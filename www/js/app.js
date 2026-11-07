@@ -131,6 +131,25 @@
     set: function (k, v) { this.data[k] = v; Store.set('settings', this.data); }
   };
 
+  /* ---------------- Geräte-Kennung (MAC-Adresse) ----------------
+     Apps dürfen die echte Hardware-MAC nicht mehr auslesen. Darum wird beim
+     ersten Start eine feste Kennung im MAC-Format erzeugt und gespeichert. */
+  var Device = {
+    mac: function () {
+      var m = Store.get('mac');
+      if (!m || !/^([0-9A-F]{2}:){5}[0-9A-F]{2}$/.test(m)) {
+        var rnd = window.crypto && window.crypto.getRandomValues ? window.crypto.getRandomValues(new Uint8Array(6)) : null;
+        var b = [];
+        for (var i = 0; i < 6; i++) b.push(rnd ? rnd[i] : Math.floor(Math.random() * 256));
+        b[0] = (b[0] & 0xFC) | 0x02;
+        m = b.map(function (x) { return (x < 16 ? '0' : '') + x.toString(16).toUpperCase(); }).join(':');
+        Store.set('mac', m);
+      }
+      return m;
+    }
+  };
+  function macTag() { return h('div', { class: 'mac-tag' }, h('span', { text: 'MAC' }), h('b', { text: Device.mac() })); }
+
   /* ---------------- Netzwerk ---------------- */
   function fetchWithTimeout(url, ms) {
     var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
@@ -797,6 +816,7 @@
     }
     var el = h('div', { class: 'profiles' },
       h('div', { class: 'brand' }, brandMark(), h('span', { text: CONFIG.appName })),
+      h('div', { class: 'profiles-mac' }, macTag()),
       h('h2', { text: list.length ? 'Welche Playlist möchtest du öffnen?' : 'Füge deine erste Playlist hinzu' }),
       grid);
     Screens.reset('profiles', el);
@@ -854,6 +874,7 @@
     var el = h('div', { class: 'form-wrap' },
       h('div', { class: 'form' },
         h('h1', { text: 'Playlist hinzufügen' }),
+        h('div', null, macTag()),
         h('div', { class: 'tabs' }, tX, tM),
         fName.wrap, xBox, mBox, err,
         h('div', { class: 'row' }, saveBtn, h('button', { class: 'btn f ghost', onclick: goBack }, 'Abbrechen')),
@@ -884,7 +905,8 @@
     el: null, content: null, current: null, buttons: {},
     open: function () {
       var self = this;
-      self.content = h('main', { class: 'content' });
+      self.view = h('div', { class: 'view' });
+      self.content = h('main', { class: 'content' }, h('div', { class: 'topbar' }, macTag()), self.view);
       var items = [['home', 'Start'], ['live', 'Live TV'], ['movie', 'Filme'], ['series', 'Serien'], ['search', 'Suche'], ['settings', 'Mehr']];
       var nav = h('nav', { class: 'sidebar' }, h('div', { class: 'brand' }, brandMark(), h('span', { text: CONFIG.appName })));
       items.forEach(function (it) {
@@ -907,16 +929,16 @@
       var self = this;
       self.current = name;
       Object.keys(self.buttons).forEach(function (k) { self.buttons[k].classList.toggle('is-on', k === name); });
-      clear(self.content);
+      clear(self.view);
       var view;
       if (name === 'home') view = HomeView();
       else if (name === 'search') view = SearchView();
       else if (name === 'settings') view = SettingsView();
       else view = SectionView(name);
-      self.content.appendChild(view);
+      self.view.appendChild(view);
       if (keepFocus) return;
       setTimeout(function () {
-        if (focusContent || !document.activeElement || document.activeElement === document.body) Nav.focusFirst(self.content);
+        if (focusContent || !document.activeElement || document.activeElement === document.body) Nav.focusFirst(self.view);
       }, 30);
     }
   };
@@ -1072,6 +1094,7 @@
     var p = App.profile;
     var kv = h('div', { class: 'kv' });
     function row(k, v) { kv.appendChild(h('span', { text: k })); kv.appendChild(h('b', { text: v })); }
+    row('MAC-Adresse', Device.mac());
     row('Profil', p.name);
     row('Typ', p.type === 'xtream' ? 'Xtream Codes' : p.type === 'm3u' ? 'M3U-Playlist' : 'Demo');
     if (p.type === 'xtream') { row('Server', p.server); row('Benutzer', p.username); }

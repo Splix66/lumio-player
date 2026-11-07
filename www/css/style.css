@@ -131,9 +131,15 @@ body.kbd .poster.f:focus, body.is-tv .poster.f:focus { transform: scale(1.05); }
 .nav-btn.is-on svg { color: var(--accent); }
 .sidebar .spacer { flex: 1; }
 .content { flex: 1; min-width: 0; position: relative; display: flex; flex-direction: column; }
+.view { flex: 1; min-width: 0; min-height: 0; position: relative; display: flex; flex-direction: column; }
+.topbar { flex: none; display: flex; justify-content: flex-end; padding: .9rem 2rem 0; }
+.mac-tag { display: inline-flex; align-items: center; gap: .55rem; padding: .35rem .75rem; border-radius: .55rem; background: var(--surface); font-size: .82rem; color: var(--muted); }
+.mac-tag span { font-weight: 700; letter-spacing: .06em; font-size: .72rem; }
+.mac-tag b { color: var(--text); font-family: ui-monospace, Menlo, Consolas, "DejaVu Sans Mono", monospace; letter-spacing: .04em; font-variant-numeric: tabular-nums; }
+.profiles-mac { margin-top: 1.2rem; }
 
 /* ---------- Startseite ---------- */
-.home { overflow-y: auto; padding: 2rem 2.2rem 3rem; display: flex; flex-direction: column; gap: 2rem; }
+.home { overflow-y: auto; padding: 1rem 2.2rem 3rem; display: flex; flex-direction: column; gap: 2rem; }
 .home-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
 .home-head h1 { font-size: 2rem; letter-spacing: -.02em; }
 .home-head p { color: var(--muted); margin-top: .3rem; }
@@ -162,7 +168,7 @@ body.kbd .tile.f:focus, body.is-tv .tile.f:focus { transform: scale(1.03); }
 
 /* ---------- Bereich (Live / Filme / Serien) ---------- */
 .section { display: flex; flex-direction: column; min-height: 0; flex: 1; }
-.section-head { display: flex; align-items: center; gap: 1rem; padding: 1.6rem 2rem 1rem; }
+.section-head { display: flex; align-items: center; gap: 1rem; padding: .6rem 2rem 1rem; }
 .section-head h1 { font-size: 1.7rem; letter-spacing: -.02em; }
 .section-head .count { color: var(--muted); }
 .section-body { flex: 1; display: flex; min-height: 0; }
@@ -228,7 +234,7 @@ body.kbd .tile.f:focus, body.is-tv .tile.f:focus { transform: scale(1.03); }
 .ep .seen i { display: block; height: 100%; background: var(--accent); }
 
 /* ---------- Suche & Einstellungen ---------- */
-.search, .settings { overflow-y: auto; padding: 2rem 2.2rem 3rem; display: flex; flex-direction: column; gap: 1.4rem; }
+.search, .settings { overflow-y: auto; padding: 1rem 2.2rem 3rem; display: flex; flex-direction: column; gap: 1.4rem; }
 .search .field input { font-size: 1.15rem; padding: 1rem 1.2rem; }
 .settings h1, .search h1 { font-size: 1.7rem; }
 .panel { background: var(--surface); border-radius: var(--radius); padding: 1.2rem 1.4rem; display: flex; flex-direction: column; gap: .9rem; max-width: 46rem; }
@@ -292,7 +298,8 @@ body.kbd .tile.f:focus, body.is-tv .tile.f:focus { transform: scale(1.03); }
   .nav-btn { flex-direction: column; gap: .2rem; padding: .45rem .3rem; flex: 1; font-size: .68rem; }
   .nav-btn span { display: block; }
   .content { padding-top: env(safe-area-inset-top); }
-  .home, .search, .settings { padding: 1.2rem 1rem 2rem; }
+  .topbar { padding: .6rem 1rem 0; }
+  .home, .search, .settings { padding: .6rem 1rem 2rem; }
   .home-head h1 { font-size: 1.5rem; }
   .tiles { grid-template-columns: 1fr 1fr; gap: .8rem; }
   .tile { min-height: 7.5rem; padding: 1rem; }
@@ -300,7 +307,7 @@ body.kbd .tile.f:focus, body.is-tv .tile.f:focus { transform: scale(1.03); }
   .tile svg { width: 1.8rem; height: 1.8rem; }
   .tile h3 { font-size: 1.15rem; }
   .rail .poster { width: 7.4rem; }
-  .section-head { padding: 1rem 1rem .6rem; }
+  .section-head { padding: .4rem 1rem .6rem; }
   .section-head h1 { font-size: 1.35rem; }
   .section-body { flex-direction: column; }
   .cats { width: auto; flex-direction: row; overflow-x: auto; overflow-y: hidden; padding: 0 1rem .8rem; gap: .4rem; scrollbar-width: none; }
