@@ -85,7 +85,9 @@
     restart: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>',
     trash: '<path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/>',
     profile: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
-    close: '<path d="M6 6l12 12M18 6L6 18"/>'
+    close: '<path d="M6 6l12 12M18 6L6 18"/>',
+    vol: '<path d="M11 5L6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/>',
+    volOff: '<path d="M11 5L6 9H3v6h3l5 4z"/><path d="M16 9l5 6M21 9l-5 6"/>'
   };
   function icon(name) {
     var span = document.createElement('span');
@@ -634,7 +636,7 @@
      Playlist per Handy: Abgleich mit dem Online-Dienst (MAC + Key)
      ========================================================== */
   var Cloud = {
-    registered: false, timer: null, busy: false,
+    registered: false, timer: null, busy: false, uploading: {},
     rpc: function (fn, body) {
       return fetch(CONFIG.cloudUrl + fn, {
         method: 'POST',
@@ -655,7 +657,9 @@
       }).then(function (r) {
         self.busy = false;
         if (!r || !r.ok) return null;
-        return self.apply(r.items || []);
+        var res = self.apply(r.items || []);
+        self.upload();
+        return res;
       }, function () { self.busy = false; return null; });
     },
     apply: function (items) {
@@ -688,6 +692,26 @@
       if (App.profile && removed.some(function (p) { return p.id === App.profile.id; })) { App.profile = null; showProfiles(); }
       else if (top && top.name === 'profiles') showProfiles();
       return { changed: true, added: added, removed: removed };
+    },
+    /* Playlists, die direkt in der App eingetragen wurden, auch online speichern (damit sie auf der Webseite erscheinen) */
+    upload: function () {
+      var self = this;
+      if (!self.registered) return;
+      Profiles.list().forEach(function (p) {
+        if (p.remoteId || (p.type !== 'm3u' && p.type !== 'xtream') || self.uploading[p.id]) return;
+        self.uploading[p.id] = true;
+        var body = { p_mac: Device.mac(), p_key: Device.key(), p_name: p.name || 'Playlist', p_type: p.type };
+        if (p.type === 'm3u') body.p_url = p.url;
+        else { body.p_server = p.server; body.p_username = p.username; body.p_password = p.password; }
+        self.rpc('add_playlist', body).then(function (r) {
+          delete self.uploading[p.id];
+          if (!r || !r.ok || !r.id) return;
+          var list = Profiles.list();
+          var x = list.filter(function (q) { return q.id === p.id; })[0];
+          if (x && !x.remoteId) { x.remoteId = r.id; Profiles.save(list); }
+          if (App.profile && App.profile.id === p.id) App.profile.remoteId = r.id;
+        }, function () { delete self.uploading[p.id]; });
+      });
     },
     start: function () {
       var self = this;
@@ -1211,7 +1235,6 @@
     var grid = h('div', { class: 'profile-grid' });
     list.forEach(function (p) {
       var sub = p.type === 'xtream' ? 'Xtream Codes' : p.type === 'm3u' ? 'M3U-Playlist' : 'Demo';
-      if (p.remoteId) sub += ' · per Handy';
       grid.appendChild(h('div', { class: 'profile' },
         h('button', { class: 'card f', onclick: function () { activateProfile(p); }, 'data-autofocus': p.id === Store.get('active') ? true : null },
           h('span', { class: 'avatar', style: 'background:' + colorFor(p.name), text: initials(p.name) }),
@@ -1283,6 +1306,7 @@
       saveBtn.disabled = true; saveBtn.textContent = 'Verbinde …';
       makeProvider(p).login().then(function () {
         var saved = Profiles.add(p);
+        Cloud.upload();
         activateProfile(saved, true);
       }, function (e) {
         err.textContent = e.message || 'Verbindung fehlgeschlagen.';
@@ -1353,6 +1377,8 @@
     show: function (name, focusContent, keepFocus) {
       var self = this;
       self.current = name;
+      // Mini-Player beenden, wenn man zu Filmen oder Serien wechselt
+      if ((name === 'movie' || name === 'series') && Player.mini) Player.close();
       if (!COMPACT_NAV[name]) self.el.classList.remove('nav-collapsed');
       Object.keys(self.buttons).forEach(function (k) { self.buttons[k].classList.toggle('is-on', k === name); });
       clear(self.view);
@@ -1740,7 +1766,7 @@
       self.zap = h('div', { class: 'zap is-hidden' });
       self.osd = h('div', { class: 'osd' },
         h('div', { class: 'osd-top' }, h('button', { class: 'btn f', onclick: goBack }, icon('back'), h('span', { text: 'Zurück' })), self.liveTag, self.title),
-        h('div', { class: 'osd-bottom' }, self.info, self.bar, self.times, self.ctrls));
+        h('div', { class: 'osd-bottom' }, self.info, self.bar, self.times, h('div', { class: 'ctrl-row' }, self.ctrls, self.volumeUi())));
       self.miniTitle = h('span', { class: 'mini-title' });
       self.miniUi = h('div', { class: 'mini-ui' },
         h('button', { class: 'mini-open f', title: 'Vollbild', onclick: function () { self.maximize(); } }, self.miniTitle),
@@ -1754,6 +1780,13 @@
       });
       self.el.addEventListener('click', function (e) { if (e.target === video || e.target === self.osd) self.toggleOsd(); });
       self.el.addEventListener('mousemove', function () { self.showOsd(); });
+      // Mausrad = Lautstärke (PC)
+      self.el.addEventListener('wheel', function (e) {
+        if (self.mini) return;
+        e.preventDefault();
+        self.setVolume(self.video.volume + (e.deltaY < 0 ? 0.05 : -0.05));
+        self.showOsd();
+      }, { passive: false });
 
       video.addEventListener('waiting', function () { self.spinner.style.display = ''; });
       video.addEventListener('playing', function () { self.spinner.style.display = 'none'; self.err.style.display = 'none'; self.paintCtrls(); });
@@ -2096,6 +2129,37 @@
       var v = this.video;
       if (this.item && this.isVod() && v && v.duration && isFinite(v.duration)) Resume.set(this.item, v.currentTime, v.duration);
     },
+    /* Lautstärke: Ton an/aus und Regler, Einstellung wird gespeichert */
+    volumeUi: function () {
+      var self = this, v = Settings.get('volume');
+      if (typeof v !== 'number') v = 1;
+      self.video.volume = v;
+      self.video.muted = !!Settings.get('muted');
+      self.muteBtn = h('button', { class: 'btn f', 'data-c': 'mute', title: 'Ton an/aus', 'aria-label': 'Ton an/aus', onclick: function () { self.setMuted(!self.video.muted); } });
+      self.range = h('input', { class: 'f vol-range', type: 'range', min: '0', max: '100', step: '5', value: String(Math.round(v * 100)), 'aria-label': 'Lautstärke' });
+      self.range.addEventListener('input', function () { self.setVolume(Number(self.range.value) / 100); self.showOsd(); });
+      self.paintVol();
+      return h('div', { class: 'vol' }, self.muteBtn, self.range);
+    },
+    setVolume: function (v) {
+      v = Math.max(0, Math.min(1, Math.round(v * 100) / 100));
+      this.video.volume = v;
+      Settings.set('volume', v);
+      if (v > 0 && this.video.muted) { this.video.muted = false; Settings.set('muted', false); }
+      if (this.range) this.range.value = String(Math.round(v * 100));
+      this.paintVol();
+    },
+    setMuted: function (m) {
+      this.video.muted = m;
+      Settings.set('muted', m);
+      this.paintVol();
+      this.showOsd();
+    },
+    paintVol: function () {
+      if (!this.muteBtn) return;
+      clear(this.muteBtn);
+      this.muteBtn.appendChild(icon(this.video.muted || this.video.volume === 0 ? 'volOff' : 'vol'));
+    },
     destroyHls: function () { if (this.hls) { try { this.hls.destroy(); } catch (e) {} this.hls = null; } },
 
     enterFullscreen: function () {
@@ -2161,6 +2225,7 @@
     var t = e.target;
     var inInput = t && t.tagName === 'INPUT';
     if (dirs[k]) {
+      if (inInput && t.type === 'range' && (k === 37 || k === 39)) return;
       if (inInput && (k === 37 || k === 39)) {
         var len = t.value.length, pos = t.selectionStart;
         var atEdge = pos === null || (k === 37 && pos === 0) || (k === 39 && pos === len);
