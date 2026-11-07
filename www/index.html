@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0d12">
+  <meta name="format-detection" content="telephone=no">
+  <title>Lumio Player</title>
+  <link rel="icon" href="img/icon.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+    <div id="screens"></div>
+    <div id="dialog-layer"></div>
+    <div id="toast-layer" aria-live="polite"></div>
+  </div>
+
+  <!-- Samsung (Tizen): Fernbedienungs-API. Auf anderen Geräten wird das einfach ignoriert. -->
+  <script src="$WEBAPIS/webapis/webapis.js" onerror="this.remove()"></script>
+  <!-- Videobibliothek für HLS-Streams (wird beim Einrichten nach lib/ kopiert, sonst aus dem Internet geladen) -->
+  <script src="lib/hls.min.js" onerror="this.remove()"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

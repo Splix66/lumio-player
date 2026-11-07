@@ -1,0 +1,32 @@
+{
+  "name": "lumio-player",
+  "version": "1.0.0",
+  "description": "IPTV-Player für Handy, Tablet und Fernseher (Xtream Codes & M3U)",
+  "private": true,
+  "scripts": {
+    "postinstall": "node scripts/copy-libs.js",
+    "start": "node scripts/serve.js",
+    "android:einrichten": "npx cap add android && node scripts/patch-android.js && npx cap sync android",
+    "android:aktualisieren": "node scripts/patch-android.js && npx cap sync android",
+    "android:oeffnen": "npx cap open android",
+    "ios:einrichten": "npx cap add ios && node scripts/patch-ios.js && npx cap sync ios",
+    "ios:aktualisieren": "node scripts/patch-ios.js && npx cap sync ios",
+    "ios:oeffnen": "npx cap open ios",
+    "icons": "python3 scripts/make-icons.py && npx capacitor-assets generate",
+    "tv:bauen": "node scripts/build-tv.js",
+    "lg:paket": "node scripts/build-tv.js && ares-package dist/webos -o dist",
+    "lg:installieren": "ares-install dist/*.ipk",
+    "samsung:paket": "node scripts/build-tv.js && tizen package -t wgt -- dist/tizen"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/app": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/ios": "^7.0.0",
+    "hls.js": "^1.5.0"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^7.0.0"
+  }
+}

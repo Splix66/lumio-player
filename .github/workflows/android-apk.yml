@@ -1,0 +1,77 @@
+# Baut automatisch die Android-APK (Handy, Tablet, Fire TV, Android TV),
+# sobald Dateien hochgeladen werden – oder per Klick unter "Actions → Run workflow".
+name: Android-APK bauen
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Projekt holen
+        uses: actions/checkout@v4
+
+      - name: Node.js einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Java einrichten
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Bausteine installieren
+        run: npm install
+
+      - name: Bilder erzeugen (Symbole, Banner)
+        run: |
+          pip install pillow
+          python3 scripts/make-icons.py
+
+      - name: Android-Projekt erzeugen
+        run: |
+          npx cap add android
+          node scripts/patch-android.js
+
+      - name: App-Symbole erzeugen
+        continue-on-error: true
+        run: npx capacitor-assets generate --android
+
+      - name: App-Dateien übertragen
+        run: |
+          node scripts/patch-android.js
+          npx cap sync android
+
+      - name: APK bauen
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: APK umbenennen
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk lumio-player.apk
+
+      - name: APK unter "Releases" bereitstellen
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: neueste
+          name: Lumio Player – neueste Version
+          body: |
+            Automatisch gebaut aus Version ${{ github.sha }}.
+            Download: lumio-player.apk (Handy, Tablet, Fire TV, Android TV)
+          files: lumio-player.apk
+          make_latest: true
+
+      - name: Download-Link anzeigen
+        run: |
+          echo "## ✅ APK fertig" >> $GITHUB_STEP_SUMMARY
+          echo "Direkter Download-Link (auch für die Downloader-App auf dem Fire TV):" >> $GITHUB_STEP_SUMMARY
+          echo "https://github.com/${{ github.repository }}/releases/latest/download/lumio-player.apk" >> $GITHUB_STEP_SUMMARY

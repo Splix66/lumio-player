@@ -1,0 +1,14 @@
+{
+  "id": "de.lumio.player",
+  "version": "1.0.0",
+  "vendor": "Lumio",
+  "type": "web",
+  "main": "index.html",
+  "title": "Lumio Player",
+  "icon": "icon.png",
+  "largeIcon": "largeIcon.png",
+  "bgColor": "#0a0c11",
+  "resolution": "1920x1080",
+  "disableBackHistoryAPI": true,
+  "transparent": false
+}

@@ -1,0 +1,22 @@
+{
+  "appId": "de.lumio.player",
+  "appName": "Lumio Player",
+  "webDir": "www",
+  "backgroundColor": "#0a0c11",
+  "server": {
+    "androidScheme": "http",
+    "cleartext": true
+  },
+  "android": {
+    "allowMixedContent": true
+  },
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#0a0c11"
+  },
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  }
+}
