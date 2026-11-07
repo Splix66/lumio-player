@@ -1125,7 +1125,8 @@
     if (item.logo) bg.style.backgroundImage = 'url("' + String(item.logo).replace(/"/g, '%22') + '")';
     var info = h('div', { class: 'detail-info' }, h('h1', { text: item.name }));
     var main = h('div', { class: 'detail-main' }, h('div', { class: 'poster' }, posterArt(item)), info);
-    var el = h('div', { class: 'detail' }, bg, main);
+    var back = h('div', { class: 'detail-top' }, h('button', { class: 'btn f ghost', onclick: goBack }, icon('back'), 'Zurück'));
+    var el = h('div', { class: 'detail' }, bg, back, main);
     return { el: el, info: info, bg: bg };
   }
   function metaLine(d) {
