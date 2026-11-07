@@ -137,6 +137,13 @@ body.kbd .poster.f:focus, body.is-tv .poster.f:focus { transform: scale(1.05); }
 .mac-tag span { font-weight: 700; letter-spacing: .06em; font-size: .72rem; }
 .mac-tag b { color: var(--text); font-family: ui-monospace, Menlo, Consolas, "DejaVu Sans Mono", monospace; letter-spacing: .04em; font-variant-numeric: tabular-nums; }
 .profiles-mac { margin-top: 1.2rem; }
+.remote { margin-top: 2.4rem; display: flex; gap: 1.4rem; align-items: center; background: var(--surface); border-radius: var(--radius); padding: 1.2rem 1.4rem; max-width: 40rem; box-shadow: inset 0 0 0 1px var(--line); }
+.qr { width: 9rem; flex: none; background: #fff; border-radius: .6rem; padding: .35rem; }
+.qr img { width: 100%; height: auto; image-rendering: pixelated; }
+.remote-text { display: flex; flex-direction: column; gap: .5rem; min-width: 0; }
+.remote-text h3 { font-size: 1.05rem; }
+.remote-text p { color: var(--muted); font-size: .9rem; line-height: 1.45; }
+.settings .remote { margin-top: 0; max-width: 46rem; }
 
 /* ---------- Startseite ---------- */
 .home { overflow-y: auto; padding: 1rem 2.2rem 3rem; display: flex; flex-direction: column; gap: 2rem; }
@@ -334,4 +341,5 @@ body.kbd .tile.f:focus, body.is-tv .tile.f:focus { transform: scale(1.03); }
   .kv { grid-template-columns: 1fr; gap: .1rem; }
   .kv b { margin-bottom: .4rem; }
   .card { width: 9.5rem; min-height: 8rem; }
+  .remote { flex-direction: column; text-align: center; }
 }

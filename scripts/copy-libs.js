@@ -2,13 +2,19 @@
 const fs = require('fs');
 const path = require('path');
 
-const src = path.join(__dirname, '..', 'node_modules', 'hls.js', 'dist', 'hls.min.js');
-const dest = path.join(__dirname, '..', 'www', 'lib', 'hls.min.js');
+const libs = [
+  ['hls.js', 'dist/hls.min.js', 'hls.min.js'],
+  ['qrcode-generator', 'qrcode.js', 'qrcode.js']
+];
+const libDir = path.join(__dirname, '..', 'www', 'lib');
+fs.mkdirSync(libDir, { recursive: true });
 
-if (!fs.existsSync(src)) {
-  console.log('hls.js nicht gefunden – die App lädt sie dann aus dem Internet.');
-  process.exit(0);
+for (const [pkg, file, target] of libs) {
+  const src = path.join(__dirname, '..', 'node_modules', pkg, file);
+  if (!fs.existsSync(src)) {
+    console.log(pkg + ' nicht gefunden – die App lädt es dann aus dem Internet.');
+    continue;
+  }
+  fs.copyFileSync(src, path.join(libDir, target));
+  console.log('OK: ' + pkg + ' nach www/lib kopiert');
 }
-fs.mkdirSync(path.dirname(dest), { recursive: true });
-fs.copyFileSync(src, dest);
-console.log('✓ hls.js nach www/lib kopiert');

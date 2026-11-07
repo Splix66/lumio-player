@@ -14,7 +14,13 @@
     version: '1.0.0',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     hlsCdn: 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js',
-    requestTimeout: 30000
+    requestTimeout: 30000,
+    // Online-Dienst für "Playlist per Handy hinzufügen" (Supabase + Webseite auf GitHub Pages)
+    cloudUrl: 'https://oofzhklrbrpxjoicwbsf.supabase.co/rest/v1/rpc/',
+    cloudKey: 'sb_publishable_cx6n8buREFat_yE7kKW6FA_SnMsOQX7',
+    portalUrl: 'https://splix66.github.io/lumio-player/',
+    qrCdn: 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js',
+    syncInterval: 30000
   };
 
   /* ---------------- Geräte-Erkennung ---------------- */
@@ -146,9 +152,23 @@
         Store.set('mac', m);
       }
       return m;
-    }
+    },
+    key: function () {
+      var k = Store.get('devkey');
+      if (!k || !/^[A-Z2-9]{6}$/.test(k)) {
+        var abc = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        var rnd = window.crypto && window.crypto.getRandomValues ? window.crypto.getRandomValues(new Uint8Array(6)) : null;
+        k = '';
+        for (var i = 0; i < 6; i++) k += abc.charAt((rnd ? rnd[i] : Math.floor(Math.random() * 256)) % abc.length);
+        Store.set('devkey', k);
+      }
+      return k;
+    },
+    portalLink: function () { return CONFIG.portalUrl + '?mac=' + encodeURIComponent(this.mac()) + '&key=' + this.key(); }
   };
-  function macTag() { return h('div', { class: 'mac-tag' }, h('span', { text: 'MAC' }), h('b', { text: Device.mac() })); }
+  function macTag() {
+    return h('div', { class: 'mac-tag' }, h('span', { text: 'MAC' }), h('b', { text: Device.mac() }), h('span', { text: 'KEY' }), h('b', { text: Device.key() }));
+  }
 
   /* ---------------- Netzwerk ---------------- */
   function fetchWithTimeout(url, ms) {
@@ -484,12 +504,117 @@
     save: function (list) { Store.set('profiles', list); },
     add: function (p) { var l = this.list(); p.id = p.id || uid(); l.push(p); this.save(l); return p; },
     remove: function (id) {
+      var gone = this.get(id);
+      if (gone && gone.remoteId) Cloud.rpc('delete_playlist', { p_mac: Device.mac(), p_key: Device.key(), p_id: gone.remoteId }).catch(function () {});
       this.save(this.list().filter(function (p) { return p.id !== id; }));
       Store.del('fav.' + id); Store.del('resume.' + id); Store.del('recent.' + id);
       if (Store.get('active') === id) Store.del('active');
     },
     get: function (id) { return this.list().filter(function (p) { return p.id === id; })[0]; }
   };
+
+  /* ==========================================================
+     Playlist per Handy: Abgleich mit dem Online-Dienst (MAC + Key)
+     ========================================================== */
+  var Cloud = {
+    registered: false, timer: null, busy: false,
+    rpc: function (fn, body) {
+      return fetch(CONFIG.cloudUrl + fn, {
+        method: 'POST',
+        headers: { apikey: CONFIG.cloudKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      }).then(function (r) { return r.json(); });
+    },
+    sync: function () {
+      var self = this;
+      if (self.busy || !CONFIG.cloudUrl) return Promise.resolve(null);
+      self.busy = true;
+      var mac = Device.mac(), key = Device.key();
+      var first = self.registered ? Promise.resolve({ ok: true }) : self.rpc('register_device', { p_mac: mac, p_key: key });
+      return first.then(function (r) {
+        if (!r || !r.ok) return null;
+        self.registered = true;
+        return self.rpc('list_playlists', { p_mac: mac, p_key: key });
+      }).then(function (r) {
+        self.busy = false;
+        if (!r || !r.ok) return null;
+        return self.apply(r.items || []);
+      }, function () { self.busy = false; return null; });
+    },
+    apply: function (items) {
+      var byId = {};
+      items.forEach(function (it) { byId[it.id] = it; });
+      var list = Profiles.list(), added = [], removed = [], changed = false;
+      list = list.filter(function (p) {
+        if (p.remoteId && !byId[p.remoteId]) { removed.push(p); changed = true; return false; }
+        return true;
+      });
+      items.forEach(function (it) {
+        var data = it.type === 'xtream'
+          ? { type: 'xtream', server: normalizeServer(it.server), username: it.username, password: it.password }
+          : { type: 'm3u', url: it.url };
+        data.name = it.name; data.remoteId = it.id;
+        var ex = list.filter(function (p) { return p.remoteId === it.id; })[0];
+        if (!ex) { data.id = uid(); list.push(data); added.push(data); changed = true; return; }
+        ['type', 'name', 'url', 'server', 'username', 'password'].forEach(function (k) {
+          if ((ex[k] || '') !== (data[k] || '')) { ex[k] = data[k]; changed = true; }
+        });
+      });
+      if (!changed) return { changed: false };
+      Profiles.save(list);
+      removed.forEach(function (p) {
+        Store.del('fav.' + p.id); Store.del('resume.' + p.id); Store.del('recent.' + p.id);
+        if (Store.get('active') === p.id) Store.del('active');
+      });
+      if (added.length) toast('Neue Playlist empfangen: ' + added.map(function (p) { return p.name; }).join(', '), 4000);
+      var top = Screens.top();
+      if (App.profile && removed.some(function (p) { return p.id === App.profile.id; })) { App.profile = null; showProfiles(); }
+      else if (top && top.name === 'profiles') showProfiles();
+      return { changed: true, added: added, removed: removed };
+    },
+    start: function () {
+      var self = this;
+      self.sync();
+      clearInterval(self.timer);
+      self.timer = setInterval(function () { if (!document.hidden) self.sync(); }, CONFIG.syncInterval);
+    }
+  };
+
+  var qrLoading = null;
+  function loadQrLib() {
+    if (window.qrcode) return Promise.resolve(window.qrcode);
+    if (!qrLoading) {
+      qrLoading = new Promise(function (resolve) {
+        var s = document.createElement('script');
+        s.src = CONFIG.qrCdn;
+        s.onload = function () { resolve(window.qrcode || null); };
+        s.onerror = function () { resolve(null); };
+        document.head.appendChild(s);
+      });
+    }
+    return qrLoading;
+  }
+  function qrBox(text) {
+    var box = h('div', { class: 'qr' });
+    loadQrLib().then(function (qrcode) {
+      if (!qrcode) { box.style.display = 'none'; return; }
+      try {
+        var qr = qrcode(0, 'M');
+        qr.addData(text);
+        qr.make();
+        box.appendChild(h('img', { src: qr.createDataURL(6, 2), alt: 'QR-Code' }));
+      } catch (e) { box.style.display = 'none'; }
+    });
+    return box;
+  }
+  function remotePanel() {
+    return h('div', { class: 'remote' },
+      qrBox(Device.portalLink()),
+      h('div', { class: 'remote-text' },
+        h('h3', { text: 'Playlist per Handy hinzufügen' }),
+        h('p', { text: 'QR-Code mit dem Handy scannen und dort deinen M3U-Link oder Xtream-Zugang eingeben. Die Playlist erscheint danach automatisch hier.' }),
+        h('p', { class: 'hint', text: 'Ohne QR-Code: ' + CONFIG.portalUrl.replace(/^https?:\/\//, '').replace(/\/$/, '') + ' öffnen und MAC + KEY eingeben.' })));
+  }
 
   var App = { profile: null, provider: null };
 
@@ -794,6 +919,7 @@
     var grid = h('div', { class: 'profile-grid' });
     list.forEach(function (p) {
       var sub = p.type === 'xtream' ? 'Xtream Codes' : p.type === 'm3u' ? 'M3U-Playlist' : 'Demo';
+      if (p.remoteId) sub += ' · per Handy';
       grid.appendChild(h('div', { class: 'profile' },
         h('button', { class: 'card f', onclick: function () { activateProfile(p); }, 'data-autofocus': p.id === Store.get('active') ? true : null },
           h('span', { class: 'avatar', style: 'background:' + colorFor(p.name), text: initials(p.name) }),
@@ -818,7 +944,8 @@
       h('div', { class: 'brand' }, brandMark(), h('span', { text: CONFIG.appName })),
       h('div', { class: 'profiles-mac' }, macTag()),
       h('h2', { text: list.length ? 'Welche Playlist möchtest du öffnen?' : 'Füge deine erste Playlist hinzu' }),
-      grid);
+      grid,
+      remotePanel());
     Screens.reset('profiles', el);
   }
 
@@ -1125,6 +1252,7 @@
         h('div', { class: 'row' },
           h('button', { class: 'btn f primary', onclick: showProfiles, 'data-autofocus': true }, icon('profile'), 'Profil wechseln'),
           h('button', { class: 'btn f', onclick: function () { App.provider.reset(); searchCache = {}; toast('Daten werden neu geladen'); } }, icon('restart'), 'Daten neu laden'))),
+      remotePanel(),
       fmtRow,
       h('div', { class: 'panel' }, h('h3', { text: 'Verlauf' }),
         h('div', { class: 'row' },
@@ -1649,6 +1777,7 @@
     var active = Profiles.get(Store.get('active'));
     if (active) activateProfile(active);
     else showProfiles();
+    Cloud.start();
   }
 
   // Für automatische Tests von außen erreichbar
