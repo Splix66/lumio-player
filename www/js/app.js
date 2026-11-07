@@ -1407,7 +1407,6 @@
       chip);
     App.provider.account().then(function (a) {
       if (a && a.expires) chip.lastChild.textContent = 'Gültig bis ' + fmtDate(a.expires);
-      if (a && a.count) chip.lastChild.textContent = a.count + ' Einträge';
     }).catch(function () { chip.lastChild.textContent = 'Offline'; chip.firstChild.style.background = 'var(--live)'; });
 
     function tile(kind, title, sub) {
@@ -1468,7 +1467,7 @@
         if (activeBtn !== btn) return;
         clear(items);
         items.scrollTop = 0;
-        count.textContent = list.length + (list.length === 1 ? ' Eintrag' : ' Einträge');
+        count.textContent = String(list.length);
         if (!list.length) {
           items.appendChild(stateBox(cat.id === '__fav' ? 'Noch keine Favoriten' : 'Keine Einträge', cat.id === '__fav' ? 'Markiere Inhalte mit dem Stern, um sie hier zu sammeln.' : null));
           return;
@@ -2139,7 +2138,31 @@
       self.range = h('input', { class: 'f vol-range', type: 'range', min: '0', max: '100', step: '5', value: String(Math.round(v * 100)), 'aria-label': 'Lautstärke' });
       self.range.addEventListener('input', function () { self.setVolume(Number(self.range.value) / 100); self.showOsd(); });
       self.paintVol();
-      return h('div', { class: 'vol' }, self.muteBtn, self.range);
+      var wrap = h('div', { class: 'vol' }, self.muteBtn, self.range);
+      // Großer Tippbereich: auch knapp neben dem Regler tippen/klicken stellt die Lautstärke ein
+      function at(x) {
+        var r = self.range.getBoundingClientRect();
+        if (!r.width) return;
+        self.setVolume((x - r.left) / r.width);
+        self.showOsd();
+      }
+      function point(e) { return e.touches && e.touches[0] ? e.touches[0].clientX : e.clientX; }
+      function start(e) {
+        if (self.muteBtn.contains(e.target)) return;
+        e.preventDefault();
+        at(point(e));
+        var touch = e.type === 'touchstart';
+        function move(ev) { ev.preventDefault(); at(point(ev)); }
+        function end() {
+          document.removeEventListener(touch ? 'touchmove' : 'mousemove', move);
+          document.removeEventListener(touch ? 'touchend' : 'mouseup', end);
+        }
+        document.addEventListener(touch ? 'touchmove' : 'mousemove', move, { passive: false });
+        document.addEventListener(touch ? 'touchend' : 'mouseup', end);
+      }
+      wrap.addEventListener('mousedown', start);
+      wrap.addEventListener('touchstart', start, { passive: false });
+      return wrap;
     },
     setVolume: function (v) {
       v = Math.max(0, Math.min(1, Math.round(v * 100) / 100));
