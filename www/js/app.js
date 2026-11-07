@@ -93,7 +93,7 @@
     return span.firstChild;
   }
   /* Logo: "L" und Play-Zeichen in Textfarbe, der Lichtpunkt in der gewählten Akzentfarbe */
-  var LOGO_SVG = '<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M14 20v44a20 20 0 0 0 20 20h44" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round"/><path class="play" d="M38 23.6c0-3.6 3.9-5.8 7-4l35.4 22.2c3 1.8 3 6.2 0 8L45 72c-3.1 1.8-7-.4-7-4z"/><circle class="dot" cx="84" cy="22" r="6"/></svg>';
+  var LOGO_SVG = '<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M14 20v44a20 20 0 0 0 20 20h44" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round"/><path class="play" d="M38 23.6c0-3.6 3.9-5.8 7-4l35.4 22.2c3 1.8 3 6.2 0 8L45 72c-3.1 1.8-7-.4-7-4z"/><circle class="dot" cx="84" cy="22" r="6"/><path class="star" d="M84 12L86.5 19.5L94 22L86.5 24.5L84 32L81.5 24.5L74 22L81.5 19.5Z"/></svg>';
   function brandMark() { var m = h('span', { class: 'brand-mark' }); m.innerHTML = LOGO_SVG; return m; }
 
   function hashCode(s) { var x = 0; s = String(s || ''); for (var i = 0; i < s.length; i++) x = (x * 31 + s.charCodeAt(i)) | 0; return Math.abs(x); }
@@ -192,21 +192,98 @@
     media: window.matchMedia ? window.matchMedia('(prefers-color-scheme: light)') : null,
     accent: function () { var id = Settings.get('accent'); return ACCENTS.filter(function (x) { return x.id === id; })[0] || ACCENTS[0]; },
     apply: function () {
-      var mode = Settings.get('theme') || 'auto';
+      var mode = Settings.get('theme') || 'dark';
       var light = mode === 'light' || (mode === 'auto' && !Platform.tv && !!(this.media && this.media.matches));
       var root = document.documentElement;
       root.setAttribute('data-theme', light ? 'light' : 'dark');
-      var acc = this.accent();
+      var season = Season.current(), se = season ? SEASONS[season] : null;
+      var acc = se || this.accent();
+      if (se) { root.setAttribute('data-season', season); root.style.setProperty('--season-dot', se.dot); }
+      else root.removeAttribute('data-season');
       root.style.setProperty('--accent', acc.a);
       root.style.setProperty('--accent-2', acc.b);
       root.style.setProperty('--accent-ink', acc.ink);
       root.style.setProperty('--accent-soft', rgba(acc.a, light ? 0.14 : 0.18));
       var meta = document.querySelector('meta[name="theme-color"]');
       if (meta) meta.setAttribute('content', light ? '#f4f5f8' : '#0a0c11');
+      Fx.set(se ? se.fx : null);
     },
     watch: function () {
       var self = this;
       if (self.media && self.media.addListener) self.media.addListener(function () { self.apply(); });
+    }
+  };
+
+  /* ---------------- Saison-Designs (Weihnachten, Silvester) ---------------- */
+  var SEASONS = {
+    christmas: { name: 'Weihnachten', greet: 'Frohe Weihnachten', a: '#e63946', b: '#ff8a5c', ink: '#2a0507', dot: '#ffd166', fx: 'snow' },
+    newyear: { name: 'Silvester', greet: 'Guten Rutsch', a: '#ffc53d', b: '#ffe9a8', ink: '#261c02', dot: '#ffe27a', fx: 'sparks' }
+  };
+  var Season = {
+    current: function () {
+      var s = Settings.get('season') || 'auto';
+      if (s === 'off') return null;
+      if (s !== 'auto') return SEASONS[s] ? s : null;
+      var d = new Date(), m = d.getMonth() + 1, day = d.getDate();
+      if (m === 12 && day <= 26) return 'christmas';
+      if ((m === 12 && day >= 27) || (m === 1 && day <= 1)) return 'newyear';
+      return null;
+    }
+  };
+
+  /* Schneefall bzw. funkelnde Lichter, ganz leicht im Hintergrund */
+  var Fx = {
+    canvas: null, ctx: null, parts: [], kind: null, raf: 0, last: 0,
+    set: function (kind) {
+      var self = this;
+      if (Settings.get('fx') === false) kind = null;
+      try { if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) kind = null; } catch (e) {}
+      if (!window.requestAnimationFrame) kind = null;
+      if (kind === self.kind) return;
+      self.kind = kind;
+      self.parts = [];
+      if (self.raf) cancelAnimationFrame(self.raf);
+      self.raf = 0;
+      if (!kind) { if (self.canvas) self.canvas.style.display = 'none'; return; }
+      if (!self.canvas) {
+        self.canvas = h('canvas', { class: 'fx', 'aria-hidden': 'true' });
+        document.body.appendChild(self.canvas);
+        self.ctx = self.canvas.getContext('2d');
+        window.addEventListener('resize', function () { self.size(); });
+      }
+      self.canvas.style.display = '';
+      self.size();
+      var n = Platform.tv ? 34 : 48;
+      for (var i = 0; i < n; i++) self.parts.push(self.spawn(true));
+      var loop = function (t) { self.frame(t); if (self.kind) self.raf = requestAnimationFrame(loop); };
+      self.raf = requestAnimationFrame(loop);
+    },
+    size: function () { if (this.canvas) { this.canvas.width = window.innerWidth; this.canvas.height = window.innerHeight; } },
+    spawn: function (anywhere) {
+      var W = window.innerWidth, H = window.innerHeight;
+      if (this.kind === 'snow') return { x: Math.random() * W, y: anywhere ? Math.random() * H : -8, r: 1 + Math.random() * 2.4, vy: 0.35 + Math.random() * 0.8, vx: Math.random() * 0.5 - 0.25, ph: Math.random() * 6.28 };
+      return { x: Math.random() * W, y: anywhere ? Math.random() * H : H + 8, r: 0.8 + Math.random() * 1.7, vy: -(0.2 + Math.random() * 0.5), vx: Math.random() * 0.4 - 0.2, ph: Math.random() * 6.28, warm: Math.random() > 0.5 };
+    },
+    frame: function (t) {
+      if (Platform.tv && t - this.last < 33) return;
+      var dt = this.last ? Math.min(3, (t - this.last) / 16.7) : 1;
+      this.last = t;
+      var c = this.ctx, W = this.canvas.width, H = this.canvas.height;
+      c.clearRect(0, 0, W, H);
+      var top = Screens.top();
+      if (top && top.name === 'player') return;
+      var light = document.documentElement.getAttribute('data-theme') === 'light';
+      for (var i = 0; i < this.parts.length; i++) {
+        var p = this.parts[i];
+        p.ph += 0.02 * dt;
+        p.x += (p.vx + Math.sin(p.ph) * 0.3) * dt;
+        p.y += p.vy * dt;
+        if (p.y > H + 10 || p.y < -12 || p.x < -10 || p.x > W + 10) { this.parts[i] = this.spawn(false); continue; }
+        var a;
+        if (this.kind === 'snow') { a = 0.35 + p.r / 6; c.fillStyle = light ? 'rgba(120,140,175,' + a + ')' : 'rgba(255,255,255,' + a + ')'; }
+        else { a = 0.35 + 0.65 * Math.abs(Math.sin(p.ph * 3)); c.fillStyle = p.warm ? 'rgba(255,205,90,' + a + ')' : (light ? 'rgba(200,150,40,' + a + ')' : 'rgba(255,240,205,' + a + ')'); }
+        c.beginPath(); c.arc(p.x, p.y, p.r, 0, 6.283); c.fill();
+      }
     }
   };
 
@@ -667,15 +744,15 @@
     });
     var label = h('p', { class: 'hint' });
     function paint() {
-      var t = Settings.get('theme') || 'auto', c = Theme.accent();
+      var t = Settings.get('theme') || 'dark', c = Theme.accent(), s = Season.current();
       modeBtns.forEach(function (x) { x[1].classList.toggle('is-on', x[0] === t); });
       swBtns.forEach(function (x) { x[1].classList.toggle('is-on', x[0] === c.id); });
-      label.textContent = 'Gewählt: ' + c.name;
+      label.textContent = 'Gewählt: ' + c.name + (s ? ' · Gerade läuft das ' + SEASONS[s].name + '-Design, deine Farbe gilt danach wieder.' : '');
     }
     paint();
     return h('div', { class: 'panel' },
       h('h3', { text: 'Darstellung' }),
-      h('p', { class: 'hint', text: 'Automatisch passt sich dem Gerät an (Fernseher bleiben dunkel).' }),
+      h('p', { class: 'hint', text: 'Standard ist Dunkel. Automatisch passt sich dem Gerät an.' }),
       row,
       h('h3', { text: 'Farbe' }),
       sw, label);
@@ -689,6 +766,137 @@
         h('p', { text: 'QR-Code mit dem Handy scannen und dort deinen M3U-Link oder Xtream-Zugang eingeben. Die Playlist erscheint danach automatisch hier.' }),
         h('p', { class: 'hint', text: 'Ohne QR-Code: ' + CONFIG.portalUrl.replace(/^https?:\/\//, '').replace(/\/$/, '') + ' öffnen und MAC + KEY eingeben.' })));
   }
+
+  /* ==========================================================
+     Geheimer Admin-Bereich
+     Zugang: Mehr → Über → 7× auf die Versionsnummer, dann PIN
+     ========================================================== */
+  function pinHash(p) {
+    var s = 'lumio-admin:' + p, x = 0x811c9dc5;
+    for (var i = 0; i < s.length; i++) { x ^= s.charCodeAt(i); x = Math.imul(x, 16777619) >>> 0; }
+    return x.toString(16);
+  }
+  function platformName() {
+    if (Platform.tizen) return 'Samsung (Tizen)';
+    if (Platform.webos) return 'LG (webOS)';
+    if (/Electron/.test(UA)) return 'PC-App';
+    if (Platform.androidTV) return 'Android TV / Fire TV';
+    if (Platform.ios) return 'iPhone / iPad';
+    if (Platform.android) return 'Android';
+    return 'Browser';
+  }
+  function storageKB() {
+    var n = 0;
+    try { for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (k.indexOf('lumio.') === 0) n += k.length + (localStorage.getItem(k) || '').length; } } catch (e) {}
+    return Math.round(n * 2 / 1024);
+  }
+  function resetAll() {
+    try {
+      var keys = [];
+      for (var i = 0; i < localStorage.length; i++) keys.push(localStorage.key(i));
+      keys.forEach(function (k) { if (k.indexOf('lumio.') === 0 && k !== 'lumio.mac' && k !== 'lumio.devkey') localStorage.removeItem(k); });
+    } catch (e) {}
+    location.reload();
+  }
+  var Admin = {
+    taps: 0, tapTimer: null,
+    tap: function () {
+      var self = this;
+      self.taps++;
+      clearTimeout(self.tapTimer);
+      self.tapTimer = setTimeout(function () { self.taps = 0; }, 3000);
+      if (self.taps >= 7) { self.taps = 0; self.unlock(); }
+    },
+    unlock: function () {
+      var self = this, has = !!Settings.get('adminPin');
+      var f = inputField(has ? 'Admin-PIN' : 'Neue Admin-PIN (4 bis 8 Ziffern)', '', 'password');
+      f.input.setAttribute('inputmode', 'numeric');
+      f.input.setAttribute('data-autofocus', '');
+      var f2 = has ? null : inputField('PIN wiederholen', '', 'password');
+      if (f2) f2.input.setAttribute('inputmode', 'numeric');
+      var err = h('div', { class: 'error' });
+      function go() {
+        var a = f.input.value.trim();
+        if (!/^\d{4,8}$/.test(a)) { err.textContent = 'Bitte 4 bis 8 Ziffern eingeben.'; return; }
+        if (!has) {
+          if (f2.input.value.trim() !== a) { err.textContent = 'Die PINs stimmen nicht überein.'; return; }
+          Settings.set('adminPin', pinHash(a));
+        } else if (pinHash(a) !== Settings.get('adminPin')) {
+          err.textContent = 'Falsche PIN.'; f.input.value = ''; return;
+        }
+        Screens.pop();
+        setTimeout(function () { self.show(); }, 40);
+      }
+      (f2 ? f2 : f).input.addEventListener('keydown', function (e) { if (e.keyCode === 13) go(); });
+      var panel = h('div', { class: 'modal-panel admin-lock' },
+        h('div', { class: 'admin-lock-in' },
+          h('h2', { text: has ? 'Admin-Bereich' : 'Admin-PIN festlegen' }),
+          h('p', { class: 'hint', text: has ? 'Bitte gib deine PIN ein.' : 'Mit dieser PIN öffnest du künftig den Admin-Bereich auf diesem Gerät.' }),
+          f.wrap, f2 ? f2.wrap : null, err,
+          h('div', { class: 'row' },
+            h('button', { class: 'btn f primary', onclick: go }, has ? 'Öffnen' : 'Speichern & öffnen'),
+            h('button', { class: 'btn f ghost', onclick: goBack }, 'Abbrechen'))));
+      Screens.push('admin-lock', h('div', { class: 'modal' }, h('div', { class: 'modal-backdrop', onclick: goBack }), panel), { overlay: true });
+    },
+    show: function () {
+      var self = this;
+      function seg(options, get, set, after) {
+        var row = h('div', { class: 'row' });
+        var btns = options.map(function (o) {
+          var b = h('button', { class: 'btn f', onclick: function () { set(o[0]); paint(); if (after) after(); } }, o[1]);
+          row.appendChild(b);
+          return [o[0], b];
+        });
+        function paint() { var v = get(); btns.forEach(function (x) { x[1].classList.toggle('is-on', x[0] === v); }); }
+        paint();
+        return row;
+      }
+      var seasonInfo = h('p', { class: 'hint' });
+      function paintSeason() { var s = Season.current(); seasonInfo.textContent = 'Gerade aktiv: ' + (s ? SEASONS[s].name + '-Design' : 'normales Design'); }
+      paintSeason();
+      var kv = h('div', { class: 'kv' });
+      function row(k, v) { kv.appendChild(h('span', { text: k })); kv.appendChild(h('b', { text: String(v) })); }
+      row('Version', CONFIG.version);
+      row('Gerät', platformName());
+      row('MAC', Device.mac());
+      row('KEY', Device.key());
+      row('Playlists', Profiles.list().length);
+      row('Online-Dienst', Cloud.registered ? 'verbunden' : 'nicht verbunden');
+      row('Gespeichert', storageKB() + ' KB');
+      var el = h('div', { class: 'settings admin' },
+        h('div', { class: 'admin-head' },
+          h('button', { class: 'btn f ghost', onclick: goBack, 'data-autofocus': true }, icon('back'), 'Zurück'),
+          h('h1', { text: 'Admin-Bereich' })),
+        h('div', { class: 'panel' },
+          h('h3', { text: 'Saison-Design' }),
+          h('p', { class: 'hint', text: 'Automatisch: Weihnachten vom 1. bis 26. Dezember, Silvester vom 27. Dezember bis 1. Januar.' }),
+          seg([['auto', 'Automatisch'], ['christmas', 'Weihnachten'], ['newyear', 'Silvester'], ['off', 'Aus']],
+            function () { return Settings.get('season') || 'auto'; },
+            function (v) { Settings.set('season', v); Theme.apply(); }, paintSeason),
+          seasonInfo,
+          h('h3', { text: 'Schnee & Funkeln' }),
+          seg([[true, 'An'], [false, 'Aus']],
+            function () { return Settings.get('fx') !== false; },
+            function (v) { Settings.set('fx', v); Theme.apply(); })),
+        h('div', { class: 'panel' },
+          h('h3', { text: 'Startbildschirm' }),
+          h('p', { class: 'hint', text: 'Karte „Demo ansehen“ bei den Playlists.' }),
+          seg([[true, 'Anzeigen'], [false, 'Ausblenden']],
+            function () { return !Settings.get('hideDemo'); },
+            function (v) { Settings.set('hideDemo', !v); })),
+        h('div', { class: 'panel' }, h('h3', { text: 'Geräte-Info' }), kv),
+        h('div', { class: 'panel' },
+          h('h3', { text: 'Sicherheit' }),
+          h('div', { class: 'row' },
+            h('button', { class: 'btn f', onclick: function () { Settings.set('adminPin', null); goBack(); setTimeout(function () { self.unlock(); }, 60); } }, 'Admin-PIN ändern'))),
+        h('div', { class: 'panel' },
+          h('h3', { text: 'App zurücksetzen' }),
+          h('p', { class: 'hint', text: 'Löscht Playlists, Favoriten, Verlauf und Einstellungen auf diesem Gerät. MAC und KEY bleiben erhalten.' }),
+          h('div', { class: 'row' },
+            h('button', { class: 'btn f danger', onclick: function () { confirmBox('Wirklich alles zurücksetzen?', 'Das kann nicht rückgängig gemacht werden.', 'Zurücksetzen', resetAll); } }, icon('trash'), 'Alles zurücksetzen'))));
+      Screens.push('admin', el);
+    }
+  };
 
   var App = { profile: null, provider: null };
 
@@ -1018,7 +1226,7 @@
     grid.appendChild(h('div', { class: 'profile' },
       h('button', { class: 'card add f', onclick: showAddProfile, 'data-autofocus': list.length ? null : true },
         icon('plus'), h('span', { class: 'label', text: 'Playlist hinzufügen' }), h('span', { class: 'sub', text: 'Xtream oder M3U' }))));
-    if (!list.some(function (p) { return p.type === 'demo'; })) {
+    if (!Settings.get('hideDemo') && !list.some(function (p) { return p.type === 'demo'; })) {
       grid.appendChild(h('div', { class: 'profile' },
         h('button', {
           class: 'card add f', onclick: function () { activateProfile(Profiles.add({ type: 'demo', name: 'Demo' })); }
@@ -1169,7 +1377,7 @@
     var p = App.profile;
     var chip = h('span', { class: 'chip' }, h('span', { class: 'dot' }), p.type === 'demo' ? 'Demo-Modus' : 'Verbunden');
     var head = h('div', { class: 'home-head' },
-      h('div', null, h('h1', { text: p.name }), h('p', { text: p.type === 'demo' ? 'Probiere die App mit freien Test-Videos aus.' : 'Was möchtest du heute schauen?' })),
+      h('div', null, h('h1', { text: p.name }), h('p', { text: p.type === 'demo' ? 'Probiere die App mit freien Test-Videos aus.' : (Season.current() ? SEASONS[Season.current()].greet + ' – was möchtest du heute schauen?' : 'Was möchtest du heute schauen?') })),
       chip);
     App.provider.account().then(function (a) {
       if (a && a.expires) chip.lastChild.textContent = 'Gültig bis ' + fmtDate(a.expires);
@@ -1353,7 +1561,8 @@
         h('div', { class: 'row' },
           h('button', { class: 'btn f', onclick: function () { confirmBox('Verlauf löschen?', '„Weiterschauen“ und „Zuletzt gesehen“ werden geleert.', 'Löschen', function () { Resume.clear(); Store.del('recent.' + pid()); toast('Verlauf gelöscht'); }); } }, icon('trash'), 'Verlauf löschen'))),
       h('div', { class: 'panel' }, h('h3', { text: 'Über' }),
-        h('p', { class: 'hint', text: CONFIG.appName + ' ' + CONFIG.version + ' · Dieser Player enthält keine Inhalte. Du bist selbst dafür verantwortlich, nur Streams zu nutzen, für die du eine Berechtigung hast. Datenschutz und Impressum: splix66.github.io/lumio-player' })));
+        h('button', { class: 'about-version f', onclick: function () { Admin.tap(); } }, CONFIG.appName + ' ' + CONFIG.version),
+        h('p', { class: 'hint', text: 'Dieser Player enthält keine Inhalte. Du bist selbst dafür verantwortlich, nur Streams zu nutzen, für die du eine Berechtigung hast. Datenschutz und Impressum: splix66.github.io/lumio-player' })));
   }
 
   /* ==========================================================

@@ -107,6 +107,12 @@ body.kbd .poster.f:focus, body.is-tv .poster.f:focus { transform: scale(1.05); }
 .brand-mark svg { width: 100%; height: 100%; overflow: visible; }
 .brand-mark .play { fill: currentColor; }
 .brand-mark .dot { fill: var(--accent); filter: drop-shadow(0 0 .25rem var(--accent)); }
+.brand-mark .star { display: none; }
+:root[data-season] .brand-mark .dot { display: none; }
+:root[data-season] .brand-mark .star { display: inline; fill: var(--season-dot); filter: drop-shadow(0 0 .3rem var(--season-dot)); transform-box: fill-box; transform-origin: center; }
+:root[data-season="newyear"] .brand-mark .star { animation: twinkle 1.6s ease-in-out infinite; }
+@keyframes twinkle { 50% { opacity: .55; transform: scale(.78) rotate(20deg); } }
+.fx { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 45; }
 .profiles h2 { margin: 2.2rem 0 1.4rem; font-size: 1.15rem; color: var(--muted); font-weight: 500; text-align: center; }
 .profile-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.2rem; max-width: 60rem; }
 .profile { display: flex; flex-direction: column; align-items: center; gap: .5rem; }
@@ -167,6 +173,12 @@ body.kbd .poster.f:focus, body.is-tv .poster.f:focus { transform: scale(1.05); }
 .remote-text h3 { font-size: 1.05rem; }
 .remote-text p { color: var(--muted); font-size: .9rem; line-height: 1.45; }
 .settings .remote { margin-top: 0; max-width: 46rem; }
+.about-version { align-self: flex-start; font-weight: 600; color: var(--muted); padding: .2rem .4rem; margin-left: -.4rem; border-radius: .4rem; }
+.admin-head { display: flex; align-items: center; gap: 1.2rem; flex-wrap: wrap; }
+.admin-head h1 { font-size: 1.7rem; }
+.admin-lock { max-width: 26rem; }
+.admin-lock-in { padding: 1.6rem; display: flex; flex-direction: column; gap: .9rem; }
+.admin-lock-in h2 { font-size: 1.3rem; }
 .swatches { display: flex; flex-wrap: wrap; gap: .8rem; }
 .swatch { width: 2.7rem; height: 2.7rem; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .12); }
 .swatch.is-on { box-shadow: 0 0 0 .2rem var(--surface), 0 0 0 .38rem var(--text); }
