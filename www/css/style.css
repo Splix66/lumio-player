@@ -24,8 +24,16 @@
   --radius-sm: 0.55rem;
   --sidebar: 15rem;
   --gap: 1rem;
-  --font: -apple-system, BlinkMacSystemFont, "SamsungOne", "LG Smart UI", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* San Francisco auf Apple-Geräten, sonst "Inter" (sieht fast gleich aus, wird mit der App mitgeliefert) */
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
+
+/* Schrift Inter (aus www/fonts, wird beim Bauen automatisch dorthin kopiert) */
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 400; font-display: swap; src: url("../fonts/inter-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 500; font-display: swap; src: url("../fonts/inter-latin-500-normal.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 600; font-display: swap; src: url("../fonts/inter-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 700; font-display: swap; src: url("../fonts/inter-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 800; font-display: swap; src: url("../fonts/inter-latin-800-normal.woff2") format("woff2"); }
 
 /* Schrift skaliert mit der Bildschirmbreite: groß auf dem TV, kompakt auf dem Handy */
 html { font-size: 15px; }

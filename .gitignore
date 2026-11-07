@@ -1,6 +1,7 @@
 node_modules/
 dist/
 www/lib/hls.min.js
+www/fonts/
 android/app/build/
 ios/App/Pods/
 *.ipk

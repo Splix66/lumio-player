@@ -29,8 +29,8 @@ jobs:
         with:
           node-version: 20
 
-      - name: Bausteine installieren (hls.js)
-        run: npm install --ignore-scripts hls.js@1 && node scripts/copy-libs.js
+      - name: Bausteine installieren (hls.js, Schrift)
+        run: npm install --ignore-scripts hls.js@1 @fontsource/inter@5 && node scripts/copy-libs.js
 
       - name: Bilder erzeugen
         run: |
