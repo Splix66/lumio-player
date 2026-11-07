@@ -81,4 +81,4 @@ icon(80).save(p('platforms', 'webos', 'icon.png'))
 icon(130).save(p('platforms', 'webos', 'largeIcon.png'))
 icon(192).save(p('www', 'img', 'icon.png'))
 
-print('✓ Symbole erzeugt')
+print('Symbole erzeugt')
