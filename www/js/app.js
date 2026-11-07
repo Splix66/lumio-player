@@ -84,7 +84,8 @@
     down: '<path d="M6 9l6 6 6-6"/>',
     restart: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>',
     trash: '<path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/>',
-    profile: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>'
+    profile: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+    close: '<path d="M6 6l12 12M18 6L6 18"/>'
   };
   function icon(name) {
     var span = document.createElement('span');
@@ -717,7 +718,9 @@
       return top ? top.el : document.body;
     },
     candidates: function () {
-      return $all('.f', this.root()).filter(function (el) {
+      var all = $all('.f', this.root());
+      if (!Dialog.open && Player.mini && Player.el) all = all.concat($all('.mini-ui .f', Player.el));
+      return all.filter(function (el) {
         if (el.disabled) return false;
         if (el.closest && el.closest('.is-hidden, .is-off')) return false;
         var r = el.getBoundingClientRect();
@@ -789,11 +792,12 @@
     push: function (name, el, opts) {
       opts = opts || {};
       var cur = this.top();
-      if (cur) { cur.lastFocus = document.activeElement; cur.el.classList.add('is-off'); }
+      if (cur) { cur.lastFocus = document.activeElement; if (!opts.overlay) cur.el.classList.add('is-off'); }
       el.classList.add('screen');
       $('#screens').appendChild(el);
-      var s = { name: name, el: el, onLeave: opts.onLeave, onBack: opts.onBack, onShow: opts.onShow };
+      var s = { name: name, el: el, onLeave: opts.onLeave, onBack: opts.onBack, onShow: opts.onShow, overlay: !!opts.overlay };
       this.stack.push(s);
+      this.mark();
       setTimeout(function () { Nav.focusFirst(el); }, 20);
       return s;
     },
@@ -803,14 +807,21 @@
       if (s.onLeave) s.onLeave();
       if (s.el.parentNode) s.el.parentNode.removeChild(s.el);
       var prev = this.top();
+      this.mark();
       if (prev) {
         prev.el.classList.remove('is-off');
-        if (prev.onShow) prev.onShow();
+        if (prev.onShow && !s.overlay) prev.onShow();
         var f = prev.lastFocus;
         setTimeout(function () { if (f && document.body.contains(f)) Nav.focus(f); else Nav.focusFirst(prev.el); }, 20);
       }
     },
+    /* Merkt sich, ob gerade ein Pop-up offen ist (damit der Mini-Player Platz bekommt) */
+    mark: function () {
+      var t = this.top();
+      document.body.classList.toggle('modal-open', !!(t && t.overlay));
+    },
     reset: function (name, el, opts) {
+      if (Player.mini) Player.close();
       while (this.stack.length) {
         var s = this.stack.pop();
         if (s.onLeave) s.onLeave();
@@ -1038,11 +1049,17 @@
       var nav = h('nav', { class: 'sidebar' }, h('div', { class: 'brand' }, brandMark(), h('span', { text: CONFIG.appName })));
       items.forEach(function (it) {
         if (it[0] === 'settings') nav.appendChild(h('div', { class: 'spacer' }));
-        var b = h('button', { class: 'nav-btn f', onclick: function () { self.show(it[0], true); } }, icon(it[0]), h('span', { text: it[1] }));
+        var b = h('button', { class: 'nav-btn f', title: it[1], onclick: function () { self.show(it[0], true); } }, icon(it[0]), h('span', { text: it[1] }));
         self.buttons[it[0]] = b;
         nav.appendChild(b);
       });
       self.el = h('div', { class: 'shell' }, nav, self.content);
+      // Seitenleiste wird schmal, sobald man in Live TV, Filme, Serien oder Suche nach rechts in den Inhalt geht
+      self.el.addEventListener('focusin', function (e) {
+        var inNav = e.target && e.target.closest && e.target.closest('.sidebar');
+        if (inNav && INPUT.mode !== 'key') return;
+        self.el.classList.toggle('nav-collapsed', !inNav && !!COMPACT_NAV[self.current]);
+      });
       Screens.reset('shell', self.el, {
         onBack: function () {
           if (self.current !== 'home') { self.show('home', true); return true; }
@@ -1055,6 +1072,7 @@
     show: function (name, focusContent, keepFocus) {
       var self = this;
       self.current = name;
+      if (!COMPACT_NAV[name]) self.el.classList.remove('nav-collapsed');
       Object.keys(self.buttons).forEach(function (k) { self.buttons[k].classList.toggle('is-on', k === name); });
       clear(self.view);
       var view;
@@ -1069,6 +1087,9 @@
       }, 30);
     }
   };
+
+  var COMPACT_NAV = { live: true, movie: true, series: true, search: true };
+  var INPUT = { mode: 'key' };
 
   /* ---------- Start ---------- */
   function HomeView() {
@@ -1126,7 +1147,7 @@
     var items = h('div', { class: 'items' }, loader());
     var el = h('div', { class: 'section' },
       h('div', { class: 'section-head' }, h('h1', { text: titles[kind] }), count),
-      h('div', { class: 'section-body' }, cats, items));
+      h('div', { class: 'section-body' }, cats, items, kind === 'live' ? h('div', { class: 'mini-slot' }, h('div', { class: 'mini-slot-box' }), h('div', { class: 'mini-slot-info' })) : null));
 
     var activeBtn = null;
     function selectCat(cat, btn, focusList) {
@@ -1276,9 +1297,10 @@
     if (item.logo) bg.style.backgroundImage = 'url("' + String(item.logo).replace(/"/g, '%22') + '")';
     var info = h('div', { class: 'detail-info' }, h('h1', { text: item.name }));
     var main = h('div', { class: 'detail-main' }, h('div', { class: 'poster' }, posterArt(item)), info);
-    var back = h('div', { class: 'detail-top' }, h('button', { class: 'btn f ghost', onclick: goBack }, icon('back'), 'Zurück'));
-    var el = h('div', { class: 'detail' }, bg, back, main);
-    return { el: el, info: info, bg: bg };
+    var top = h('div', { class: 'detail-top' }, h('button', { class: 'btn f ghost', onclick: goBack }, icon('close'), 'Schließen'));
+    var panel = h('div', { class: 'detail modal-panel' }, bg, top, main);
+    var el = h('div', { class: 'modal' }, h('div', { class: 'modal-backdrop', onclick: goBack }), panel);
+    return { el: el, panel: panel, info: info, bg: bg };
   }
   function metaLine(d) {
     var m = h('div', { class: 'meta' });
@@ -1321,7 +1343,7 @@
       if (d.director || d.cast) f.info.appendChild(h('p', { class: 'hint', text: [d.director ? 'Regie: ' + d.director : '', d.cast ? 'Mit: ' + d.cast : ''].filter(Boolean).join(' · ') }));
       if (d.backdrop) f.bg.style.backgroundImage = 'url("' + d.backdrop + '")';
     }).catch(function () {});
-    Screens.push('movie', f.el, { onShow: function () { var had = document.activeElement; paintActions(); if (!document.body.contains(had)) Nav.focusFirst(actions); } });
+    Screens.push('movie', f.el, { overlay: true, onShow: function () { var had = document.activeElement; paintActions(); if (!document.body.contains(had)) Nav.focusFirst(actions); } });
   }
 
   function showSeries(item) {
@@ -1331,7 +1353,7 @@
     var actions = h('div', { class: 'row' }, favButton(item));
     var metaBox = h('div'), plotBox = h('p', { class: 'plot', text: item.plot || '' });
     f.info.appendChild(metaBox); f.info.appendChild(actions); f.info.appendChild(plotBox);
-    f.el.appendChild(seasonsBar); f.el.appendChild(epBox);
+    f.panel.appendChild(seasonsBar); f.panel.appendChild(epBox);
     var seasons = [], curSeason = null, continueBtn = null;
 
     function renderEpisodes(season) {
@@ -1378,7 +1400,7 @@
     }, function (e) {
       clear(epBox).appendChild(stateBox('Laden fehlgeschlagen', e.message));
     });
-    Screens.push('series', f.el, { onShow: function () { if (curSeason) { renderEpisodes(curSeason); paintContinue(); } } });
+    Screens.push('series', f.el, { overlay: true, onShow: function () { if (curSeason) { renderEpisodes(curSeason); paintContinue(); } } });
   }
 
   /* ==========================================================
@@ -1401,7 +1423,17 @@
   function isHlsUrl(u) { return /\.m3u8(\?|$)/i.test(u) || /\/hls\//i.test(u) || /\.ism\/\.m3u8/i.test(u); }
 
   function playItem(item, ctx) {
-    Player.open(item, ctx || { list: [item], index: 0 });
+    ctx = ctx || { list: [item], index: 0 };
+    if (Player.mini) {
+      // Mini-Player läuft: anderer Sender = Vorschau wechseln, derselbe Sender = Vollbild
+      if (item.kind === 'live' && Player.item && Player.item.kind === 'live') {
+        if (Player.item.id === item.id) Player.maximize();
+        else Player.switchTo(item, ctx);
+        return;
+      }
+      Player.maximize();
+    }
+    Player.open(item, ctx);
   }
 
   var Player = {
@@ -1426,7 +1458,11 @@
       self.osd = h('div', { class: 'osd' },
         h('div', { class: 'osd-top' }, h('button', { class: 'btn f', onclick: goBack }, icon('back'), h('span', { text: 'Zurück' })), self.liveTag, self.title),
         h('div', { class: 'osd-bottom' }, self.info, self.bar, self.times, self.ctrls));
-      self.el = h('div', { class: 'player' }, video, self.spinner, self.osd, self.zap, self.err);
+      self.miniTitle = h('span', { class: 'mini-title' });
+      self.miniUi = h('div', { class: 'mini-ui' },
+        h('button', { class: 'mini-open f', title: 'Vollbild', onclick: function () { self.maximize(); } }, self.miniTitle),
+        h('button', { class: 'mini-close f', title: 'Schließen', onclick: function () { self.close(); } }, icon('close')));
+      self.el = h('div', { class: 'player' }, video, self.spinner, self.osd, self.zap, self.err, self.miniUi);
 
       self.bar.addEventListener('click', function (e) {
         if (!self.isVod() || !video.duration) return;
@@ -1446,12 +1482,108 @@
       video.addEventListener('ended', function () { self.onEnded(); });
       video.addEventListener('error', function () { self.onError('Das Video konnte nicht abgespielt werden (Format oder Verbindung).'); });
 
-      Screens.push('player', self.el, { onLeave: function () { self.teardown(); }, onBack: function () { return false; } });
+      Screens.push('player', self.el, self.screenOpts());
       self.enterFullscreen();
       self.load(item);
     },
 
     isVod: function () { return this.item && this.item.kind !== 'live'; },
+
+    screenOpts: function () {
+      var self = this;
+      return {
+        onLeave: function () { self.teardown(); },
+        // Zurück bei Live TV: Sender läuft klein weiter
+        onBack: function () {
+          if (self.item && self.item.kind === 'live' && self.err.style.display === 'none') { self.minimize(); return true; }
+          return false;
+        }
+      };
+    },
+
+    minimize: function () {
+      var self = this;
+      if (!self.el || self.mini) return;
+      var idx = -1;
+      Screens.stack.forEach(function (s, i) { if (s.el === self.el) idx = i; });
+      if (idx < 0) return;
+      Screens.stack.splice(idx, 1);
+      Screens.mark();
+      self.mini = true;
+      clearTimeout(self.hideTimer);
+      self.exitFullscreen();
+      self.el.classList.add('is-mini');
+      document.body.classList.add('has-mini');
+      var prev = Screens.top();
+      if (prev) {
+        prev.el.classList.remove('is-off');
+        if (prev.onShow) prev.onShow();
+        var f = prev.lastFocus;
+        setTimeout(function () { if (f && document.body.contains(f)) Nav.focus(f); else Nav.focusFirst(prev.el); self.place(); }, 20);
+      }
+      self.lastPlace = '';
+      self.place();
+      clearInterval(self.placeTimer);
+      self.placeTimer = setInterval(function () { self.place(); }, 300);
+    },
+
+    maximize: function () {
+      var self = this;
+      if (!self.el || !self.mini) return;
+      self.mini = false;
+      clearInterval(self.placeTimer);
+      self.el.classList.remove('is-mini', 'is-docked');
+      document.body.classList.remove('has-mini');
+      var st = self.el.style;
+      st.left = st.top = st.width = st.height = '';
+      self.lastPlace = '';
+      Screens.push('player', self.el, self.screenOpts());
+      self.enterFullscreen();
+      self.showOsd();
+    },
+
+    close: function () {
+      if (!this.el) return;
+      if (this.mini) {
+        var el = this.el;
+        this.teardown();
+        if (el.parentNode) el.parentNode.removeChild(el);
+        return;
+      }
+      var top = Screens.top();
+      if (top && top.el === this.el) Screens.pop();
+    },
+
+    /* Mini-Player im Live-Bereich rechts andocken, sonst unten rechts in der Ecke */
+    place: function () {
+      if (!this.mini || !this.el) return;
+      var top = Screens.top(), slot = null;
+      if (top) { var s = top.el.querySelector('.mini-slot-box'); if (s && s.offsetWidth > 0) slot = s; }
+      var key = 'corner';
+      if (slot) { var r = slot.getBoundingClientRect(); key = Math.round(r.left) + ',' + Math.round(r.top) + ',' + Math.round(r.width) + ',' + Math.round(r.height); }
+      if (key !== this.lastPlace) {
+        this.lastPlace = key;
+        var st = this.el.style;
+        if (slot) {
+          var p = key.split(',');
+          st.left = p[0] + 'px'; st.top = p[1] + 'px'; st.width = p[2] + 'px'; st.height = p[3] + 'px';
+          this.el.classList.add('is-docked');
+        } else {
+          st.left = st.top = st.width = st.height = '';
+          this.el.classList.remove('is-docked');
+        }
+      }
+      var info = top && top.el.querySelector('.mini-slot-info');
+      if (!info) return;
+      var k = (this.item ? this.item.name : '') + '|' + (this.epgNow || '') + '|' + (this.epgNext || '');
+      if (info.getAttribute('data-k') === k) return;
+      info.setAttribute('data-k', k);
+      clear(info);
+      info.appendChild(h('div', { class: 'title', text: this.item ? this.item.name : '' }));
+      if (this.epgNow) info.appendChild(h('div', { class: 'now', text: this.epgNow }));
+      if (this.epgNext) info.appendChild(h('div', { class: 'next', text: this.epgNext }));
+      info.appendChild(h('p', { class: 'hint', text: 'Denselben Sender noch einmal wählen öffnet das Vollbild.' }));
+    },
 
     switchTo: function (item, ctx) {
       this.saveResume();
@@ -1465,6 +1597,9 @@
       self.triedAlt = false; self.retried = false;
       self.err.style.display = 'none';
       self.spinner.style.display = '';
+      self.epgNow = ''; self.epgNext = '';
+      if (self.miniTitle) self.miniTitle.textContent = item.name;
+      self.lastPlace = '';
       self.title.textContent = item.kind === 'episode' ? (item.seriesName ? item.seriesName + ' · ' : '') + 'S' + item.season + ' E' + item.num + ' – ' + item.name : item.name;
       self.liveTag.style.display = item.kind === 'live' ? '' : 'none';
       self.bar.classList.toggle('seek', self.isVod());
@@ -1534,7 +1669,7 @@
         h('button', { class: 'btn f primary', onclick: function () { self.load(self.item); } }, 'Erneut versuchen'),
         h('button', { class: 'btn f', onclick: goBack }, 'Schließen')));
       self.err.style.display = '';
-      setTimeout(function () { Nav.focus($('.btn', self.err)); }, 30);
+      setTimeout(function () { if (!self.mini) Nav.focus($('.btn', self.err)); }, 30);
     },
 
     onEnded: function () {
@@ -1559,10 +1694,13 @@
           clear(self.info);
           var now = Date.now() / 1000;
           var cur = list.filter(function (e) { return e.start <= now && e.end > now; })[0] || list[0];
-          if (!cur) { self.info.appendChild(h('div', { class: 'now', text: item.name })); self.bar.style.display = 'none'; return; }
+          if (!cur) { self.epgNow = ''; self.epgNext = ''; self.info.appendChild(h('div', { class: 'now', text: item.name })); self.bar.style.display = 'none'; return; }
           var next = list.filter(function (e) { return e.start >= cur.end - 1; })[0];
           self.info.appendChild(h('div', { class: 'now', text: fmtClock(cur.start) + ' – ' + fmtClock(cur.end) + '  ' + cur.title }));
           if (next) self.info.appendChild(h('div', { class: 'next', text: 'Danach: ' + fmtClock(next.start) + '  ' + next.title }));
+          self.epgNow = fmtClock(cur.start) + ' – ' + fmtClock(cur.end) + '  ' + cur.title;
+          self.epgNext = next ? 'Danach: ' + fmtClock(next.start) + '  ' + next.title : '';
+          self.lastPlace = '';
           self.bar.style.display = '';
           var pct = Math.max(0, Math.min(100, (now - cur.start) / (cur.end - cur.start) * 100));
           self.bar.firstChild.style.width = pct + '%';
@@ -1587,7 +1725,7 @@
       if (!self.ctrls) return;
       var had = self.ctrls.contains(document.activeElement) ? document.activeElement.getAttribute('data-c') : null;
       clear(self.ctrls);
-      var playBtn = h('button', { class: 'btn f big primary', 'data-c': 'play', onclick: function () { self.togglePlay(); } }, icon(v.paused ? 'play' : 'pause'), h('span', { text: v.paused ? 'Abspielen' : 'Pause' }));
+      var playBtn = h('button', { class: 'btn f big primary', 'data-c': 'play', 'data-autofocus': true, onclick: function () { self.togglePlay(); } }, icon(v.paused ? 'play' : 'pause'), h('span', { text: v.paused ? 'Abspielen' : 'Pause' }));
       if (self.isVod()) {
         self.ctrls.appendChild(h('button', { class: 'btn f', 'data-c': 'rew', onclick: function () { self.seek(-15); } }, icon('rew'), h('span', { text: '15 s' })));
         self.ctrls.appendChild(playBtn);
@@ -1629,6 +1767,7 @@
 
     showOsd: function (stay) {
       var self = this;
+      if (self.mini) return;
       var wasHidden = self.osd.classList.contains('is-hidden');
       self.osd.classList.remove('is-hidden');
       if (wasHidden || !self.osd.contains(document.activeElement)) {
@@ -1652,7 +1791,7 @@
       var hidden = self.osd.classList.contains('is-hidden');
       var errOpen = self.err.style.display !== 'none';
       if (k === KEY.PLAYPAUSE || k === KEY.PLAY || k === KEY.PAUSE) { self.togglePlay(); return true; }
-      if (k === KEY.STOP) { goBack(); return true; }
+      if (k === KEY.STOP) { self.close(); return true; }
       if (k === KEY.FF) { self.seek(30); return true; }
       if (k === KEY.RW) { self.seek(-15); return true; }
       if (k === KEY.CH_UP) { self.zapBy(-1); return true; }
@@ -1699,6 +1838,9 @@
       this.destroyHls();
       try { this.video.pause(); this.video.removeAttribute('src'); this.video.load(); } catch (e) {}
       this.exitFullscreen();
+      clearInterval(this.placeTimer);
+      this.mini = false;
+      document.body.classList.remove('has-mini');
       this.el = null; this.video = null; this.item = null; this.ctx = null;
     }
   };
@@ -1726,6 +1868,7 @@
 
   function onKeyDown(e) {
     var k = KEY_ALIASES[e.keyCode] || e.keyCode;
+    INPUT.mode = 'key';
     var dirs = { 37: 'left', 38: 'up', 39: 'right', 40: 'down' };
     if (dirs[k] || k === 13) document.body.classList.add('kbd');
 
@@ -1769,7 +1912,7 @@
   function boot() {
     if (Platform.tv) document.body.classList.add('is-tv');
     document.addEventListener('keydown', onKeyDown, true);
-    document.addEventListener('pointerdown', function () { if (!Platform.tv) document.body.classList.remove('kbd'); });
+    document.addEventListener('pointerdown', function () { INPUT.mode = 'pointer'; if (!Platform.tv) document.body.classList.remove('kbd'); }, true);
     // Video weiterlaufen lassen, aber beim Verlassen der App den Fortschritt sichern
     document.addEventListener('visibilitychange', function () { if (document.hidden && Player.el) Player.saveResume(); });
     registerTvKeys();
