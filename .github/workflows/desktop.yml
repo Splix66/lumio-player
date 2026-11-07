@@ -1,0 +1,82 @@
+# Baut die PC-Version für Windows (.exe) und Mac (.dmg),
+# sobald Dateien hochgeladen werden – oder per Klick unter "Actions → Run workflow".
+name: PC-Version bauen
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Projekt holen
+        uses: actions/checkout@v4
+
+      - name: Node.js einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Bausteine installieren (hls.js)
+        run: npm install --ignore-scripts hls.js@1 && node scripts/copy-libs.js
+
+      - name: Bilder erzeugen
+        run: |
+          python -m pip install pillow || python3 -m pip install --break-system-packages pillow
+          python scripts/make-icons.py || python3 scripts/make-icons.py
+
+      - name: App in die PC-Hülle kopieren
+        run: |
+          rm -rf desktop/app
+          cp -R www desktop/app
+          cp assets/icon-only.png desktop/icon.png
+
+      - name: PC-App bauen
+        working-directory: desktop
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: |
+          npm install
+          npx electron-builder --publish never
+
+      - name: Ergebnis sichern
+        uses: actions/upload-artifact@v4
+        with:
+          name: pc-${{ matrix.os }}
+          path: |
+            desktop/dist/lumio-player-setup.exe
+            desktop/dist/lumio-player-mac.dmg
+          if-no-files-found: ignore
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ergebnisse holen
+        uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
+
+      - name: Unter "Releases" bereitstellen
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: pc
+          name: Lumio Player – PC-Version
+          body: |
+            Windows: lumio-player-setup.exe
+            Mac: lumio-player-mac.dmg
+          files: out/*
+          make_latest: false
