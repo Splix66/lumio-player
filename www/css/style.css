@@ -17,6 +17,9 @@
   --accent-ink: #1a0d06;    /* Textfarbe auf der Hauptfarbe */
   --live: #ff4d5e;
   --ok: #3ddc97;
+  --text-2: #cdd3de;
+  --danger: #ff8a95;
+  --accent-soft: rgba(255, 120, 73, .18);
   --radius: 0.9rem;
   --radius-sm: 0.55rem;
   --sidebar: 15rem;
@@ -31,6 +34,23 @@ html { font-size: 15px; }
 @media (min-width: 1900px) { html { font-size: 22px; } }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+/* Heller Modus */
+:root[data-theme="light"] {
+  --bg: #f4f5f8;
+  --bg-2: #eceef3;
+  --surface: #ffffff;
+  --surface-2: #eef0f5;
+  --surface-3: #e0e4ec;
+  --line: rgba(16, 22, 38, 0.10);
+  --text: #11141b;
+  --text-2: #3a4252;
+  --muted: #5a6376;
+  --dim: #8891a3;
+  --danger: #d4283f;
+}
+:root[data-theme="dark"] { color-scheme: dark; }
+:root[data-theme="light"] { color-scheme: light; }
+
 html, body {
   margin: 0; height: 100%; background: var(--bg); color: var(--text);
   font-family: var(--font); line-height: 1.35; overflow: hidden;
@@ -65,7 +85,7 @@ body.kbd .poster.f:focus, body.is-tv .poster.f:focus { transform: scale(1.05); }
 .btn.primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: var(--accent-ink); }
 .btn.ghost { background: transparent; box-shadow: inset 0 0 0 1px var(--line); }
 .btn.small { padding: .45rem .9rem; font-size: .85rem; }
-.btn.danger { color: #ff8a95; }
+.btn.danger { color: var(--danger); }
 .btn[disabled] { opacity: .5; pointer-events: none; }
 .btn.is-on { background: var(--text); color: var(--bg); }
 
@@ -81,7 +101,7 @@ body.kbd .poster.f:focus, body.is-tv .poster.f:focus { transform: scale(1.05); }
 
 /* ---------- Profile / Start ---------- */
 .profiles { align-items: center; justify-content: center; overflow-y: auto; padding: 2rem 1.2rem;
-  background: radial-gradient(1200px 600px at 50% -10%, rgba(255,120,73,.18), transparent 60%), var(--bg); }
+  background: radial-gradient(1200px 600px at 50% -10%, var(--accent-soft), transparent 60%), var(--bg); }
 .brand { display: flex; align-items: center; gap: .8rem; font-size: 1.6rem; font-weight: 800; letter-spacing: -.02em; }
 .brand-mark { width: 2.6rem; height: 2.6rem; border-radius: .8rem; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; color: var(--accent-ink); }
 .brand-mark svg { width: 1.2rem; height: 1.2rem; fill: currentColor; stroke: none; margin-left: .15rem; }
@@ -114,7 +134,7 @@ body.kbd .poster.f:focus, body.is-tv .poster.f:focus { transform: scale(1.05); }
 }
 .field input:focus { border-color: var(--accent); }
 .hint { font-size: .82rem; color: var(--dim); }
-.error { color: #ff8a95; font-size: .9rem; min-height: 1.2em; }
+.error { color: var(--danger); font-size: .9rem; min-height: 1.2em; }
 .row { display: flex; gap: .7rem; flex-wrap: wrap; }
 
 /* ---------- Grundgerüst mit Seitenleiste ---------- */
@@ -145,6 +165,9 @@ body.kbd .poster.f:focus, body.is-tv .poster.f:focus { transform: scale(1.05); }
 .remote-text h3 { font-size: 1.05rem; }
 .remote-text p { color: var(--muted); font-size: .9rem; line-height: 1.45; }
 .settings .remote { margin-top: 0; max-width: 46rem; }
+.swatches { display: flex; flex-wrap: wrap; gap: .8rem; }
+.swatch { width: 2.7rem; height: 2.7rem; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .12); }
+.swatch.is-on { box-shadow: 0 0 0 .2rem var(--surface), 0 0 0 .38rem var(--text); }
 
 /* ---------- Startseite ---------- */
 .home { overflow-y: auto; padding: 1rem 2.2rem 3rem; display: flex; flex-direction: column; gap: 2rem; }
@@ -211,7 +234,7 @@ body.kbd .tile.f:focus, body.is-tv .tile.f:focus { transform: scale(1.03); }
 .poster .art img, .poster .art .ph { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .poster .art .ph { display: flex; align-items: flex-end; padding: .8rem; font-weight: 800; font-size: 1.05rem; line-height: 1.15; color: rgba(255,255,255,.92); }
 .poster .title { font-size: .9rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 .15rem; }
-.poster .badge { position: absolute; top: .5rem; left: .5rem; background: rgba(0,0,0,.65); padding: .15rem .45rem; border-radius: .35rem; font-size: .75rem; font-weight: 700; }
+.poster .badge { position: absolute; top: .5rem; left: .5rem; color: #fff; background: rgba(0,0,0,.65); padding: .15rem .45rem; border-radius: .35rem; font-size: .75rem; font-weight: 700; }
 .poster .prog { position: absolute; left: 0; right: 0; bottom: 0; height: .3rem; background: rgba(255,255,255,.2); }
 .poster .prog i { display: block; height: 100%; background: var(--accent); }
 
@@ -226,7 +249,7 @@ body.kbd .tile.f:focus, body.is-tv .tile.f:focus { transform: scale(1.03); }
 .detail-info h1 { font-size: 2.2rem; letter-spacing: -.02em; line-height: 1.1; }
 .meta { display: flex; flex-wrap: wrap; gap: .5rem 1rem; color: var(--muted); font-size: .95rem; }
 .meta .rate { color: var(--accent-2); font-weight: 700; }
-.plot { color: #cdd3de; max-width: 48rem; line-height: 1.55; }
+.plot { color: var(--text-2); max-width: 48rem; line-height: 1.55; }
 .detail-info .row { margin-top: .4rem; }
 .seasons { position: relative; padding: 0 2.6rem; display: flex; gap: .5rem; overflow-x: auto; scrollbar-width: none; }
 .seasons::-webkit-scrollbar { display: none; }
@@ -251,7 +274,12 @@ body.kbd .tile.f:focus, body.is-tv .tile.f:focus { transform: scale(1.03); }
 .kv b { color: var(--text); font-weight: 600; word-break: break-all; }
 
 /* ---------- Player ---------- */
-.player { background: #000; }
+/* Der Player bleibt immer dunkel, auch im hellen Modus */
+.player {
+  background: #000; color: var(--text);
+  --bg: #0a0c11; --bg-2: #10131a; --surface: #171b24; --surface-2: #1f2430; --surface-3: #2a3040;
+  --line: rgba(255, 255, 255, 0.08); --text: #f3f5f9; --text-2: #cdd3de; --muted: #a3acbd; --dim: #6b7487;
+}
 .player video { position: absolute; inset: 0; width: 100%; height: 100%; background: #000; object-fit: contain; }
 .osd { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; transition: opacity .25s ease, visibility .25s; }
 .osd.is-hidden { opacity: 0; visibility: hidden; }

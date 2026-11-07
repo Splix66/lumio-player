@@ -171,6 +171,43 @@
     return h('div', { class: 'mac-tag' }, h('span', { text: 'MAC' }), h('b', { text: Device.mac() }), h('span', { text: 'KEY' }), h('b', { text: Device.key() }));
   }
 
+  /* ---------------- Darstellung: Hell/Dunkel und Akzentfarbe ---------------- */
+  var ACCENTS = [
+    { id: 'orange', name: 'Sonnenorange', a: '#ff7849', b: '#ffb347', ink: '#1a0d06' },
+    { id: 'red', name: 'Rot', a: '#ff4d5e', b: '#ff8a6b', ink: '#22040a' },
+    { id: 'pink', name: 'Pink', a: '#ff5fa2', b: '#ff9ad1', ink: '#26030f' },
+    { id: 'violet', name: 'Violett', a: '#8b7bff', b: '#c38bff', ink: '#0d0824' },
+    { id: 'blue', name: 'Blau', a: '#3d8bff', b: '#5fd0ff', ink: '#03132a' },
+    { id: 'teal', name: 'Türkis', a: '#19c8b9', b: '#6ff0c4', ink: '#022320' },
+    { id: 'green', name: 'Grün', a: '#3ddc84', b: '#b6f05a', ink: '#04220f' },
+    { id: 'gold', name: 'Gold', a: '#ffc53d', b: '#ffe27a', ink: '#261c02' }
+  ];
+  function rgba(hex, alpha) {
+    var n = parseInt(hex.slice(1), 16);
+    return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + alpha + ')';
+  }
+  var Theme = {
+    media: window.matchMedia ? window.matchMedia('(prefers-color-scheme: light)') : null,
+    accent: function () { var id = Settings.get('accent'); return ACCENTS.filter(function (x) { return x.id === id; })[0] || ACCENTS[0]; },
+    apply: function () {
+      var mode = Settings.get('theme') || 'auto';
+      var light = mode === 'light' || (mode === 'auto' && !Platform.tv && !!(this.media && this.media.matches));
+      var root = document.documentElement;
+      root.setAttribute('data-theme', light ? 'light' : 'dark');
+      var acc = this.accent();
+      root.style.setProperty('--accent', acc.a);
+      root.style.setProperty('--accent-2', acc.b);
+      root.style.setProperty('--accent-ink', acc.ink);
+      root.style.setProperty('--accent-soft', rgba(acc.a, light ? 0.14 : 0.18));
+      var meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', light ? '#f4f5f8' : '#0a0c11');
+    },
+    watch: function () {
+      var self = this;
+      if (self.media && self.media.addListener) self.media.addListener(function () { self.apply(); });
+    }
+  };
+
   /* ---------------- Netzwerk ---------------- */
   function fetchWithTimeout(url, ms) {
     var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
@@ -608,6 +645,40 @@
     });
     return box;
   }
+  function appearancePanel() {
+    var modes = [['auto', 'Automatisch'], ['dark', 'Dunkel'], ['light', 'Hell']];
+    var row = h('div', { class: 'row' });
+    var modeBtns = modes.map(function (m) {
+      var b = h('button', { class: 'btn f', onclick: function () { Settings.set('theme', m[0]); Theme.apply(); paint(); } }, m[1]);
+      row.appendChild(b);
+      return [m[0], b];
+    });
+    var sw = h('div', { class: 'swatches' });
+    var swBtns = ACCENTS.map(function (a) {
+      var b = h('button', {
+        class: 'swatch f', title: a.name, 'aria-label': a.name,
+        style: 'background:linear-gradient(135deg,' + a.a + ',' + a.b + ')',
+        onclick: function () { Settings.set('accent', a.id); Theme.apply(); paint(); }
+      });
+      sw.appendChild(b);
+      return [a.id, b];
+    });
+    var label = h('p', { class: 'hint' });
+    function paint() {
+      var t = Settings.get('theme') || 'auto', c = Theme.accent();
+      modeBtns.forEach(function (x) { x[1].classList.toggle('is-on', x[0] === t); });
+      swBtns.forEach(function (x) { x[1].classList.toggle('is-on', x[0] === c.id); });
+      label.textContent = 'Gewählt: ' + c.name;
+    }
+    paint();
+    return h('div', { class: 'panel' },
+      h('h3', { text: 'Darstellung' }),
+      h('p', { class: 'hint', text: 'Automatisch passt sich dem Gerät an (Fernseher bleiben dunkel).' }),
+      row,
+      h('h3', { text: 'Farbe' }),
+      sw, label);
+  }
+
   function remotePanel() {
     return h('div', { class: 'remote' },
       qrBox(Device.portalLink()),
@@ -1273,6 +1344,7 @@
         h('div', { class: 'row' },
           h('button', { class: 'btn f primary', onclick: showProfiles, 'data-autofocus': true }, icon('profile'), 'Profil wechseln'),
           h('button', { class: 'btn f', onclick: function () { App.provider.reset(); searchCache = {}; toast('Daten werden neu geladen'); } }, icon('restart'), 'Daten neu laden'))),
+      appearancePanel(),
       remotePanel(),
       fmtRow,
       h('div', { class: 'panel' }, h('h3', { text: 'Verlauf' }),
@@ -1910,6 +1982,8 @@
      Start
      ========================================================== */
   function boot() {
+    Theme.apply();
+    Theme.watch();
     if (Platform.tv) document.body.classList.add('is-tv');
     document.addEventListener('keydown', onKeyDown, true);
     document.addEventListener('pointerdown', function () { INPUT.mode = 'pointer'; if (!Platform.tv) document.body.classList.remove('kbd'); }, true);
