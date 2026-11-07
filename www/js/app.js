@@ -1258,7 +1258,7 @@
         h('div', { class: 'row' },
           h('button', { class: 'btn f', onclick: function () { confirmBox('Verlauf löschen?', '„Weiterschauen“ und „Zuletzt gesehen“ werden geleert.', 'Löschen', function () { Resume.clear(); Store.del('recent.' + pid()); toast('Verlauf gelöscht'); }); } }, icon('trash'), 'Verlauf löschen'))),
       h('div', { class: 'panel' }, h('h3', { text: 'Über' }),
-        h('p', { class: 'hint', text: CONFIG.appName + ' ' + CONFIG.version + ' · Dieser Player enthält keine Inhalte. Du bist selbst dafür verantwortlich, nur Streams zu nutzen, für die du eine Berechtigung hast.' })));
+        h('p', { class: 'hint', text: CONFIG.appName + ' ' + CONFIG.version + ' · Dieser Player enthält keine Inhalte. Du bist selbst dafür verantwortlich, nur Streams zu nutzen, für die du eine Berechtigung hast. Datenschutz und Impressum: splix66.github.io/lumio-player' })));
   }
 
   /* ==========================================================
