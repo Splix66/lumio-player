@@ -897,6 +897,12 @@ body.has-mini .screen.modal { padding-right: calc(min(26rem, 46vw) + 3rem); }
 .toast { background: var(--surface-3); color: var(--text); padding: .75rem 1.3rem; border-radius: 999px; box-shadow: 0 .6rem 2rem rgba(0, 0, 0, .4), 0 0 0 1px var(--line-2); animation: toastIn .2s ease; max-width: 90vw; margin-top: .5rem; font-weight: 500; }
 @keyframes toastIn { from { opacity: 0; transform: translateY(10px); } }
 
+/* Sparmodus für schwache Geräte: keine Unschärfe, keine Einblend-Animationen (spart Grafikleistung und Speicher) */
+body.lite .fh-bg.is-blur, body.lite .d-bg { filter: none; transform: none; }
+body.lite .fh-bg { transition: opacity .2s ease; transform: none; }
+body.lite .view-in, body.lite .fh-in, body.lite .modal-panel, body.lite .chan.is-playing::after { animation: none; }
+body.lite .fh-title { text-shadow: none; }
+
 @media (prefers-reduced-motion: reduce) {
   .modal-panel, .sk, .view-in, .chan.is-playing::after { animation: none; }
   .f { transition: none; }

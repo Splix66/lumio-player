@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Lumio Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.5.3',
+    version: '1.5.4',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     hlsCdn: 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js',
     requestTimeout: 30000,
@@ -35,6 +35,8 @@
   Platform.androidTV = Platform.android && (/AFT|Android TV|BRAVIA|SHIELD|\bTV\b/i.test(UA) || navigator.maxTouchPoints === 0);
   Platform.tv = Platform.tizen || Platform.webos || Platform.androidTV;
   Platform.safari = Platform.ios || (/Safari/.test(UA) && !/Chrome|Chromium|Android/.test(UA));
+  // Wenig Arbeitsspeicher (≤ 2 GB) oder schwacher Prozessor (≤ 4 Kerne bei Android-Boxen) → Sparmodus für die Optik
+  Platform.lite = (navigator.deviceMemory > 0 && navigator.deviceMemory <= 2) || (Platform.androidTV && navigator.hardwareConcurrency > 0 && navigator.hardwareConcurrency <= 4);
 
   /* ---------------- Kleine Helfer ---------------- */
   function $(sel, root) { return (root || document).querySelector(sel); }
@@ -1753,6 +1755,7 @@
         clear(grid).appendChild(stateBox(T('Laden fehlgeschlagen'), e.message, T('Erneut versuchen'), function () { selectCat(cat); }));
       });
     }
+    el._dispose = function () { req++; if (chunker) { chunker.dispose(); chunker = null; } clear(grid); clear(topSlot); clear(resumeSlot); };
     // Nach dem Schauen: Fortschritt, „Weiterschauen“ und Knöpfe im Titelbild auffrischen, ohne die Liste neu zu laden
     el._refresh = function () {
       var st = Screens.top(), lf = st && st.lastFocus, inResume = lf && resumeSlot.contains(lf), k0 = inResume && lf.getAttribute('data-key');
@@ -1984,6 +1987,9 @@
       if ((name === 'movie' || name === 'series') && Player.mini) Player.close();
       Object.keys(self.buttons).forEach(function (k) { self.buttons[k].classList.toggle('is-on', k === name); });
       self.viewBack = null;
+      // alte Ansicht aufräumen (lange Listen sofort freigeben – wichtig für Boxen mit wenig Speicher)
+      var old = self.view.firstChild;
+      if (old && old._dispose) { try { old._dispose(); } catch (e) {} }
       clear(self.view);
       var view;
       if (name === 'home') view = HomeView();
@@ -2393,6 +2399,7 @@
         Nav.focus(activeButton() || cats.children[1] || back);
       }
     }
+    el._dispose = function () { req++; if (chunker) { chunker.dispose(); chunker = null; } clear(items); };
     Shell.viewBack = function () {
       if (curGroup && document.body.contains(el)) { showLanguages(curGroup); return true; }
       return false;
@@ -3324,8 +3331,8 @@
           if (self.video !== video) return;
           if (Hls && Hls.isSupported()) {
             var hls = new Hls({
-              enableWorker: true, lowLatencyMode: false, backBufferLength: 30,
-              maxBufferLength: 30, maxMaxBufferLength: 60,          // genug Puffer, ohne alten TVs den Speicher zu füllen
+              enableWorker: true, lowLatencyMode: false, backBufferLength: Platform.lite ? 10 : 30,
+              maxBufferLength: 30, maxMaxBufferLength: Platform.lite ? 40 : 60,          // genug Puffer, ohne alten TVs den Speicher zu füllen
               capLevelToPlayerSize: true,                           // im kleinen Player keine volle Auflösung laden
               fragLoadingMaxRetry: 4, levelLoadingMaxRetry: 3, manifestLoadingMaxRetry: 2
             });
@@ -3887,6 +3894,8 @@
     Theme.apply();
     Theme.watch();
     if (Platform.tv) document.body.classList.add('is-tv');
+    // Schwache Geräte (z. B. Android-Boxen mit 2 GB): teure Effekte wie Unschärfe und Animationen weglassen
+    if (Platform.lite) document.body.classList.add('lite');
     document.addEventListener('keydown', onKeyDown, true);
     document.addEventListener('pointerdown', function () { INPUT.mode = 'pointer'; if (!Platform.tv) document.body.classList.remove('kbd'); }, true);
     // Video weiterlaufen lassen, aber beim Verlassen der App den Fortschritt sichern
