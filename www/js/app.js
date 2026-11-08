@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Lumio Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.4.0',
+    version: '1.5.0',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     hlsCdn: 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js',
     requestTimeout: 30000,
@@ -715,7 +715,7 @@
       var gone = this.get(id);
       if (gone && gone.remoteId) Cloud.rpc('delete_playlist', { p_mac: Device.mac(), p_key: Device.key(), p_id: gone.remoteId }).catch(function () {});
       this.save(this.list().filter(function (p) { return p.id !== id; }));
-      Store.del('fav.' + id); Store.del('resume.' + id); Store.del('recent.' + id);
+      Store.del('fav.' + id); Store.del('resume.' + id); Store.del('recent.' + id); Store.del('seen.' + id); Store.del('last.' + id);
       if (Store.get('active') === id) Store.del('active');
     },
     get: function (id) { return this.list().filter(function (p) { return p.id === id; })[0]; }
@@ -1080,6 +1080,7 @@
     get: function (item) { return this.all()[this.key(item)]; },
     set: function (item, t, d) {
       var a = this.all(); var k = this.key(item);
+      if (d && t > d - 60) Seen.add(item);          // bis (fast) zum Ende geschaut = gesehen
       if (!d || t < 30 || t > d - 60) delete a[k];
       else a[k] = { t: Math.floor(t), d: Math.floor(d), at: Date.now(), item: slim(item) };
       var keys = Object.keys(a).sort(function (x, y) { return a[y].at - a[x].at; });
@@ -1088,6 +1089,21 @@
     },
     recent: function () { var a = this.all(); return Object.keys(a).map(function (k) { return a[k]; }).sort(function (x, y) { return y.at - x.at; }); },
     clear: function () { Store.del('resume.' + pid()); }
+  };
+
+  /* Fertig geschaute Filme und Folgen (für Häkchen und „nächste ungesehene Folge“) */
+  var Seen = {
+    all: function () { return Store.get('seen.' + pid(), {}); },
+    has: function (item) { return !!this.all()[item.kind + ':' + item.id]; },
+    add: function (item) {
+      if (!item || (item.kind !== 'movie' && item.kind !== 'episode')) return;
+      var a = this.all(), k = item.kind + ':' + item.id;
+      if (a[k]) return;
+      a[k] = Date.now();
+      var keys = Object.keys(a);
+      if (keys.length > 2500) keys.sort(function (x, y) { return a[x] - a[y]; }).slice(0, keys.length - 2000).forEach(function (x) { delete a[x]; });
+      Store.set('seen.' + pid(), a);
+    }
   };
 
   /* Was zuletzt lief (Sender, Film oder Serie) – beim nächsten App-Start landet man genau dort */
@@ -1235,7 +1251,10 @@
     var p = scrollParent(el);
     while (p) {
       var r = el.getBoundingClientRect(), pr = p.getBoundingClientRect(), pad = 24;
-      if (r.top < pr.top + pad) p.scrollTop -= (pr.top + pad - r.top);
+      // feststehende Leiste oben (z. B. Genre-Leiste) nicht über das gewählte Element legen
+      var sticky = p._stickyTop && !(el.closest && el.closest('.chipbar-wrap')) ? p._stickyTop() : 0;
+      var top = pad + sticky;
+      if (r.top < pr.top + top) p.scrollTop -= (pr.top + top - r.top);
       else if (r.bottom > pr.bottom - pad) p.scrollTop += (r.bottom - pr.bottom + pad);
       if (r.left < pr.left + pad) p.scrollLeft -= (pr.left + pad - r.left);
       else if (r.right > pr.right - pad) p.scrollLeft += (r.right - pr.right + pad);
@@ -1395,6 +1414,8 @@
   function posterCard(item, onClick, opts) {
     opts = opts || {};
     var prog = opts.progress ? h('span', { class: 'prog' }, h('i', { style: 'width:' + Math.round(opts.progress * 100) + '%' })) : null;
+    if (opts.badge) prog = [prog, h('span', { class: 'badge', text: opts.badge })];
+    if (opts.seen) prog = [prog, h('span', { class: 'seen-mark', title: T('Gesehen') }, icon('check'))];
     var r = Number(item.rating), yr = item.year ? String(item.year).slice(0, 4) : '';
     var sub = (r > 0 || yr) ? h('span', { class: 'sub' },
       r > 0 ? h('span', { class: 'rate', text: '★ ' + r.toFixed(1) }) : null,
@@ -1454,6 +1475,252 @@
       upTo: function (idx) { while (done <= idx && done < items.length) more(); },
       dispose: function () { scroller.removeEventListener('scroll', onScroll); }
     };
+  }
+
+  /* Waagerechte Reihe mit Überschrift (Startseite, Filme, Serien, Detailseiten) */
+  function railEl(title, kids, kind) {
+    return h('section', { class: 'rail' + (kind ? ' k-' + kind : '') }, h('h2', null, kind ? icon(kind) : null, h('span', { text: title })), h('div', { class: 'rail-track' }, kids));
+  }
+  /* Fortschritt pro Serie aus „Weiterschauen“: { serienId: 'S2 E5' } */
+  function seriesBadges() {
+    var out = {};
+    Resume.recent().forEach(function (r) { var it = r.item; if (it.kind === 'episode' && it.seriesId && !out[it.seriesId]) out[it.seriesId] = 'S' + it.season + ' E' + it.num; });
+    return out;
+  }
+  function mediaCard(it, badges) {
+    var r = it.kind === 'movie' ? Resume.get(it) : null;
+    return posterCard(it, function () { openItem(it); }, {
+      progress: r ? r.t / r.d : 0,
+      badge: badges && badges[it.id] ? badges[it.id] : null,
+      seen: it.kind === 'movie' && !r && Seen.has(it)
+    });
+  }
+
+  /* Großes Titelbild oben (wie bei Streaming-Diensten): Hintergrundbild, Titel, Infos und Knöpfe */
+  function featureHero(item, opts) {
+    opts = opts || {};
+    var isSeries = item.kind === 'series';
+    var bg = h('div', { class: 'fh-bg' });
+    var meta = h('div', { class: 'fh-meta' });
+    var plot = h('p', { class: 'fh-plot', text: item.plot || '' });
+    var actions = h('div', { class: 'row fh-actions' });
+    var el = h('section', { class: 'fhero k-' + (isSeries ? 'series' : 'movie') }, bg, h('div', { class: 'fh-shade' }),
+      h('div', { class: 'fh-in' },
+        opts.top || null,
+        opts.kicker ? h('span', { class: 'fh-kicker' }, icon(isSeries ? 'series' : 'movie'), h('span', { text: opts.kicker })) : null,
+        h('h1', { class: 'fh-title', text: item.name }), meta, plot, actions, opts.bottom || null));
+    var shownBg = '', wantBg = '';
+    function setBg(url, blur) {
+      if (!url || url === shownBg) return;
+      wantBg = url;
+      var im = new Image();
+      im.onload = function () {
+        if (wantBg !== url) return;      // ein besseres Bild (Hintergrundbild statt Cover) wurde inzwischen angefordert
+        shownBg = url;
+        bg.style.backgroundImage = 'url("' + String(url).replace(/"/g, '%22') + '")';
+        bg.classList.toggle('is-blur', !!blur);
+        bg.classList.add('is-in');
+      };
+      im.src = url;
+    }
+    function paintActions() {
+      clear(actions);
+      if (isSeries) {
+        actions.appendChild(h('button', { class: 'btn f primary', onclick: function () { showSeries(item); } }, icon('play'), h('span', { text: T('Ansehen') })));
+      } else {
+        var r = Resume.get(item);
+        actions.appendChild(h('button', { class: 'btn f primary', onclick: function () { playItem(item, { list: [item], index: 0 }); } }, icon('play'), h('span', { text: r ? T('Weiter bei {0}', fmtTime(r.t)) : T('Abspielen') })));
+        actions.appendChild(h('button', { class: 'btn f ghost', onclick: function () { showMovie(item); } }, icon('info'), h('span', { text: T('Details') })));
+      }
+      actions.appendChild(favButton(item));
+    }
+    paintActions();
+    if (item.rating || item.year) meta.appendChild(metaLine(item));
+    if (item.backdrop) setBg(item.backdrop); else setBg(item.logo, true);
+    (isSeries ? App.provider.seriesInfo(item) : App.provider.movieInfo(item)).then(function (d) {
+      if (!d || !el.parentNode) return;
+      clear(meta).appendChild(metaLine(d.rating || d.year || d.genre ? d : item));
+      if (d.plot) plot.textContent = d.plot;
+      if (d.ext && !isSeries) item.ext = d.ext;
+      if (d.backdrop) { item.backdrop = d.backdrop; setBg(d.backdrop); }
+    }).catch(function () {});
+    el._refresh = paintActions;
+    return el;
+  }
+
+  /* ==========================================================
+     Filme & Serien: eigene Oberfläche
+     Großes Titelbild, darunter eine Leiste (Sprache → Genre, jeweils mit Anzahl) und große Cover.
+     Serien zeigen zusätzlich „Weiterschauen“ und den Stand pro Serie („S2 E5“).
+     ========================================================== */
+  function MediaView(kind) {
+    var key = pid() + kind, isSeries = kind === 'series';
+    var allCat = { id: '__all', name: isSeries ? T('Alle Serien') : T('Alle Filme') };
+    var heroSlot = h('div', { class: 'mv-hero' });
+    var bar = h('div', { class: 'chipbar', role: 'toolbar' });
+    var barWrap = h('div', { class: 'chipbar-wrap' }, bar);
+    var title = h('h2', { class: 'mv-title' }), count = h('span', { class: 'count' });
+    var resumeSlot = h('div', { class: 'mv-resume' });
+    var grid = h('div', { class: 'poster-grid mv-grid' });
+    var el = h('div', { class: 'page media media-' + kind + ' k-' + kind }, heroSlot, barWrap, resumeSlot, h('div', { class: 'mv-head' }, title, count), grid);
+    el._stickyTop = function () { return barWrap.offsetHeight; };
+    var flat = [], groups = null, curGroup = null, activeId = null, counts = null, req = 0, chunker = null, heroId = null;
+
+    function grpCat(g) { return { id: '__grp:' + g.key, name: T('Alle'), group: g }; }
+    function inGroup(g, id) { if (id === '__grp:' + g.key) return grpCat(g); for (var i = 0; i < g.cats.length; i++) if (g.cats[i].id === id) return g.cats[i]; return null; }
+    function chip(c, label) {
+      var b = h('button', { class: 'chip f', title: c.full || label, onclick: function () { selectCat(c); } }, h('span', { class: 'chip-name', text: label }), h('span', { class: 'lc-n' }));
+      b._cat = c;
+      return b;
+    }
+    function paintBar() {
+      clear(bar);
+      if (groups && !curGroup) {
+        bar.appendChild(chip(allCat, allCat.name));
+        groups.forEach(function (g) {
+          var b = h('button', { class: 'chip chip-lang f', title: g.name, onclick: function () { openGroup(g); } },
+            h('span', { class: 'lc-code', text: g.code || '…' }), h('span', { class: 'chip-name', text: g.name }), h('span', { class: 'lc-n' }), icon('next'));
+          b._group = g;
+          bar.appendChild(b);
+        });
+      } else if (groups && curGroup) {
+        bar.appendChild(h('button', { class: 'chip chip-back f', title: T('Zurück zu den Sprachen'), onclick: function () { showLanguages(curGroup); } },
+          icon('back'), h('span', { class: 'lc-code', text: curGroup.code || '…' }), h('span', { class: 'chip-name', text: curGroup.name })));
+        bar.appendChild(chip(grpCat(curGroup), T('Alle')));
+        curGroup.cats.forEach(function (c) { bar.appendChild(chip(c, c.name)); });
+      } else {
+        bar.appendChild(chip(allCat, allCat.name));
+        flat.forEach(function (c) { bar.appendChild(chip(c, c.name)); });
+      }
+      markActive(); paintCounts();
+    }
+    function markActive() {
+      $all('.chip', bar).forEach(function (b) {
+        if (b._cat) b.classList.toggle('is-on', b._cat.id === activeId);
+        else if (b._group) b.classList.toggle('is-on', !!inGroup(b._group, activeId));
+      });
+    }
+    function paintCounts() {
+      if (!counts) return;
+      $all('.chip', bar).forEach(function (b) {
+        var slot = $('.lc-n', b), n = null, g = b._group || (b._cat && b._cat.group);
+        if (!slot) return;
+        if (g) { n = 0; g.cats.forEach(function (c) { n += counts.by[c.id] || 0; }); }
+        else if (b._cat) n = b._cat.id === '__all' ? counts.total : (counts.by[b._cat.id] || 0);
+        if (n !== null) slot.textContent = fmtCount(n);
+      });
+    }
+    function openGroup(g) {
+      curGroup = g; lastGroup[key] = g.key;
+      paintBar();
+      selectCat(grpCat(g));
+      Nav.focus($('.chip.is-on', bar) || bar.children[1]);
+      bar.scrollLeft = 0;
+    }
+    function showLanguages(g) {
+      curGroup = null; lastGroup[key] = null;
+      paintBar();
+      var b = null;
+      $all('.chip-lang', bar).forEach(function (x) { if (x._group === g) b = x; });
+      Nav.focus(b || bar.firstChild);
+    }
+    Shell.viewBack = function () {
+      if (curGroup && document.body.contains(el)) { showLanguages(curGroup); return true; }
+      return false;
+    };
+
+    function itemsFor(cat) {
+      if (cat.group) {
+        return App.provider.items(kind, '__all').then(function (all) {
+          var ids = {};
+          cat.group.cats.forEach(function (c) { ids[c.id] = 1; });
+          var out = all.filter(function (x) { return ids[x.catId]; });
+          return some(out, function (x) { return Number(x.added) > 0; }) ? out.sort(byAdded) : out;
+        });
+      }
+      return App.provider.items(kind, cat.id).then(function (list) {
+        return cat.id === '__all' && some(list, function (x) { return Number(x.added) > 0; }) ? list.slice().sort(byAdded) : list;
+      });
+    }
+    function paintResume() {
+      clear(resumeSlot);
+      if (activeId !== '__all' && activeId.indexOf('__grp:') !== 0) return;
+      var mine = Resume.recent().filter(function (r) { return isSeries ? r.item.kind === 'episode' : r.item.kind === 'movie'; }).slice(0, 12);
+      if (mine.length) resumeSlot.appendChild(railEl(T('Weiterschauen'), mine.map(continueCard), kind));
+    }
+    function pickHero(list, cat) {
+      var it = null;
+      for (var i = 0; i < Math.min(list.length, 40); i++) if (list[i].logo) { it = list[i]; break; }
+      if (!it || it.id === heroId) return;
+      heroId = it.id;
+      var kicker = cat.id === '__all' ? T('Neu hinzugefügt') : cat.group ? T('Neu in {0}', cat.group.name) : cat.name;
+      clear(heroSlot).appendChild(featureHero(it, { kicker: kicker }));
+    }
+    function selectCat(cat) {
+      lastCat[key] = cat.id; activeId = cat.id;
+      markActive();
+      var my = ++req;
+      if (chunker) { chunker.dispose(); chunker = null; }
+      clear(grid).appendChild(loader());
+      title.textContent = cat.group ? T('Alle in {0}', cat.group.name) : cat.name;
+      count.textContent = '';
+      paintResume();
+      itemsFor(cat).then(function (list) {
+        if (my !== req) return;
+        clear(grid);
+        count.textContent = fmtCount(list.length);
+        if (!list.length) { grid.appendChild(stateBox(T('Keine Einträge'), T('In dieser Kategorie ist gerade nichts enthalten.'))); return; }
+        var badges = isSeries ? seriesBadges() : null;
+        var rc = chunker = renderChunked(grid, el, list, function (it) { return mediaCard(it, badges); });
+        pickHero(list, cat);
+        var pf = Shell.pendingFocus;
+        if (pf && pf.kind === kind) {
+          Shell.pendingFocus = null;
+          for (var k = 0; k < list.length; k++) if (list[k].id === pf.id) {
+            rc.upTo(k);
+            var target = grid.querySelector('[data-idx="' + k + '"]');
+            setTimeout(function () {
+              var st = Screens.stack, own = null;
+              for (var q = 0; q < st.length; q++) if (st[q].el.contains(grid)) own = st[q];
+              if (own && Screens.top() === own) Nav.focus(target); else if (own) own.lastFocus = target;
+            }, 60);
+            break;
+          }
+        }
+      }, function (e) {
+        if (my !== req) return;
+        clear(grid).appendChild(stateBox(T('Laden fehlgeschlagen'), e.message, T('Erneut versuchen'), function () { selectCat(cat); }));
+      });
+    }
+    // Nach dem Schauen: Fortschritt, „Weiterschauen“ und Knöpfe im Titelbild auffrischen, ohne die Liste neu zu laden
+    el._refresh = function () {
+      var st = Screens.top(), lf = st && st.lastFocus, inResume = lf && resumeSlot.contains(lf), k0 = inResume && lf.getAttribute('data-key');
+      paintResume();
+      if (inResume && st) st.lastFocus = (k0 && $('[data-key="' + k0 + '"]', resumeSlot)) || $('.f', resumeSlot) || $('.chip.is-on', bar);
+      var h0 = heroSlot.firstChild;
+      if (h0 && h0._refresh) h0._refresh();
+    };
+
+    App.provider.categories(kind).then(function (list) {
+      flat = list || [];
+      groups = groupCats(flat);
+      var want = lastCat[key], target = null;
+      if (groups) {
+        var g = null;
+        groups.forEach(function (x) { if (!g && want && inGroup(x, want)) g = x; });
+        if (!g && lastGroup[key]) groups.forEach(function (x) { if (x.key === lastGroup[key]) g = x; });
+        if (g) { curGroup = g; lastGroup[key] = g.key; target = (want && inGroup(g, want)) || grpCat(g); }
+      } else if (want) {
+        flat.forEach(function (c) { if (c.id === want) target = c; });
+      }
+      paintBar();
+      selectCat(target || allCat);
+      if (document.activeElement === document.body) Nav.focus($('.chip.is-on', bar) || bar.firstChild);
+      catCounts(kind).then(function (c) { counts = c; paintCounts(); }).catch(function () {});
+    }, function (e) {
+      clear(grid).appendChild(stateBox(T('Laden fehlgeschlagen'), e.message, T('Erneut versuchen'), function () { Shell.show(kind, true); }));
+    });
+    return el;
   }
 
   /* ==========================================================
@@ -1629,9 +1896,9 @@
           return false;
         },
         onShow: function () {
-          if (self.current !== 'home') return;
           var v = self.view.firstChild;
-          if (v && v._refresh) v._refresh(); else self.show('home', false, true);
+          if (v && v._refresh) v._refresh();
+          else if (self.current === 'home') self.show('home', false, true);
         }
       });
       self.show('home');
@@ -1662,6 +1929,7 @@
       else if (name === 'settings') view = SettingsView();
       else if (name === 'profile') view = ProfileView();
       else if (name === 'favs') view = FavoritesView();
+      else if (name === 'movie' || name === 'series') view = MediaView(name);
       else view = SectionView(name);
       self.view.appendChild(view);
       if (keepFocus) return;
@@ -1768,6 +2036,7 @@
   /* ---------- Startseite ---------- */
   function HomeView() {
     var p = App.profile, season = Season.current();
+    var langBar = homeLangBar();
     var status = h('span', { class: 'hero-status' }, h('i', { class: 'dot' }), h('span', { text: p.type === 'demo' ? T('Demo-Modus') : p.name }));
     App.provider.account().then(function (a) {
       if (!a || !a.expires) return;
@@ -1783,7 +2052,7 @@
           h('span', { class: 'hero-kicker', text: season ? T(SEASONS[season].greet) : T('Willkommen bei') }),
           wordmark()),
         h('p', { class: 'hero-sub', text: p.type === 'demo' ? T('Probiere die App mit freien Test-Videos aus.') : T('Dein Licht für Live TV, Filme und Serien.') }),
-        homeLangBar()));
+        langBar));
     var rows = h('div', { class: 'rows' });
     var el = h('div', { class: 'page home' }, hero, rows);
 
@@ -1818,6 +2087,7 @@
     }
     paintPersonal();
     el._refresh = function () {
+      if (hero && hero._refresh) hero._refresh();
       var st = Screens.top(), lf = st && st.lastFocus, key = lf && lf.getAttribute && lf.getAttribute('data-key');
       var inPersonal = lf && personal.contains(lf);
       paintPersonal();
@@ -1826,6 +2096,19 @@
 
     var shown = {};
     var moviesP = sampleItems('movie'), seriesP = sampleItems('series');
+    // Großes Titelbild: „Empfehlung des Tages“ aus den bestbewerteten Filmen (wechselt täglich)
+    moviesP.then(function (list) {
+      var pool = list.filter(function (x) { return x.logo && Number(x.rating) > 0; }).sort(byRating).slice(0, 6);
+      if (!pool.length) pool = list.filter(function (x) { return x.logo; }).slice(0, 6);
+      if (!pool.length || !hero.parentNode) return;
+      var pick = pool[daySeed('hero') % pool.length];
+      var fh = featureHero(pick, { kicker: T('Empfehlung des Tages'), top: status, bottom: langBar });
+      fh.classList.add('home-hero');
+      var hadFocus = hero.contains(document.activeElement);
+      el.replaceChild(fh, hero);
+      hero = fh;
+      if (hadFocus) Nav.focus($('.btn.primary', fh));
+    }).catch(function () {});
     asyncRail(T('Top bewertet'), moviesP, function (list) {
       if (!list.length) return null;
       var fresh = some(list, function (x) { return Number(x.added) > 0; });
@@ -1976,6 +2259,11 @@
       h('div', { class: 'section-body' }, cats, items, panel ? panel.el : null));
     var key = pid() + kind;
     var allCat = { id: '__all', name: allNames[kind] };
+    // Live TV: eigene Listen „Favoriten“ und „Zuletzt gesehen“ ganz oben
+    var extraCats = kind !== 'live' ? [] : [
+      { id: '__fav', name: T('Favoriten'), ic: 'heart', local: function () { return Favs.list('live'); } },
+      { id: '__recent', name: T('Zuletzt gesehen'), ic: 'history', local: function () { return Recent.list(); } }
+    ];
     var groups = null, curGroup = null, activeId = null, req = 0, counts = null, chunker = null;
     // Zahlen hinter Sprachen und Kategorien: bei einer Sprache alle Einträge dieser Sprache, sonst je Kategorie
     function paintCounts() {
@@ -1984,6 +2272,7 @@
         var b = cats.children[i], n = null, slot = b.querySelector('.lc-n');
         if (!slot) continue;
         if (b._group) { n = 0; b._group.cats.forEach(function (c) { n += counts.by[c.id] || 0; }); }
+        else if (b._cat && b._cat.local) n = b._cat.local().length;
         else if (b._cat) n = b._cat.id === '__all' ? counts.total : (counts.by[b._cat.id] || 0);
         if (n !== null) slot.textContent = fmtCount(n);
       }
@@ -2002,7 +2291,7 @@
       return null;
     }
     function catBtn(c) {
-      var b = h('button', { class: 'cat f has-n', title: c.full || c.name }, h('span', { class: 'cat-name', text: c.name }), h('span', { class: 'lc-n' }));
+      var b = h('button', { class: 'cat f has-n' + (c.ic ? ' cat-special' : ''), title: c.full || c.name }, c.ic ? icon(c.ic) : null, h('span', { class: 'cat-name', text: c.name }), h('span', { class: 'lc-n', text: c.local ? String(c.local().length) : '' }));
       b._cat = c;
       b.addEventListener('click', function () { selectCat(c, true); });
       return b;
@@ -2020,6 +2309,7 @@
       curGroup = null; lastGroup[key] = null;
       clear(cats);
       cats.appendChild(catBtn(allCat));
+      extraCats.forEach(function (c) { cats.appendChild(catBtn(c)); });
       var focusBtn = null;
       groups.forEach(function (g) { var b = langBtn(g); cats.appendChild(b); if (g === focusGroup) focusBtn = b; });
       markActive(); paintCounts();
@@ -2054,14 +2344,19 @@
       if (chunker) { chunker.dispose(); chunker = null; }
       clear(items).appendChild(loader());
       count.textContent = '';
-      App.provider.items(kind, cat.id).then(function (list) {
+      (cat.local ? Promise.resolve(cat.local()) : App.provider.items(kind, cat.id)).then(function (list) {
         if (my !== req) return;
         // „Alle Filme/Serien“: die neuesten zuerst
         if (cat.id === '__all' && kind !== 'live' && some(list, function (x) { return Number(x.added) > 0; })) list = list.slice().sort(byAdded);
         clear(items);
         items.scrollTop = 0;
         count.textContent = String(list.length);
-        if (!list.length) { items.appendChild(stateBox(T('Keine Einträge'), T('In dieser Kategorie ist gerade nichts enthalten.'))); return; }
+        if (!list.length) {
+          items.appendChild(cat.id === '__fav' ? stateBox(T('Noch keine Lieblingssender'), T('Wähle im Player bei einem Sender „Merken“ – dann erscheint er hier.'))
+            : cat.id === '__recent' ? stateBox(T('Noch nichts geschaut'), T('Die zuletzt gesehenen Sender erscheinen hier.'))
+            : stateBox(T('Keine Einträge'), T('In dieser Kategorie ist gerade nichts enthalten.')));
+          return;
+        }
         var box = h('div', { class: kind === 'live' ? 'chan-list' : 'poster-grid' });
         items.appendChild(box);
         var rc = chunker = renderChunked(box, items, list, function (it, i) {
@@ -2103,7 +2398,7 @@
       groups = groupCats(list);
       if (!groups) {
         // Keine Sprachen erkannt: alle Kategorien untereinander wie bisher
-        var all = [allCat].concat(list);
+        var all = [allCat].concat(extraCats, list);
         all.forEach(function (c) { cats.appendChild(catBtn(c)); if (c.id === want) target = c; });
         if (!target) target = kind === 'live' ? (list[0] || allCat) : allCat;
       } else {
@@ -2437,7 +2732,7 @@
         panel('history', T('Verlauf'), [
           h('p', { class: 'hint', text: T('„Weiterschauen“ und „Zuletzt gesehene Sender“ auf diesem Gerät.') }),
           h('div', { class: 'row' },
-            h('button', { class: 'btn f', onclick: function () { confirmBox(T('Verlauf löschen?'), T('„Weiterschauen“ und „Zuletzt gesehene Sender“ werden geleert.'), T('Löschen'), function () { Resume.clear(); Store.del('recent.' + pid()); toast(T('Verlauf gelöscht')); }); } }, icon('trash'), h('span', { text: T('Verlauf löschen') })))]),
+            h('button', { class: 'btn f', onclick: function () { confirmBox(T('Verlauf löschen?'), T('„Weiterschauen“ und „Zuletzt gesehene Sender“ werden geleert.'), T('Löschen'), function () { Resume.clear(); Store.del('recent.' + pid()); Store.del('seen.' + pid()); toast(T('Verlauf gelöscht')); }); } }, icon('trash'), h('span', { text: T('Verlauf löschen') })))]),
         panel('info', T('Über'), [
           h('button', { class: 'about-version f', onclick: function () { Admin.tap(); } }, CONFIG.appName + ' ' + CONFIG.version),
           h('p', { class: 'hint', text: T('Dieser Player enthält keine Inhalte. Du bist selbst dafür verantwortlich, nur Streams zu nutzen, für die du eine Berechtigung hast. Datenschutz und Impressum: splix66.github.io/lumio-player') })])));
@@ -2487,6 +2782,20 @@
     return b;
   }
 
+  /* „Ähnliche Titel“ unter Film- und Serienseiten: aus derselben Kategorie, die bestbewerteten zuerst */
+  function similarRail(item, panel) {
+    if (!item.catId) return;
+    var kind = item.kind === 'series' ? 'series' : 'movie';
+    App.provider.items(kind, item.catId).then(function (list) {
+      var pick = list.filter(function (x) { return x.id !== item.id && x.logo; }).sort(byRating).slice(0, 14);
+      if (pick.length < 3 || !panel.parentNode) return;
+      var badges = kind === 'series' ? seriesBadges() : null;
+      panel.appendChild(h('div', { class: 'd-similar' }, railEl(T('Ähnliche Titel'), pick.map(function (it) {
+        return posterCard(it, function () { Screens.pop(); setTimeout(function () { openItem(it); }, 30); }, { badge: badges && badges[it.id] });
+      }), kind)));
+    }).catch(function () {});
+  }
+
   function showMovie(item) {
     var f = detailFrame(item);
     var actions = h('div', { class: 'row' });
@@ -2512,6 +2821,7 @@
       if (d.director || d.cast) f.info.appendChild(h('p', { class: 'credits', text: [d.director ? T('Regie: {0}', d.director) : '', d.cast ? T('Mit: {0}', d.cast) : ''].filter(Boolean).join('. ') }));
       if (d.backdrop) { item.backdrop = d.backdrop; f.setBackdrop(d.backdrop); }
     }).catch(function () {});
+    similarRail(item, f.panel);
     Screens.push('movie', f.el, { overlay: true, onShow: function () { var had = document.activeElement; paintActions(); if (!document.body.contains(had)) Nav.focusFirst(actions); } });
   }
 
@@ -2539,17 +2849,29 @@
           h('span', { class: 'thumb' },
             ep.logo ? img(ep.logo, '') : null,
             h('span', { class: 'n', text: String(ep.num || i + 1) }),
-            r ? h('span', { class: 'seen' }, h('i', { style: 'width:' + Math.round(r.t / r.d * 100) + '%' })) : null),
+            r ? h('span', { class: 'seen' }, h('i', { style: 'width:' + Math.round(r.t / r.d * 100) + '%' })) : null,
+            !r && Seen.has(ep) ? h('span', { class: 'ep-done', title: T('Gesehen') }, icon('check')) : null),
           h('span', { class: 't' }, h('b', { text: ep.name }), ep.plot || ep.duration ? h('small', { text: [ep.duration ? String(ep.duration).replace(/^00:/, '') : '', ep.plot].filter(Boolean).join(' – ') }) : null),
           h('span', { class: 'play-i' }, icon('play'))));
       });
     }
+    /* Wo geht es weiter? Angefangene Folge, sonst die erste noch nicht gesehene, sonst Folge 1 */
+    function nextTarget() {
+      var last = Resume.recent().filter(function (r) { return r.item.kind === 'episode' && r.item.seriesId === item.id; })[0];
+      if (last) return { ep: last.item, resume: true };
+      var any = false, first = null;
+      for (var a = 0; a < seasons.length; a++) for (var b = 0; b < seasons[a].episodes.length; b++) {
+        var e = seasons[a].episodes[b];
+        if (Seen.has(e)) any = true; else if (!first) first = e;
+      }
+      if (any && first) return { ep: first, resume: true };
+      return seasons[0] && seasons[0].episodes[0] ? { ep: seasons[0].episodes[0], resume: false } : null;
+    }
     function paintContinue() {
       if (continueBtn && continueBtn.parentNode) continueBtn.parentNode.removeChild(continueBtn);
-      var last = Resume.recent().filter(function (r) { return r.item.kind === 'episode' && r.item.seriesId === item.id; })[0];
-      var target = last ? last.item : (seasons[0] && seasons[0].episodes[0]);
+      var nt = nextTarget(), target = nt && nt.ep;
       if (!target) return;
-      var label = last ? T('Weiter: S{0} E{1}', target.season, target.num) : T('Folge 1 abspielen');
+      var label = nt.resume ? T('Weiter: S{0} E{1}', target.season, target.num) : T('Folge 1 abspielen');
       continueBtn = h('button', { class: 'btn f primary', 'data-autofocus': true, onclick: function () {
         var s = seasons.filter(function (x) { return x.num === target.season; })[0] || seasons[0];
         var idx = 0; s.episodes.forEach(function (e, i) { if (e.id === target.id) idx = i; });
@@ -2567,8 +2889,11 @@
       seasons.forEach(function (s) {
         seasonsBar.appendChild(h('button', { class: 'btn f', 'data-s': s.num, onclick: function () { renderEpisodes(s); } }, T('Staffel {0}', s.num)));
       });
-      renderEpisodes(seasons[0]);
+      var nt = nextTarget(), startSeason = seasons[0];
+      if (nt) seasons.forEach(function (x) { if (x.num === nt.ep.season) startSeason = x; });
+      renderEpisodes(startSeason);
       paintContinue();
+      similarRail(item, f.panel);
       if (Screens.top() && Screens.top().el === f.el) Nav.focus(continueBtn || $('.f', f.el));
     }, function (e) {
       clear(epBox).appendChild(stateBox(T('Laden fehlgeschlagen'), e.message));
@@ -2997,6 +3322,7 @@
       var self = this;
       Resume.set(self.item, 0, 0);
       var c = self.ctx;
+      if (self.isVod()) Seen.add(self.item);
       if (self.item.kind === 'live') { self.reconnecting(); self.attach(self.curUrl); return; }   // Live-Sender „enden“ nicht – neu verbinden
       if (self.item.kind === 'episode' && c && c.list && c.index < c.list.length - 1) { self.showNext(c.list[c.index + 1]); return; }
       if (self.isVod()) goBack();
