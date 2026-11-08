@@ -923,6 +923,44 @@ body.lite .fh-title { text-shadow: none; }
 }
 
 /* ==========================================================
+   Startbildschirm: Zugang + Live TV / Filme / Serien
+   ========================================================== */
+.shell.is-launcher .topnav { display: none; }
+.launcher { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 2.2rem var(--pad) 1.6rem; overflow: hidden; }
+.ln-head { position: relative; display: flex; align-items: center; }
+.ln-head .brand { font-size: 1.7rem; }
+.ln-head .brand-mark { width: 2.6rem; height: 2.6rem; }
+.ln-head .hero-status { margin: 0 0 0 auto; font-size: 1rem; padding: .5rem 1.05rem; }
+.ln-head .hero-status .dot { width: .6rem; height: .6rem; }
+.ln-clock { margin-left: 1.4rem; font-size: 1.9rem; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: var(--text); }
+.ln-tiles { position: relative; flex: 1; min-height: 0; max-height: 32rem; display: grid; grid-template-columns: 1.35fr 1fr 1fr; grid-gap: 1.4rem; gap: 1.4rem; margin: 2.4rem 0 1.8rem; }
+.ln-tile {
+  position: relative; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; min-width: 0;
+  padding: 1.8rem 1.9rem; border-radius: var(--radius-lg); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--text); text-align: left; overflow: hidden;
+}
+/* Bereichsfarbe als weiches Licht aus der Ecke */
+.ln-tile::before { content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: radial-gradient(120% 95% at 0% 0%, var(--k), transparent 62%); opacity: .14; transition: opacity .2s ease; pointer-events: none; }
+.ln-tile:hover::before { opacity: .24; }
+.lt-ic { position: relative; width: 4.2rem; height: 4.2rem; border-radius: 1.15rem; display: grid; place-items: center; background: var(--k); color: #fff; box-shadow: 0 .9rem 2.2rem -.8rem var(--k); }
+.lt-ic .i { width: 2.3rem; height: 2.3rem; }
+.ln-tile.k-live .lt-ic { width: 5rem; height: 5rem; border-radius: 1.35rem; }
+.ln-tile.k-live .lt-ic .i { width: 2.8rem; height: 2.8rem; }
+.lt-txt { position: relative; display: flex; flex-direction: column; width: 100%; min-width: 0; }
+.lt-label { font-size: 2.2rem; font-weight: 800; letter-spacing: -.035em; line-height: 1.1; }
+.ln-tile.k-live .lt-label { font-size: 2.7rem; }
+.lt-sub { margin-top: .5rem; color: var(--muted); font-size: .98rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body.kbd .ln-tile.f:focus, body.is-tv .ln-tile.f:focus { transform: scale(1.03); box-shadow: 0 0 0 .2rem var(--bg), 0 0 0 .4rem var(--k), 0 1.4rem 3rem -1.2rem var(--k); }
+body.kbd .ln-tile.f:focus::before, body.is-tv .ln-tile.f:focus::before { opacity: .32; }
+body.kbd .ln-tile.f:focus .lt-sub, body.is-tv .ln-tile.f:focus .lt-sub { color: var(--text-2); }
+.ln-acts { position: relative; display: flex; flex-wrap: wrap; }
+.ln-acts > * { margin: 0 .7rem .2rem 0; }
+.ln-act { display: inline-flex; align-items: center; padding: .78rem 1.3rem; border-radius: 999px; background: var(--surface-2); color: var(--text-2); font-weight: 600; font-size: .98rem; }
+.ln-act .i { width: 1.25rem; height: 1.25rem; margin-right: .6rem; }
+.ln-act:hover { background: var(--surface-3); color: var(--text); }
+body.kbd .ln-act.f:focus, body.is-tv .ln-act.f:focus { background: var(--text); color: var(--bg); box-shadow: none; }
+
+/* ==========================================================
    Handy & kleines Tablet: Menü unten
    ========================================================== */
 @media (max-width: 960px) and (orientation: portrait) {
@@ -1112,4 +1150,35 @@ body.lite .fh-title { text-shadow: none; }
   html:not(.tv) .id-box { margin-top: 1rem; }
   html:not(.tv) .osd-top { padding: 1rem 1.4rem 2rem; }
   html:not(.tv) .osd-bottom { padding: 2rem 1.4rem 1rem; }
+}
+
+/* Startbildschirm auf kleinen Bildschirmen */
+@media (orientation: landscape) and (max-height: 540px) {
+  html:not(.tv) .launcher { padding: calc(.9rem + env(safe-area-inset-top)) var(--pad) .7rem calc(var(--pad) + env(safe-area-inset-left)); }
+  html:not(.tv) .ln-head .brand { font-size: 1.3rem; }
+  html:not(.tv) .ln-head .brand-mark { width: 2.1rem; height: 2.1rem; }
+  html:not(.tv) .ln-clock { font-size: 1.35rem; margin-left: 1rem; }
+  html:not(.tv) .ln-head .hero-status { font-size: .85rem; padding: .35rem .8rem; }
+  html:not(.tv) .ln-tiles { margin: 1rem 0 .9rem; grid-gap: .8rem; gap: .8rem; }
+  html:not(.tv) .ln-tile { padding: 1.1rem 1.2rem; }
+  html:not(.tv) .lt-ic, html:not(.tv) .ln-tile.k-live .lt-ic { width: 3.1rem; height: 3.1rem; border-radius: .9rem; }
+  html:not(.tv) .lt-ic .i, html:not(.tv) .ln-tile.k-live .lt-ic .i { width: 1.8rem; height: 1.8rem; }
+  html:not(.tv) .lt-label { font-size: 1.55rem; }
+  html:not(.tv) .ln-tile.k-live .lt-label { font-size: 1.8rem; }
+  html:not(.tv) .lt-sub { font-size: .85rem; margin-top: .3rem; }
+  html:not(.tv) .ln-act { padding: .5rem .95rem; font-size: .85rem; }
+}
+@media (max-width: 700px) and (orientation: portrait) {
+  html:not(.tv) .shell.is-launcher .content { padding-bottom: 2.4rem; }
+  html:not(.tv) .shell.is-launcher .statusbar { bottom: 0; padding-bottom: calc(.25rem + env(safe-area-inset-bottom)); }
+  html:not(.tv) .launcher { overflow-y: auto; padding-top: calc(1.2rem + env(safe-area-inset-top)); }
+  html:not(.tv) .ln-head { flex-wrap: wrap; }
+  html:not(.tv) .ln-head .hero-status { order: 3; margin: 1rem 0 0; }
+  html:not(.tv) .ln-clock { margin-left: auto; font-size: 1.4rem; }
+  html:not(.tv) .ln-tiles { flex: none; max-height: none; grid-template-columns: 1fr; grid-gap: .8rem; gap: .8rem; margin: 1.3rem 0 1.2rem; }
+  html:not(.tv) .ln-tile { flex-direction: row; align-items: center; justify-content: flex-start; padding: 1.1rem; min-height: 6.4rem; }
+  html:not(.tv) .lt-ic, html:not(.tv) .ln-tile.k-live .lt-ic { width: 3.4rem; height: 3.4rem; border-radius: 1rem; flex: none; margin-right: 1rem; }
+  html:not(.tv) .lt-ic .i, html:not(.tv) .ln-tile.k-live .lt-ic .i { width: 1.9rem; height: 1.9rem; }
+  html:not(.tv) .lt-label, html:not(.tv) .ln-tile.k-live .lt-label { font-size: 1.5rem; }
+  html:not(.tv) .lt-sub { font-size: .85rem; }
 }

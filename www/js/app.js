@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Lumio Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.6.1',
+    version: '1.7.0',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     hlsCdn: 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js',
     requestTimeout: 30000,
@@ -1905,14 +1905,14 @@
     return { input: input, wrap: h('label', { class: 'field' }, h('span', { text: label }), input) };
   }
 
-  function activateProfile(p, isNew, restore) {
+  function activateProfile(p, isNew) {
     App.profile = p;
     App.provider = makeProvider(p);
     Store.set('active', p.id);
     if (isNew || p.type === 'demo') { Shell.open(); Expiry.check(); return; }
     // Kurz prüfen, ob der Zugang noch funktioniert – die Startseite erscheint trotzdem sofort
     App.provider.login().catch(function (e) { toast(T('Hinweis: {0}', e.message), 4000); });
-    Shell.open(restore);
+    Shell.open();
     Expiry.check();
   }
 
@@ -1921,9 +1921,9 @@
      ========================================================== */
   var Shell = {
     el: null, view: null, current: null, buttons: {}, pendingFocus: null,
-    open: function (restore) {
+    open: function () {
       var self = this;
-      self.buttons = {};
+      self.buttons = {}; self.current = null;
       self.view = h('div', { class: 'view' });
       var tabs = h('nav', { class: 'main-tabs', 'aria-label': T('Hauptmenü') });
       [['home', T('Start'), 'home'], ['live', T('Live TV'), 'live'], ['movie', T('Filme'), 'movie'], ['series', T('Serien'), 'series']].forEach(function (it) {
@@ -1965,26 +1965,17 @@
           else if (self.current === 'home') self.show('home', false, true);
         }
       });
+      // Die App startet immer auf dem Startbildschirm (Zugang + Live TV / Filme / Serien)
       self.show('home');
-      if (restore) self.restoreLast();
-    },
-    /* Beim App-Start dort weitermachen, wo man aufgehört hat */
-    restoreLast: function () {
-      var r = Last.get();
-      if (!r || !r.item || Date.now() - r.at > 30 * 86400000) return;
-      var it = r.item, kind = it.kind === 'live' ? 'live' : it.kind === 'series' ? 'series' : it.kind === 'movie' ? 'movie' : null;
-      if (!kind) return;
-      if (it.catId) lastCat[pid() + kind] = String(it.catId);
-      this.pendingFocus = { kind: kind, id: it.id };
-      this.show(kind, false);
-      if (kind === 'movie') setTimeout(function () { showMovie(it); }, 150);
-      if (kind === 'series') setTimeout(function () { showSeries(it); }, 150);
     },
     show: function (name, focusContent, keepFocus) {
-      var self = this;
+      var self = this, prev = self.current;
       self.current = name;
-      // Mini-Player beenden, wenn man zu Filmen oder Serien wechselt
-      if ((name === 'movie' || name === 'series') && Player.mini) Player.close();
+      // Mini-Player beenden, wenn man zu Filmen, Serien oder zum Startbildschirm wechselt
+      if ((name === 'movie' || name === 'series' || name === 'home') && Player.mini) Player.close();
+      if (QuickSearch.isOpen) QuickSearch.close(true);
+      // Startbildschirm ohne Menüleiste – er ist selbst das Menü
+      self.el.classList.toggle('is-launcher', name === 'home');
       Object.keys(self.buttons).forEach(function (k) { self.buttons[k].classList.toggle('is-on', k === name); });
       self.viewBack = null;
       // alte Ansicht aufräumen (lange Listen sofort freigeben – wichtig für Boxen mit wenig Speicher)
@@ -1992,7 +1983,7 @@
       if (old && old._dispose) { try { old._dispose(); } catch (e) {} }
       clear(self.view);
       var view;
-      if (name === 'home') view = HomeView();
+      if (name === 'home') view = LauncherView(prev);
       else if (name === 'settings') view = SettingsView();
       else if (name === 'profile') view = ProfileView();
       else if (name === 'favs') view = FavoritesView();
@@ -2010,101 +2001,21 @@
   var INPUT = { mode: 'key' };
 
   /* ---------- Gemeinsame Listen (Start, Suche, Empfehlungen) ---------- */
-  var searchCache = {}, homeCache = {};
+  var searchCache = {};
   /* Alle Einträge einer Art (für die Suche) */
   function allItems(kind) {
     var k = pid() + kind;
     if (!searchCache[k]) { searchCache[k] = App.provider.items(kind, '__all'); searchCache[k].catch(function () { delete searchCache[k]; }); }
     return searchCache[k];
   }
-  /* Sprache der Filme und Serien auf der Startseite: frei wählbar (pro Playlist), sonst die App-Sprache */
-  function homeLang() { return Settings.get('homeLang.' + pid()) || Lang.cur; }
-  function pickGroup(groups) {
-    if (!groups) return null;
-    var want = homeLang(), g = groups.filter(function (x) { return x.key === want; })[0];
-    return g || groups.filter(function (x) { return x.key !== '_'; })[0] || null;
-  }
-  /* Auswahl für die Startseite: bei Xtream nur die ersten Kategorien (schnell, auch auf schwachen Geräten).
-     Sind die Kategorien nach Sprachen benannt, kommen nur Filme/Serien der gewählten Sprache. */
-  function sampleItems(kind) {
-    var k = pid() + kind + '|' + homeLang();
-    if (homeCache[k]) return homeCache[k];
-    var prov = App.provider;
-    var pr = prov.categories(kind).then(function (cats) {
-      cats = cats || [];
-      var mine = pickGroup(groupCats(cats));
-      if (prov.type === 'xtream') {
-        return Promise.all((mine ? mine.cats : cats).slice(0, 3).map(function (c) { return prov.items(kind, c.id).catch(function () { return []; }); }))
-          .then(function (lists) {
-            var seen = {}, out = [];
-            lists.forEach(function (l) { l.forEach(function (x) { if (!seen[x.id]) { seen[x.id] = 1; out.push(x); } }); });
-            return out;
-          });
-      }
-      return prov.items(kind, '__all').then(function (all) {
-        if (!mine) return all;
-        var ids = {};
-        mine.cats.forEach(function (c) { ids[c.id] = 1; });
-        return all.filter(function (x) { return ids[x.catId]; });
-      });
-    });
-    homeCache[k] = pr;
-    pr.catch(function () { delete homeCache[k]; });
-    return pr;
-  }
   function byAdded(a, b) { return Number(b.added || 0) - Number(a.added || 0); }
   function byRating(a, b) { return Number(b.rating || 0) - Number(a.rating || 0); }
   function some(list, fn) { for (var i = 0; i < list.length; i++) if (fn(list[i])) return true; return false; }
-  function daySeed(s) { var d = new Date(); return hashCode(s + '|' + d.getFullYear() + d.getMonth() + d.getDate()); }
 
-  /* Empfehlungen: aus den Kategorien, die du schaust oder gemerkt hast – täglich neu gemischt */
-  function recommendations(exclude) {
-    var cats = { movie: [], series: [] };
-    function addCat(kind, id) { if (id && cats[kind].indexOf(id) < 0) cats[kind].push(id); }
-    Resume.recent().forEach(function (r) { if (r.item.kind === 'movie') addCat('movie', r.item.catId); });
-    Favs.list('movie').forEach(function (x) { addCat('movie', x.catId); });
-    Favs.list('series').forEach(function (x) { addCat('series', x.catId); });
-    var jobs = [];
-    cats.movie.slice(0, 2).forEach(function (c) { jobs.push(App.provider.items('movie', c).catch(function () { return []; })); });
-    cats.series.slice(0, 1).forEach(function (c) { jobs.push(App.provider.items('series', c).catch(function () { return []; })); });
-    if (!jobs.length) jobs = [sampleItems('movie').catch(function () { return []; }), sampleItems('series').catch(function () { return []; })];
-    var skip = {};
-    Object.keys(exclude).forEach(function (k) { skip[k] = 1; });
-    Resume.recent().forEach(function (r) { skip[r.item.kind + r.item.id] = 1; });
-    Favs.list('movie').concat(Favs.list('series')).forEach(function (x) { skip[x.kind + x.id] = 1; });
-    return Promise.all(jobs).then(function (lists) {
-      var pool = [];
-      lists.forEach(function (l) { l.forEach(function (x) { var k = x.kind + x.id; if (skip[k]) return; skip[k] = 1; pool.push(x); }); });
-      var scored = pool.map(function (x) { return { x: x, s: (Number(x.rating) || 5) + (daySeed(x.id) % 1000) / 250 }; });
-      scored.sort(function (a, b) { return b.s - a.s; });
-      return scored.slice(0, 18).map(function (o) { return o.x; });
-    });
-  }
-
-  /* Auswahl „Filme & Serien auf: Deutsch / Türkisch / …“ – erscheint nur, wenn die Playlist Sprachen kennt */
-  function homeLangBar() {
-    var bar = h('div', { class: 'home-lang' });
-    App.provider.categories('movie').then(function (cats) {
-      var groups = groupCats(cats || []), cur = pickGroup(groups);
-      if (!groups || !cur) return;
-      bar.appendChild(h('span', { class: 'hl-label', text: T('Filme & Serien auf') }));
-      groups.filter(function (g) { return g.key !== '_'; }).slice(0, 8).forEach(function (g) {
-        var b = h('button', { class: 'hl-chip f' + (g === cur ? ' is-on' : ''), title: g.name, 'data-k': g.key, onclick: function () {
-          if (g === cur) return;
-          Settings.set('homeLang.' + pid(), g.key);
-          Shell.show('home', false, true);
-          setTimeout(function () { var nb = $('.hl-chip[data-k="' + g.key + '"]'); if (nb) Nav.focus(nb); }, 80);
-        } }, h('span', { class: 'lc-code', text: g.code }), h('span', { text: g.name }));
-        bar.appendChild(b);
-      });
-    }).catch(function () {});
-    return bar;
-  }
-
-  /* ---------- Startseite ---------- */
-  function HomeView() {
-    var p = App.profile, season = Season.current();
-    var langBar = homeLangBar();
+  /* ---------- Startbildschirm: Zugang und Auswahl Live TV / Filme / Serien ----------
+     Bewusst schlicht: drei große Kacheln, darunter Suche, Favoriten, Playlist und Einstellungen. */
+  function LauncherView(focusKind) {
+    var p = App.profile;
     var status = h('span', { class: 'hero-status' }, h('i', { class: 'dot' }), h('span', { text: p.type === 'demo' ? T('Demo-Modus') : p.name }));
     App.provider.account().then(function (a) {
       if (!a || !a.expires) return;
@@ -2113,95 +2024,45 @@
       else if (days <= 30) { status.classList.add('is-warn'); status.lastChild.textContent = days === 1 ? T('{0} – läuft in 1 Tag ab', p.name) : T('{0} – läuft in {1} Tagen ab', p.name, days); }
       else status.lastChild.textContent = T('{0} – gültig bis {1}', p.name, fmtDate(a.expires));
     }).catch(function () { status.classList.add('is-off'); status.lastChild.textContent = T('{0} – keine Verbindung', p.name); });
-    var hero = h('section', { class: 'hero' }, heroArt(),
-      h('div', { class: 'hero-in' },
-        status,
-        h('h1', { class: 'hero-title' },
-          h('span', { class: 'hero-kicker', text: season ? T(SEASONS[season].greet) : T('Willkommen bei') }),
-          wordmark()),
-        h('p', { class: 'hero-sub', text: p.type === 'demo' ? T('Probiere die App mit freien Test-Videos aus.') : T('Dein Licht für Live TV, Filme und Serien.') }),
-        langBar));
-    var rows = h('div', { class: 'rows' });
-    var el = h('div', { class: 'page home' }, hero, rows);
 
-    function rail(title, kids, moreKind, kind) {
-      var track = h('div', { class: 'rail-track' }, kids);
-      if (moreKind) track.appendChild(h('button', { class: 'more-card f', onclick: function () { Shell.show(moreKind, true); } }, icon('arrowR'), h('span', { text: T('Mehr anzeigen') })));
-      kind = kind || moreKind;
-      return h('section', { class: 'rail' + (kind ? ' k-' + kind : '') }, h('h2', null, kind ? icon(kind) : null, h('span', { text: title })), track);
-    }
-    function asyncRail(title, pr, build) {
-      var kids = [];
-      for (var i = 0; i < 8; i++) kids.push(h('span', { class: 'sk poster-sk' }));
-      var sk = rail(title, kids);
-      rows.appendChild(sk);
-      pr.then(function (res) {
-        if (!sk.parentNode) return;
-        var r = build(res || []);
-        if (r) rows.replaceChild(r, sk); else rows.removeChild(sk);
-      }, function () { if (sk.parentNode) rows.removeChild(sk); });
-    }
+    var clock = h('span', { class: 'ln-clock' });
+    function tick() { var d = new Date(); clock.textContent = (d.getHours() < 10 ? '0' : '') + d.getHours() + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes(); }
+    tick();
+    var timer = setInterval(tick, 15000);
 
-    // „Weiterschauen“ und „Zuletzt gesehene Sender“ werden nach dem Schauen nur aufgefrischt –
-    // die Startseite wird nicht komplett neu aufgebaut (Scroll-Position und Fokus bleiben erhalten)
-    var personal = h('div', { class: 'rows-personal' });
-    rows.appendChild(personal);
-    function paintPersonal() {
-      clear(personal);
-      var resume = Resume.recent().slice(0, 12);
-      if (resume.length) personal.appendChild(rail(T('Weiterschauen'), resume.map(continueCard)));
-      var recent = Recent.list();
-      if (recent.length) personal.appendChild(rail(T('Zuletzt gesehene Sender'), recent.map(function (it, i) { var t = chanTile(it, function () { playItem(it, { list: recent, index: i }); }); t.setAttribute('data-key', 'live:' + it.id); return t; }), null, 'live'));
+    var want = focusKind === 'movie' || focusKind === 'series' ? focusKind : 'live';
+    function tile(kind, label) {
+      var sub = h('span', { class: 'lt-sub' });
+      var b = h('button', { class: 'ln-tile f k-' + kind, 'data-key': 'ln:' + kind, 'data-autofocus': kind === want ? true : null, onclick: function () { Shell.show(kind, true); } },
+        h('span', { class: 'lt-ic' }, icon(kind)),
+        h('span', { class: 'lt-txt' }, h('span', { class: 'lt-label', text: label }), sub));
+      b._sub = sub;
+      return b;
     }
-    paintPersonal();
-    el._refresh = function () {
-      if (hero && hero._refresh) hero._refresh();
-      var st = Screens.top(), lf = st && st.lastFocus, key = lf && lf.getAttribute && lf.getAttribute('data-key');
-      var inPersonal = lf && personal.contains(lf);
-      paintPersonal();
-      if (inPersonal && st) st.lastFocus = (key && $('[data-key="' + key + '"]', personal)) || $('.f', personal) || $('.f', el);
-    };
+    var tLive = tile('live', T('Live TV')), tMovie = tile('movie', T('Filme')), tSeries = tile('series', T('Serien'));
+    function paintSubs() {
+      var rec = Recent.list()[0], res = Resume.recent();
+      var mv = res.filter(function (r) { return r.item.kind === 'movie'; })[0];
+      var ep = res.filter(function (r) { return r.item.kind === 'episode'; })[0];
+      tLive._sub.textContent = rec ? T('Zuletzt: {0}', rec.name) : T('Alle Sender');
+      tMovie._sub.textContent = mv ? T('Weiterschauen: {0}', mv.item.name) : T('Alle Filme');
+      tSeries._sub.textContent = ep ? T('Weiterschauen: {0}', ep.item.seriesName || ep.item.name) : T('Alle Serien');
+    }
+    paintSubs();
 
-    var shown = {};
-    var moviesP = sampleItems('movie'), seriesP = sampleItems('series');
-    // Großes Titelbild: „Empfehlung des Tages“ aus den bestbewerteten Filmen (wechselt täglich)
-    moviesP.then(function (list) {
-      var pool = list.filter(function (x) { return x.logo && Number(x.rating) > 0; }).sort(byRating).slice(0, 6);
-      if (!pool.length) pool = list.filter(function (x) { return x.logo; }).slice(0, 6);
-      if (!pool.length || !hero.parentNode) return;
-      var pick = pool[daySeed('hero') % pool.length];
-      var fh = featureHero(pick, { kicker: T('Empfehlung des Tages'), top: status, bottom: langBar });
-      fh.classList.add('home-hero');
-      var hadFocus = hero.contains(document.activeElement);
-      el.replaceChild(fh, hero);
-      hero = fh;
-      if (hadFocus) Nav.focus($('.btn.primary', fh));
-    }).catch(function () {});
-    asyncRail(T('Top bewertet'), moviesP, function (list) {
-      if (!list.length) return null;
-      var fresh = some(list, function (x) { return Number(x.added) > 0; });
-      var rated = some(list, function (x) { return Number(x.rating) > 0; });
-      var pool = list.slice();
-      if (fresh) pool = pool.sort(byAdded).slice(0, 300);
-      if (rated) pool.sort(byRating);
-      var top = pool.slice(0, 18);
-      top.forEach(function (x) { shown[x.kind + x.id] = 1; });
-      // Echte Zuschauerzahlen gibt es nicht – sortiert wird nach der Bewertung, die der Anbieter mitschickt
-      return rail(rated ? T('Top bewertet') : (fresh ? T('Neue Filme') : T('Filme')), top.map(function (it) { return posterCard(it, function () { openItem(it); }); }), 'movie');
-    });
-    asyncRail(T('Neue Serien'), seriesP, function (list) {
-      if (!list.length) return null;
-      var fresh = some(list, function (x) { return Number(x.added) > 0; });
-      var pool = list.slice();
-      if (fresh) pool.sort(byAdded);
-      var top = pool.slice(0, 18);
-      top.forEach(function (x) { shown[x.kind + x.id] = 1; });
-      return rail(fresh ? T('Neue Serien') : T('Serien'), top.map(function (it) { return posterCard(it, function () { openItem(it); }); }), 'series');
-    });
-    asyncRail(T('Empfehlungen für dich'), Promise.all([moviesP.catch(function () { return []; }), seriesP.catch(function () { return []; })]).then(function () { return recommendations(shown); }), function (list) {
-      if (!list.length) return null;
-      return rail(T('Empfehlungen für dich'), list.map(function (it) { return posterCard(it, function () { openItem(it); }); }));
-    });
+    function act(ic, label, fn) { return h('button', { class: 'ln-act f', 'data-key': 'ln:' + ic, onclick: fn }, icon(ic), h('span', { text: label })); }
+    var searchAct = act('search', T('Suche'), function () { QuickSearch.toggle(searchAct); });
+    var el = h('div', { class: 'launcher' }, heroArt(),
+      h('header', { class: 'ln-head' }, h('div', { class: 'brand' }, brandMark(), wordmark()), status, clock),
+      h('div', { class: 'ln-tiles' }, tLive, tMovie, tSeries),
+      h('div', { class: 'ln-acts' },
+        searchAct,
+        act('heart', T('Favoriten'), function () { Shell.show('favs', true); }),
+        act('profile', T('Playlist'), function () { Shell.show('profile', true); }),
+        act('settings', T('Einstellungen'), function () { Shell.show('settings', true); })));
+    // nach dem Schauen nur die Zeilen „Zuletzt“ / „Weiterschauen“ auffrischen, Fokus bleibt
+    el._refresh = paintSubs;
+    el._dispose = function () { clearInterval(timer); };
     return el;
   }
 
@@ -2579,7 +2440,7 @@
     isOpen: false, el: null, input: null, pop: null, btn: null, timer: null, wired: false,
     build: function (root, btn) {
       var self = this;
-      self.btn = btn;
+      self.btn = self.navBtn = btn;
       self.input = h('input', { class: 'f', type: 'search', placeholder: T('Sender, Filme oder Serien suchen …'), autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false', 'aria-label': T('Suche') });
       self.input.addEventListener('input', function () { clearTimeout(self.timer); self.timer = setTimeout(function () { self.run(); }, 350); });
       self.input.addEventListener('keydown', function (e) {
@@ -2599,9 +2460,18 @@
     place: function () {
       var r = this.btn.getBoundingClientRect(), W = window.innerWidth;
       var rem = parseFloat(window.getComputedStyle(document.documentElement).fontSize) || 16, hh = 2.8 * rem;
-      var nav = this.btn.closest ? this.btn.closest('.topnav').getBoundingClientRect() : { right: 0, bottom: r.bottom };
+      var navEl = this.btn.closest ? this.btn.closest('.topnav') : null;
       var st = this.el.style, ps = this.pop.style;
       st.left = st.right = ps.left = ps.right = 'auto';
+      var nav = navEl ? navEl.getBoundingClientRect() : null;
+      if (!nav || !nav.width) {
+        // Startbildschirm (ohne Menüleiste): Suchfeld mittig oben
+        var head = document.querySelector('.ln-head'), hb = head ? head.getBoundingClientRect().bottom : 0;
+        var w = Math.min(40 * rem, W - 24), lx = (W - w) / 2, top = hb ? hb + 0.8 * rem : 1.4 * rem;
+        st.left = ps.left = lx + 'px'; st.width = ps.width = w + 'px';
+        st.top = top + 'px'; ps.top = (top + hh + 8) + 'px';
+        return;
+      }
       if (r.left < W * 0.3) {
         // Seitenleiste (Handy quer): Leiste oben im Inhaltsbereich
         var left = nav.right + 12;
@@ -2615,8 +2485,9 @@
         else { var pr = W - r.left + 8; ps.right = pr + 'px'; ps.width = Math.min(40 * rem, W - pr - 12) + 'px'; }
       }
     },
-    open: function () {
+    open: function (anchor) {
       var self = this;
+      self.btn = anchor || self.navBtn;
       self.isOpen = true;
       self.el.classList.remove('is-hidden'); self.pop.classList.remove('is-hidden');
       self.btn.classList.add('is-on');
@@ -2633,7 +2504,7 @@
       this.btn.classList.remove('is-on');
       if (!keepFocus) Nav.focus(this.btn);
     },
-    toggle: function () { if (this.isOpen) this.close(); else this.open(); },
+    toggle: function (anchor) { if (this.isOpen) this.close(); else this.open(anchor); },
     run: function () {
       var self = this, pop = self.pop, q = norm(self.input.value.trim());
       if (q.length < 2) { clear(pop).appendChild(h('p', { class: 'hint qs-hint', text: T('Gib mindestens zwei Buchstaben ein. Gesucht wird in allen Sendern, Filmen und Serien deiner Playlist.') })); return; }
@@ -4010,7 +3881,7 @@
     registerTvKeys();
 
     var active = Profiles.get(Store.get('active'));
-    if (active) activateProfile(active, false, true);
+    if (active) activateProfile(active, false);
     else showProfiles();
     Cloud.start();
     StillWatching.start();
