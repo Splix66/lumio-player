@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Lumio Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.5.1',
+    version: '1.5.2',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     hlsCdn: 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js',
     requestTimeout: 30000,
@@ -757,7 +757,7 @@
     apply: function (items) {
       var byId = {};
       items.forEach(function (it) { byId[it.id] = it; });
-      var list = Profiles.list(), added = [], removed = [], changed = false;
+      var list = Profiles.list(), added = [], removed = [], edited = [], changed = false;
       list = list.filter(function (p) {
         if (p.remoteId && !byId[p.remoteId]) { removed.push(p); changed = true; return false; }
         return true;
@@ -769,9 +769,11 @@
         data.name = it.name; data.remoteId = it.id;
         var ex = list.filter(function (p) { return p.remoteId === it.id; })[0];
         if (!ex) { data.id = uid(); list.push(data); added.push(data); changed = true; return; }
+        var conn = false;
         ['type', 'name', 'url', 'server', 'username', 'password'].forEach(function (k) {
-          if ((ex[k] || '') !== (data[k] || '')) { ex[k] = data[k]; changed = true; }
+          if ((ex[k] || '') !== (data[k] || '')) { ex[k] = data[k]; changed = true; if (k !== 'name') conn = true; }
         });
+        if (conn) edited.push(ex);
       });
       if (!changed) return { changed: false };
       Profiles.save(list);
@@ -781,9 +783,16 @@
       });
       if (added.length) toast(T('Neue Playlist empfangen: {0}', added.map(function (p) { return p.name; }).join(', ')), 4000);
       var top = Screens.top();
+      var cur = App.profile && list.filter(function (p) { return p.id === App.profile.id; })[0];
+      if (cur) App.profile.name = cur.name;
       if (App.profile && removed.some(function (p) { return p.id === App.profile.id; })) { App.profile = null; showProfiles(); }
+      else if (App.profile && edited.some(function (p) { return p.id === App.profile.id; })) {
+        // Zugangsdaten der laufenden Playlist wurden auf der Webseite geändert: neu laden (außer während der Wiedergabe)
+        if (Player.el && !Player.mini) toast(T('Playlist „{0}“ wurde geändert – gilt nach dem nächsten Start.', cur.name), 5000);
+        else { toast(T('Playlist „{0}“ wurde geändert.', cur.name), 2000); reloadApp(); }
+      }
       else if (top && top.name === 'profiles') showProfiles();
-      return { changed: true, added: added, removed: removed };
+      return { changed: true, added: added, removed: removed, edited: edited };
     },
     /* Playlists, die direkt in der App eingetragen wurden, auch online speichern (damit sie auf der Webseite erscheinen) */
     upload: function () {

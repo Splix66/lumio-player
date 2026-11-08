@@ -3,132 +3,323 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0a0c11">
+  <meta name="theme-color" content="#0b0b0f">
   <meta name="robots" content="noindex">
-  <title>Lumio Player – Playlist hinzufügen</title>
+  <title>Lumio Player – Kundenbereich</title>
   <style>
+    /* Lumio Player – Kundenbereich (Playlists verwalten, Hilfe & Support)
+       Gleiche Farben wie die App, damit es sich wie ein Produkt anfühlt. */
     :root {
-      --bg: #0b0a1a; --surface: #171430; --surface-2: #211c40; --surface-3: #2d2753;
-      --line: rgba(196, 181, 253, 0.12); --text: #f5f3ff; --muted: #a6a1c8; --dim: #736d9a;
-      --accent: #8b5cf6; --accent-2: #c084fc; --accent-ink: #ffffff; --ok: #34d399; --bad: #ff8aa0;
-      --mono: ui-monospace, Menlo, Consolas, "DejaVu Sans Mono", monospace;
+      --bg: #0b0b0f; --surface: #14141a; --surface-2: #1c1c24; --surface-3: #262630;
+      --line: rgba(255, 255, 255, .08); --line-2: rgba(255, 255, 255, .14);
+      --text: #f4f4f6; --muted: #a4a4b4; --dim: #6f6f80;
+      --accent: #8b5cf6; --accent-2: #a78bfa; --accent-soft: rgba(139, 92, 246, .16);
+      --ok: #34d399; --bad: #ff7a90; --gold: #ffc53d;
+      --mono: ui-monospace, "SF Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace;
+      --r: .9rem;
       color-scheme: dark;
     }
     * { box-sizing: border-box; }
     html, body { margin: 0; background: var(--bg); color: var(--text); }
     body {
-      font: 16px/1.45 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font: 16px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       -webkit-font-smoothing: antialiased; min-height: 100vh;
-      background: radial-gradient(900px 520px at 70% -10%, rgba(139,92,246,.28), transparent 62%), var(--bg);
-      padding: max(24px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 48px max(16px, env(safe-area-inset-left));
+      padding: 0 max(16px, env(safe-area-inset-right)) 56px max(16px, env(safe-area-inset-left));
     }
-    main { max-width: 34rem; margin: 0 auto; display: flex; flex-direction: column; gap: 1.2rem; }
-    .brand { display: flex; align-items: center; gap: .7rem; font-weight: 800; font-size: 1.3rem; letter-spacing: -.02em; }
-    .mark { width: 2.2rem; height: 2.2rem; display: grid; place-items: center; color: var(--text); }
+    a { color: var(--accent-2); }
+    svg.i { width: 1.15em; height: 1.15em; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    [hidden] { display: none !important; }
+    .wrap { max-width: 46rem; margin: 0 auto; }
+
+    /* Kopfzeile */
+    .top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: max(18px, env(safe-area-inset-top)) 0 18px; }
+    .brand { display: flex; align-items: center; gap: .65rem; font-weight: 800; font-size: 1.2rem; letter-spacing: -.02em; color: var(--text); text-decoration: none; }
+    .brand span:last-child { font-weight: 400; color: var(--muted); }
+    .mark { width: 2rem; height: 2rem; display: grid; place-items: center; }
     .mark svg { width: 100%; height: 100%; overflow: visible; }
     .mark .play { fill: url(#lumioPlay); }
-    .mark .dot { fill: #ffc53d; filter: drop-shadow(0 0 4px #ffc53d); }
-    h1 { font-size: 1.6rem; margin: .4rem 0 0; letter-spacing: -.02em; text-wrap: balance; }
-    .lead { color: var(--muted); margin: 0; }
-    .card { background: var(--surface); border-radius: 1rem; padding: 1.2rem; display: flex; flex-direction: column; gap: .9rem; box-shadow: inset 0 0 0 1px var(--line); }
-    .card h2 { font-size: 1.05rem; margin: 0; }
-    .step { display: inline-grid; place-items: center; width: 1.5rem; height: 1.5rem; border-radius: 50%; background: var(--surface-3); font-size: .8rem; margin-right: .5rem; }
-    label { display: flex; flex-direction: column; gap: .35rem; font-size: .85rem; color: var(--muted); }
-    input {
-      font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: .6rem;
-      padding: .8rem .9rem; width: 100%; outline: none;
-    }
-    input:focus { border-color: var(--accent); }
-    input.mono { font-family: var(--mono); letter-spacing: .05em; text-transform: uppercase; }
-    .row { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
-    .row > * { min-width: 0; }
-    @media (max-width: 420px) { .row { grid-template-columns: 1fr; } }
+    .mark .dot { fill: var(--gold); filter: drop-shadow(0 0 4px var(--gold)); }
+    .lang { display: flex; padding: .2rem; border-radius: 999px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); }
+    .lang button { padding: .35rem .7rem; font-size: .8rem; font-weight: 700; background: transparent; color: var(--muted); }
+    .lang button[aria-pressed="true"] { background: var(--surface-3); color: var(--text); }
+
+    /* Grundelemente */
+    h1 { font-size: clamp(1.6rem, 5vw, 2.2rem); line-height: 1.12; letter-spacing: -.03em; margin: .6rem 0 .6rem; text-wrap: balance; }
+    h2 { font-size: 1.15rem; margin: 0; letter-spacing: -.01em; }
+    p { margin: 0; }
+    .lead { color: var(--muted); max-width: 36rem; }
     button {
-      font: inherit; font-weight: 700; border: 0; border-radius: 999px; padding: .85rem 1.3rem; cursor: pointer;
-      background: var(--surface-3); color: var(--text);
+      font: inherit; font-weight: 650; border: 0; border-radius: 999px; padding: .75rem 1.2rem; cursor: pointer;
+      background: var(--surface-3); color: var(--text); display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+      transition: background-color .15s ease, color .15s ease, box-shadow .15s ease;
     }
-    button.primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: var(--accent-ink); }
+    button:hover { background: #30303c; }
+    button.primary { background: var(--accent); color: #fff; }
+    button.primary:hover { background: #7c4ff0; }
+    button.ghost { background: transparent; box-shadow: inset 0 0 0 1px var(--line-2); }
+    button.ghost:hover { background: var(--surface-2); }
+    button.danger { color: var(--bad); }
+    button.danger.is-armed { background: var(--bad); color: #1a0509; box-shadow: none; }
+    button.small { padding: .45rem .85rem; font-size: .85rem; }
     button:disabled { opacity: .55; cursor: default; }
-    button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-    .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; background: var(--bg); padding: .3rem; border-radius: 999px; }
-    .tabs button { padding: .6rem; background: transparent; color: var(--muted); }
-    .tabs button[aria-selected="true"] { background: var(--surface-3); color: var(--text); }
-    .msg { font-size: .9rem; min-height: 1.3em; margin: 0; }
+    button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible, a:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+    label { display: flex; flex-direction: column; gap: .35rem; font-size: .85rem; color: var(--muted); font-weight: 600; }
+    input, select, textarea {
+      font: inherit; font-weight: 400; color: var(--text); background: var(--bg); border: 1px solid var(--line-2); border-radius: .65rem;
+      padding: .75rem .85rem; width: 100%; outline: none;
+    }
+    textarea { min-height: 8rem; resize: vertical; line-height: 1.45; }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+    input.mono { font-family: var(--mono); letter-spacing: .06em; text-transform: uppercase; font-size: 1.05rem; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+    .grid2 > * { min-width: 0; }
+    .field-pass { position: relative; }
+    .field-pass input { padding-right: 6.5rem; }
+    .field-pass button { position: absolute; right: .35rem; bottom: .35rem; padding: .4rem .7rem; font-size: .8rem; background: var(--surface-2); }
+    .msg { font-size: .9rem; min-height: 1.35em; }
     .msg.bad { color: var(--bad); }
     .msg.ok { color: var(--ok); }
-    .device { display: flex; align-items: center; justify-content: space-between; gap: .8rem; flex-wrap: wrap; }
-    .device b { font-family: var(--mono); letter-spacing: .04em; }
-    .device .dot { display: inline-block; width: .55rem; height: .55rem; border-radius: 50%; background: var(--ok); margin-right: .45rem; }
-    ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .5rem; }
-    li { display: flex; align-items: center; gap: .8rem; background: var(--surface-2); border-radius: .7rem; padding: .7rem .8rem; }
-    li .t { flex: 1; min-width: 0; }
-    li .t b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    li .t small { color: var(--muted); display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    li button { padding: .45rem .8rem; font-size: .85rem; background: transparent; color: var(--bad); box-shadow: inset 0 0 0 1px var(--line); }
-    .empty { color: var(--dim); font-size: .9rem; margin: 0; }
-    .hint { color: var(--dim); font-size: .8rem; margin: 0; }
-    .hint a { color: var(--muted); }
-    [hidden] { display: none !important; }
+    .hint { color: var(--dim); font-size: .82rem; }
+    .card { background: var(--surface); border-radius: var(--r); box-shadow: inset 0 0 0 1px var(--line); padding: 1.25rem; }
+    .stack { display: flex; flex-direction: column; gap: .9rem; }
+
+    /* Hauptbereiche */
+    .tabs { display: flex; gap: .3rem; margin: 1.4rem 0 1.2rem; border-bottom: 1px solid var(--line); }
+    .tabs button { border-radius: .6rem .6rem 0 0; background: transparent; color: var(--muted); padding: .7rem 1rem; box-shadow: inset 0 -2px 0 transparent; }
+    .tabs button:hover { color: var(--text); background: transparent; }
+    .tabs button[aria-selected="true"] { color: var(--text); box-shadow: inset 0 -2px 0 var(--accent-2); }
+    .tabs .count { font-size: .78rem; color: var(--dim); font-variant-numeric: tabular-nums; font-weight: 600; }
+
+    /* Verbinden */
+    .connect { display: grid; grid-template-columns: 1.1fr .9fr; gap: 1.2rem; align-items: start; }
+    .connect form { display: flex; flex-direction: column; gap: 1rem; }
+    .connect .grid2 { grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); }
+    .connect input.mono { letter-spacing: .03em; }
+    .where { display: flex; flex-direction: column; gap: .8rem; color: var(--muted); font-size: .92rem; }
+    .where b { color: var(--text); }
+    /* Mini-Abbild der Fußleiste der App: so sieht man sofort, wo MAC und KEY stehen */
+    .tv { aspect-ratio: 16 / 9; border-radius: .7rem; background: linear-gradient(160deg, #1b1630, #0d0d14 60%); box-shadow: inset 0 0 0 1px var(--line-2), 0 1.2rem 2rem -1rem rgba(0, 0, 0, .7); position: relative; overflow: hidden; }
+    .tv::before { content: ""; position: absolute; left: 8%; top: 18%; width: 46%; height: 9%; border-radius: .3rem; background: rgba(255, 255, 255, .12); }
+    .tv::after { content: ""; position: absolute; left: 8%; top: 34%; width: 30%; height: 6%; border-radius: .3rem; background: rgba(255, 255, 255, .07); }
+    .tv-bar { position: absolute; left: 0; right: 0; bottom: 0; padding: .45rem .6rem; display: flex; gap: .7rem; font: 600 .62rem/1 var(--mono); color: var(--muted); background: rgba(0, 0, 0, .45); border-top: 1px solid var(--line); white-space: nowrap; overflow: hidden; }
+    .tv-bar span { color: var(--dim); margin-right: .3rem; }
+    .tv-bar .hl { color: var(--text); box-shadow: 0 0 0 .18rem var(--bg), 0 0 0 .32rem var(--accent-2); border-radius: .2rem; padding: 0 .15rem; animation: hl 2.4s ease-in-out infinite; }
+    @keyframes hl { 50% { box-shadow: 0 0 0 .18rem var(--bg), 0 0 0 .32rem transparent; } }
+
+    /* Verbundenes Gerät */
+    .device { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+    .device .ic { width: 3rem; height: 3rem; border-radius: .8rem; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent-2); flex: none; }
+    .device .ic svg { width: 1.5rem; height: 1.5rem; }
+    .device .who { flex: 1; min-width: 12rem; }
+    .device .who small { display: flex; align-items: center; gap: .45rem; color: var(--muted); font-size: .82rem; font-weight: 600; }
+    .device .who small::before { content: ""; width: .5rem; height: .5rem; border-radius: 50%; background: var(--ok); box-shadow: 0 0 .5rem var(--ok); }
+    .device .who b { font: 600 1.15rem/1.3 var(--mono); letter-spacing: .05em; }
+
+    /* Playlists */
+    .pl-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
+    .pl-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .6rem; }
+    .pl { display: flex; align-items: center; gap: .9rem; background: var(--surface); border-radius: var(--r); padding: .85rem .9rem; box-shadow: inset 0 0 0 1px var(--line); }
+    .pl.is-editing { box-shadow: inset 0 0 0 1.5px var(--accent-2); }
+    .pl .ic { width: 2.6rem; height: 2.6rem; border-radius: .7rem; display: grid; place-items: center; background: var(--surface-2); color: var(--accent-2); flex: none; }
+    .pl .t { flex: 1; min-width: 0; }
+    .pl .t b { display: block; font-size: 1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pl .t small { display: block; color: var(--muted); font-size: .84rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pl .t .type { color: var(--dim); font-weight: 650; margin-right: .5rem; }
+    .pl .act { display: flex; gap: .4rem; flex: none; }
+    .empty { text-align: center; padding: 2.4rem 1.2rem; display: flex; flex-direction: column; align-items: center; gap: .8rem; color: var(--muted); }
+    .empty svg { width: 2.2rem; height: 2.2rem; color: var(--accent-2); }
+    .empty b { color: var(--text); font-size: 1.05rem; }
+    .loading { color: var(--dim); padding: 1.4rem .2rem; }
+
+    /* Bearbeiten / Hinzufügen */
+    .editor { margin-bottom: 1rem; }
+    .editor h2 { margin-bottom: .2rem; }
+    .seg { display: grid; grid-template-columns: 1fr 1fr; gap: .3rem; background: var(--bg); padding: .3rem; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--line); }
+    .seg button { padding: .55rem; background: transparent; color: var(--muted); }
+    .seg button[aria-selected="true"] { background: var(--surface-3); color: var(--text); }
+    .row-btns { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; }
+
+    /* Hilfe */
+    .faq { display: flex; flex-direction: column; gap: .5rem; }
+    .faq details { background: var(--surface); border-radius: var(--r); box-shadow: inset 0 0 0 1px var(--line); }
+    .faq details[open] { box-shadow: inset 0 0 0 1px var(--line-2); }
+    .faq summary { cursor: pointer; list-style: none; padding: 1rem 1.1rem; font-weight: 650; display: flex; justify-content: space-between; gap: 1rem; border-radius: var(--r); }
+    .faq summary::-webkit-details-marker { display: none; }
+    .faq summary::after { content: "+"; color: var(--dim); font-weight: 400; font-size: 1.3rem; line-height: 1; }
+    .faq details[open] summary::after { content: "–"; }
+    .faq .a { padding: 0 1.1rem 1.1rem; color: var(--muted); display: flex; flex-direction: column; gap: .6rem; max-width: 40rem; }
+    .help-grid { display: grid; gap: 1.6rem; }
+    .help-grid h2 { margin-bottom: .8rem; }
+    .counter { text-align: right; font-size: .75rem; color: var(--dim); font-variant-numeric: tabular-nums; margin-top: -.5rem; }
+
+    .foot { margin-top: 3rem; display: flex; flex-direction: column; gap: .6rem; color: var(--dim); font-size: .8rem; }
+    .foot a { color: var(--muted); margin-right: 1rem; }
+    #toast { position: fixed; left: 50%; bottom: max(1.5rem, env(safe-area-inset-bottom)); transform: translateX(-50%) translateY(1rem); opacity: 0; pointer-events: none;
+      background: var(--surface-3); color: var(--text); padding: .75rem 1.2rem; border-radius: 999px; box-shadow: 0 .6rem 2rem rgba(0, 0, 0, .45), inset 0 0 0 1px var(--line-2);
+      transition: opacity .2s ease, transform .2s ease; font-weight: 600; font-size: .92rem; max-width: calc(100vw - 2rem); text-align: center; }
+    #toast.on { opacity: 1; transform: translateX(-50%); }
+
+    @media (max-width: 720px) {
+      .connect { grid-template-columns: 1fr; }
+      .where { order: -1; }
+      .tv { max-width: 22rem; }
+    }
+    @media (max-width: 520px) {
+      .grid2, .connect .grid2 { grid-template-columns: 1fr; }
+      .pl { flex-wrap: wrap; }
+      .pl .act { width: 100%; padding-left: 3.5rem; }
+      .pl .act button { flex: 1; }
+      .pl-head button.primary { width: 100%; }
+      .tabs button { flex: 1; padding: .7rem .4rem; }
+    }
+    @media (prefers-reduced-motion: reduce) { .tv-bar .hl { animation: none; } #toast, button { transition: none; } }
   </style>
 </head>
 <body>
-  <main>
-    <div class="brand">
-      <span class="mark"><svg viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="lumioPlay" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c084fc"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs><path d="M14 20v44a20 20 0 0 0 20 20h44" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round"/><path class="play" d="M38 23.6c0-3.6 3.9-5.8 7-4l35.4 22.2c3 1.8 3 6.2 0 8L45 72c-3.1 1.8-7-.4-7-4z"/><circle class="dot" cx="84" cy="22" r="6"/></svg></span>
-      Lumio Player
-    </div>
-    <div>
-      <h1 data-t>Playlist zu deinem Gerät hinzufügen</h1>
-      <p class="lead" data-t>MAC-Adresse und Key findest du in der App ganz unten oder auf dem Startbildschirm. Wenn du den QR-Code gescannt oder angetippt hast, sind sie schon eingetragen.</p>
-    </div>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs><linearGradient id="lumioPlay" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c084fc"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs>
+    <symbol id="i-tv" viewBox="0 0 24 24"><rect x="2.5" y="4.5" width="19" height="13" rx="2"/><path d="M8 21h8M12 17.5V21"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></symbol>
+    <symbol id="i-server" viewBox="0 0 24 24"><rect x="3" y="3.5" width="18" height="7" rx="1.5"/><rect x="3" y="13.5" width="18" height="7" rx="1.5"/><path d="M7 7h.01M7 17h.01"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></symbol>
+    <symbol id="i-out" viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 16l-4-4 4-4M6 12h10"/></symbol>
+  </svg>
 
-    <form class="card" id="loginForm" novalidate>
-      <h2><span class="step">1</span><span data-t>Gerät verbinden</span></h2>
-      <div class="row">
-        <label><span data-t>MAC-Adresse</span><input class="mono" id="mac" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="AA:BB:CC:DD:EE:FF"></label>
-        <label>Key<input class="mono" id="key" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABC123" maxlength="12"></label>
+  <div class="wrap">
+    <header class="top">
+      <a class="brand" href="./">
+        <span class="mark"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M14 20v44a20 20 0 0 0 20 20h44" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round"/><path class="play" d="M38 23.6c0-3.6 3.9-5.8 7-4l35.4 22.2c3 1.8 3 6.2 0 8L45 72c-3.1 1.8-7-.4-7-4z"/><circle class="dot" cx="84" cy="22" r="6"/></svg></span>
+        <span>Lumio</span><span>Player</span>
+      </a>
+      <div class="lang" role="group" aria-label="Sprache / Language">
+        <button type="button" data-lang="de" aria-pressed="true">DE</button>
+        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+        <button type="button" data-lang="tr" aria-pressed="false">TR</button>
       </div>
-      <button class="primary" id="loginBtn" type="submit" data-t>Verbinden</button>
-      <p class="msg" id="loginMsg" role="status"></p>
-    </form>
+    </header>
 
-    <section class="card" id="deviceCard" hidden>
-      <div class="device">
-        <span><span class="dot"></span><span data-t>Gerät</span> <b id="devMac"></b></span>
-        <button type="button" id="switchBtn" data-t>Anderes Gerät</button>
-      </div>
-      <h2 data-t>Playlists auf diesem Gerät</h2>
-      <ul id="list"></ul>
-      <p class="empty" id="empty" data-t>Noch keine Playlist hinzugefügt.</p>
-    </section>
+    <main>
+      <h1 id="title" data-t>Playlists auf deinem Gerät verwalten</h1>
+      <p class="lead" id="lead" data-t>Füge Playlists hinzu, ändere Zugangsdaten oder lösche alte Listen – ohne mühsames Tippen mit der Fernbedienung.</p>
 
-    <form class="card" id="addForm" novalidate hidden>
-      <h2><span class="step">2</span><span data-t>Playlist hinzufügen</span></h2>
       <div class="tabs" role="tablist">
-        <button type="button" role="tab" id="tabM3u" aria-selected="true" data-t>M3U-Link</button>
-        <button type="button" role="tab" id="tabXt" aria-selected="false">Xtream Codes</button>
+        <button type="button" role="tab" id="tabMain" aria-selected="true" aria-controls="viewMain"><span id="tabMainLabel" data-t>Gerät verbinden</span> <span class="count" id="plCount"></span></button>
+        <button type="button" role="tab" id="tabHelp" aria-selected="false" aria-controls="viewHelp" data-t>Hilfe &amp; Support</button>
       </div>
-      <label><span data-t>Name</span><input id="name" maxlength="60" data-tp placeholder="z. B. Wohnzimmer" autocomplete="off"></label>
-      <div id="m3uFields">
-        <label><span data-t>M3U-Link</span><input id="url" type="url" inputmode="url" placeholder="http://…/playlist.m3u" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
-      </div>
-      <div id="xtFields" hidden>
-        <div style="display:flex;flex-direction:column;gap:.9rem">
-          <label><span data-t>Server-Adresse</span><input id="server" type="url" inputmode="url" placeholder="http://beispiel.de:8080" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
-          <div class="row">
-            <label><span data-t>Benutzername</span><input id="user" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
-            <label><span data-t>Passwort</span><input id="pass" type="password" autocomplete="off"></label>
+
+      <!-- Gerät verbinden -->
+      <section id="viewMain" role="tabpanel">
+        <div class="connect" id="connect">
+          <form class="card" id="loginForm" novalidate>
+            <div class="grid2">
+              <label><span data-t>MAC-Adresse</span><input class="mono" id="mac" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="AA:BB:CC:DD:EE:FF" maxlength="17" inputmode="text"></label>
+              <label>KEY<input class="mono" id="key" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABC123" maxlength="12"></label>
+            </div>
+            <button class="primary" id="loginBtn" type="submit" data-t>Verbinden</button>
+            <p class="msg" id="loginMsg" role="status"></p>
+          </form>
+          <div class="where">
+            <div class="tv" aria-hidden="true"><div class="tv-bar"><span>MAC</span><b class="hl">AA:BB:CC:DD:EE:FF</b> <span>KEY</span><b class="hl">ABC123</b></div></div>
+            <p data-t>MAC-Adresse und KEY stehen in der App ganz unten am Bildschirmrand und unter „Profil“.</p>
+            <p data-t>Hast du den QR-Code in der App gescannt, ist beides schon eingetragen.</p>
           </div>
         </div>
-      </div>
-      <button class="primary" id="addBtn" type="submit" data-t>Zum Gerät senden</button>
-      <p class="msg" id="addMsg" role="status"></p>
-      <p class="hint" data-t>Die Playlist erscheint innerhalb von etwa 30 Sekunden in der App.</p>
-    </form>
 
-    <p class="hint" data-t>Lumio Player enthält keine Sender oder Inhalte. Nutze nur Zugänge, für die du eine Berechtigung hast. Deine Angaben werden verschlüsselt übertragen und nur gespeichert, damit dein Gerät sie abrufen kann. Löschst du eine Playlist hier, wird sie auch vom Gerät entfernt.</p>
-    <p class="hint"><a href="impressum.html" data-t>Impressum</a> · <a href="datenschutz.html" data-t>Datenschutz</a></p>
-  </main>
+        <div id="dash" hidden>
+          <div class="card device">
+            <span class="ic"><svg class="i"><use href="#i-tv"/></svg></span>
+            <div class="who"><small data-t>Verbunden mit Gerät</small><b id="devMac"></b></div>
+            <button type="button" class="ghost small" id="logoutBtn"><svg class="i"><use href="#i-out"/></svg><span data-t>Anderes Gerät</span></button>
+          </div>
+
+          <div class="pl-head" style="margin-top:1.6rem">
+            <h2 data-t>Auf diesem Gerät</h2>
+            <button type="button" class="primary" id="newBtn"><svg class="i"><use href="#i-plus"/></svg><span data-t>Playlist hinzufügen</span></button>
+          </div>
+
+          <form class="card stack editor" id="editor" novalidate hidden>
+            <div>
+              <h2 id="edTitle"></h2>
+              <p class="hint" id="edNote"></p>
+            </div>
+            <div class="seg" role="tablist" aria-label="Typ">
+              <button type="button" role="tab" id="modeM3u" aria-selected="true" data-t>M3U-Link</button>
+              <button type="button" role="tab" id="modeXt" aria-selected="false">Xtream Codes</button>
+            </div>
+            <label><span data-t>Name</span><input id="name" maxlength="60" data-tp placeholder="z. B. Wohnzimmer" autocomplete="off"></label>
+            <div id="m3uFields" class="stack">
+              <label><span data-t>M3U-Link</span><input id="url" type="url" inputmode="url" placeholder="http://…/playlist.m3u" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+              <p class="hint" data-t>Tipp: Ein kompletter Xtream-Link (…/get.php?username=…&password=…) wird automatisch erkannt.</p>
+            </div>
+            <div id="xtFields" class="stack" hidden>
+              <label><span data-t>Server-Adresse</span><input id="server" type="url" inputmode="url" placeholder="http://beispiel.de:8080" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+              <div class="grid2">
+                <label><span data-t>Benutzername</span><input id="user" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+                <label><span data-t>Passwort</span><span class="field-pass"><input id="pass" type="password" autocomplete="new-password"><button type="button" id="showPass" data-t>Anzeigen</button></span></label>
+              </div>
+            </div>
+            <div class="row-btns">
+              <button class="primary" id="saveBtn" type="submit"></button>
+              <button type="button" class="ghost" id="cancelBtn" data-t>Abbrechen</button>
+            </div>
+            <p class="msg" id="edMsg" role="status"></p>
+          </form>
+
+          <p class="loading" id="loading" data-t>Playlists werden geladen …</p>
+          <ul class="pl-list" id="list"></ul>
+          <div class="card empty" id="empty" hidden>
+            <svg class="i"><use href="#i-list"/></svg>
+            <b data-t>Noch keine Playlist auf diesem Gerät</b>
+            <p data-t>Füge deinen M3U-Link oder Xtream-Zugang hinzu – er erscheint nach etwa 30 Sekunden in der App.</p>
+          </div>
+          <p class="hint" style="margin-top:1rem" data-t>Änderungen erscheinen nach etwa 30 Sekunden in der App, solange sie geöffnet und mit dem Internet verbunden ist.</p>
+        </div>
+      </section>
+
+      <!-- Hilfe & Support -->
+      <section id="viewHelp" role="tabpanel" hidden>
+        <div class="help-grid">
+          <div>
+            <h2 data-t>Häufige Fragen</h2>
+            <div class="faq" id="faq"></div>
+          </div>
+          <div>
+            <h2 data-t>Support kontaktieren</h2>
+            <div class="card" id="supNeedDevice">
+              <p class="lead" style="margin-bottom:1rem" data-t>Verbinde zuerst dein Gerät, damit wir wissen, worum es geht.</p>
+              <button type="button" class="primary" id="goConnect" data-t>Gerät verbinden</button>
+            </div>
+            <form class="card stack" id="supForm" novalidate hidden>
+              <label><span data-t>Worum geht es?</span>
+                <select id="supTopic">
+                  <option value="Playlist erscheint nicht" data-t>Playlist erscheint nicht in der App</option>
+                  <option value="Wiedergabe" data-t>Sender oder Filme starten nicht</option>
+                  <option value="Ruckeln" data-t>Bild ruckelt oder bleibt hängen</option>
+                  <option value="Frage" data-t>Frage zur App</option>
+                  <option value="Sonstiges" data-t>Sonstiges</option>
+                </select>
+              </label>
+              <label><span data-t>Deine Nachricht</span><textarea id="supMsg" maxlength="2000" data-tp placeholder="Was ist passiert? Auf welchem Gerät (z. B. Samsung-TV, Fire TV, Handy)?"></textarea></label>
+              <p class="counter" id="supCount">0 / 2000</p>
+              <label><span data-t>E-Mail oder Telefon (optional)</span><input id="supContact" maxlength="200" autocomplete="email" data-tp placeholder="Nur nötig, wenn wir dir antworten sollen"></label>
+              <button class="primary" id="supBtn" type="submit" data-t>Nachricht senden</button>
+              <p class="msg" id="supState" role="status"></p>
+              <p class="hint"><span data-t>Wir speichern deine Nachricht zusammen mit der MAC-Adresse deines Geräts.</span> <a href="datenschutz.html" data-t>Datenschutz</a></p>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <footer class="foot">
+        <p data-t>Lumio Player enthält keine Sender oder Inhalte. Nutze nur Zugänge, für die du eine Berechtigung hast. Alle Daten werden verschlüsselt übertragen.</p>
+        <p><a href="impressum.html" data-t>Impressum</a><a href="datenschutz.html" data-t>Datenschutz</a></p>
+      </footer>
+    </main>
+  </div>
+  <div id="toast" role="status" aria-live="polite"></div>
 
   <script>
     (function () {
@@ -137,84 +328,250 @@
       var KEY = 'sb_publishable_cx6n8buREFat_yE7kKW6FA_SnMsOQX7';
       var $ = function (id) { return document.getElementById(id); };
 
-      /* ---------- Sprachen (Deutsch, Englisch, Türkisch) ---------- */
+      /* ---------- Häufige Fragen (Deutsch ist die Grundsprache, Übersetzungen unten) ---------- */
+      var FAQ = [
+        ['Wo finde ich MAC-Adresse und KEY?', [
+          'Öffne Lumio Player auf deinem Fernseher oder Handy. MAC und KEY stehen ganz unten am Bildschirmrand – und oben rechts unter „Profil“.',
+          'Ist noch keine Playlist eingerichtet, zeigt die App beides groß auf dem Startbildschirm, zusammen mit einem QR-Code. Scannst du ihn mit dem Handy, öffnet sich diese Seite mit allem schon ausgefüllt.']],
+        ['Meine Playlist erscheint nicht in der App', [
+          'Die App fragt alle 30 Sekunden nach neuen Playlists, solange sie geöffnet und mit dem Internet verbunden ist. Warte kurz oder starte die App neu.',
+          'Prüfe, ob MAC und KEY hier genau mit denen in der App übereinstimmen. Jedes Gerät hat eigene Werte.']],
+        ['Sender oder Filme starten nicht', [
+          'Prüfe zuerst, ob dein Zugang noch läuft: Die Restlaufzeit steht in der App unten rechts. Bei abgelaufenem Zugang hilft nur dein Anbieter.',
+          'Bei Live-Sendern hilft oft ein anderes Format: In der App unter Einstellungen → Live-Stream-Format zwischen HLS und MPEG-TS wechseln.',
+          'Hat sich das Passwort geändert, kannst du die Playlist hier unter „Playlists“ bearbeiten.']],
+        ['Das Bild ruckelt oder bleibt hängen', [
+          'Meist liegt es an der Internetverbindung oder am Server des Anbieters. Ein Netzwerkkabel statt WLAN hilft beim Fernseher oft spürbar.',
+          'Viele Zugänge erlauben nur eine Verbindung gleichzeitig. Läuft derselbe Zugang auf einem zweiten Gerät, bricht das Bild ab.']],
+        ['Was ist der Unterschied zwischen M3U und Xtream?', [
+          'Ein M3U-Link ist eine einzelne Adresse mit allen Sendern. Xtream Codes besteht aus Server-Adresse, Benutzername und Passwort.',
+          'Wenn dein Anbieter beides anbietet, nimm Xtream: Kategorien laden schneller und Filme und Serien bekommen Beschreibungen, Cover und Staffeln.']],
+        ['Gehen Favoriten verloren, wenn ich eine Playlist bearbeite?', [
+          'Nein. Beim Bearbeiten bleibt die Playlist dieselbe – Favoriten und „Weiterschauen“ bleiben in der App erhalten. Nur beim Löschen werden sie mit entfernt.']],
+        ['Sind meine Zugangsdaten sicher?', [
+          'Alle Daten werden verschlüsselt übertragen. Abrufen kann sie nur, wer MAC-Adresse und KEY deines Geräts kennt. Nach 20 falschen Versuchen wird das Gerät für eine Stunde gesperrt.',
+          'Gib MAC und KEY deshalb nicht an Fremde weiter.']],
+        ['Woher bekomme ich Sender?', [
+          'Lumio Player ist nur der Player und enthält keine Sender oder Inhalte. Die Playlist bekommst du von deinem IPTV-Anbieter.']]
+      ];
+
       var I18N = {
         en: {
-          'Lumio Player – Playlist hinzufügen': 'Lumio Player – Add playlist',
-          'Playlist zu deinem Gerät hinzufügen': 'Add a playlist to your device',
-          'MAC-Adresse und Key findest du in der App ganz unten oder auf dem Startbildschirm. Wenn du den QR-Code gescannt oder angetippt hast, sind sie schon eingetragen.': 'You find the MAC address and key at the very bottom of the app or on its start screen. If you scanned or tapped the QR code, they are already filled in.',
-          'Gerät verbinden': 'Connect device', 'MAC-Adresse': 'MAC address', 'Verbinden': 'Connect', 'Gerät': 'Device', 'Anderes Gerät': 'Other device',
-          'Playlists auf diesem Gerät': 'Playlists on this device', 'Noch keine Playlist hinzugefügt.': 'No playlist added yet.',
-          'Playlist hinzufügen': 'Add playlist', 'M3U-Link': 'M3U link', 'Name': 'Name', 'z. B. Wohnzimmer': 'e.g. Living room',
-          'Server-Adresse': 'Server address', 'Benutzername': 'Username', 'Passwort': 'Password', 'Zum Gerät senden': 'Send to device',
-          'Die Playlist erscheint innerhalb von etwa 30 Sekunden in der App.': 'The playlist appears in the app within about 30 seconds.',
-          'Lumio Player enthält keine Sender oder Inhalte. Nutze nur Zugänge, für die du eine Berechtigung hast. Deine Angaben werden verschlüsselt übertragen und nur gespeichert, damit dein Gerät sie abrufen kann. Löschst du eine Playlist hier, wird sie auch vom Gerät entfernt.': 'Lumio Player contains no channels or content. Only use logins you are entitled to. Your details are transmitted encrypted and stored only so your device can fetch them. If you delete a playlist here, it is also removed from the device.',
+          'Lumio Player – Kundenbereich': 'Lumio Player – Customer area',
+          'Playlists auf deinem Gerät verwalten': 'Manage the playlists on your device',
+          'Füge Playlists hinzu, ändere Zugangsdaten oder lösche alte Listen – ohne mühsames Tippen mit der Fernbedienung.': 'Add playlists, change login details or delete old lists – no tedious typing with the remote.',
+          'Gerät verbinden': 'Connect device', 'Hilfe & Support': 'Help & support', 'Playlists': 'Playlists',
+          'MAC-Adresse': 'MAC address', 'Verbinden': 'Connect', 'Verbinde …': 'Connecting …',
+          'MAC-Adresse und KEY stehen in der App ganz unten am Bildschirmrand und unter „Profil“.': 'The MAC address and KEY are shown at the very bottom of the app and under “Profile”.',
+          'Hast du den QR-Code in der App gescannt, ist beides schon eingetragen.': 'If you scanned the QR code in the app, both are already filled in.',
+          'Verbunden mit Gerät': 'Connected to device', 'Auf diesem Gerät': 'On this device', 'Anderes Gerät': 'Other device',
+          'Playlist hinzufügen': 'Add playlist', 'Neue Playlist': 'New playlist', 'Playlist bearbeiten': 'Edit playlist',
+          'M3U-Link': 'M3U link', 'Name': 'Name', 'z. B. Wohnzimmer': 'e.g. Living room',
+          'Tipp: Ein kompletter Xtream-Link (…/get.php?username=…&password=…) wird automatisch erkannt.': 'Tip: a complete Xtream link (…/get.php?username=…&password=…) is detected automatically.',
+          'Server-Adresse': 'Server address', 'Benutzername': 'Username', 'Passwort': 'Password', 'Anzeigen': 'Show', 'Verbergen': 'Hide',
+          'Zum Gerät senden': 'Send to device', 'Änderungen speichern': 'Save changes', 'Abbrechen': 'Cancel',
+          'Speichere …': 'Saving …', 'Sende …': 'Sending …',
+          'Die Playlist erscheint nach etwa 30 Sekunden in der App.': 'The playlist appears in the app after about 30 seconds.',
+          'Favoriten und „Weiterschauen“ bleiben in der App erhalten.': 'Favorites and “Continue watching” are kept in the app.',
+          'Playlists werden geladen …': 'Loading playlists …',
+          'Noch keine Playlist auf diesem Gerät': 'No playlist on this device yet',
+          'Füge deinen M3U-Link oder Xtream-Zugang hinzu – er erscheint nach etwa 30 Sekunden in der App.': 'Add your M3U link or Xtream login – it appears in the app after about 30 seconds.',
+          'Änderungen erscheinen nach etwa 30 Sekunden in der App, solange sie geöffnet und mit dem Internet verbunden ist.': 'Changes appear in the app after about 30 seconds while it is open and online.',
+          'Bearbeiten': 'Edit', 'Löschen': 'Delete', 'Wirklich löschen?': 'Really delete?', 'Benutzer': 'User',
+          'Gespeichert.': 'Saved.', 'Gesendet.': 'Sent.', 'Gelöscht.': 'Deleted.', 'Als Xtream-Zugang erkannt.': 'Detected as Xtream login.',
+          'Meine Playlist': 'My playlist',
+          'Häufige Fragen': 'Frequently asked questions', 'Support kontaktieren': 'Contact support',
+          'Verbinde zuerst dein Gerät, damit wir wissen, worum es geht.': 'Connect your device first so we know which one it is about.',
+          'Worum geht es?': 'What is it about?', 'Playlist erscheint nicht in der App': 'Playlist does not appear in the app',
+          'Sender oder Filme starten nicht': 'Channels or movies do not start', 'Bild ruckelt oder bleibt hängen': 'Picture stutters or freezes',
+          'Frage zur App': 'Question about the app', 'Sonstiges': 'Something else', 'Deine Nachricht': 'Your message',
+          'Was ist passiert? Auf welchem Gerät (z. B. Samsung-TV, Fire TV, Handy)?': 'What happened? On which device (e.g. Samsung TV, Fire TV, phone)?',
+          'E-Mail oder Telefon (optional)': 'Email or phone (optional)', 'Nur nötig, wenn wir dir antworten sollen': 'Only needed if you want a reply',
+          'Nachricht senden': 'Send message', 'Danke! Deine Nachricht ist angekommen.': 'Thank you! Your message has arrived.',
+          'Wir speichern deine Nachricht zusammen mit der MAC-Adresse deines Geräts.': 'We store your message together with your device’s MAC address.',
+          'Lumio Player enthält keine Sender oder Inhalte. Nutze nur Zugänge, für die du eine Berechtigung hast. Alle Daten werden verschlüsselt übertragen.': 'Lumio Player contains no channels or content. Only use logins you are entitled to. All data is transmitted encrypted.',
           'Impressum': 'Legal notice', 'Datenschutz': 'Privacy',
           'Keine Verbindung. Bitte Internet prüfen und erneut versuchen.': 'No connection. Please check your internet and try again.',
-          'Löschen': 'Delete', 'Wirklich löschen?': 'Really delete?', 'Verbinde …': 'Connecting …', 'Sende …': 'Sending …',
           'Bitte eine vollständige MAC-Adresse eingeben (12 Zeichen).': 'Please enter a complete MAC address (12 characters).',
-          'Bitte den Key aus der App eingeben.': 'Please enter the key from the app.',
-          'Als Xtream-Zugang erkannt und gesendet.': 'Detected as Xtream login and sent.', 'Gesendet.': 'Sent.',
-          'Die Playlist erscheint gleich in der App.': 'The playlist will appear in the app shortly.', 'Meine Playlist': 'My playlist',
+          'Bitte den KEY aus der App eingeben.': 'Please enter the KEY from the app.',
+          'Bitte beschreibe dein Anliegen etwas genauer.': 'Please describe your request in a little more detail.',
           'Gerät nicht gefunden. Öffne die App einmal mit Internetverbindung.': 'Device not found. Open the app once with an internet connection.',
           'Zu viele Fehlversuche. Bitte in einer Stunde erneut versuchen.': 'Too many failed attempts. Please try again in an hour.',
           'MAC-Adresse oder Geräteschlüssel falsch.': 'Wrong MAC address or device key.',
           'Bitte Server, Benutzername und Passwort eingeben.': 'Please enter server, username and password.',
           'Bitte einen gültigen M3U-Link (http:// oder https://) eingeben.': 'Please enter a valid M3U link (http:// or https://).',
-          'Maximal 20 Playlists pro Gerät.': 'A maximum of 20 playlists per device.', 'Unbekannter Playlist-Typ.': 'Unknown playlist type.', 'Ungültige Geräte-Daten.': 'Invalid device data.'
+          'Maximal 20 Playlists pro Gerät.': 'A maximum of 20 playlists per device.', 'Unbekannter Playlist-Typ.': 'Unknown playlist type.',
+          'Ungültige Geräte-Daten.': 'Invalid device data.', 'Playlist nicht gefunden.': 'Playlist not found.', 'Maximal 5 Nachrichten pro Tag.': 'A maximum of 5 messages per day.',
+          'Wo finde ich MAC-Adresse und KEY?': 'Where do I find the MAC address and KEY?',
+          'Öffne Lumio Player auf deinem Fernseher oder Handy. MAC und KEY stehen ganz unten am Bildschirmrand – und oben rechts unter „Profil“.': 'Open Lumio Player on your TV or phone. MAC and KEY are shown at the very bottom of the screen – and under “Profile” at the top right.',
+          'Ist noch keine Playlist eingerichtet, zeigt die App beides groß auf dem Startbildschirm, zusammen mit einem QR-Code. Scannst du ihn mit dem Handy, öffnet sich diese Seite mit allem schon ausgefüllt.': 'If no playlist is set up yet, the app shows both in large type on the start screen, together with a QR code. Scan it with your phone and this page opens with everything filled in.',
+          'Meine Playlist erscheint nicht in der App': 'My playlist does not appear in the app',
+          'Die App fragt alle 30 Sekunden nach neuen Playlists, solange sie geöffnet und mit dem Internet verbunden ist. Warte kurz oder starte die App neu.': 'The app checks for new playlists every 30 seconds while it is open and online. Wait a moment or restart the app.',
+          'Prüfe, ob MAC und KEY hier genau mit denen in der App übereinstimmen. Jedes Gerät hat eigene Werte.': 'Check that MAC and KEY here exactly match those in the app. Every device has its own values.',
+          'Prüfe zuerst, ob dein Zugang noch läuft: Die Restlaufzeit steht in der App unten rechts. Bei abgelaufenem Zugang hilft nur dein Anbieter.': 'First check that your subscription is still active: the remaining time is shown at the bottom right of the app. If it has expired, only your provider can help.',
+          'Bei Live-Sendern hilft oft ein anderes Format: In der App unter Einstellungen → Live-Stream-Format zwischen HLS und MPEG-TS wechseln.': 'For live channels another format often helps: in the app go to Settings → Live stream format and switch between HLS and MPEG-TS.',
+          'Hat sich das Passwort geändert, kannst du die Playlist hier unter „Playlists“ bearbeiten.': 'If your password changed, you can edit the playlist here under “Playlists”.',
+          'Das Bild ruckelt oder bleibt hängen': 'The picture stutters or freezes',
+          'Meist liegt es an der Internetverbindung oder am Server des Anbieters. Ein Netzwerkkabel statt WLAN hilft beim Fernseher oft spürbar.': 'It is usually the internet connection or the provider’s server. A network cable instead of Wi-Fi often makes a noticeable difference on TVs.',
+          'Viele Zugänge erlauben nur eine Verbindung gleichzeitig. Läuft derselbe Zugang auf einem zweiten Gerät, bricht das Bild ab.': 'Many subscriptions allow only one connection at a time. If the same login is running on a second device, the picture drops.',
+          'Was ist der Unterschied zwischen M3U und Xtream?': 'What is the difference between M3U and Xtream?',
+          'Ein M3U-Link ist eine einzelne Adresse mit allen Sendern. Xtream Codes besteht aus Server-Adresse, Benutzername und Passwort.': 'An M3U link is a single address with all channels. Xtream Codes consists of a server address, username and password.',
+          'Wenn dein Anbieter beides anbietet, nimm Xtream: Kategorien laden schneller und Filme und Serien bekommen Beschreibungen, Cover und Staffeln.': 'If your provider offers both, choose Xtream: categories load faster and movies and series get descriptions, covers and seasons.',
+          'Gehen Favoriten verloren, wenn ich eine Playlist bearbeite?': 'Do I lose favorites when I edit a playlist?',
+          'Nein. Beim Bearbeiten bleibt die Playlist dieselbe – Favoriten und „Weiterschauen“ bleiben in der App erhalten. Nur beim Löschen werden sie mit entfernt.': 'No. Editing keeps the same playlist – favorites and “Continue watching” stay in the app. They are only removed when you delete it.',
+          'Sind meine Zugangsdaten sicher?': 'Are my login details safe?',
+          'Alle Daten werden verschlüsselt übertragen. Abrufen kann sie nur, wer MAC-Adresse und KEY deines Geräts kennt. Nach 20 falschen Versuchen wird das Gerät für eine Stunde gesperrt.': 'All data is transmitted encrypted. Only someone who knows your device’s MAC address and KEY can retrieve it. After 20 wrong attempts the device is locked for one hour.',
+          'Gib MAC und KEY deshalb nicht an Fremde weiter.': 'So do not share MAC and KEY with strangers.',
+          'Woher bekomme ich Sender?': 'Where do I get channels?',
+          'Lumio Player ist nur der Player und enthält keine Sender oder Inhalte. Die Playlist bekommst du von deinem IPTV-Anbieter.': 'Lumio Player is only the player and contains no channels or content. You get the playlist from your IPTV provider.'
         },
         tr: {
-          'Lumio Player – Playlist hinzufügen': 'Lumio Player – Liste ekle',
-          'Playlist zu deinem Gerät hinzufügen': 'Cihazına liste ekle',
-          'MAC-Adresse und Key findest du in der App ganz unten oder auf dem Startbildschirm. Wenn du den QR-Code gescannt oder angetippt hast, sind sie schon eingetragen.': 'MAC adresini ve anahtarı uygulamanın en altında veya başlangıç ekranında bulursun. QR kodunu taradıysan veya dokunduysan zaten girilmiş olur.',
-          'Gerät verbinden': 'Cihazı bağla', 'MAC-Adresse': 'MAC adresi', 'Verbinden': 'Bağlan', 'Gerät': 'Cihaz', 'Anderes Gerät': 'Başka cihaz',
-          'Playlists auf diesem Gerät': 'Bu cihazdaki listeler', 'Noch keine Playlist hinzugefügt.': 'Henüz liste eklenmedi.',
-          'Playlist hinzufügen': 'Liste ekle', 'M3U-Link': 'M3U bağlantısı', 'Name': 'Ad', 'z. B. Wohnzimmer': 'örn. Oturma odası',
-          'Server-Adresse': 'Sunucu adresi', 'Benutzername': 'Kullanıcı adı', 'Passwort': 'Şifre', 'Zum Gerät senden': 'Cihaza gönder',
-          'Die Playlist erscheint innerhalb von etwa 30 Sekunden in der App.': 'Liste yaklaşık 30 saniye içinde uygulamada görünür.',
-          'Lumio Player enthält keine Sender oder Inhalte. Nutze nur Zugänge, für die du eine Berechtigung hast. Deine Angaben werden verschlüsselt übertragen und nur gespeichert, damit dein Gerät sie abrufen kann. Löschst du eine Playlist hier, wird sie auch vom Gerät entfernt.': 'Lumio Player kanal veya içerik içermez. Yalnızca izin sahibi olduğun erişimleri kullan. Bilgilerin şifreli iletilir ve yalnızca cihazının alabilmesi için saklanır. Burada bir listeyi silersen cihazdan da kaldırılır.',
+          'Lumio Player – Kundenbereich': 'Lumio Player – Müşteri alanı',
+          'Playlists auf deinem Gerät verwalten': 'Cihazındaki listeleri yönet',
+          'Füge Playlists hinzu, ändere Zugangsdaten oder lösche alte Listen – ohne mühsames Tippen mit der Fernbedienung.': 'Liste ekle, giriş bilgilerini değiştir veya eski listeleri sil – kumandayla zahmetli yazmadan.',
+          'Gerät verbinden': 'Cihazı bağla', 'Hilfe & Support': 'Yardım ve destek', 'Playlists': 'Listeler',
+          'MAC-Adresse': 'MAC adresi', 'Verbinden': 'Bağlan', 'Verbinde …': 'Bağlanıyor …',
+          'MAC-Adresse und KEY stehen in der App ganz unten am Bildschirmrand und unter „Profil“.': 'MAC adresi ve KEY uygulamanın en altında ve “Profil” bölümünde yazar.',
+          'Hast du den QR-Code in der App gescannt, ist beides schon eingetragen.': 'Uygulamadaki QR kodunu taradıysan ikisi de zaten girilmiştir.',
+          'Verbunden mit Gerät': 'Bağlı cihaz', 'Auf diesem Gerät': 'Bu cihazda', 'Anderes Gerät': 'Başka cihaz',
+          'Playlist hinzufügen': 'Liste ekle', 'Neue Playlist': 'Yeni liste', 'Playlist bearbeiten': 'Listeyi düzenle',
+          'M3U-Link': 'M3U bağlantısı', 'Name': 'Ad', 'z. B. Wohnzimmer': 'örn. Oturma odası',
+          'Tipp: Ein kompletter Xtream-Link (…/get.php?username=…&password=…) wird automatisch erkannt.': 'İpucu: Tam bir Xtream bağlantısı (…/get.php?username=…&password=…) otomatik tanınır.',
+          'Server-Adresse': 'Sunucu adresi', 'Benutzername': 'Kullanıcı adı', 'Passwort': 'Şifre', 'Anzeigen': 'Göster', 'Verbergen': 'Gizle',
+          'Zum Gerät senden': 'Cihaza gönder', 'Änderungen speichern': 'Değişiklikleri kaydet', 'Abbrechen': 'İptal',
+          'Speichere …': 'Kaydediliyor …', 'Sende …': 'Gönderiliyor …',
+          'Die Playlist erscheint nach etwa 30 Sekunden in der App.': 'Liste yaklaşık 30 saniye sonra uygulamada görünür.',
+          'Favoriten und „Weiterschauen“ bleiben in der App erhalten.': 'Favoriler ve “İzlemeye devam et” uygulamada korunur.',
+          'Playlists werden geladen …': 'Listeler yükleniyor …',
+          'Noch keine Playlist auf diesem Gerät': 'Bu cihazda henüz liste yok',
+          'Füge deinen M3U-Link oder Xtream-Zugang hinzu – er erscheint nach etwa 30 Sekunden in der App.': 'M3U bağlantını veya Xtream girişini ekle – yaklaşık 30 saniye sonra uygulamada görünür.',
+          'Änderungen erscheinen nach etwa 30 Sekunden in der App, solange sie geöffnet und mit dem Internet verbunden ist.': 'Değişiklikler, uygulama açık ve internete bağlıyken yaklaşık 30 saniye sonra görünür.',
+          'Bearbeiten': 'Düzenle', 'Löschen': 'Sil', 'Wirklich löschen?': 'Gerçekten silinsin mi?', 'Benutzer': 'Kullanıcı',
+          'Gespeichert.': 'Kaydedildi.', 'Gesendet.': 'Gönderildi.', 'Gelöscht.': 'Silindi.', 'Als Xtream-Zugang erkannt.': 'Xtream girişi olarak tanındı.',
+          'Meine Playlist': 'Listem',
+          'Häufige Fragen': 'Sık sorulan sorular', 'Support kontaktieren': 'Destekle iletişime geç',
+          'Verbinde zuerst dein Gerät, damit wir wissen, worum es geht.': 'Önce cihazını bağla, böylece hangi cihaz olduğunu bilelim.',
+          'Worum geht es?': 'Konu nedir?', 'Playlist erscheint nicht in der App': 'Liste uygulamada görünmüyor',
+          'Sender oder Filme starten nicht': 'Kanallar veya filmler başlamıyor', 'Bild ruckelt oder bleibt hängen': 'Görüntü takılıyor veya donuyor',
+          'Frage zur App': 'Uygulama hakkında soru', 'Sonstiges': 'Diğer', 'Deine Nachricht': 'Mesajın',
+          'Was ist passiert? Auf welchem Gerät (z. B. Samsung-TV, Fire TV, Handy)?': 'Ne oldu? Hangi cihazda (örn. Samsung TV, Fire TV, telefon)?',
+          'E-Mail oder Telefon (optional)': 'E-posta veya telefon (isteğe bağlı)', 'Nur nötig, wenn wir dir antworten sollen': 'Yalnızca yanıt istiyorsan gerekli',
+          'Nachricht senden': 'Mesaj gönder', 'Danke! Deine Nachricht ist angekommen.': 'Teşekkürler! Mesajın ulaştı.',
+          'Wir speichern deine Nachricht zusammen mit der MAC-Adresse deines Geräts.': 'Mesajını cihazının MAC adresiyle birlikte saklarız.',
+          'Lumio Player enthält keine Sender oder Inhalte. Nutze nur Zugänge, für die du eine Berechtigung hast. Alle Daten werden verschlüsselt übertragen.': 'Lumio Player kanal veya içerik içermez. Yalnızca izin sahibi olduğun erişimleri kullan. Tüm veriler şifreli iletilir.',
           'Impressum': 'Künye', 'Datenschutz': 'Gizlilik',
           'Keine Verbindung. Bitte Internet prüfen und erneut versuchen.': 'Bağlantı yok. Lütfen internetini kontrol edip tekrar dene.',
-          'Löschen': 'Sil', 'Wirklich löschen?': 'Gerçekten silinsin mi?', 'Verbinde …': 'Bağlanıyor …', 'Sende …': 'Gönderiliyor …',
           'Bitte eine vollständige MAC-Adresse eingeben (12 Zeichen).': 'Lütfen tam bir MAC adresi gir (12 karakter).',
-          'Bitte den Key aus der App eingeben.': 'Lütfen uygulamadaki anahtarı gir.',
-          'Als Xtream-Zugang erkannt und gesendet.': 'Xtream girişi olarak tanındı ve gönderildi.', 'Gesendet.': 'Gönderildi.',
-          'Die Playlist erscheint gleich in der App.': 'Liste birazdan uygulamada görünecek.', 'Meine Playlist': 'Listem',
+          'Bitte den KEY aus der App eingeben.': 'Lütfen uygulamadaki KEY’i gir.',
+          'Bitte beschreibe dein Anliegen etwas genauer.': 'Lütfen isteğini biraz daha ayrıntılı anlat.',
           'Gerät nicht gefunden. Öffne die App einmal mit Internetverbindung.': 'Cihaz bulunamadı. Uygulamayı bir kez internet bağlantısıyla aç.',
           'Zu viele Fehlversuche. Bitte in einer Stunde erneut versuchen.': 'Çok fazla hatalı deneme. Lütfen bir saat sonra tekrar dene.',
           'MAC-Adresse oder Geräteschlüssel falsch.': 'MAC adresi veya cihaz anahtarı yanlış.',
           'Bitte Server, Benutzername und Passwort eingeben.': 'Lütfen sunucu, kullanıcı adı ve şifreyi gir.',
           'Bitte einen gültigen M3U-Link (http:// oder https://) eingeben.': 'Lütfen geçerli bir M3U bağlantısı gir (http:// veya https://).',
-          'Maximal 20 Playlists pro Gerät.': 'Cihaz başına en fazla 20 liste.', 'Unbekannter Playlist-Typ.': 'Bilinmeyen liste türü.', 'Ungültige Geräte-Daten.': 'Geçersiz cihaz bilgileri.'
+          'Maximal 20 Playlists pro Gerät.': 'Cihaz başına en fazla 20 liste.', 'Unbekannter Playlist-Typ.': 'Bilinmeyen liste türü.',
+          'Ungültige Geräte-Daten.': 'Geçersiz cihaz bilgileri.', 'Playlist nicht gefunden.': 'Liste bulunamadı.', 'Maximal 5 Nachrichten pro Tag.': 'Günde en fazla 5 mesaj.',
+          'Wo finde ich MAC-Adresse und KEY?': 'MAC adresini ve KEY’i nerede bulurum?',
+          'Öffne Lumio Player auf deinem Fernseher oder Handy. MAC und KEY stehen ganz unten am Bildschirmrand – und oben rechts unter „Profil“.': 'Lumio Player’ı televizyonunda veya telefonunda aç. MAC ve KEY ekranın en altında – ve sağ üstte “Profil” bölümünde yazar.',
+          'Ist noch keine Playlist eingerichtet, zeigt die App beides groß auf dem Startbildschirm, zusammen mit einem QR-Code. Scannst du ihn mit dem Handy, öffnet sich diese Seite mit allem schon ausgefüllt.': 'Henüz liste yoksa uygulama ikisini de başlangıç ekranında büyük gösterir, yanında bir QR kodu vardır. Telefonla tararsan bu sayfa her şey doldurulmuş olarak açılır.',
+          'Meine Playlist erscheint nicht in der App': 'Listem uygulamada görünmüyor',
+          'Die App fragt alle 30 Sekunden nach neuen Playlists, solange sie geöffnet und mit dem Internet verbunden ist. Warte kurz oder starte die App neu.': 'Uygulama açık ve internete bağlıyken her 30 saniyede yeni listeleri kontrol eder. Biraz bekle veya uygulamayı yeniden başlat.',
+          'Prüfe, ob MAC und KEY hier genau mit denen in der App übereinstimmen. Jedes Gerät hat eigene Werte.': 'Buradaki MAC ve KEY’in uygulamadakilerle birebir aynı olduğunu kontrol et. Her cihazın kendi değerleri vardır.',
+          'Prüfe zuerst, ob dein Zugang noch läuft: Die Restlaufzeit steht in der App unten rechts. Bei abgelaufenem Zugang hilft nur dein Anbieter.': 'Önce aboneliğinin devam edip etmediğini kontrol et: kalan süre uygulamanın sağ altında yazar. Süresi dolduysa yalnızca sağlayıcın yardımcı olabilir.',
+          'Bei Live-Sendern hilft oft ein anderes Format: In der App unter Einstellungen → Live-Stream-Format zwischen HLS und MPEG-TS wechseln.': 'Canlı kanallarda başka bir format çoğu zaman yardımcı olur: uygulamada Ayarlar → Canlı yayın formatı bölümünden HLS ile MPEG-TS arasında geçiş yap.',
+          'Hat sich das Passwort geändert, kannst du die Playlist hier unter „Playlists“ bearbeiten.': 'Şifren değiştiyse listeyi burada “Listeler” bölümünde düzenleyebilirsin.',
+          'Das Bild ruckelt oder bleibt hängen': 'Görüntü takılıyor veya donuyor',
+          'Meist liegt es an der Internetverbindung oder am Server des Anbieters. Ein Netzwerkkabel statt WLAN hilft beim Fernseher oft spürbar.': 'Genellikle internet bağlantısından veya sağlayıcının sunucusundan kaynaklanır. Televizyonda Wi-Fi yerine ağ kablosu çoğu zaman belirgin fark yaratır.',
+          'Viele Zugänge erlauben nur eine Verbindung gleichzeitig. Läuft derselbe Zugang auf einem zweiten Gerät, bricht das Bild ab.': 'Birçok abonelik aynı anda yalnızca bir bağlantıya izin verir. Aynı giriş ikinci bir cihazda açıksa görüntü kesilir.',
+          'Was ist der Unterschied zwischen M3U und Xtream?': 'M3U ile Xtream arasındaki fark nedir?',
+          'Ein M3U-Link ist eine einzelne Adresse mit allen Sendern. Xtream Codes besteht aus Server-Adresse, Benutzername und Passwort.': 'M3U bağlantısı tüm kanalları içeren tek bir adrestir. Xtream Codes sunucu adresi, kullanıcı adı ve şifreden oluşur.',
+          'Wenn dein Anbieter beides anbietet, nimm Xtream: Kategorien laden schneller und Filme und Serien bekommen Beschreibungen, Cover und Staffeln.': 'Sağlayıcın ikisini de sunuyorsa Xtream’i seç: kategoriler daha hızlı yüklenir, filmler ve diziler açıklama, kapak ve sezon bilgisi alır.',
+          'Gehen Favoriten verloren, wenn ich eine Playlist bearbeite?': 'Bir listeyi düzenlersem favoriler kaybolur mu?',
+          'Nein. Beim Bearbeiten bleibt die Playlist dieselbe – Favoriten und „Weiterschauen“ bleiben in der App erhalten. Nur beim Löschen werden sie mit entfernt.': 'Hayır. Düzenlerken liste aynı kalır – favoriler ve “İzlemeye devam et” uygulamada korunur. Yalnızca silindiğinde onlar da kaldırılır.',
+          'Sind meine Zugangsdaten sicher?': 'Giriş bilgilerim güvende mi?',
+          'Alle Daten werden verschlüsselt übertragen. Abrufen kann sie nur, wer MAC-Adresse und KEY deines Geräts kennt. Nach 20 falschen Versuchen wird das Gerät für eine Stunde gesperrt.': 'Tüm veriler şifreli iletilir. Onlara yalnızca cihazının MAC adresini ve KEY’ini bilen erişebilir. 20 hatalı denemeden sonra cihaz bir saat kilitlenir.',
+          'Gib MAC und KEY deshalb nicht an Fremde weiter.': 'Bu yüzden MAC ve KEY’i yabancılarla paylaşma.',
+          'Woher bekomme ich Sender?': 'Kanalları nereden bulurum?',
+          'Lumio Player ist nur der Player und enthält keine Sender oder Inhalte. Die Playlist bekommst du von deinem IPTV-Anbieter.': 'Lumio Player yalnızca oynatıcıdır, kanal veya içerik içermez. Listeyi IPTV sağlayıcından alırsın.'
         }
       };
-      var qs0 = new URLSearchParams(location.search);
-      var lang = (qs0.get('lang') || 'de').slice(0, 2).toLowerCase();   // Deutsch ist die Grundsprache
-      if (lang !== 'de' && !I18N[lang]) lang = 'en';
-      try { if (qs0.get('lang')) sessionStorage.setItem('lumio.lang', lang); else lang = sessionStorage.getItem('lumio.lang') || lang; } catch (e) {}
-      if (lang !== 'de' && !I18N[lang]) lang = 'de';
-      function t(s) { var d = I18N[lang]; return d && d[s] != null ? d[s] : s; }
-      document.documentElement.setAttribute('lang', lang);
-      document.title = t(document.title);
-      Array.prototype.forEach.call(document.querySelectorAll('[data-t]'), function (el) { el.textContent = t(el.textContent.trim()); });
-      Array.prototype.forEach.call(document.querySelectorAll('[data-tp]'), function (el) { el.placeholder = t(el.placeholder); });
-      var device = null, mode = 'm3u';
 
+      /* ---------- Sprache: Deutsch ist die Grundsprache; die App gibt ?lang= mit ---------- */
+      var qs0 = new URLSearchParams(location.search);
+      var lang = 'de';
+      try { lang = sessionStorage.getItem('lumio.lang') || lang; } catch (e) {}
+      if (qs0.get('lang')) lang = qs0.get('lang').slice(0, 2).toLowerCase();
+      if (lang !== 'de' && !I18N[lang]) lang = 'de';
+      function tr(s) { var d = I18N[lang]; return d && d[s] != null ? d[s] : s; }
+      var docTitle = document.title;
+
+      function buildFaq() {
+        var box = $('faq'), open = {};
+        Array.prototype.forEach.call(box.querySelectorAll('details'), function (d, i) { if (d.open) open[i] = 1; });
+        box.textContent = '';
+        FAQ.forEach(function (f, i) {
+          var d = document.createElement('details');
+          if (open[i]) d.open = true;
+          var s = document.createElement('summary'); s.textContent = tr(f[0]);
+          var a = document.createElement('div'); a.className = 'a';
+          f[1].forEach(function (p) { var el = document.createElement('p'); el.textContent = tr(p); a.appendChild(el); });
+          d.appendChild(s); d.appendChild(a); box.appendChild(d);
+        });
+      }
+      function applyLang() {
+        document.documentElement.setAttribute('lang', lang);
+        document.title = tr(docTitle);
+        Array.prototype.forEach.call(document.querySelectorAll('[data-t]'), function (el) {
+          if (!el.hasAttribute('data-k')) el.setAttribute('data-k', el.textContent.trim());
+          el.textContent = tr(el.getAttribute('data-k'));
+        });
+        Array.prototype.forEach.call(document.querySelectorAll('[data-tp]'), function (el) {
+          if (!el.hasAttribute('data-kp')) el.setAttribute('data-kp', el.placeholder);
+          el.placeholder = tr(el.getAttribute('data-kp'));
+        });
+        Array.prototype.forEach.call(document.querySelectorAll('.lang button'), function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-lang') === lang)); });
+        buildFaq();
+        if (device) { $('tabMainLabel').textContent = tr('Playlists'); render(); paintEditor(); }
+        else $('tabMainLabel').textContent = tr('Gerät verbinden');
+        $('showPass').textContent = tr($('pass').type === 'password' ? 'Anzeigen' : 'Verbergen');
+      }
+      Array.prototype.forEach.call(document.querySelectorAll('.lang button'), function (b) {
+        b.addEventListener('click', function () {
+          lang = b.getAttribute('data-lang');
+          try { sessionStorage.setItem('lumio.lang', lang); } catch (e) {}
+          applyLang();
+        });
+      });
+
+      /* ---------- Hilfsfunktionen ---------- */
+      var device = null, items = null, editing = null, mode = 'm3u', toastTimer = null;
       function rpc(fn, body) {
         return fetch(API + fn, {
           method: 'POST',
           headers: { apikey: KEY, 'Content-Type': 'application/json' },
           body: JSON.stringify(body)
-        }).then(function (r) { return r.json(); }).catch(function () {
-          return { ok: false, error: t('Keine Verbindung. Bitte Internet prüfen und erneut versuchen.') };
+        }).then(function (r) { return r.json(); }).then(function (j) {
+          return j && typeof j === 'object' && 'ok' in j ? j : { ok: false, error: (j && j.message) || 'Keine Verbindung. Bitte Internet prüfen und erneut versuchen.' };
+        }, function () {
+          return { ok: false, error: 'Keine Verbindung. Bitte Internet prüfen und erneut versuchen.' };
         });
       }
-      function say(el, text, kind) { el.textContent = t(text || ''); el.className = 'msg' + (kind ? ' ' + kind : ''); }
+      function say(el, text, kind) { el.textContent = text ? tr(text) : ''; el.className = 'msg' + (kind ? ' ' + kind : ''); }
+      function toast(text) {
+        var el = $('toast'); el.textContent = text; el.classList.add('on');
+        clearTimeout(toastTimer); toastTimer = setTimeout(function () { el.classList.remove('on'); }, 3200);
+      }
+      function icon(name) {
+        var ns = 'http://www.w3.org/2000/svg', s = document.createElementNS(ns, 'svg'), u = document.createElementNS(ns, 'use');
+        s.setAttribute('class', 'i'); u.setAttribute('href', '#i-' + name); s.appendChild(u); return s;
+      }
+      function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
       function normMac(v) {
         var hex = String(v || '').toUpperCase().replace(/[^0-9A-F]/g, '');
         if (hex.length !== 12) return null;
         return hex.match(/../g).join(':');
       }
+      function hostOf(u) { var m = /^[a-z]+:\/\/([^\/?#]+)/i.exec(String(u || '')); return m ? m[1] : String(u || ''); }
       function parseXtream(link) {
         var m = /^(https?:\/\/[^\/?#]+)(?:\/[^?#]*)?\/(?:get|player_api)\.php\?(.*)$/i.exec(String(link || '').trim());
         if (!m) return null;
@@ -223,84 +580,166 @@
         return q.username && q.password ? { server: m[1], username: q.username, password: q.password } : null;
       }
 
-      function render(items) {
-        var list = $('list');
-        list.textContent = '';
-        $('empty').hidden = items.length > 0;
-        items.forEach(function (it) {
-          var li = document.createElement('li');
-          var t = document.createElement('div'); t.className = 't';
-          var b = document.createElement('b'); b.textContent = it.name;
-          var s = document.createElement('small');
-          s.textContent = it.type === 'xtream' ? 'Xtream · ' + it.server + ' · ' + it.username : 'M3U · ' + it.url;
-          t.appendChild(b); t.appendChild(s);
-          var del = document.createElement('button');
-          del.type = 'button'; del.textContent = t('Löschen');
-          del.addEventListener('click', function () {
-            if (del.dataset.confirm !== '1') { del.dataset.confirm = '1'; del.textContent = t('Wirklich löschen?'); return; }
-            del.disabled = true;
-            rpc('delete_playlist', { p_mac: device.mac, p_key: device.key, p_id: it.id }).then(function (r) {
-              if (!r.ok) { say($('addMsg'), r.error, 'bad'); del.disabled = false; return; }
-              refresh();
-            });
-          });
-          li.appendChild(t); li.appendChild(del);
-          list.appendChild(li);
-        });
+      /* ---------- Bereiche umschalten ---------- */
+      function showTab(which) {
+        var help = which === 'help';
+        $('tabMain').setAttribute('aria-selected', String(!help));
+        $('tabHelp').setAttribute('aria-selected', String(help));
+        $('viewMain').hidden = help; $('viewHelp').hidden = !help;
       }
-      function refresh() {
-        return rpc('list_playlists', { p_mac: device.mac, p_key: device.key }).then(function (r) {
-          if (!r.ok) { say($('addMsg'), r.error, 'bad'); return; }
-          render(r.items || []);
-        });
-      }
+      $('tabMain').addEventListener('click', function () { showTab('main'); });
+      $('tabHelp').addEventListener('click', function () { showTab('help'); });
+      $('goConnect').addEventListener('click', function () { showTab('main'); $('mac').focus(); });
 
-      function connect(mac, key) {
+      /* ---------- Gerät verbinden ---------- */
+      $('mac').addEventListener('input', function () {
+        // Doppelpunkte automatisch setzen, während man tippt
+        var hex = this.value.toUpperCase().replace(/[^0-9A-F]/g, '').slice(0, 12);
+        var v = (hex.match(/.{1,2}/g) || []).join(':');
+        if (v !== this.value) this.value = v;
+      });
+      function setConnected(on) {
+        $('connect').hidden = on; $('dash').hidden = !on;
+        $('supNeedDevice').hidden = on; $('supForm').hidden = !on;
+        $('tabMainLabel').textContent = tr(on ? 'Playlists' : 'Gerät verbinden');
+        if (!on) $('plCount').textContent = '';
+      }
+      function connect(mac, key, quiet) {
         var btn = $('loginBtn');
-        btn.disabled = true; btn.textContent = t('Verbinde …');
-        rpc('list_playlists', { p_mac: mac, p_key: key }).then(function (r) {
-          btn.disabled = false; btn.textContent = t('Verbinden');
-          if (!r.ok) { say($('loginMsg'), r.error, 'bad'); return; }
+        btn.disabled = true; btn.textContent = tr('Verbinde …');
+        return rpc('list_playlists', { p_mac: mac, p_key: key }).then(function (r) {
+          btn.disabled = false; btn.textContent = tr('Verbinden');
+          if (!r.ok) {
+            say($('loginMsg'), r.error, 'bad');
+            if (quiet) try { sessionStorage.removeItem('lumio.device'); } catch (e) {}
+            return;
+          }
+          say($('loginMsg'), '');
           device = { mac: mac, key: key };
           try { sessionStorage.setItem('lumio.device', JSON.stringify(device)); } catch (e) {}
           $('devMac').textContent = mac;
-          $('loginForm').hidden = true;
-          $('deviceCard').hidden = false;
-          $('addForm').hidden = false;
-          render(r.items || []);
-          $('name').focus();
+          items = r.items || [];
+          setConnected(true);
+          render();
+          if (!items.length) openEditor(null);
         });
       }
-
       $('loginForm').addEventListener('submit', function (e) {
         e.preventDefault();
         var mac = normMac($('mac').value);
         var key = $('key').value.trim().toUpperCase();
-        if (!mac) { say($('loginMsg'), 'Bitte eine vollständige MAC-Adresse eingeben (12 Zeichen).', 'bad'); return; }
-        if (!/^[A-Z0-9]{6,12}$/.test(key)) { say($('loginMsg'), 'Bitte den Key aus der App eingeben.', 'bad'); return; }
+        if (!mac) { say($('loginMsg'), 'Bitte eine vollständige MAC-Adresse eingeben (12 Zeichen).', 'bad'); $('mac').focus(); return; }
+        if (!/^[A-Z0-9]{6,12}$/.test(key)) { say($('loginMsg'), 'Bitte den KEY aus der App eingeben.', 'bad'); $('key').focus(); return; }
         say($('loginMsg'), '');
         connect(mac, key);
       });
-
-      $('switchBtn').addEventListener('click', function () {
-        device = null;
+      $('logoutBtn').addEventListener('click', function () {
+        device = null; items = null; closeEditor();
         try { sessionStorage.removeItem('lumio.device'); } catch (e) {}
-        $('deviceCard').hidden = true; $('addForm').hidden = true; $('loginForm').hidden = false;
+        setConnected(false);
         $('mac').value = ''; $('key').value = ''; $('mac').focus();
       });
 
+      /* ---------- Playlists anzeigen ---------- */
+      function refresh() {
+        if (!device) return Promise.resolve();
+        return rpc('list_playlists', { p_mac: device.mac, p_key: device.key }).then(function (r) {
+          if (!r.ok) { toast(tr(r.error)); return; }
+          items = r.items || [];
+          render();
+        });
+      }
+      function render() {
+        var list = $('list');
+        $('loading').hidden = items !== null;
+        if (items === null) return;
+        list.textContent = '';
+        $('empty').hidden = items.length > 0 || !$('editor').hidden;
+        $('plCount').textContent = items.length ? String(items.length) : '';
+        items.forEach(function (it) {
+          var li = el('li', 'pl' + (editing && editing.id === it.id ? ' is-editing' : ''));
+          var ic = el('span', 'ic'); ic.appendChild(icon(it.type === 'xtream' ? 'server' : 'list'));
+          var txt = el('div', 't');
+          txt.appendChild(el('b', null, it.name));
+          var line = el('small');
+          line.appendChild(el('span', 'type', it.type === 'xtream' ? 'Xtream' : 'M3U'));
+          line.appendChild(document.createTextNode(hostOf(it.type === 'xtream' ? it.server : it.url)));
+          txt.appendChild(line);
+          if (it.type === 'xtream' && it.username) txt.appendChild(el('small', null, tr('Benutzer') + ': ' + it.username));
+          var act = el('div', 'act');
+          var edit = el('button', 'ghost small'); edit.type = 'button';
+          edit.appendChild(icon('edit')); edit.appendChild(el('span', null, tr('Bearbeiten')));
+          edit.addEventListener('click', function () { openEditor(it); });
+          var del = el('button', 'ghost small danger'); del.type = 'button';
+          var delLabel = el('span', null, tr('Löschen'));
+          del.appendChild(icon('trash')); del.appendChild(delLabel);
+          var disarm = null;
+          del.addEventListener('click', function () {
+            if (!del.classList.contains('is-armed')) {
+              // Zweimal tippen zum Löschen – schützt vor Versehen
+              del.classList.add('is-armed'); delLabel.textContent = tr('Wirklich löschen?');
+              disarm = setTimeout(function () { del.classList.remove('is-armed'); delLabel.textContent = tr('Löschen'); }, 4000);
+              return;
+            }
+            clearTimeout(disarm); del.disabled = true;
+            rpc('delete_playlist', { p_mac: device.mac, p_key: device.key, p_id: it.id }).then(function (r) {
+              if (!r.ok) { del.disabled = false; toast(tr(r.error)); return; }
+              if (editing && editing.id === it.id) closeEditor();
+              toast(tr('Gelöscht.'));
+              refresh();
+            });
+          });
+          act.appendChild(edit); act.appendChild(del);
+          li.appendChild(ic); li.appendChild(txt); li.appendChild(act);
+          list.appendChild(li);
+        });
+      }
+
+      /* ---------- Hinzufügen und Bearbeiten ---------- */
       function setMode(m) {
         mode = m;
-        $('tabM3u').setAttribute('aria-selected', m === 'm3u');
-        $('tabXt').setAttribute('aria-selected', m === 'xtream');
+        $('modeM3u').setAttribute('aria-selected', String(m === 'm3u'));
+        $('modeXt').setAttribute('aria-selected', String(m === 'xtream'));
         $('m3uFields').hidden = m !== 'm3u';
         $('xtFields').hidden = m !== 'xtream';
-        say($('addMsg'), '');
       }
-      $('tabM3u').addEventListener('click', function () { setMode('m3u'); });
-      $('tabXt').addEventListener('click', function () { setMode('xtream'); });
+      $('modeM3u').addEventListener('click', function () { setMode('m3u'); });
+      $('modeXt').addEventListener('click', function () { setMode('xtream'); });
+      $('showPass').addEventListener('click', function () {
+        var p = $('pass'); p.type = p.type === 'password' ? 'text' : 'password';
+        this.textContent = tr(p.type === 'password' ? 'Anzeigen' : 'Verbergen');
+      });
+      function paintEditor() {
+        $('edTitle').textContent = tr(editing ? 'Playlist bearbeiten' : 'Neue Playlist');
+        $('edNote').textContent = tr(editing ? 'Favoriten und „Weiterschauen“ bleiben in der App erhalten.' : 'Die Playlist erscheint nach etwa 30 Sekunden in der App.');
+        $('saveBtn').textContent = tr(editing ? 'Änderungen speichern' : 'Zum Gerät senden');
+      }
+      function openEditor(it) {
+        editing = it || null;
+        say($('edMsg'), '');
+        $('name').value = it ? it.name : '';
+        $('url').value = it && it.type === 'm3u' ? it.url || '' : '';
+        $('server').value = it && it.type === 'xtream' ? it.server || '' : '';
+        $('user').value = it && it.type === 'xtream' ? it.username || '' : '';
+        $('pass').value = it && it.type === 'xtream' ? it.password || '' : '';
+        $('pass').type = 'password'; $('showPass').textContent = tr('Anzeigen');
+        setMode(it ? it.type : 'm3u');
+        paintEditor();
+        $('editor').hidden = false;
+        $('newBtn').hidden = true;
+        render();
+        $('editor').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setTimeout(function () { (it ? $('name') : (mode === 'm3u' ? $('url') : $('server'))).focus({ preventScroll: true }); }, 250);
+      }
+      function closeEditor() {
+        editing = null;
+        $('editor').hidden = true; $('newBtn').hidden = false;
+        if (items) render();
+      }
+      $('newBtn').addEventListener('click', function () { openEditor(null); });
+      $('cancelBtn').addEventListener('click', closeEditor);
 
-      $('addForm').addEventListener('submit', function (e) {
+      $('editor').addEventListener('submit', function (e) {
         e.preventDefault();
         var body = { p_mac: device.mac, p_key: device.key, p_name: $('name').value.trim() };
         var x = mode === 'm3u' ? parseXtream($('url').value) : parseXtream($('server').value);
@@ -314,28 +753,49 @@
           body.p_type = 'xtream'; body.p_server = srv.replace(/\/+$/, '');
           body.p_username = $('user').value.trim(); body.p_password = $('pass').value;
         }
-        if (!body.p_name) body.p_name = body.p_type === 'xtream' ? (body.p_username || 'Xtream') : t('Meine Playlist');
-        var btn = $('addBtn');
-        btn.disabled = true; btn.textContent = t('Sende …');
-        rpc('add_playlist', body).then(function (r) {
-          btn.disabled = false; btn.textContent = t('Zum Gerät senden');
-          if (!r.ok) { say($('addMsg'), r.error, 'bad'); return; }
-          say($('addMsg'), t(x && mode === 'm3u' ? 'Als Xtream-Zugang erkannt und gesendet.' : 'Gesendet.') + ' ' + t('Die Playlist erscheint gleich in der App.'), 'ok');
-          ['name', 'url', 'server', 'user', 'pass'].forEach(function (id) { $(id).value = ''; });
+        if (!body.p_name) body.p_name = body.p_type === 'xtream' ? (body.p_username || 'Xtream') : tr('Meine Playlist');
+        var fn = 'add_playlist';
+        if (editing) { fn = 'update_playlist'; body.p_id = editing.id; }
+        var btn = $('saveBtn');
+        btn.disabled = true; btn.textContent = tr(editing ? 'Speichere …' : 'Sende …');
+        rpc(fn, body).then(function (r) {
+          btn.disabled = false; paintEditor();
+          if (!r.ok) { say($('edMsg'), r.error, 'bad'); return; }
+          toast((x && mode === 'm3u' ? tr('Als Xtream-Zugang erkannt.') + ' ' : '') + tr(editing ? 'Gespeichert.' : 'Gesendet.') + ' ' + tr('Die Playlist erscheint nach etwa 30 Sekunden in der App.'));
+          closeEditor();
           refresh();
         });
       });
 
-      // Werte aus dem QR-Code übernehmen
-      var q = qs0;
-      var qm = normMac(q.get('mac')), qk = (q.get('key') || '').toUpperCase();
+      /* ---------- Support-Nachricht ---------- */
+      $('supMsg').addEventListener('input', function () { $('supCount').textContent = this.value.length + ' / 2000'; });
+      $('supForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var text = $('supMsg').value.trim();
+        if (text.length < 5) { say($('supState'), 'Bitte beschreibe dein Anliegen etwas genauer.', 'bad'); $('supMsg').focus(); return; }
+        var btn = $('supBtn');
+        btn.disabled = true; btn.textContent = tr('Sende …');
+        rpc('send_support', { p_mac: device.mac, p_key: device.key, p_topic: $('supTopic').value, p_message: text, p_contact: $('supContact').value.trim() }).then(function (r) {
+          btn.disabled = false; btn.textContent = tr('Nachricht senden');
+          if (!r.ok) { say($('supState'), r.error, 'bad'); return; }
+          say($('supState'), 'Danke! Deine Nachricht ist angekommen.', 'ok');
+          $('supMsg').value = ''; $('supCount').textContent = '0 / 2000';
+        });
+      });
+
+      // Neue Playlists aus der App erscheinen, sobald man zur Seite zurückkehrt
+      document.addEventListener('visibilitychange', function () { if (!document.hidden && device && $('editor').hidden) refresh(); });
+
+      /* ---------- Start: Werte aus dem QR-Code übernehmen ---------- */
+      applyLang();
+      var qm = normMac(qs0.get('mac')), qk = (qs0.get('key') || '').toUpperCase();
       if (qm) $('mac').value = qm;
       if (qk) $('key').value = qk;
-      if (q.has('mac') || q.has('key')) history.replaceState(null, '', location.pathname);
+      if (qs0.has('mac') || qs0.has('key') || qs0.has('lang')) history.replaceState(null, '', location.pathname);
       var saved = null;
       try { saved = JSON.parse(sessionStorage.getItem('lumio.device') || 'null'); } catch (e) {}
       if (qm && /^[A-Z0-9]{6,12}$/.test(qk)) connect(qm, qk);
-      else if (saved && saved.mac && saved.key) connect(saved.mac, saved.key);
+      else if (saved && saved.mac && saved.key) connect(saved.mac, saved.key, true);
     })();
   </script>
 </body>

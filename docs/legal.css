@@ -1,4 +1,4 @@
-:root { color-scheme: dark; --bg: #0b0a1a; --text: #f5f3ff; --muted: #b9b4d8; --dim: #736d9a; --accent: #a78bfa; }
+:root { color-scheme: dark; --bg: #0b0b0f; --text: #f5f3ff; --muted: #b9b4d8; --dim: #736d9a; --accent: #a78bfa; }
 * { box-sizing: border-box; }
 html, body { margin: 0; background: var(--bg); color: var(--text); }
 body {
@@ -13,3 +13,4 @@ ul { padding-left: 1.2rem; }
 a { color: var(--accent); }
 .back { text-decoration: none; font-weight: 600; }
 .meta { color: var(--dim); font-size: .9rem; margin: 0; }
+h3 { font-size: .98rem; margin: 1.3rem 0 .3rem; }
