@@ -303,8 +303,9 @@ body.kbd .tile.f:focus, body.is-tv .tile.f:focus { transform: scale(1.03); }
   --line: rgba(255, 255, 255, 0.08); --text: #f3f5f9; --text-2: #cdd3de; --muted: #a3acbd; --dim: #6b7487;
 }
 .player video { position: absolute; inset: 0; width: 100%; height: 100%; background: #000; object-fit: contain; }
-.osd { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; transition: opacity .25s ease, visibility .25s; }
-.osd.is-hidden { opacity: 0; visibility: hidden; }
+/* Einblenden: sofort sichtbar (damit die Fernbedienung gleich einen Knopf hat), Ausblenden: weich */
+.osd { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; transition: opacity .25s ease, visibility 0s linear 0s; }
+.osd.is-hidden { opacity: 0; visibility: hidden; transition: opacity .25s ease, visibility 0s linear .25s; }
 .osd-top { display: flex; align-items: center; gap: 1rem; padding: 1.4rem 2rem 3rem; background: linear-gradient(180deg, rgba(0,0,0,.8), transparent); }
 .osd-top h2 { font-size: 1.35rem; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .osd-top .live-tag { background: var(--live); color: #fff; font-weight: 800; font-size: .75rem; padding: .2rem .5rem; border-radius: .3rem; letter-spacing: .05em; }
@@ -314,7 +315,19 @@ body.kbd .tile.f:focus, body.is-tv .tile.f:focus { transform: scale(1.03); }
 .epg .next { color: var(--muted); font-size: .9rem; }
 .bar { position: relative; height: .4rem; border-radius: 1rem; background: rgba(255,255,255,.22); overflow: hidden; }
 .bar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); border-radius: 1rem; }
-.bar.seek { cursor: pointer; height: .5rem; }
+.bar.seek { cursor: pointer; height: .5rem; transition: height .15s ease; }
+/* Großer Tippbereich um den Balken und kleine Vorschau beim Spulen */
+.bar-wrap { position: relative; padding: .8rem 0; margin: -.8rem 0; touch-action: none; }
+.bar-wrap:hover .bar.seek, .bar.seek:focus { height: .75rem; }
+body.kbd .bar.f:focus, body.is-tv .bar.f:focus { box-shadow: 0 0 0 .2rem var(--accent); transform: none; }
+.seek-prev { position: absolute; bottom: 2.2rem; left: 0; width: 15rem; transform: translateX(-50%); pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: .45rem; transition: opacity .12s ease; z-index: 2; }
+.seek-prev.is-hidden { opacity: 0; visibility: hidden; }
+.sp-img { width: 100%; aspect-ratio: 16 / 9; border-radius: .6rem; overflow: hidden; background: #111 center / 2rem no-repeat; box-shadow: 0 0 0 .15rem rgba(255, 255, 255, .9), 0 .6rem 1.6rem rgba(0, 0, 0, .6); position: relative; }
+.sp-img video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .15s ease; }
+.seek-prev.has-img .sp-img video { opacity: 1; }
+.seek-prev.no-img .sp-img { display: none; }
+.sp-time { font-weight: 700; font-size: 1rem; font-variant-numeric: tabular-nums; background: rgba(0, 0, 0, .75); padding: .2rem .65rem; border-radius: .5rem; }
+@supports not (aspect-ratio: 16 / 9) { .sp-img { height: 8.4rem; } }
 .times { display: flex; justify-content: space-between; color: var(--muted); font-size: .85rem; font-variant-numeric: tabular-nums; }
 .ctrl-row { display: flex; align-items: center; gap: 1rem; }
 .ctrls { display: flex; gap: .7rem; justify-content: center; flex-wrap: wrap; flex: 1; }
@@ -449,6 +462,7 @@ body.has-mini .section-body .mini-slot { display: flex; flex-direction: column; 
   .osd-bottom { padding: 2rem 1rem calc(1rem + env(safe-area-inset-bottom)); }
   .ctrls .btn span { display: none; }
   .vol-range { width: 6rem; }
+  .seek-prev { width: 10rem; }
   .kv { grid-template-columns: 1fr; gap: .1rem; }
   .kv b { margin-bottom: .4rem; }
   .card { width: 9.5rem; min-height: 8rem; }

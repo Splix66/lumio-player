@@ -782,6 +782,18 @@
       sw, label);
   }
 
+  function seekPreviewPanel() {
+    var bOn = h('button', { class: 'btn f' }, 'An');
+    var bOff = h('button', { class: 'btn f' }, 'Aus');
+    function paint() { var off = Settings.get('seekPreview') === false; bOn.classList.toggle('is-on', !off); bOff.classList.toggle('is-on', off); }
+    bOn.onclick = function () { Settings.set('seekPreview', true); paint(); toast('Vorschaubild beim Spulen: an'); };
+    bOff.onclick = function () { Settings.set('seekPreview', false); paint(); toast('Vorschaubild beim Spulen: aus'); };
+    paint();
+    return h('div', { class: 'panel' }, h('h3', { text: 'Vorschaubild beim Spulen' }),
+      h('p', { class: 'hint', text: 'Zeigt bei Filmen und Serien ein kleines Bild der Stelle, zu der du spulst. Falls dein Anbieter nur eine Verbindung gleichzeitig erlaubt und das Video beim Spulen hängt, schalte es aus – die Zeit wird dann trotzdem angezeigt.' }),
+      h('div', { class: 'row' }, bOn, bOff));
+  }
+
   function remotePanel() {
     return h('div', { class: 'remote' },
       qrBox(Device.portalLink()),
@@ -1582,6 +1594,7 @@
       appearancePanel(),
       remotePanel(),
       fmtRow,
+      seekPreviewPanel(),
       h('div', { class: 'panel' }, h('h3', { text: 'Verlauf' }),
         h('div', { class: 'row' },
           h('button', { class: 'btn f', onclick: function () { confirmBox('Verlauf löschen?', '„Weiterschauen“ und „Zuletzt gesehen“ werden geleert.', 'Löschen', function () { Resume.clear(); Store.del('recent.' + pid()); toast('Verlauf gelöscht'); }); } }, icon('trash'), 'Verlauf löschen'))),
@@ -1759,24 +1772,67 @@
       self.info = h('div', { class: 'epg' });
       self.bar = h('div', { class: 'bar' }, h('i', { style: 'width:0%' }));
       self.times = h('div', { class: 'times' }, h('span', { text: '0:00' }), h('span', { text: '0:00' }));
+      // Kleine Vorschau beim Spulen (wie bei YouTube)
+      self.pvBox = h('div', { class: 'sp-img' });
+      self.pvTime = h('div', { class: 'sp-time' });
+      self.seekPrev = h('div', { class: 'seek-prev is-hidden' }, self.pvBox, self.pvTime);
+      self.barWrap = h('div', { class: 'bar-wrap' }, self.bar, self.seekPrev);
       self.ctrls = h('div', { class: 'ctrls' });
       self.spinner = h('div', { class: 'spinner' });
       self.err = h('div', { class: 'state', style: 'display:none' });
       self.zap = h('div', { class: 'zap is-hidden' });
       self.osd = h('div', { class: 'osd' },
         h('div', { class: 'osd-top' }, h('button', { class: 'btn f', onclick: goBack }, icon('back'), h('span', { text: 'Zurück' })), self.liveTag, self.title),
-        h('div', { class: 'osd-bottom' }, self.info, self.bar, self.times, h('div', { class: 'ctrl-row' }, self.ctrls, self.volumeUi())));
+        h('div', { class: 'osd-bottom' }, self.info, self.barWrap, self.times, h('div', { class: 'ctrl-row' }, self.ctrls, self.volumeUi())));
       self.miniTitle = h('span', { class: 'mini-title' });
       self.miniUi = h('div', { class: 'mini-ui' },
         h('button', { class: 'mini-open f', title: 'Vollbild', onclick: function () { self.maximize(); } }, self.miniTitle),
         h('button', { class: 'mini-close f', title: 'Schließen', onclick: function () { self.close(); } }, icon('close')));
       self.el = h('div', { class: 'player' }, video, self.spinner, self.osd, self.zap, self.err, self.miniUi);
 
-      self.bar.addEventListener('click', function (e) {
-        if (!self.isVod() || !video.duration) return;
-        var r = self.bar.getBoundingClientRect();
-        video.currentTime = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * video.duration;
+      // Spulen mit Maus oder Finger: Vorschau beim Bewegen, beim Loslassen wird gesprungen
+      var barWrap = self.barWrap, dragging = false;
+      function frac(x) { var r = self.bar.getBoundingClientRect(); return r.width ? Math.max(0, Math.min(1, (x - r.left) / r.width)) : 0; }
+      function px(e) {
+        if (e.touches && e.touches[0]) return e.touches[0].clientX;
+        if (e.changedTouches && e.changedTouches[0]) return e.changedTouches[0].clientX;
+        return e.clientX;
+      }
+      barWrap.addEventListener('mousemove', function (e) {
+        if (dragging || !self.canSeek()) return;
+        self.preview(frac(px(e)) * video.duration);
       });
+      barWrap.addEventListener('mouseleave', function () { if (!dragging && self.scrubT == null) self.hidePreview(); });
+      function down(e) {
+        if (!self.canSeek()) return;
+        if (e.type === 'mousedown' && e.button) return;
+        e.preventDefault();
+        dragging = true;
+        var touch = e.type === 'touchstart';
+        clearTimeout(self.scrubTimer);
+        self.scrubT = frac(px(e)) * video.duration;
+        self.preview(self.scrubT);
+        self.showOsd(true);
+        function move(ev) {
+          ev.preventDefault();
+          self.scrubT = frac(px(ev)) * video.duration;
+          self.preview(self.scrubT);
+        }
+        function up(ev) {
+          document.removeEventListener(touch ? 'touchmove' : 'mousemove', move);
+          document.removeEventListener(touch ? 'touchend' : 'mouseup', up);
+          document.removeEventListener('touchcancel', up);
+          dragging = false;
+          var t = self.scrubT;
+          if (t == null) return;
+          self.commitTo(t);
+        }
+        document.addEventListener(touch ? 'touchmove' : 'mousemove', move, { passive: false });
+        document.addEventListener(touch ? 'touchend' : 'mouseup', up);
+        if (touch) document.addEventListener('touchcancel', up);
+      }
+      barWrap.addEventListener('mousedown', down);
+      barWrap.addEventListener('touchstart', down, { passive: false });
       self.el.addEventListener('click', function (e) { if (e.target === video || e.target === self.osd) self.toggleOsd(); });
       self.el.addEventListener('mousemove', function () { self.showOsd(); });
       // Mausrad = Lautstärke (PC)
@@ -1810,6 +1866,7 @@
         onLeave: function () { self.teardown(); },
         // Zurück bei Live TV: Sender läuft klein weiter
         onBack: function () {
+          if (self.scrubT != null) { self.cancelScrub(); return true; }
           if (self.item && self.item.kind === 'live' && self.err.style.display === 'none') { self.minimize(); return true; }
           return false;
         }
@@ -1918,6 +1975,12 @@
       self.title.textContent = item.kind === 'episode' ? (item.seriesName ? item.seriesName + ' · ' : '') + 'S' + item.season + ' E' + item.num + ' – ' + item.name : item.name;
       self.liveTag.style.display = item.kind === 'live' ? '' : 'none';
       self.bar.classList.toggle('seek', self.isVod());
+      self.bar.classList.toggle('f', self.isVod());
+      if (self.isVod()) self.bar.setAttribute('tabindex', '0'); else self.bar.removeAttribute('tabindex');
+      self.dropThumb();
+      self.pvFailed = false;
+      self.scrubT = null; self.scrubN = 0; clearTimeout(self.scrubTimer);
+      self.hidePreview();
       self.times.style.display = self.isVod() ? '' : 'none';
       self.bar.firstChild.style.width = '0%';
       clear(self.info);
@@ -1940,6 +2003,8 @@
     attach: function (url) {
       var self = this, video = self.video;
       self.destroyHls();
+      self.dropThumb();
+      self.curUrl = url;
       var nativeHls = !!video.canPlayType('application/vnd.apple.mpegurl');
       var preferNative = Platform.safari || Platform.tizen || Platform.webos;
       if (isHlsUrl(url) && !(nativeHls && preferNative)) {
@@ -2029,10 +2094,11 @@
       if (!this.isVod()) return;
       var v = this.video, d = v.duration || 0;
       if (!d || !isFinite(d)) return;
+      var cur = this.scrubT != null ? this.scrubT : v.currentTime;
       this.bar.style.display = '';
-      this.bar.firstChild.style.width = (v.currentTime / d * 100) + '%';
-      this.times.firstChild.textContent = fmtTime(v.currentTime);
-      this.times.lastChild.textContent = '-' + fmtTime(d - v.currentTime);
+      this.bar.firstChild.style.width = (cur / d * 100) + '%';
+      this.times.firstChild.textContent = fmtTime(cur);
+      this.times.lastChild.textContent = '-' + fmtTime(d - cur);
     },
 
     paintCtrls: function () {
@@ -2059,11 +2125,112 @@
     },
 
     togglePlay: function () { if (this.video.paused) this.playSafe(); else this.video.pause(); this.showOsd(); },
-    seek: function (s) {
+    seek: function (s) { this.scrubBy(s); },
+    canSeek: function () { var v = this.video; return !!(this.isVod() && v && v.duration && isFinite(v.duration)); },
+
+    /* ---------- Spulen mit Vorschau (wie bei YouTube) ----------
+       Pfeiltasten/Buttons verschieben erst nur die Vorschau. Nach einer kurzen
+       Pause springt das Video an die gewählte Stelle. Mehrmals drücken = schneller. */
+    scrubBy: function (s, focusBar) {
+      var self = this, v = self.video;
+      if (!self.canSeek()) return;
+      var going = self.scrubT != null;
+      self.scrubN = going ? (self.scrubN || 0) + 1 : 0;
+      var mult = self.scrubN >= 14 ? 6 : self.scrubN >= 6 ? 3 : 1;
+      var base = going ? self.scrubT : v.currentTime;
+      self.scrubT = Math.max(0, Math.min(v.duration - 1, base + s * mult));
+      self.showOsd(true);
+      if (focusBar && self.bar.classList.contains('f')) Nav.focus(self.bar);
+      self.preview(self.scrubT);
+      clearTimeout(self.scrubTimer);
+      self.scrubTimer = setTimeout(function () { if (self.scrubT != null) self.commitTo(self.scrubT); }, 1000);
+    },
+    commitTo: function (t) {
       var v = this.video;
-      if (!v.duration || !isFinite(v.duration)) return;
-      v.currentTime = Math.max(0, Math.min(v.duration - 1, v.currentTime + s));
-      this.paintProgress(); this.showOsd();
+      clearTimeout(this.scrubTimer);
+      this.scrubT = null; this.scrubN = 0;
+      if (v && v.duration && isFinite(v.duration)) {
+        try { v.currentTime = Math.max(0, Math.min(v.duration - 1, t)); } catch (e) {}
+      }
+      this.paintProgress();
+      this.hidePreview();
+      this.showOsd();
+    },
+    cancelScrub: function () {
+      clearTimeout(this.scrubTimer);
+      this.scrubT = null; this.scrubN = 0;
+      this.hidePreview();
+      this.paintProgress();
+      this.showOsd();
+    },
+    preview: function (t) {
+      var self = this, d = self.video && self.video.duration;
+      if (!d || !isFinite(d) || !self.seekPrev) return;
+      self.pvTime.textContent = fmtTime(t);
+      self.seekPrev.classList.remove('is-hidden');
+      var w = self.bar.offsetWidth, pw = self.seekPrev.offsetWidth || 0;
+      var x = Math.max(pw / 2, Math.min(w - pw / 2, t / d * w));
+      self.seekPrev.style.left = x + 'px';
+      if (self.scrubT != null) self.paintProgress();
+      self.thumb(t);
+    },
+    hidePreview: function () { if (this.seekPrev) this.seekPrev.classList.add('is-hidden'); },
+
+    /* Vorschaubild: ein zweites, unsichtbares Video springt an die gewünschte Stelle.
+       Es wird nur beim Spulen geladen und kurz danach wieder geschlossen. */
+    thumb: function (t) {
+      var self = this;
+      clearTimeout(self.pvKill);
+      self.pvKill = setTimeout(function () { self.dropThumb(); }, 8000);
+      var off = Settings.get('seekPreview') === false || self.pvFailed || !self.curUrl;
+      self.seekPrev.classList.toggle('no-img', off);
+      if (off) return;
+      self.pvWant = t;
+      if (self.pv) { self.pvGo(); return; }
+      var pv = h('video', { playsinline: true, 'webkit-playsinline': true, preload: 'metadata' });
+      pv.muted = true;
+      self.pv = pv; self.pvBusy = false;
+      self.pvBox.appendChild(pv);
+      function fail() { self.pvFailed = true; self.dropThumb(); if (self.seekPrev) self.seekPrev.classList.add('no-img'); }
+      pv.addEventListener('loadedmetadata', function () { self.pvGo(); });
+      pv.addEventListener('seeked', function () {
+        if (self.pv !== pv) return;
+        self.pvBusy = false;
+        self.seekPrev.classList.add('has-img');
+        self.pvGo();
+      });
+      pv.addEventListener('error', function () { if (self.pv === pv) fail(); });
+      var url = self.curUrl;
+      if (isHlsUrl(url) && self.hls && window.Hls) {
+        var hp = new window.Hls({ enableWorker: true, startLevel: 0, capLevelToPlayerSize: true, maxBufferLength: 2, maxMaxBufferLength: 4, backBufferLength: 0 });
+        hp.on(window.Hls.Events.ERROR, function (ev, data) { if (data.fatal && self.pvHls === hp) fail(); });
+        self.pvHls = hp;
+        hp.loadSource(url);
+        hp.attachMedia(pv);
+      } else {
+        pv.src = url;
+      }
+    },
+    pvGo: function () {
+      var pv = this.pv;
+      if (!pv || this.pvWant == null || pv.readyState < 1) return;
+      if (this.pvBusy && Date.now() - this.pvBusyAt < 4000) return;
+      var t = this.pvWant;
+      this.pvWant = null;
+      this.pvBusy = true; this.pvBusyAt = Date.now();
+      try { pv.currentTime = t; } catch (e) { this.pvBusy = false; }
+    },
+    dropThumb: function () {
+      clearTimeout(this.pvKill);
+      if (this.pvHls) { try { this.pvHls.destroy(); } catch (e) {} this.pvHls = null; }
+      if (this.pv) {
+        var pv = this.pv;
+        this.pv = null;
+        try { pv.removeAttribute('src'); pv.load(); } catch (e) {}
+        if (pv.parentNode) pv.parentNode.removeChild(pv);
+      }
+      this.pvBusy = false; this.pvWant = null;
+      if (this.seekPrev) this.seekPrev.classList.remove('has-img');
     },
     zapBy: function (d) {
       var c = this.ctx;
@@ -2115,12 +2282,18 @@
       if (hidden) {
         if (self.item.kind === 'live' && k === KEY.UP) { self.zapBy(-1); return true; }
         if (self.item.kind === 'live' && k === KEY.DOWN) { self.zapBy(1); return true; }
-        if (self.isVod() && k === KEY.LEFT) { self.seek(-15); return true; }
-        if (self.isVod() && k === KEY.RIGHT) { self.seek(30); return true; }
+        if (self.isVod() && k === KEY.LEFT) { self.scrubBy(-10, true); return true; }
+        if (self.isVod() && k === KEY.RIGHT) { self.scrubBy(10, true); return true; }
         if (k === KEY.ENTER || k === KEY.UP || k === KEY.DOWN || k === KEY.LEFT || k === KEY.RIGHT) { self.showOsd(); return true; }
         return false;
       }
-      self.showOsd();
+      var onBar = document.activeElement === self.bar || (self.scrubT != null && !self.osd.contains(document.activeElement));
+      if (onBar && self.isVod()) {
+        if (k === KEY.LEFT) { self.scrubBy(-10, true); return true; }
+        if (k === KEY.RIGHT) { self.scrubBy(10, true); return true; }
+        if (k === KEY.ENTER) { if (self.scrubT != null) self.commitTo(self.scrubT); else self.togglePlay(); return true; }
+      }
+      self.showOsd(self.scrubT != null);
       return false;
     },
 
@@ -2206,6 +2379,8 @@
       this.saveResume();
       clearInterval(this.saveTimer); clearInterval(this.epgTimer); clearTimeout(this.hideTimer); clearTimeout(this.zapTimer);
       this.destroyHls();
+      this.dropThumb();
+      clearTimeout(this.scrubTimer); this.scrubT = null;
       try { this.video.pause(); this.video.removeAttribute('src'); this.video.load(); } catch (e) {}
       this.exitFullscreen();
       clearInterval(this.placeTimer);
