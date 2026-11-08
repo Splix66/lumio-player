@@ -1008,18 +1008,23 @@ body.kbd .ln-mini.f:focus, body.is-tv .ln-mini.f:focus { background: var(--text)
 .lr-track { display: flex; overflow-x: auto; overflow-y: hidden; padding: .3rem .4rem .5rem; margin: -.3rem -.4rem 0; scrollbar-width: none; }
 .lr-track::-webkit-scrollbar { display: none; }
 .lr-track > * + * { margin-left: .8rem; }
-.lr-card { position: relative; flex: none; width: 15rem; height: 4.6rem; display: flex; align-items: center; border-radius: var(--radius); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); overflow: hidden; text-align: left; color: var(--text); }
-.lr-thumb { position: relative; flex: none; width: 6.6rem; height: 100%; overflow: hidden; background: var(--surface-2); }
-.lr-thumb .ph, .lr-thumb img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
-.lr-thumb.is-logo { display: grid; place-items: center; }
-.lr-thumb.is-logo .logo-box { width: 5rem; height: 3.2rem; }
-.lr-txt { display: flex; flex-direction: column; min-width: 0; padding: 0 .8rem; }
+.lr-card { --k: var(--accent-2); position: relative; flex: none; width: 12.5rem; display: flex; flex-direction: column; border-radius: var(--radius); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); overflow: hidden; text-align: left; color: var(--text); }
+.lr-card.k-movie { --k: var(--c-movie); }
+.lr-card.k-series { --k: var(--c-series); }
+.lr-thumb { position: relative; display: block; width: 100%; height: 7rem; overflow: hidden; background: var(--surface-2); }
+.lr-thumb .ph, .lr-thumb img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.lr-thumb .lr-blur { object-fit: cover; transform: scale(1.25); filter: blur(14px) brightness(.55); }
+.lr-thumb .lr-cover { object-fit: contain; }
+/* Kennzeichnung: Film gelb, Serie blau */
+.lr-tag { position: absolute; top: .45rem; left: .45rem; padding: .12rem .45rem; border-radius: .35rem; background: var(--k); color: #111; font-size: .66rem; font-weight: 800; letter-spacing: .02em; box-shadow: 0 .2rem .6rem rgba(0, 0, 0, .35); }
+.lr-card.k-series .lr-tag { color: #fff; }
+.lr-bar { position: absolute; left: 0; right: 0; bottom: 0; height: .25rem; background: rgba(255, 255, 255, .18); }
+.lr-bar i { display: block; height: 100%; background: var(--k); }
+.lr-txt { display: flex; flex-direction: column; min-width: 0; padding: .55rem .75rem .65rem; }
 .lr-txt b { font-size: .92rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.lr-txt small { margin-top: .2rem; color: var(--muted); font-size: .78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.lr-live { font-style: normal; font-size: .62rem; font-weight: 800; letter-spacing: .04em; color: #fff; background: var(--live); padding: .05rem .32rem; border-radius: .25rem; margin-right: .4rem; vertical-align: .1em; }
-.lr-bar { position: absolute; left: 0; right: 0; bottom: 0; height: .22rem; background: var(--line-2); }
-.lr-bar i { display: block; height: 100%; background: var(--accent-2); }
-body.kbd .lr-card.f:focus, body.is-tv .lr-card.f:focus { transform: scale(1.04); }
+.lr-txt small { margin-top: .15rem; color: var(--muted); font-size: .78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lr-card.k-series .lr-txt small { color: var(--c-series); }
+body.kbd .lr-card.f:focus, body.is-tv .lr-card.f:focus { transform: scale(1.05); box-shadow: 0 0 0 .18rem var(--bg), 0 0 0 .36rem var(--k); }
 
 /* Fußleiste auf dem Startbildschirm: MAC und KEY groß, Uhr und Datum rechts */
 .sb-clock { display: none; }
@@ -1251,8 +1256,9 @@ body.kbd .lr-card.f:focus, body.is-tv .lr-card.f:focus { transform: scale(1.04);
   html:not(.tv) .lp-cell b { font-size: .9rem; }
   html:not(.tv) .ln-recent { margin-top: .8rem; }
   html:not(.tv) .lr-title { font-size: .95rem; margin-bottom: .5rem; }
-  html:not(.tv) .lr-card { width: 12.5rem; height: 3.8rem; }
-  html:not(.tv) .lr-thumb { width: 5.2rem; }
+  html:not(.tv) .lr-card { width: 10rem; }
+  html:not(.tv) .lr-thumb { height: 5.6rem; }
+  html:not(.tv) .lr-txt { padding: .4rem .6rem .5rem; }
   html:not(.tv) .shell.is-launcher .statusbar { padding: .4rem var(--pad) calc(.45rem + env(safe-area-inset-bottom)); }
   html:not(.tv) .shell.is-launcher .statusbar .mac-tag { font-size: .95rem; }
   html:not(.tv) .shell.is-launcher .sb-clock { font-size: .85rem; }
@@ -1278,5 +1284,5 @@ body.kbd .lr-card.f:focus, body.is-tv .lr-card.f:focus { transform: scale(1.04);
   html:not(.tv) .lt-label { font-size: 1.1rem; }
   html:not(.tv) .lt-sub { font-size: .72rem; }
   html:not(.tv) .ln-side { grid-column: 1 / -1; }
-  html:not(.tv) .lr-card { width: 13rem; }
+  html:not(.tv) .lr-card { width: 11rem; }
 }

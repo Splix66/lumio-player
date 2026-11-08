@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Lumio Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.8.0',
+    version: '1.8.1',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     hlsCdn: 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js',
     requestTimeout: 30000,
@@ -2088,33 +2088,32 @@
       }).catch(function () { expEl.textContent = T('keine Verbindung'); plCard.classList.add('is-off'); });
     }
 
-    // Zuletzt geschaut (kompakt)
+    // Zuletzt geschaut: angefangene Filme (gelb) und Serien (blau) als Bildkarten – keine Live-Sender
     var recent = h('section', { class: 'ln-recent' });
-    function recCard(it, sub, pct, onclick, live) {
-      var src = live ? null : (it.backdrop || it.logo);
-      var thumb = live ? h('span', { class: 'lr-thumb is-logo' }, logoBox(it))
-        : h('span', { class: 'lr-thumb' }, h('span', { class: 'ph', style: 'background:' + gradientFor(it.seriesName || it.name) }), src ? img(src, '', function (i) { if (i.parentNode) i.parentNode.removeChild(i); }) : null);
-      return h('button', { class: 'lr-card f' + (live ? ' k-live' : ''), 'data-key': 'lr:' + (it.kind === 'episode' ? 'series:' + it.seriesId : it.kind + ':' + it.id), onclick: onclick },
+    function recCard(r) {
+      var it = r.item, ep = it.kind === 'episode', kind = ep ? 'series' : 'movie';
+      var src = it.logo || it.backdrop;
+      var thumb = h('span', { class: 'lr-thumb' }, h('span', { class: 'ph', style: 'background:' + gradientFor(it.seriesName || it.name) }));
+      if (src) {
+        // Cover vollständig zeigen, dahinter dasselbe Bild unscharf als Hintergrund
+        if (!Platform.lite) thumb.appendChild(img(src, 'lr-blur', function (i) { if (i.parentNode) i.parentNode.removeChild(i); }));
+        thumb.appendChild(img(src, 'lr-cover', function (i) { if (i.parentNode) i.parentNode.removeChild(i); }));
+      }
+      thumb.appendChild(h('span', { class: 'lr-tag', text: ep ? T('Serie') : T('Film') }));
+      thumb.appendChild(h('span', { class: 'lr-bar' }, h('i', { style: 'width:' + Math.max(3, Math.round(r.t / r.d * 100)) + '%' })));
+      return h('button', { class: 'lr-card f k-' + kind, 'data-key': 'lr:' + (ep ? 'series:' + it.seriesId : 'movie:' + it.id), title: ep ? (it.seriesName || it.name) : it.name, onclick: function () { playItem(it, { list: [it], index: 0 }); } },
         thumb,
         h('span', { class: 'lr-txt' },
-          h('b', { text: it.kind === 'episode' ? (it.seriesName || it.name) : it.name }),
-          h('small', null, live ? h('i', { class: 'lr-live', text: 'LIVE' }) : null, h('span', { text: sub }))),
-        pct != null ? h('span', { class: 'lr-bar' }, h('i', { style: 'width:' + pct + '%' })) : null);
+          h('b', { text: ep ? (it.seriesName || it.name) : it.name }),
+          h('small', { text: ep ? T('Staffel {0}, Folge {1}', it.season, it.num) : T('Noch {0}', fmtLeft(r.d - r.t)) })));
     }
     function paintRecent() {
       clear(recent);
-      var res = Resume.recent().slice(0, 8), rec = Recent.list().slice(0, 6);
-      recent.hidden = !res.length && !rec.length;
-      if (recent.hidden) return;
+      var res = Resume.recent().filter(function (r) { return r.item && (r.item.kind === 'movie' || r.item.kind === 'episode'); }).slice(0, 10);
+      recent.hidden = !res.length;
+      if (!res.length) return;
       var track = h('div', { class: 'lr-track' });
-      res.forEach(function (r) {
-        var it = r.item, ep = it.kind === 'episode';
-        track.appendChild(recCard(it, ep ? 'S' + it.season + ' E' + it.num : T('Noch {0}', fmtLeft(r.d - r.t)), Math.max(3, Math.round(r.t / r.d * 100)),
-          function () { playItem(it, { list: [it], index: 0 }); }));
-      });
-      rec.forEach(function (it, i) {
-        track.appendChild(recCard(it, it.num ? T('Sender {0}', it.num) : T('Live TV'), null, function () { playItem(it, { list: rec, index: i }); }, true));
-      });
+      res.forEach(function (r) { track.appendChild(recCard(r)); });
       recent.appendChild(h('h2', { class: 'lr-title', text: T('Zuletzt geschaut') }));
       recent.appendChild(track);
     }
