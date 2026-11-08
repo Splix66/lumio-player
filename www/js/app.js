@@ -11,9 +11,10 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Lumio Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.9.0',
+    version: '1.9.1',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     hlsCdn: 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js',
+    tsCdn: 'https://cdn.jsdelivr.net/npm/mpegts.js@1.7.3/dist/mpegts.js',   // für rohe TV-Signale (.ts / „RAW“)
     requestTimeout: 30000,
     // Online-Dienst für "Playlist per Handy hinzufügen" (Supabase + Webseite auf GitHub Pages)
     cloudUrl: 'https://oofzhklrbrpxjoicwbsf.supabase.co/rest/v1/rpc/',
@@ -516,6 +517,7 @@
             rating: i.rating, duration: i.duration, cast: i.cast || i.actors, director: i.director,
             poster: i.movie_image || i.cover_big || item.logo,
             backdrop: Array.isArray(i.backdrop_path) ? i.backdrop_path[0] : i.backdrop_path,
+            trailer: i.youtube_trailer || i.trailer,
             ext: md.container_extension || item.ext
           };
         });
@@ -547,6 +549,7 @@
             plot: i.plot, genre: i.genre, year: (i.releaseDate || i.release_date || '').slice(0, 4), rating: i.rating,
             cast: i.cast, director: i.director, poster: i.cover || item.logo,
             backdrop: Array.isArray(i.backdrop_path) ? i.backdrop_path[0] : i.backdrop_path,
+            trailer: i.youtube_trailer || i.trailer,
             seasons: seasons
           };
         });
@@ -1666,7 +1669,6 @@
     var resumeSlot = h('div', { class: 'mv-resume' });
     var grid = h('div', { class: 'poster-grid mv-grid' });
     var el = h('div', { class: 'page media mv2 media-' + kind + ' k-' + kind },
-      h('div', { class: 'mv-pagehead page-title' }, h('h1', null, h('span', { class: 'pt-ic' }, icon(kind)), h('span', { text: isSeries ? T('Serien') : T('Filme') })), h('span', { class: 'count mv-total' })),
       topSlot,
       h('div', { class: 'mv-body' }, h('aside', { class: 'mv-side' }, side), h('div', { class: 'mv-main' }, resumeSlot, h('div', { class: 'mv-head' }, title, count), grid)));
     var flat = [], groups = null, curGroup = null, activeId = null, counts = null, req = 0, chunker = null;
@@ -1832,7 +1834,7 @@
       selectCat(target || allCat);
       paintTop();
       if (document.activeElement === document.body) Nav.focus($('.cat.is-on', side) || side.firstChild);
-      catCounts(kind).then(function (c) { counts = c; paintCounts(); var t = $('.mv-total', el); if (t) t.textContent = fmtCount(c.total); }).catch(function () {});
+      catCounts(kind).then(function (c) { counts = c; paintCounts(); Shell.setCount(kind, fmtCount(c.total)); }).catch(function () {});
     }, function (e) {
       clear(grid).appendChild(stateBox(T('Laden fehlgeschlagen'), e.message, T('Erneut versuchen'), function () { Shell.show(kind, true); }));
     });
@@ -1980,9 +1982,20 @@
       var tabs = h('nav', { class: 'main-tabs', 'aria-label': T('Hauptmenü') });
       var homeBtn = null;
       [['home', T('Start'), 'home'], ['live', T('Live TV'), 'live'], ['movie', T('Filme'), 'movie'], ['series', T('Serien'), 'series']].forEach(function (it) {
-        var b = h('button', { class: 'tab f k-' + it[0] + (it[0] === 'home' ? ' tab-home' : ''), title: it[1], 'aria-label': it[1], onclick: function () { self.show(it[0], true); } }, icon(it[2]), h('span', { text: it[1] }));
+        var b = h('button', { class: 'tab f k-' + it[0] + (it[0] === 'home' ? ' tab-home' : ''), title: it[1], 'aria-label': it[1], onclick: function () { self.show(it[0], true); } },
+          icon(it[2]), h('span', { class: 'tab-label', text: it[1] }), it[0] === 'home' ? null : h('span', { class: 'tab-n' }));
         self.buttons[it[0]] = b;
         if (it[0] === 'home') homeBtn = b; else tabs.appendChild(b);
+      });
+      // Die drei Reiter reagieren sichtbar aufeinander: der Nachbar des gerade gewählten hebt sich leicht mit
+      tabs.addEventListener('focusin', function (e) { self.hint(e.target && e.target._tabKey); });
+      tabs.addEventListener('focusout', function (e) {
+        if (!e.relatedTarget || !tabs.contains(e.relatedTarget)) self.hint(null);
+      });
+      tabs.addEventListener('mouseleave', function () { if (!tabs.contains(document.activeElement)) self.hint(null); });
+      ['live', 'movie', 'series'].forEach(function (k) {
+        self.buttons[k]._tabKey = k;
+        self.buttons[k].addEventListener('mouseenter', function () { self.hint(k); });
       });
       var reloadTop = h('button', { class: 'icon-btn f', title: T('Playlist aktualisieren'), 'aria-label': T('Playlist aktualisieren'), onclick: reloadWithSplash }, icon('refresh'));
       function tool(name, label, ic) {
@@ -2030,7 +2043,11 @@
       if (QuickSearch.isOpen) QuickSearch.close(true);
       // Startbildschirm ohne Menüleiste – er ist selbst das Menü
       self.el.classList.toggle('is-launcher', name === 'home');
-      Object.keys(self.buttons).forEach(function (k) { self.buttons[k].classList.toggle('is-on', k === name); });
+      Object.keys(self.buttons).forEach(function (k) {
+        self.buttons[k].classList.toggle('is-on', k === name);
+        if (k !== name) self.setCount(k, '');
+      });
+      self.hint(null);
       self.viewBack = null;
       // alte Ansicht aufräumen (lange Listen sofort freigeben – wichtig für Boxen mit wenig Speicher)
       var old = self.view.firstChild;
@@ -2050,6 +2067,23 @@
       setTimeout(function () {
         if (focusContent || !document.activeElement || document.activeElement === document.body) Nav.focusFirst(self.view);
       }, 30);
+    },
+    /* Anzahl direkt am Reiter statt einer eigenen Überschrift auf der Seite */
+    setCount: function (name, txt) {
+      var b = this.buttons[name];
+      if (!b) return;
+      var n = $('.tab-n', b);
+      if (n) n.textContent = txt || '';
+    },
+    /* Nachbar-Reiter hebt sich leicht mit, damit man beim Wandern nach links/rechts sieht, wo man ist */
+    hint: function (key) {
+      var self = this, order = ['live', 'movie', 'series'], i = key ? order.indexOf(key) : -1;
+      order.forEach(function (k, j) {
+        var b = self.buttons[k];
+        if (!b) return;
+        b.classList.toggle('is-near', i >= 0 && Math.abs(i - j) === 1);
+        b.classList.toggle('is-hint', i === j);
+      });
     }
   };
 
@@ -2088,7 +2122,7 @@
       var upd = h('span', { class: 'lt-upd' }), cnt = h('span', { class: 'lt-sub' });
       var b = h('button', { class: 'ln-tile f k-' + kind, 'data-key': 'ln:' + kind, 'data-autofocus': kind === want ? true : null, onclick: function () { Shell.show(kind, true); } },
         upd, h('span', { class: 'lt-ic' }, icon(kind), kind !== 'live' ? h('span', { class: 'lt-new', text: T('NEU') }) : null), h('span', { class: 'lt-label', text: label }), cnt,
-        h('span', { class: 'lt-go' }, T('Öffnen'), icon('next')));
+        h('span', { class: 'lt-go', 'aria-hidden': 'true' }, icon('next')));
       b._upd = upd; b._cnt = cnt; b._unit = unit; b._none = none; b._kind = kind;
       return b;
     }
@@ -2576,14 +2610,11 @@
   /* ---------- Live TV / Filme / Serien ---------- */
   var lastCat = {}, lastGroup = {};
   function SectionView(kind) {
-    var titles = { live: T('Live TV'), movie: T('Filme'), series: T('Serien') };
     var allNames = { live: T('Alle Sender'), movie: T('Alle Filme'), series: T('Alle Serien') };
-    var count = h('span', { class: 'count' });
     var cats = h('div', { class: 'cats' });
     var items = h('div', { class: 'items' }, loader());
     var panel = kind === 'live' ? LivePanel() : null;
-    var el = h('div', { class: 'section section-' + kind + ' k-' + kind },
-      h('div', { class: 'section-head page-title' }, h('h1', null, h('span', { class: 'pt-ic' }, icon(kind)), h('span', { text: titles[kind] })), count),
+    var el = h('div', { class: 'section section-' + kind + ' k-' + kind + ' no-head' },
       h('div', { class: 'section-body' }, cats, items, panel ? panel.el : null));
     var key = pid() + kind;
     var allCat = { id: '__all', name: allNames[kind] };
@@ -2680,7 +2711,7 @@
       var my = ++req;
       if (chunker) { chunker.dispose(); chunker = null; }
       clear(items).appendChild(loader());
-      count.textContent = '';
+      Shell.setCount(kind, '');
       (cat.local ? Promise.resolve(cat.local()) : cat.id === '__all' ? visibleItems(kind, App.provider.items(kind, cat.id)) : App.provider.items(kind, cat.id)).then(function (list) {
         if (my !== req) return;
         if (kind === 'live' && cat.id !== '__recent') list = sortChannels(list);
@@ -2688,7 +2719,7 @@
         if (cat.id === '__all' && kind !== 'live' && some(list, function (x) { return Number(x.added) > 0; })) list = list.slice().sort(byAdded);
         clear(items);
         items.scrollTop = 0;
-        count.textContent = String(list.length);
+        Shell.setCount(kind, fmtCount(list.length));
         if (!list.length) {
           items.appendChild(cat.id === '__fav' ? stateBox(T('Noch keine Lieblingssender'), T('Wähle im Player bei einem Sender „Merken“ – dann erscheint er hier.'))
             : cat.id === '__recent' ? stateBox(T('Noch nichts geschaut'), T('Die zuletzt gesehenen Sender erscheinen hier.'))
@@ -3672,6 +3703,39 @@
     }).catch(function () {});
   }
 
+  /* ---------- Trailer ----------
+     Die Trailer kommen nicht von uns: der Anbieter legt zu jedem Film und jeder Serie
+     eine YouTube-Kennung mit in die Playlist (Feld „youtube_trailer“). Wir zeigen das
+     Video im offiziellen YouTube-Fenster – anders darf und kann man es nicht abspielen.
+     Auf Samsung- und LG-Fernsehern öffnet YouTube kein eingebettetes Fenster, dort
+     erscheint der Knopf deshalb gar nicht erst. */
+  function trailerId(v) {
+    v = String(v || '').trim();
+    if (!v) return '';
+    var m = /(?:v=|\/embed\/|youtu\.be\/|\/shorts\/)([A-Za-z0-9_-]{11})/.exec(v);
+    if (m) return m[1];
+    return /^[A-Za-z0-9_-]{11}$/.test(v) ? v : '';
+  }
+  function canTrailer() { return !Platform.tizen && !Platform.webos; }
+  function showTrailer(name, id) {
+    var frame = h('iframe', {
+      class: 'tr-frame', src: 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1&rel=0&modestbranding=1&playsinline=1',
+      allow: 'autoplay; encrypted-media; picture-in-picture; fullscreen', allowfullscreen: 'true',
+      frameborder: '0', title: T('Trailer: {0}', name)
+    });
+    var closeBtn = h('button', { class: 'icon-btn f tr-close', 'data-autofocus': true, title: T('Schließen'), 'aria-label': T('Schließen'), onclick: goBack }, icon('close'));
+    var el = h('div', { class: 'tr-screen' },
+      h('div', { class: 'tr-bar' }, h('span', { class: 'tr-name', text: name }), closeBtn),
+      h('div', { class: 'tr-box' }, frame));
+    Screens.push('trailer', el, { overlay: true });
+    setTimeout(function () { Nav.focus(closeBtn); }, 60);
+  }
+  function trailerButton(name, raw) {
+    var id = trailerId(raw);
+    if (!id || !canTrailer()) return null;
+    return h('button', { class: 'btn f', onclick: function () { showTrailer(name, id); } }, icon('play'), h('span', { text: T('Trailer') }));
+  }
+
   function showMovie(item) {
     var f = detailFrame(item);
     var actions = h('div', { class: 'row' });
@@ -3684,6 +3748,8 @@
       } else {
         actions.appendChild(h('button', { class: 'btn f primary', 'data-autofocus': true, onclick: function () { playItem(item, { list: [item], index: 0 }); } }, icon('play'), h('span', { text: T('Abspielen') })));
       }
+      var tb = trailerButton(item.name, item.trailer);
+      if (tb) actions.appendChild(tb);
       actions.appendChild(favButton(item));
     }
     paintActions();
@@ -3694,6 +3760,12 @@
       if (d.ext) item.ext = d.ext;
       metaBox.appendChild(metaLine(d));
       if (d.plot) plotBox.textContent = d.plot;
+      if (d.trailer && trailerId(d.trailer) && canTrailer()) {
+        item.trailer = d.trailer;
+        var hadFocus = actions.contains(document.activeElement);
+        paintActions();
+        if (hadFocus) Nav.focusFirst(actions);
+      }
       if (d.director || d.cast) f.info.appendChild(h('p', { class: 'credits', text: [d.director ? T('Regie: {0}', d.director) : '', d.cast ? T('Mit: {0}', d.cast) : ''].filter(Boolean).join('. ') }));
       if (d.backdrop) { item.backdrop = d.backdrop; f.setBackdrop(d.backdrop); }
     }).catch(function () {});
@@ -3760,6 +3832,8 @@
       metaBox.appendChild(metaLine(d || {}));
       if (d && d.plot) plotBox.textContent = d.plot;
       if (d && d.backdrop) { item.backdrop = d.backdrop; f.setBackdrop(d.backdrop); }
+      var tb = d && trailerButton(item.name, d.trailer);
+      if (tb) actions.insertBefore(tb, actions.lastChild);   // vor „Merken“
       seasons = (d && d.seasons) || [];
       if (!seasons.length) { clear(epBox).appendChild(stateBox(T('Keine Folgen gefunden'), null)); return; }
       seasons.forEach(function (s) {
@@ -3810,6 +3884,23 @@
     return hlsLoading;
   }
   function isHlsUrl(u) { return /\.m3u8(\?|$)/i.test(u) || /\/hls\//i.test(u) || /\.ism\/\.m3u8/i.test(u); }
+  /* Rohe TV-Signale (MPEG-TS, bei vielen Anbietern „RAW“): kein Browser kann die allein öffnen.
+     mpegts.js packt den Datenstrom im Hintergrund so um, dass das Videofenster ihn versteht. */
+  function isTsUrl(u) { return /\.ts(\?|$)/i.test(u) || /\/mpegts\//i.test(u); }
+  var tsLoading = null;
+  function ensureTs() {
+    if (window.mpegts) return Promise.resolve(window.mpegts);
+    if (!tsLoading) {
+      tsLoading = new Promise(function (resolve) {
+        var s = document.createElement('script');
+        s.src = CONFIG.tsCdn;
+        s.onload = function () { resolve(window.mpegts || null); };
+        s.onerror = function () { resolve(null); };
+        document.head.appendChild(s);
+      });
+    }
+    return tsLoading;
+  }
 
   /* ==========================================================
      TV-Player (nur Android-App): eigener Android-Videoplayer (ExoPlayer)
@@ -4160,7 +4251,7 @@
       var self = this;
       self.item = item;
       markPlaying(item);
-      self.triedAlt = false; self.retried = false; self.forceHlsJs = false;
+      self.triedAlt = false; self.retried = false; self.forceHlsJs = false; self.rawFail = false;
       self.netRetries = 0; self.stallRetries = 0; self.swappedCodec = false; self.mediaRecoverAt = 0; self.reconnect = false;
       self.closeTracks();
       if (self.nextCancel) self.nextCancel();
@@ -4279,8 +4370,36 @@
             video.src = url; self.playSafe();
           }
         });
+      // Fernseher (Tizen/webOS) und Apple-Geräte können rohe TV-Signale meist selbst öffnen,
+      // Windows, Mac und Android nicht – dort übernimmt mpegts.js.
+      } else if (isTsUrl(url) && !(Platform.tizen || Platform.webos || Platform.safari || Platform.ios)) {
+        // Rohes TV-Signal im Browser (Windows, Mac, Fernseher-Browser): erst umpacken lassen,
+        // sonst bleibt das Bild schwarz, weil kein Browser MPEG-TS direkt öffnen kann.
+        // Klappt das Umpacken nicht (kein Netz für die Hilfsdatei, oder der Anbieter
+        // liefert doch etwas anderes), probieren wir es ganz normal weiter.
+        var plain = function () {
+          if (self.video !== video || self.curUrl !== url) return;
+          self.destroyHls();
+          self.rawFail = true;
+          video.src = url;
+          self.playSafe();
+        };
+        ensureTs().then(function (mpegts) {
+          if (self.video !== video || self.curUrl !== url) return;
+          var ok = mpegts && mpegts.getFeatureList && mpegts.getFeatureList().mseLivePlayback;
+          if (!ok) { plain(); return; }
+          var p = mpegts.createPlayer({ type: 'mpegts', isLive: self.item && self.item.kind === 'live', url: url },
+            { enableWorker: true, liveBufferLatencyChasing: true, lazyLoad: false, stashInitialSize: 128 });
+          self.ts = p;
+          p.on(mpegts.Events.ERROR, function () { if (self.ts === p) plain(); });
+          try {
+            p.attachMediaElement(video);
+            p.load();
+            self.playSafe();
+          } catch (e) { plain(); }
+        });
       } else {
-        self.usingNative = isHlsUrl(url);
+        self.usingNative = isHlsUrl(url) || isTsUrl(url);
         video.src = url;
         self.playSafe();
       }
@@ -4303,7 +4422,8 @@
       self.err.appendChild(h('h3', { text: T('Wiedergabe nicht möglich') }));
       self.err.appendChild(h('p', { text: msg }));
       var ext = String((self.item && self.item.ext) || '').toLowerCase();
-      if (self.isVod() && /^(mkv|avi|wmv|flv)$/.test(ext)) self.err.appendChild(h('p', { class: 'hint', text: T('Dieser Film liegt im Format {0} vor. Nicht jedes Gerät kann dieses Format abspielen.', ext.toUpperCase()) }));
+      if (self.rawFail) self.err.appendChild(h('p', { class: 'hint', text: T('Solche Sender heißen beim Anbieter oft „RAW“. Sie werden unverändert durchgeleitet. Auf einer Android-TV-Box oder einem Fire TV Stick laufen sie meist – notfalls über einen externen Player wie VLC (Einstellungen → Wiedergabe).') }));
+      else if (self.isVod() && /^(mkv|avi|wmv|flv)$/.test(ext)) self.err.appendChild(h('p', { class: 'hint', text: T('Dieser Film liegt im Format {0} vor. Nicht jedes Gerät kann dieses Format abspielen.', ext.toUpperCase()) }));
       else if (typeof navigator.onLine === 'boolean' && !navigator.onLine) self.err.appendChild(h('p', { class: 'hint', text: T('Dein Gerät ist gerade offline. Sobald das Internet wieder da ist, geht es automatisch weiter.') }));
       self.err.appendChild(h('div', { class: 'row', style: 'justify-content:center' },
         h('button', { class: 'btn f primary', onclick: function () { self.load(self.item); } }, T('Erneut versuchen')),
@@ -4714,7 +4834,10 @@
         b.classList.toggle('is-muted', !!off);
       });
     },
-    destroyHls: function () { if (this.hls) { try { this.hls.destroy(); } catch (e) {} this.hls = null; } },
+    destroyHls: function () {
+      if (this.hls) { try { this.hls.destroy(); } catch (e) {} this.hls = null; }
+      if (this.ts) { try { this.ts.destroy(); } catch (e) {} this.ts = null; }
+    },
 
     enterFullscreen: function () {
       if (Platform.tv) return;

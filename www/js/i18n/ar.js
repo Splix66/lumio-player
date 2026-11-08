@@ -549,4 +549,7 @@ window.LUMIO_I18N["ar"] = {
   "Irak": "العراق",
   "Libanon": "لبنان",
   "Syrien": "سوريا",
+  "Trailer": "الإعلان الترويجي",
+  "Trailer: {0}": "الإعلان الترويجي: {0}",
+  "Solche Sender heißen beim Anbieter oft „RAW“. Sie werden unverändert durchgeleitet. Auf einer Android-TV-Box oder einem Fire TV Stick laufen sie meist – notfalls über einen externen Player wie VLC (Einstellungen → Wiedergabe).": "غالبًا ما يسمّي المزوّد هذه القنوات «RAW»، إذ تُمرَّر كما هي دون تحويل. عادةً ما تعمل على جهاز Android TV أو Fire TV Stick، وإن لم تعمل فعبر مشغّل خارجي مثل VLC (الإعدادات ← التشغيل).",
 };

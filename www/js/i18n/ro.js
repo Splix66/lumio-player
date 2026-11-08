@@ -549,4 +549,7 @@ window.LUMIO_I18N["ro"] = {
   "Irak": "Irak",
   "Libanon": "Liban",
   "Syrien": "Siria",
+  "Trailer": "Trailer",
+  "Trailer: {0}": "Trailer: {0}",
+  "Solche Sender heißen beim Anbieter oft „RAW“. Sie werden unverändert durchgeleitet. Auf einer Android-TV-Box oder einem Fire TV Stick laufen sie meist – notfalls über einen externen Player wie VLC (Einstellungen → Wiedergabe).": "Furnizorii numesc adesea aceste canale „RAW” – sunt transmise nemodificate. De obicei funcționează pe un Android TV box sau pe un Fire TV Stick, iar la nevoie printr-un player extern precum VLC (Setări → Redare).",
 };

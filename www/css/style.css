@@ -1714,3 +1714,94 @@ body.lite .ln-tile.has-new .lt-new { animation: none; }
 .sb-date small { color: var(--muted); font-size: .82rem; }
 /* Arabisch: Texte von rechts nach links lesen, Aufbau der App bleibt gleich */
 html[lang="ar"] h1, html[lang="ar"] h2, html[lang="ar"] h3, html[lang="ar"] p, html[lang="ar"] b, html[lang="ar"] small, html[lang="ar"] .lt-label, html[lang="ar"] .chip-name, html[lang="ar"] .cat-name, html[lang="ar"] .ch-txt, html[lang="ar"] .st-txt, html[lang="ar"] .toast, html[lang="ar"] .hint { unicode-bidi: plaintext; }
+
+/* ==========================================================
+   1.9.1 – Die drei Reiter oben sind jetzt die Überschrift
+   Kein eigener Seitentitel mehr. Der gewählte Reiter rutscht
+   ein Stück nach unten, wird größer und zeigt die Anzahl.
+   Die Nachbarn heben sich leicht mit, damit man beim Wandern
+   nach links, rechts und runter sieht, wo man gerade ist.
+   ========================================================== */
+.main-tabs { align-items: flex-start; padding-top: .45rem; }
+.main-tabs .tab {
+  position: relative; transform-origin: 50% 0;
+  transition: transform .26s cubic-bezier(.2, .9, .25, 1.15), padding .26s ease,
+              background-color .18s ease, box-shadow .26s ease, color .18s ease;
+}
+.main-tabs .tab .i { transition: transform .26s cubic-bezier(.2, .9, .25, 1.15); }
+.main-tabs .tab.is-near { transform: translateY(.18rem) scale(1.04); color: var(--text); background: var(--surface); }
+.main-tabs .tab.is-hint:not(.is-on) { transform: translateY(.3rem) scale(1.07); color: var(--text); background: var(--surface-2); }
+/* Der aktive Reiter: deutlich nach unten gesetzt und größer */
+.main-tabs .tab.is-on {
+  transform: translateY(.62rem) scale(1.12);
+  padding: .72rem 1.3rem; border-radius: 1rem;
+  box-shadow: 0 .6rem 1.3rem -.75rem var(--k-b, var(--accent));
+}
+.main-tabs .tab.is-on .i { transform: scale(1.1); }
+/* Anzahl direkt am Reiter – ersetzt die alte Überschrift „Filme“ */
+.tab-n {
+  display: none; margin-left: .55rem; padding: .1rem .5rem; border-radius: 999px;
+  background: rgba(255, 255, 255, .24); color: inherit;
+  font-size: .78rem; font-weight: 700; font-variant-numeric: tabular-nums; text-shadow: none;
+}
+.main-tabs .tab.is-on .tab-n:not(:empty) { display: inline-block; }
+body.kbd .main-tabs .tab.f:focus, body.is-tv .main-tabs .tab.f:focus { transform: translateY(.62rem) scale(1.12); }
+@media (prefers-reduced-motion: reduce) {
+  .main-tabs .tab, .main-tabs .tab .i { transition: none; }
+}
+/* Seiten beginnen jetzt direkt mit dem Inhalt */
+.mv2 { padding-top: .9rem; }
+.section.no-head .section-body { padding-top: .5rem; }
+/* Startseite: nur noch ein Pfeil auf der Kachel, das Wort „Öffnen“ ist weg */
+.lt-go {
+  position: relative; display: grid; place-items: center; margin-top: .9rem;
+  width: 2.1rem; height: 2.1rem; padding: 0; border-radius: 50%;
+  background: rgba(255, 255, 255, .22); color: #fff;
+}
+.lt-go .i { width: 1.15rem; height: 1.15rem; margin: 0; stroke-width: 2.8; }
+.ln-tile:hover .lt-go, body.kbd .ln-tile.f:focus .lt-go, body.is-tv .ln-tile.f:focus .lt-go { background: #fff; color: var(--k-b); }
+
+/* Handy & kleines Tablet: Leiste sitzt unten, deshalb hebt sich der
+   gewählte Reiter nach oben statt nach unten */
+@media (max-width: 960px) and (orientation: portrait) {
+  html:not(.tv) .main-tabs { padding-top: .35rem; }
+  html:not(.tv) .main-tabs .tab { transform-origin: 50% 100%; }
+  html:not(.tv) .main-tabs .tab.is-near { transform: translateY(-.14rem) scale(1.03); background: transparent; }
+  html:not(.tv) .main-tabs .tab.is-hint:not(.is-on) { transform: translateY(-.22rem) scale(1.05); background: transparent; }
+  html:not(.tv) .main-tabs .tab.is-on { transform: translateY(-.34rem) scale(1.08); padding: .5rem .35rem; border-radius: .8rem; box-shadow: 0 .55rem 1.2rem -.6rem var(--k-b, var(--accent)); }
+  html:not(.tv) body.kbd .main-tabs .tab.f:focus, html:not(.tv) body.is-tv .main-tabs .tab.f:focus { transform: translateY(-.34rem) scale(1.08); }
+  html:not(.tv) .main-tabs .tab.is-on .tab-n:not(:empty) { display: none; }
+  html:not(.tv) .mv2 { padding-top: .4rem; }
+}
+@media (max-width: 860px) and (orientation: landscape) {
+  html:not(.tv) .main-tabs { padding-top: 0; }
+  html:not(.tv) .main-tabs .tab { transform-origin: 0 50%; }
+  html:not(.tv) .main-tabs .tab.is-near { transform: translateX(.2rem) scale(1.03); }
+  html:not(.tv) .main-tabs .tab.is-hint:not(.is-on) { transform: translateX(.3rem) scale(1.05); }
+  html:not(.tv) .main-tabs .tab.is-on { transform: translateX(.45rem) scale(1.06); padding: .5rem .25rem; border-radius: .7rem; }
+  html:not(.tv) body.kbd .main-tabs .tab.f:focus, html:not(.tv) body.is-tv .main-tabs .tab.f:focus { transform: translateX(.45rem) scale(1.06); }
+  html:not(.tv) .main-tabs .tab.is-on .tab-n:not(:empty) { display: none; }
+}
+
+/* ==========================================================
+   Trailer – läuft im offiziellen YouTube-Fenster
+   ========================================================== */
+.tr-screen { position: fixed; inset: 0; z-index: 60; display: flex; flex-direction: column; background: #000; }
+.tr-bar { display: flex; align-items: center; gap: .8rem; padding: .7rem var(--pad); flex: none; background: linear-gradient(180deg, rgba(0, 0, 0, .85), transparent); }
+.tr-name { flex: 1; min-width: 0; color: #fff; font-weight: 700; font-size: 1.05rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tr-close { flex: none; background: rgba(255, 255, 255, .14); color: #fff; }
+.tr-close:hover { background: rgba(255, 255, 255, .26); }
+body.kbd .tr-close.f:focus, body.is-tv .tr-close.f:focus { background: #fff; color: #000; }
+.tr-box { flex: 1; min-height: 0; display: grid; place-items: center; padding: 0 var(--pad) var(--pad); }
+.tr-frame { width: 100%; height: 100%; max-width: calc((100vh - 6rem) * 16 / 9); aspect-ratio: 16 / 9; border: 0; border-radius: .9rem; background: #000; }
+@media (max-width: 700px) {
+  html:not(.tv) .tr-box { padding: 0; }
+  html:not(.tv) .tr-frame { border-radius: 0; height: auto; }
+}
+
+/* Die Kategorie steht schon links in der Liste – rechts nicht noch einmal.
+   Auf schmalen Bildschirmen wird die Liste zur Zeile, dort hilft die Zeile. */
+.mv2 .mv-head { display: none; }
+@media (max-width: 700px) {
+  html:not(.tv) .mv2 .mv-head { display: flex; padding: .2rem 0 .8rem; }
+}
