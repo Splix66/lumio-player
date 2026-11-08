@@ -56,8 +56,26 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
 
-      - name: APK umbenennen
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk lumio-player.apk
+      - name: APK umbenennen und mit festem Schlüssel signieren
+        # Immer derselbe Schlüssel = Updates lassen sich über die alte Version installieren (ohne Deinstallieren).
+        # Schlüssel und Passwort liegen NICHT im Projekt, sondern nur als Secrets:
+        # LUMIO_KEYSTORE_B64 (Schlüsseldatei als Text) und LUMIO_KEYSTORE_PASSWORD.
+        env:
+          LUMIO_KEYSTORE_B64: ${{ secrets.LUMIO_KEYSTORE_B64 }}
+          LUMIO_KEYSTORE_PASSWORD: ${{ secrets.LUMIO_KEYSTORE_PASSWORD }}
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk lumio-player.apk
+          if [ -n "$LUMIO_KEYSTORE_B64" ] && [ -n "$LUMIO_KEYSTORE_PASSWORD" ]; then
+            echo "$LUMIO_KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/lumio.p12"
+            BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+            "$BT/apksigner" sign --ks "$RUNNER_TEMP/lumio.p12" --ks-key-alias lumio \
+              --ks-pass env:LUMIO_KEYSTORE_PASSWORD --key-pass env:LUMIO_KEYSTORE_PASSWORD lumio-player.apk
+            rm -f "$RUNNER_TEMP/lumio.p12"
+            "$BT/apksigner" verify --print-certs lumio-player.apk | head -n 3
+            echo "🔑 Mit dem festen Lumio-Schlüssel signiert – Updates ohne Deinstallieren möglich." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Secrets LUMIO_KEYSTORE_B64 / LUMIO_KEYSTORE_PASSWORD fehlen – APK hat einen wechselnden Test-Schlüssel (Updates nur nach Deinstallieren)." >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: APK unter "Releases" bereitstellen
         uses: softprops/action-gh-release@v2
