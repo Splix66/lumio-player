@@ -83,6 +83,9 @@
     pause: '<path d="M7 4h4v16H7zM13 4h4v16h-4z" fill="currentColor" stroke="none"/>',
     back: '<path d="M15 18l-6-6 6-6"/>',
     next: '<path d="M9 6l6 6-6 6"/>',
+    check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+    tracks: '<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M7 11h3M13 11h4M7 15h7M16 15h1"/>',
+    fullscreen: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
     copy: '<rect x="8.5" y="8.5" width="12" height="12" rx="2"/><path d="M15.5 8.5V5.5a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h3"/>',
     globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/>',
     star: '<path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/>',
@@ -2577,6 +2580,21 @@
      Player
      ========================================================== */
   var hlsLoading = null;
+  /* Name einer Ton- oder Untertitelspur: eigener Name, sonst Sprache, sonst „Spur 2“ */
+  var LANG_ISO = { de: 'de', ger: 'de', deu: 'de', en: 'en', eng: 'en', tr: 'tr', tur: 'tr', ar: 'ar', ara: 'ar', fr: 'fr', fre: 'fr', fra: 'fr',
+    es: 'es', spa: 'es', it: 'it', ita: 'it', ru: 'ru', rus: 'ru', pl: 'pl', pol: 'pl', pt: 'pt', por: 'pt', nl: 'nl', dut: 'nl', nld: 'nl',
+    ku: 'ku', kur: 'ku', sq: 'al', alb: 'al', sqi: 'al', bg: 'bg', bul: 'bg', ro: 'ro', rum: 'ro', ron: 'ro', el: 'gr', gre: 'gr', ell: 'gr',
+    sv: 'se', swe: 'se', no: 'no', nor: 'no', da: 'dk', dan: 'dk', fi: 'fi', fin: 'fi', hu: 'hu', hun: 'hu', cs: 'cz', cze: 'cz', ces: 'cz',
+    uk: 'ua', ukr: 'ua', fa: 'fa', per: 'fa', fas: 'fa', az: 'az', aze: 'az', hi: 'in', hin: 'in' };
+  function trackLabel(name, lang, i) {
+    var code = String(lang || '').toLowerCase().split(/[-_]/)[0], key = LANG_ISO[code];
+    var langName = key && LANG_NAMES[key] ? T(LANG_NAMES[key]) : (lang ? String(lang).toUpperCase() : '');
+    name = String(name || '').trim();
+    if (name && langName && name.toLowerCase().indexOf(langName.toLowerCase()) < 0 && !/^(audio|track|und|default|subtitles?)\s*\d*$/i.test(name)) return langName + ' – ' + name;
+    if (name && !/^(audio|track|und|default|subtitles?)\s*\d*$/i.test(name)) return name;
+    return langName || T('Spur {0}', i + 1);
+  }
+
   function ensureHls() {
     if (window.Hls) return Promise.resolve(window.Hls);
     if (!hlsLoading) {
@@ -2620,7 +2638,7 @@
       self.title = h('h2');
       self.liveTag = h('span', { class: 'live-tag', text: 'LIVE' });
       self.info = h('div', { class: 'epg' });
-      self.bar = h('div', { class: 'bar' }, h('i', { style: 'width:0%' }));
+      self.bar = h('div', { class: 'bar' }, h('i', { style: 'width:0%' }), h('b', { class: 'buf' }));
       self.times = h('div', { class: 'times' }, h('span', { text: '0:00' }), h('span', { text: '0:00' }));
       // Beim Spulen erscheint die Zielzeit über dem Balken
       self.seekTime = h('div', { class: 'seek-time is-hidden' });
@@ -2631,10 +2649,14 @@
       self.spinner = h('div', { class: 'loading' }, h('div', { class: 'spinner' }), self.loadTxt);
       self.err = h('div', { class: 'state', style: 'display:none' });
       self.zap = h('div', { class: 'zap is-hidden' });
+      // Ton & Untertitel: der Knopf erscheint nur, wenn der Stream wirklich mehrere Tonspuren oder Untertitel hat
+      self.tracksBtn = h('button', { class: 'cbtn f is-gone', 'data-c': 'tracks', title: T('Ton & Untertitel'), 'aria-label': T('Ton & Untertitel'), onclick: function () { self.openTracks(); } }, icon('tracks'));
+      var fsOk = !Platform.tv && (document.fullscreenEnabled || document.webkitFullscreenEnabled);
+      self.fsBtn = fsOk ? h('button', { class: 'cbtn f', 'data-c': 'fs', title: T('Vollbild (F)'), 'aria-label': T('Vollbild'), onclick: function () { self.toggleFullscreen(); } }, icon('fullscreen')) : null;
       self.osd = h('div', { class: 'osd' },
         h('div', { class: 'osd-top' }, h('button', { class: 'btn f', onclick: goBack }, icon('back'), h('span', { text: T('Zurück') })), self.liveTag, self.title),
         h('div', { class: 'osd-bottom' }, self.info, self.barWrap, self.times,
-          h('div', { class: 'ctrl-row' }, self.ctrlLeft, self.ctrls, h('div', { class: 'ctrl-side right' }, self.volumeUi()))));
+          h('div', { class: 'ctrl-row' }, self.ctrlLeft, self.ctrls, h('div', { class: 'ctrl-side right' }, self.tracksBtn, self.fsBtn, self.volumeUi()))));
       self.miniTitle = h('span', { class: 'mini-title' });
       self.miniUi = h('div', { class: 'mini-ui' },
         h('button', { class: 'mini-open f', title: T('Vollbild'), onclick: function () { self.maximize(); } }, self.miniTitle),
@@ -2687,6 +2709,7 @@
       barWrap.addEventListener('mousedown', down);
       barWrap.addEventListener('touchstart', down, { passive: false });
       self.el.addEventListener('click', function (e) { if (e.target === video || e.target === self.osd) self.toggleOsd(); });
+      self.el.addEventListener('dblclick', function (e) { if ((e.target === video || e.target === self.osd) && self.fsBtn && !self.mini) self.toggleFullscreen(); });
       self.el.addEventListener('mousemove', function () { self.showOsd(); });
       // Mausrad = Lautstärke (PC)
       self.el.addEventListener('wheel', function (e) {
@@ -2696,8 +2719,15 @@
         self.showOsd();
       }, { passive: false });
 
-      video.addEventListener('waiting', function () { self.loadTxt.textContent = T('Wird geladen …'); self.spinner.style.display = ''; });
-      video.addEventListener('playing', function () { self.spinner.style.display = 'none'; self.err.style.display = 'none'; self.paintCtrls(); });
+      video.addEventListener('waiting', function () { if (!self.reconnect) self.loadTxt.textContent = T('Wird geladen …'); self.spinner.style.display = ''; });
+      video.addEventListener('playing', function () {
+        self.spinner.style.display = 'none'; self.err.style.display = 'none'; self.reconnect = false;
+        self.netRetries = 0; self.playedSince = Date.now();
+        self.paintCtrls(); self.updateTracks();
+      });
+      video.addEventListener('progress', function () { self.paintBuffer(); });
+      if (video.audioTracks && video.audioTracks.addEventListener) video.audioTracks.addEventListener('addtrack', function () { self.updateTracks(); });
+      if (video.textTracks && video.textTracks.addEventListener) video.textTracks.addEventListener('addtrack', function () { self.updateTracks(); });
       video.addEventListener('pause', function () { self.paintCtrls(); self.showOsd(true); });
       video.addEventListener('loadedmetadata', function () {
         if (self.isVod() && self.resumeAt) { try { video.currentTime = self.resumeAt; } catch (e) {} toast(T('Fortgesetzt bei {0}', fmtTime(self.resumeAt))); self.resumeAt = 0; }
@@ -2722,6 +2752,8 @@
         onLeave: function () { self.teardown(); },
         // Zurück bei Live TV: Sender läuft klein weiter
         onBack: function () {
+          if (self.closeTracks()) { self.showOsd(); return true; }
+          if (self.nextBox) { self.nextCancel(); return false; }
           if (self.scrubT != null) { self.cancelScrub(); return true; }
           if (self.item && self.item.kind === 'live' && self.err.style.display === 'none') { self.minimize(); return true; }
           return false;
@@ -2823,6 +2855,10 @@
       var self = this;
       self.item = item;
       self.triedAlt = false; self.retried = false; self.forceHlsJs = false;
+      self.netRetries = 0; self.stallRetries = 0; self.swappedCodec = false; self.mediaRecoverAt = 0; self.reconnect = false;
+      self.closeTracks();
+      if (self.nextCancel) self.nextCancel();
+      if (self.tracksBtn) self.tracksBtn.classList.add('is-gone');
       self.err.style.display = 'none';
       self.spinner.style.display = '';
       self.loadTxt.textContent = item.kind === 'live' ? T('{0} wird geladen …', item.name) : T('Wird geladen …');
@@ -2855,6 +2891,28 @@
 
       clearInterval(self.saveTimer);
       self.saveTimer = setInterval(function () { self.saveResume(); }, 10000);
+      // Wächter: hängt das Bild zu lange fest, wird der Stream automatisch neu verbunden
+      clearInterval(self.wdTimer); self.wdStill = 0; self.wdLastT = -1;
+      self.wdTimer = setInterval(function () { self.watchdog(); }, 2000);
+    },
+
+    watchdog: function () {
+      var v = this.video;
+      if (!v || v.paused || v.ended || this.err.style.display !== 'none') { this.wdStill = 0; return; }
+      if (v.currentTime === this.wdLastT) this.wdStill += 2; else { this.wdStill = 0; if (this.playedSince && Date.now() - this.playedSince > 30000) this.stallRetries = 0; }
+      this.wdLastT = v.currentTime;
+      if (this.wdStill < 18) return;
+      this.wdStill = 0;
+      if (this.stallRetries >= 3) { this.onError(T('Der Stream hängt und lässt sich gerade nicht wiederherstellen.')); return; }
+      this.stallRetries++;
+      if (this.isVod() && v.currentTime > 1) this.resumeAt = v.currentTime;
+      this.reconnecting();
+      this.attach(this.curUrl);
+    },
+    reconnecting: function () {
+      this.reconnect = true;
+      this.loadTxt.textContent = T('Verbindung wird wiederhergestellt …');
+      this.spinner.style.display = '';
     },
 
     attach: function (url) {
@@ -2870,17 +2928,34 @@
         ensureHls().then(function (Hls) {
           if (self.video !== video) return;
           if (Hls && Hls.isSupported()) {
-            var hls = new Hls({ enableWorker: true, lowLatencyMode: false, backBufferLength: 60 });
+            var hls = new Hls({
+              enableWorker: true, lowLatencyMode: false, backBufferLength: 30,
+              maxBufferLength: 30, maxMaxBufferLength: 60,          // genug Puffer, ohne alten TVs den Speicher zu füllen
+              capLevelToPlayerSize: true,                           // im kleinen Player keine volle Auflösung laden
+              fragLoadingMaxRetry: 4, levelLoadingMaxRetry: 3, manifestLoadingMaxRetry: 2
+            });
             self.hls = hls;
             hls.on(Hls.Events.ERROR, function (ev, data) {
-              if (!data.fatal) return;
-              if (data.type === Hls.ErrorTypes.MEDIA_ERROR && !self.retried) { self.retried = true; hls.recoverMediaError(); return; }
-              if (data.type === Hls.ErrorTypes.NETWORK_ERROR && !self.retried) { self.retried = true; setTimeout(function () { hls.startLoad(); }, 1000); return; }
+              if (!data.fatal || self.hls !== hls) return;
+              if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+                var now = Date.now();
+                if (!self.mediaRecoverAt || now - self.mediaRecoverAt > 10000) { self.mediaRecoverAt = now; hls.recoverMediaError(); return; }
+                if (!self.swappedCodec) { self.swappedCodec = true; self.mediaRecoverAt = now; hls.swapAudioCodec(); hls.recoverMediaError(); return; }
+              }
+              if (data.type === Hls.ErrorTypes.NETWORK_ERROR && self.netRetries < 4) {
+                var delay = 1000 * Math.pow(2, self.netRetries++);
+                var manifest = /manifest/i.test(String(data.details || ''));
+                self.reconnecting();
+                setTimeout(function () { if (self.hls !== hls) return; if (manifest) self.attach(self.curUrl); else hls.startLoad(); }, delay);
+                return;
+              }
               self.onError(data.type === Hls.ErrorTypes.NETWORK_ERROR ? T('Der Stream ist nicht erreichbar.') : T('Der Stream konnte nicht abgespielt werden.'));
             });
+            hls.on(Hls.Events.MANIFEST_PARSED, function () { self.playSafe(); });
+            if (Hls.Events.AUDIO_TRACKS_UPDATED) hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, function () { self.updateTracks(); });
+            if (Hls.Events.SUBTITLE_TRACKS_UPDATED) hls.on(Hls.Events.SUBTITLE_TRACKS_UPDATED, function () { self.updateTracks(); });
             hls.loadSource(url);
             hls.attachMedia(video);
-            hls.on(Hls.Events.MANIFEST_PARSED, function () { self.playSafe(); });
           } else {
             video.src = url; self.playSafe();
           }
@@ -2903,9 +2978,14 @@
       if (self.usingNative && Platform.android && !self.forceHlsJs) { self.forceHlsJs = true; self.retried = false; self.attach(self.curUrl); return; }
       if (self.alt && !self.triedAlt) { self.triedAlt = true; self.retried = false; self.attach(self.alt); return; }
       self.spinner.style.display = 'none';
+      self.reconnect = false;
+      clearInterval(self.wdTimer);
       clear(self.err);
       self.err.appendChild(h('h3', { text: T('Wiedergabe nicht möglich') }));
       self.err.appendChild(h('p', { text: msg }));
+      var ext = String((self.item && self.item.ext) || '').toLowerCase();
+      if (self.isVod() && /^(mkv|avi|wmv|flv)$/.test(ext)) self.err.appendChild(h('p', { class: 'hint', text: T('Dieser Film liegt im Format {0} vor. Nicht jedes Gerät kann dieses Format abspielen.', ext.toUpperCase()) }));
+      else if (typeof navigator.onLine === 'boolean' && !navigator.onLine) self.err.appendChild(h('p', { class: 'hint', text: T('Dein Gerät ist gerade offline. Sobald das Internet wieder da ist, geht es automatisch weiter.') }));
       self.err.appendChild(h('div', { class: 'row', style: 'justify-content:center' },
         h('button', { class: 'btn f primary', onclick: function () { self.load(self.item); } }, T('Erneut versuchen')),
         h('button', { class: 'btn f', onclick: goBack }, T('Schließen'))));
@@ -2917,13 +2997,103 @@
       var self = this;
       Resume.set(self.item, 0, 0);
       var c = self.ctx;
-      if (self.item.kind === 'episode' && c && c.list && c.index < c.list.length - 1) {
-        toast(T('Nächste Folge startet …'));
-        c.index++;
-        setTimeout(function () { if (self.el) self.load(c.list[c.index]); }, 1200);
-      } else if (self.isVod()) {
-        goBack();
+      if (self.item.kind === 'live') { self.reconnecting(); self.attach(self.curUrl); return; }   // Live-Sender „enden“ nicht – neu verbinden
+      if (self.item.kind === 'episode' && c && c.list && c.index < c.list.length - 1) { self.showNext(c.list[c.index + 1]); return; }
+      if (self.isVod()) goBack();
+    },
+    /* Nächste Folge: kleine Karte mit Countdown, wie bei Netflix */
+    showNext: function (next) {
+      var self = this, left = 10;
+      if (self.mini) { self.ctx.index++; self.load(next); return; }
+      var count = h('span', { class: 'nx-count' });
+      function paint() { count.textContent = T('Startet in {0} Sekunden', left); }
+      function cleanup() { clearInterval(self.nextTimer); if (box.parentNode) box.parentNode.removeChild(box); self.nextBox = null; self.nextCancel = null; }
+      function go() { cleanup(); self.ctx.index++; self.load(next); }
+      var box = h('div', { class: 'next-ep' },
+        next.logo ? h('span', { class: 'nx-thumb' }, img(next.logo)) : null,
+        h('div', { class: 'nx-info' }, h('small', { text: T('Nächste Folge') }), h('b', { text: 'S' + next.season + ' E' + next.num + ' · ' + next.name }), count,
+          h('div', { class: 'row' },
+            h('button', { class: 'btn f primary', onclick: go }, icon('play'), h('span', { text: T('Jetzt abspielen') })),
+            h('button', { class: 'btn f', onclick: function () { cleanup(); goBack(); } }, T('Schließen')))));
+      paint();
+      self.nextBox = box; self.nextCancel = cleanup;
+      self.el.appendChild(box);
+      self.hideOsd();
+      setTimeout(function () { Nav.focus($('.btn', box)); }, 30);
+      clearInterval(self.nextTimer);
+      self.nextTimer = setInterval(function () { left--; if (left <= 0) go(); else paint(); }, 1000);
+    },
+
+    /* ---------- Ton & Untertitel ---------- */
+    tracks: function () {
+      var v = this.video, hls = this.hls, out = { audio: [], subs: [] };
+      if (!v) return out;
+      if (hls) {
+        (hls.audioTracks || []).forEach(function (t, i) { out.audio.push({ label: trackLabel(t.name, t.lang, i), on: hls.audioTrack === i, pick: function () { hls.audioTrack = i; } }); });
+        var st = hls.subtitleTracks || [];
+        if (st.length) {
+          out.subs.push({ label: T('Aus'), on: hls.subtitleTrack === -1, pick: function () { hls.subtitleTrack = -1; } });
+          st.forEach(function (t, i) { out.subs.push({ label: trackLabel(t.name, t.lang, i), on: hls.subtitleTrack === i, pick: function () { hls.subtitleDisplay = true; hls.subtitleTrack = i; } }); });
+        }
+        return out;
       }
+      var at = v.audioTracks;
+      if (at && at.length) {
+        for (var i = 0; i < at.length; i++) (function (t, i) {
+          out.audio.push({ label: trackLabel(t.label, t.language, i), on: !!t.enabled, pick: function () { for (var j = 0; j < at.length; j++) at[j].enabled = j === i; } });
+        })(at[i], i);
+      }
+      var subs = [], tt = v.textTracks;
+      if (tt) for (var k = 0; k < tt.length; k++) if (tt[k].kind === 'subtitles' || tt[k].kind === 'captions') subs.push(tt[k]);
+      if (subs.length) {
+        out.subs.push({ label: T('Aus'), on: !some(subs, function (x) { return x.mode === 'showing'; }), pick: function () { subs.forEach(function (x) { x.mode = 'disabled'; }); } });
+        subs.forEach(function (t, i) { out.subs.push({ label: trackLabel(t.label, t.language, i), on: t.mode === 'showing', pick: function () { subs.forEach(function (x) { x.mode = x === t ? 'showing' : 'disabled'; }); } }); });
+      }
+      return out;
+    },
+    updateTracks: function () {
+      if (!this.tracksBtn) return;
+      var t = this.tracks();
+      this.tracksBtn.classList.toggle('is-gone', !(t.audio.length > 1 || t.subs.length > 1));
+    },
+    openTracks: function () {
+      var self = this, t = self.tracks();
+      self.closeTracks();
+      var box = h('div', { class: 'track-panel' });
+      function section(title, list) {
+        var sec = h('div', { class: 'tp-sec' }, h('h3', { text: title }));
+        list.forEach(function (o) {
+          sec.appendChild(h('button', { class: 'tp-opt f' + (o.on ? ' is-on' : ''), onclick: function () { o.pick(); self.closeTracks(); self.showOsd(); toast(title + ': ' + o.label); } },
+            h('span', { text: o.label }), o.on ? icon('check') : null));
+        });
+        box.appendChild(sec);
+      }
+      if (t.audio.length > 1) section(T('Tonspur'), t.audio);
+      if (t.subs.length > 1) section(T('Untertitel'), t.subs);
+      if (!box.firstChild) return;
+      self.trackPanel = box;
+      self.el.appendChild(box);
+      clearTimeout(self.hideTimer);
+      setTimeout(function () { Nav.focus($('.tp-opt.is-on', box) || $('.tp-opt', box)); }, 30);
+    },
+    closeTracks: function () {
+      var had = !!this.trackPanel;
+      if (had && this.trackPanel.parentNode) this.trackPanel.parentNode.removeChild(this.trackPanel);
+      this.trackPanel = null;
+      return had;
+    },
+    toggleFullscreen: function () {
+      var fe = document.fullscreenElement || document.webkitFullscreenElement;
+      if (fe) this.exitFullscreen(); else this.enterFullscreen();
+      this.showOsd();
+    },
+    paintBuffer: function () {
+      if (!this.isVod() || !this.video || !this.bar) return;
+      var v = this.video, d = v.duration, b = this.bar.querySelector('.buf');
+      if (!b || !d || !isFinite(d)) return;
+      var end = 0, t = v.currentTime;
+      try { for (var i = 0; i < v.buffered.length; i++) if (v.buffered.start(i) <= t + 1 && v.buffered.end(i) > end) end = v.buffered.end(i); } catch (e) {}
+      b.style.width = Math.min(100, end / d * 100) + '%';
     },
 
     loadEpg: function () {
@@ -2959,7 +3129,8 @@
       this.bar.style.display = '';
       this.bar.firstChild.style.width = (cur / d * 100) + '%';
       this.times.firstChild.textContent = fmtTime(cur);
-      this.times.lastChild.textContent = '-' + fmtTime(d - cur);
+      this.times.lastChild.textContent = '-' + fmtTime(d - cur) + '  ·  ' + T('Ende {0}', fmtClock(Date.now() / 1000 + (d - cur) / (this.video.playbackRate || 1)));
+      this.paintBuffer();
     },
 
     paintCtrls: function () {
@@ -3071,7 +3242,7 @@
       if (!stay) self.hideTimer = setTimeout(function () { if (!self.video.paused) self.hideOsd(); }, 4500);
     },
     hideOsd: function () {
-      if (this.err.style.display !== 'none') return;
+      if (this.err.style.display !== 'none' || this.trackPanel) return;
       this.osd.classList.add('is-hidden');
       if (this.osd.contains(document.activeElement)) document.activeElement.blur();
     },
@@ -3080,9 +3251,13 @@
     /* Tasten im Player. true = Taste wurde verarbeitet */
     handleKey: function (k) {
       var self = this;
-      if (Dialog.open) return false;
+      if (Dialog.open || self.trackPanel || self.nextBox) return false;
       var hidden = self.osd.classList.contains('is-hidden');
       var errOpen = self.err.style.display !== 'none';
+      var ae = document.activeElement, onButton = !hidden && ae && ae.tagName === 'BUTTON';
+      if ((k === KEY.SPACE && !onButton) || k === KEY.K_K) { self.togglePlay(); return true; }
+      if (k === KEY.K_M) { self.setMuted(!self.video.muted); return true; }
+      if (k === KEY.K_F && self.fsBtn) { self.toggleFullscreen(); return true; }
       if (k === KEY.PLAYPAUSE || k === KEY.PLAY || k === KEY.PAUSE) { self.togglePlay(); return true; }
       if (k === KEY.STOP) { self.close(); return true; }
       if (k === KEY.FF) { self.seek(30); return true; }
@@ -3193,6 +3368,7 @@
     teardown: function () {
       this.saveResume();
       clearInterval(this.saveTimer); clearInterval(this.epgTimer); clearTimeout(this.hideTimer); clearTimeout(this.zapTimer);
+      clearInterval(this.wdTimer); clearInterval(this.nextTimer); this.nextBox = null; this.nextCancel = null; this.trackPanel = null;
       this.destroyHls();
       clearTimeout(this.scrubTimer); this.scrubT = null;
       try { this.video.pause(); this.video.removeAttribute('src'); this.video.load(); } catch (e) {}
@@ -3210,7 +3386,7 @@
   var KEY = {
     LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40, ENTER: 13,
     BACK_TIZEN: 10009, BACK_WEBOS: 461, ESC: 27, BACKSPACE: 8,
-    PLAYPAUSE: 10252, PLAY: 415, PAUSE: 19, STOP: 413, FF: 417, RW: 412,
+    PLAYPAUSE: 10252, PLAY: 415, PAUSE: 19, STOP: 413, FF: 417, RW: 412, SPACE: 32, K_F: 70, K_K: 75, K_M: 77,
     CH_UP: 427, CH_DOWN: 428
   };
   // LG nutzt Bild-auf/ab-Codes für die Programmtasten
@@ -3292,6 +3468,8 @@
     else showProfiles();
     Cloud.start();
     StillWatching.start();
+    // Internet wieder da: hängengebliebene Wiedergabe automatisch neu starten
+    window.addEventListener('online', function () { if (Player.el && Player.err && Player.err.style.display !== 'none' && Player.item) Player.load(Player.item); });
     var reloaded = false;
     try { reloaded = sessionStorage.getItem('lumio.reloaded'); sessionStorage.removeItem('lumio.reloaded'); } catch (e) {}
     if (reloaded) setTimeout(function () { toast(T('Daten neu geladen')); }, 600);
