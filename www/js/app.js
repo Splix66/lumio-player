@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Lumio Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.7.5',
+    version: '1.8.0',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     hlsCdn: 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js',
     requestTimeout: 30000,
@@ -99,6 +99,8 @@
     up: '<path d="M6 15l6-6 6 6"/>',
     down: '<path d="M6 9l6 6 6-6"/>',
     restart: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>',
+    playlist: '<path d="M4 6h12M4 11h12M4 16h7"/><path d="M15.5 14v6.5l5-3.25z"/>',
+    refresh: '<path d="M20.5 11a8.5 8.5 0 0 0-15.3-4.6L3.5 8.5"/><path d="M3.5 3.5v5h5"/><path d="M3.5 13a8.5 8.5 0 0 0 15.3 4.6l1.7-2.1"/><path d="M20.5 20.5v-5h-5"/>',
     trash: '<path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/>',
     profile: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
     close: '<path d="M6 6l12 12M18 6L6 18"/>',
@@ -1958,7 +1960,7 @@
         runTime.appendChild(h('b', { text: txt }));
         if (d !== null && d <= 30) runTime.classList.add(d <= 0 ? 'is-expired' : 'is-warn');
       }).catch(function () {});
-      self.el = h('div', { class: 'shell' }, head, h('main', { class: 'content' }, self.view), h('footer', { class: 'statusbar' }, macTag(profileUser(App.profile)), runTime));
+      self.el = h('div', { class: 'shell' }, head, h('main', { class: 'content' }, self.view), h('footer', { class: 'statusbar' }, macTag(profileUser(App.profile)), runTime, h('span', { class: 'sb-clock' })));
       QuickSearch.build(self.el, searchBtn);
       Screens.reset('shell', self.el, {
         onBack: function () {
@@ -2020,57 +2022,142 @@
   function byRating(a, b) { return Number(b.rating || 0) - Number(a.rating || 0); }
   function some(list, fn) { for (var i = 0; i < list.length; i++) if (fn(list[i])) return true; return false; }
 
-  /* ---------- Startbildschirm: Zugang und Auswahl Live TV / Filme / Serien ----------
-     Bewusst schlicht: drei große Kacheln, darunter Suche, Favoriten, Playlist und Einstellungen. */
+  /* ---------- Startbildschirm ----------
+     Oben Suche, Aktualisieren, Einstellungen. Darunter Live TV / Filme / Serien mit Anzahl und Stand,
+     rechts Favoriten und die aktive Playlist mit Laufzeit, unten kompakt „Zuletzt geschaut“. */
   function LauncherView(focusKind) {
-    var p = App.profile;
-    var status = h('span', { class: 'hero-status' }, h('i', { class: 'dot' }), h('span', { text: p.type === 'demo' ? T('Demo-Modus') : p.name }));
-    App.provider.account().then(function (a) {
-      if (!a || !a.expires) return;
-      var days = Math.ceil((Number(a.expires) * 1000 - Date.now()) / 86400000);
-      if (days <= 0) { status.classList.add('is-off'); status.lastChild.textContent = T('{0} – abgelaufen am {1}', p.name, fmtDate(a.expires)); }
-      else if (days <= 30) { status.classList.add('is-warn'); status.lastChild.textContent = days === 1 ? T('{0} – läuft in 1 Tag ab', p.name) : T('{0} – läuft in {1} Tagen ab', p.name, days); }
-      else status.lastChild.textContent = T('{0} – gültig bis {1}', p.name, fmtDate(a.expires));
-    }).catch(function () { status.classList.add('is-off'); status.lastChild.textContent = T('{0} – keine Verbindung', p.name); });
+    var p = App.profile, busy = false;
+    var want = focusKind === 'movie' || focusKind === 'series' || focusKind === 'favs' || focusKind === 'profile' || focusKind === 'settings' ? focusKind : 'live';
 
-    var clock = h('span', { class: 'ln-clock' });
-    function tick() { var d = new Date(); clock.textContent = (d.getHours() < 10 ? '0' : '') + d.getHours() + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes(); }
-    tick();
-    var timer = setInterval(tick, 15000);
+    // Kopfzeile
+    var searchBtn = h('button', { class: 'ln-search f', 'data-key': 'ln:search', onclick: function () { QuickSearch.toggle(searchBtn); } },
+      icon('search'), h('span', { text: T('Suche') }));
+    var reloadBtn = h('button', { class: 'ln-btn f', 'data-key': 'ln:reload', title: T('Playlist aktualisieren'), onclick: function () { doRefresh(true); } },
+      icon('refresh'), h('span', { text: T('Aktualisieren') }));
+    var setBtn = h('button', { class: 'ln-round f', 'data-key': 'ln:settings', 'data-autofocus': want === 'settings' ? true : null, title: T('Einstellungen'), 'aria-label': T('Einstellungen'), onclick: function () { Shell.show('settings', true); } }, icon('settings'));
+    var head = h('header', { class: 'ln-head' }, h('div', { class: 'brand' }, brandMark(), wordmark()), h('div', { class: 'ln-tools' }, searchBtn, reloadBtn, setBtn));
 
-    var want = focusKind === 'movie' || focusKind === 'series' ? focusKind : 'live';
-    function tile(kind, label) {
-      var sub = h('span', { class: 'lt-sub' });
+    // Live TV / Filme / Serien
+    function tile(kind, label, unit, none) {
+      var upd = h('span', { class: 'lt-upd' }), cnt = h('span', { class: 'lt-sub' });
       var b = h('button', { class: 'ln-tile f k-' + kind, 'data-key': 'ln:' + kind, 'data-autofocus': kind === want ? true : null, onclick: function () { Shell.show(kind, true); } },
-        h('span', { class: 'lt-ic' }, icon(kind)),
-        h('span', { class: 'lt-txt' }, h('span', { class: 'lt-label', text: label }), sub));
-      b._sub = sub;
+        upd, h('span', { class: 'lt-ic' }, icon(kind)), h('span', { class: 'lt-label', text: label }), cnt);
+      b._upd = upd; b._cnt = cnt; b._unit = unit; b._none = none; b._kind = kind;
       return b;
     }
-    var tLive = tile('live', T('Live TV')), tMovie = tile('movie', T('Filme')), tSeries = tile('series', T('Serien'));
-    function paintSubs() {
-      var rec = Recent.list()[0], res = Resume.recent();
-      var mv = res.filter(function (r) { return r.item.kind === 'movie'; })[0];
-      var ep = res.filter(function (r) { return r.item.kind === 'episode'; })[0];
-      tLive._sub.textContent = rec ? T('Zuletzt: {0}', rec.name) : T('Alle Sender');
-      tMovie._sub.textContent = mv ? T('Weiterschauen: {0}', mv.item.name) : T('Alle Filme');
-      tSeries._sub.textContent = ep ? T('Weiterschauen: {0}', ep.item.seriesName || ep.item.name) : T('Alle Serien');
+    var tiles = [tile('live', T('Live TV'), '{0} Sender', T('Alle Sender')), tile('movie', T('Filme'), '{0} Filme', T('Alle Filme')), tile('series', T('Serien'), '{0} Serien', T('Alle Serien'))];
+    function paintStats() {
+      var st = Stats.get();
+      tiles.forEach(function (t) {
+        var x = st[t._kind];
+        t.classList.toggle('is-busy', busy);
+        t._upd.textContent = busy ? T('Wird aktualisiert …') : x ? T('Aktualisiert {0}', ago(x.at)) : '';
+        t._cnt.textContent = x ? T(t._unit, fmtCount(x.n)) : t._none;
+      });
     }
-    paintSubs();
 
-    function act(ic, label, fn) { return h('button', { class: 'ln-act f', 'data-key': 'ln:' + ic, onclick: fn }, icon(ic), h('span', { text: label })); }
-    var searchAct = act('search', T('Suche'), function () { QuickSearch.toggle(searchAct); });
-    var el = h('div', { class: 'launcher' }, heroArt(),
-      h('header', { class: 'ln-head' }, h('div', { class: 'brand' }, brandMark(), wordmark()), status, clock),
-      h('div', { class: 'ln-main' },
-        h('div', { class: 'ln-tiles' }, tLive, tMovie, tSeries),
-        h('div', { class: 'ln-acts' },
-          searchAct,
-          act('heart', T('Favoriten'), function () { Shell.show('favs', true); }),
-          act('profile', T('Playlist'), function () { Shell.show('profile', true); }),
-          act('settings', T('Einstellungen'), function () { Shell.show('settings', true); }))));
-    // nach dem Schauen nur die Zeilen „Zuletzt“ / „Weiterschauen“ auffrischen, Fokus bleibt
-    el._refresh = paintSubs;
+    // Favoriten
+    var favN = h('small');
+    var favCard = h('button', { class: 'ln-card ln-fav f', 'data-key': 'ln:favs', 'data-autofocus': want === 'favs' ? true : null, onclick: function () { Shell.show('favs', true); } },
+      h('span', { class: 'lc-ic' }, icon('heart')), h('span', { class: 'lc-txt' }, h('b', { text: T('Favoriten') }), favN), icon('next'));
+    function paintFavs() {
+      var a = Favs.all(), n = (a.live || []).length + (a.movie || []).length + (a.series || []).length;
+      favN.textContent = n === 1 ? T('1 Eintrag') : T('{0} Einträge', n);
+    }
+
+    // Aktive Playlist mit Laufzeit
+    var nPl = Profiles.list().length;
+    var expEl = h('b', { text: '…' }), leftEl = h('small', { class: 'lp-left' });
+    var plCard = h('div', { class: 'ln-card ln-pl' },
+      h('div', { class: 'lp-top' },
+        h('span', { class: 'lc-ic' }, icon('playlist')),
+        h('span', { class: 'lc-txt' }, h('b', { text: T('Playlist') }), h('small', { text: nPl === 1 ? T('1 Playlist') : T('{0} Playlists', nPl) })),
+        h('button', { class: 'ln-mini f', 'data-key': 'ln:profile', 'data-autofocus': want === 'profile' ? true : null, onclick: function () { Shell.show('profile', true); } }, T('Verwalten'))),
+      h('div', { class: 'lp-row' },
+        h('div', { class: 'lp-cell' }, h('small', { text: T('Aktuelle Playlist') }), h('b', { text: p.type === 'demo' ? T('Demo-Modus') : p.name })),
+        h('div', { class: 'lp-cell lp-exp' }, h('small', { text: T('Gültig bis') }), expEl, leftEl)));
+    function paintExpiry() {
+      App.provider.account().then(function (a) {
+        if (!a || a.expires === undefined) { expEl.textContent = '—'; return; }
+        if (!a.expires) { expEl.textContent = T('unbegrenzt'); return; }
+        var days = Math.ceil((Number(a.expires) * 1000 - Date.now()) / 86400000);
+        expEl.textContent = fmtDate(a.expires);
+        leftEl.textContent = days <= 0 ? T('abgelaufen') : days === 1 ? T('noch 1 Tag') : T('noch {0} Tage', days);
+        plCard.classList.toggle('is-warn', days > 0 && days <= 30);
+        plCard.classList.toggle('is-off', days <= 0);
+      }).catch(function () { expEl.textContent = T('keine Verbindung'); plCard.classList.add('is-off'); });
+    }
+
+    // Zuletzt geschaut (kompakt)
+    var recent = h('section', { class: 'ln-recent' });
+    function recCard(it, sub, pct, onclick, live) {
+      var src = live ? null : (it.backdrop || it.logo);
+      var thumb = live ? h('span', { class: 'lr-thumb is-logo' }, logoBox(it))
+        : h('span', { class: 'lr-thumb' }, h('span', { class: 'ph', style: 'background:' + gradientFor(it.seriesName || it.name) }), src ? img(src, '', function (i) { if (i.parentNode) i.parentNode.removeChild(i); }) : null);
+      return h('button', { class: 'lr-card f' + (live ? ' k-live' : ''), 'data-key': 'lr:' + (it.kind === 'episode' ? 'series:' + it.seriesId : it.kind + ':' + it.id), onclick: onclick },
+        thumb,
+        h('span', { class: 'lr-txt' },
+          h('b', { text: it.kind === 'episode' ? (it.seriesName || it.name) : it.name }),
+          h('small', null, live ? h('i', { class: 'lr-live', text: 'LIVE' }) : null, h('span', { text: sub }))),
+        pct != null ? h('span', { class: 'lr-bar' }, h('i', { style: 'width:' + pct + '%' })) : null);
+    }
+    function paintRecent() {
+      clear(recent);
+      var res = Resume.recent().slice(0, 8), rec = Recent.list().slice(0, 6);
+      recent.hidden = !res.length && !rec.length;
+      if (recent.hidden) return;
+      var track = h('div', { class: 'lr-track' });
+      res.forEach(function (r) {
+        var it = r.item, ep = it.kind === 'episode';
+        track.appendChild(recCard(it, ep ? 'S' + it.season + ' E' + it.num : T('Noch {0}', fmtLeft(r.d - r.t)), Math.max(3, Math.round(r.t / r.d * 100)),
+          function () { playItem(it, { list: [it], index: 0 }); }));
+      });
+      rec.forEach(function (it, i) {
+        track.appendChild(recCard(it, it.num ? T('Sender {0}', it.num) : T('Live TV'), null, function () { playItem(it, { list: rec, index: i }); }, true));
+      });
+      recent.appendChild(h('h2', { class: 'lr-title', text: T('Zuletzt geschaut') }));
+      recent.appendChild(track);
+    }
+
+    function doRefresh(byUser) {
+      if (busy) return;
+      busy = true; reloadBtn.classList.add('is-busy'); paintStats();
+      refreshPlaylist().then(function (r) {
+        busy = false; reloadBtn.classList.remove('is-busy');
+        paintStats(); paintExpiry();
+        if (r.error) toast(T('Hinweis: {0}', r.error.message || T('Verbindung fehlgeschlagen.')), 4000);
+        else if (byUser) toast(T('Playlist aktualisiert'));
+      });
+    }
+
+    var el = h('div', { class: 'launcher' }, heroArt(), head,
+      h('div', { class: 'ln-grid' }, tiles[0], tiles[1], tiles[2], h('div', { class: 'ln-side' }, favCard, plCard)),
+      recent);
+    paintStats(); paintFavs(); paintExpiry(); paintRecent();
+
+    // Uhr und Datum unten rechts (in der Fußleiste), „vor X Min.“ laufend aktualisieren
+    function tick() {
+      var c = $('.sb-clock'), d = new Date();
+      if (c) {
+        var loc = { de: 'de-DE', en: 'en-GB', tr: 'tr-TR' }[Lang.cur] || 'de-DE';
+        clear(c);
+        c.appendChild(h('b', { text: (d.getHours() < 10 ? '0' : '') + d.getHours() + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes() }));
+        c.appendChild(h('span', { text: d.toLocaleDateString(loc, { weekday: 'short', day: 'numeric', month: 'short' }) }));
+      }
+      if (!busy) paintStats();
+    }
+    setTimeout(tick, 0);
+    var timer = setInterval(tick, 20000);
+    // Noch nie geladen (erste Nutzung dieser Playlist): Anzahl im Hintergrund holen
+    var st0 = Stats.get();
+    if (!st0.live && !st0.movie && !st0.series) setTimeout(function () { if (el.parentNode) doRefresh(false); }, 1500);
+
+    // nach dem Schauen nur die Inhalte auffrischen, Fokus bleibt auf derselben Karte
+    el._refresh = function () {
+      var sc = Screens.top(), lf = sc && sc.lastFocus, key = lf && lf.getAttribute && lf.getAttribute('data-key');
+      paintRecent(); paintFavs(); paintStats();
+      if (sc && key && !el.contains(lf)) sc.lastFocus = $('[data-key="' + key + '"]', el) || tiles[0];
+    };
     el._dispose = function () { clearInterval(timer); };
     return el;
   }
@@ -2209,12 +2296,42 @@
 
   /* Anzahl der Einträge je Kategorie (aus der Gesamtliste, die beim Anbieter ohnehin zwischengespeichert wird) */
   var countCache = {};
+  /* Anzahl Sender/Filme/Serien und wann zuletzt geladen – pro Playlist gespeichert, für den Startbildschirm */
+  var Stats = {
+    get: function () { return Store.get('stats.' + pid(), {}); },
+    set: function (kind, n) { var s = this.get(); s[kind] = { n: n, at: Date.now() }; Store.set('stats.' + pid(), s); }
+  };
+  /* Playlist mit einem Klick neu laden: alles frisch vom Anbieter holen und neu zählen */
+  var refreshing = null;
+  function refreshPlaylist() {
+    if (refreshing) return refreshing;
+    var prov = App.provider;
+    if (prov.reset) prov.reset();
+    searchCache = {}; countCache = {};
+    var jobs = ['live', 'movie', 'series'].map(function (k) { return catCounts(k).then(function () { return true; }, function () { return false; }); });
+    var acc = prov.login ? prov.login().then(function () { return null; }, function (e) { return e; }) : Promise.resolve(null);
+    refreshing = Promise.all([acc].concat(jobs)).then(function (r) {
+      refreshing = null;
+      return { error: r[0], ok: r.slice(1).some(function (x) { return x; }) };
+    });
+    return refreshing;
+  }
+  function ago(ts) {
+    var m = Math.round((Date.now() - ts) / 60000);
+    if (m < 1) return T('gerade eben');
+    if (m < 60) return T('vor {0} Min.', m);
+    var hrs = Math.round(m / 60);
+    if (hrs < 24) return T('vor {0} Std.', hrs);
+    var d = Math.round(hrs / 24);
+    return d === 1 ? T('vor 1 Tag') : T('vor {0} Tagen', d);
+  }
   function catCounts(kind) {
     var k = pid() + kind;
     if (!countCache[k]) {
       countCache[k] = App.provider.items(kind, '__all').then(function (list) {
         var by = {};
         list.forEach(function (x) { var c = String(x.catId); by[c] = (by[c] || 0) + 1; });
+        Stats.set(kind, list.length);
         return { by: by, total: list.length };
       });
       countCache[k].catch(function () { delete countCache[k]; });

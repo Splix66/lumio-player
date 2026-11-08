@@ -936,45 +936,97 @@ body.lite .fh-title { text-shadow: none; }
 }
 
 /* ==========================================================
-   Startbildschirm: Zugang + Live TV / Filme / Serien
+   Startbildschirm: Live TV / Filme / Serien, Favoriten, Playlist, zuletzt geschaut
    ========================================================== */
 .shell.is-launcher .topnav { display: none; }
-.launcher { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 2.2rem var(--pad) 1.6rem; overflow: hidden; }
-.ln-head { position: relative; display: flex; align-items: center; }
-.ln-head .brand { font-size: 1.7rem; }
-.ln-head .brand-mark { width: 2.6rem; height: 2.6rem; }
-.ln-head .hero-status { margin: 0 0 0 auto; font-size: 1rem; padding: .5rem 1.05rem; }
-.ln-head .hero-status .dot { width: .6rem; height: .6rem; }
-.ln-clock { margin-left: 1.4rem; font-size: 1.9rem; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: var(--text); }
-/* Kacheln mittig, kompakt, mit großem Symbol */
-.ln-main { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 1rem; }
-.ln-tiles { display: flex; justify-content: center; max-width: 100%; }
-.ln-tiles > * + * { margin-left: 1.3rem; }
+.launcher { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 1.7rem var(--pad) .9rem; overflow: hidden; }
+.launcher > * { position: relative; }
+.launcher > .hero-art { position: absolute; }
+.ln-head { display: flex; align-items: center; flex: none; }
+.ln-head .brand { font-size: 1.6rem; }
+.ln-head .brand-mark { width: 2.5rem; height: 2.5rem; }
+.ln-tools { margin-left: auto; display: flex; align-items: center; }
+.ln-tools > * + * { margin-left: .7rem; }
+.ln-search { display: inline-flex; align-items: center; width: 17rem; height: 3.2rem; padding: 0 1.1rem; border-radius: 999px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line-2); color: var(--muted); font-size: .95rem; }
+.ln-search .i { width: 1.25rem; height: 1.25rem; margin-right: .7rem; }
+.ln-btn { display: inline-flex; align-items: center; height: 3.2rem; padding: 0 1.2rem; border-radius: 999px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line-2); color: var(--text-2); font-weight: 600; font-size: .95rem; }
+.ln-btn .i { width: 1.3rem; height: 1.3rem; margin-right: .6rem; }
+.ln-btn.is-busy .i { animation: spin 1s linear infinite; }
+.ln-round { width: 3.2rem; height: 3.2rem; border-radius: 50%; display: grid; place-items: center; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line-2); color: var(--text-2); }
+.ln-round .i { width: 1.35rem; height: 1.35rem; }
+.ln-search:hover, .ln-btn:hover, .ln-round:hover { background: var(--surface-2); color: var(--text); }
+body.kbd .ln-search.f:focus, body.is-tv .ln-search.f:focus, body.kbd .ln-btn.f:focus, body.is-tv .ln-btn.f:focus, body.kbd .ln-round.f:focus, body.is-tv .ln-round.f:focus { background: var(--text); color: var(--bg); box-shadow: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Kacheln + rechte Spalte */
+.ln-grid { flex: 1 1 auto; min-height: 13rem; max-height: 23.5rem; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 1.35fr); grid-gap: 1.1rem; gap: 1.1rem; margin-top: 1.6rem; }
 .ln-tile {
-  position: relative; width: 15.5rem; height: 14.5rem; flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  padding: 1.2rem 1rem; border-radius: var(--radius-lg); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line);
+  position: relative; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 2.2rem 1rem 1.3rem; border-radius: var(--radius-lg); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line);
   color: var(--text); text-align: center; overflow: hidden;
 }
-.ln-tile.k-live { width: 19rem; }
-/* Bereichsfarbe als weiches Licht hinter dem Symbol */
-.ln-tile::before { content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: radial-gradient(75% 65% at 50% 34%, var(--k), transparent 72%); opacity: .13; transition: opacity .2s ease; pointer-events: none; }
-.ln-tile:hover::before { opacity: .22; }
-.lt-ic { position: relative; width: 5.8rem; height: 5.8rem; display: grid; place-items: center; color: var(--k); }
+.ln-tile::before { content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: radial-gradient(75% 60% at 50% 42%, var(--k), transparent 72%); opacity: .12; transition: opacity .2s ease; pointer-events: none; }
+.ln-tile:hover::before { opacity: .2; }
+.lt-upd { position: absolute; top: .85rem; left: .6rem; right: .6rem; font-size: .72rem; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ln-tile.is-busy .lt-upd { color: var(--k); }
+.lt-ic { position: relative; width: 4.8rem; height: 4.8rem; display: grid; place-items: center; color: var(--k); }
 .lt-ic .i { width: 100%; height: 100%; stroke-width: 1.6; }
-.lt-txt { position: relative; display: flex; flex-direction: column; align-items: center; width: 100%; min-width: 0; margin-top: .9rem; }
-.lt-label { font-size: 1.75rem; font-weight: 800; letter-spacing: -.03em; line-height: 1.1; }
-.lt-sub { margin-top: .4rem; max-width: 100%; color: var(--muted); font-size: .88rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-body.kbd .ln-tile.f:focus, body.is-tv .ln-tile.f:focus { transform: scale(1.06); box-shadow: 0 0 0 .2rem var(--bg), 0 0 0 .4rem var(--k), 0 1.2rem 2.6rem -1rem var(--k); }
-body.kbd .ln-tile.f:focus::before, body.is-tv .ln-tile.f:focus::before { opacity: .3; }
+.lt-label { position: relative; margin-top: .8rem; font-size: 1.85rem; font-weight: 800; letter-spacing: -.03em; line-height: 1.1; }
+.lt-sub { position: relative; margin-top: .35rem; max-width: 100%; color: var(--muted); font-size: .9rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+body.kbd .ln-tile.f:focus, body.is-tv .ln-tile.f:focus { transform: scale(1.04); box-shadow: 0 0 0 .2rem var(--bg), 0 0 0 .4rem var(--k), 0 1.2rem 2.6rem -1rem var(--k); }
+body.kbd .ln-tile.f:focus::before, body.is-tv .ln-tile.f:focus::before { opacity: .28; }
 body.kbd .ln-tile.f:focus .lt-sub, body.is-tv .ln-tile.f:focus .lt-sub { color: var(--text-2); }
-.ln-acts { position: relative; display: flex; flex-wrap: wrap; justify-content: center; margin-top: 2rem; }
-.ln-acts > * { margin: 0 .35rem .5rem; }
-.ln-act { display: inline-flex; align-items: center; padding: .78rem 1.3rem; border-radius: 999px; background: var(--surface-2); color: var(--text-2); font-weight: 600; font-size: .98rem; }
-.ln-act .i { width: 1.3rem; height: 1.3rem; margin-right: .6rem; }
-.ln-act:hover { background: var(--surface-3); color: var(--text); }
-body.kbd .ln-act.f:focus, body.is-tv .ln-act.f:focus { background: var(--text); color: var(--bg); box-shadow: none; }
-/* Auf dem Startbildschirm MAC, KEY und Laufzeit groß – in Live TV, Filmen und Serien bleiben sie klein unten */
+.ln-side { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.ln-side > * + * { margin-top: 1.1rem; }
+.ln-card { border-radius: var(--radius-lg); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); color: var(--text); }
+.lc-ic { width: 2.9rem; height: 2.9rem; flex: none; display: grid; place-items: center; border-radius: .9rem; background: var(--accent-soft); color: var(--accent-2); }
+.lc-ic .i { width: 1.55rem; height: 1.55rem; }
+.lc-txt { display: flex; flex-direction: column; min-width: 0; margin-left: .9rem; text-align: left; }
+.lc-txt b { font-size: 1.2rem; font-weight: 750; letter-spacing: -.02em; }
+.lc-txt small { color: var(--muted); font-size: .82rem; margin-top: .1rem; }
+.ln-fav { display: flex; align-items: center; padding: 1rem 1.2rem; flex: none; }
+.ln-fav .lc-ic { color: var(--c-live); }
+.ln-fav > .i { margin-left: auto; width: 1.2rem; height: 1.2rem; color: var(--dim); }
+body.kbd .ln-fav.f:focus, body.is-tv .ln-fav.f:focus { background: var(--surface-2); }
+.ln-pl { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: space-between; padding: 1rem 1.2rem 1.1rem; }
+.lp-top { display: flex; align-items: center; }
+.ln-mini { margin-left: auto; padding: .45rem .9rem; border-radius: 999px; background: var(--surface-2); color: var(--text-2); font-size: .82rem; font-weight: 650; }
+.ln-mini:hover { background: var(--surface-3); color: var(--text); }
+body.kbd .ln-mini.f:focus, body.is-tv .ln-mini.f:focus { background: var(--text); color: var(--bg); box-shadow: none; }
+.lp-row { display: flex; padding-top: .9rem; margin-top: .9rem; border-top: 1px solid var(--line); }
+.lp-cell { display: flex; flex-direction: column; min-width: 0; }
+.lp-cell small { color: var(--dim); font-size: .76rem; }
+.lp-cell b { font-size: 1.02rem; font-weight: 700; margin-top: .15rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lp-exp { margin-left: auto; padding-left: 1rem; text-align: right; flex: none; }
+.lp-cell small.lp-left { margin-top: .15rem; color: var(--muted); }
+.ln-pl.is-warn .lp-exp b, .ln-pl.is-warn .lp-left { color: var(--warn); }
+.ln-pl.is-off .lp-exp b { color: var(--live); }
+
+/* Zuletzt geschaut – bewusst kompakt */
+.ln-recent { flex: none; margin-top: 1.5rem; }
+.lr-title { font-size: 1.1rem; font-weight: 750; letter-spacing: -.01em; padding-left: .7rem; box-shadow: inset .22rem 0 0 var(--accent-2); margin-bottom: .7rem; }
+.lr-track { display: flex; overflow-x: auto; overflow-y: hidden; padding: .3rem .4rem .5rem; margin: -.3rem -.4rem 0; scrollbar-width: none; }
+.lr-track::-webkit-scrollbar { display: none; }
+.lr-track > * + * { margin-left: .8rem; }
+.lr-card { position: relative; flex: none; width: 15rem; height: 4.6rem; display: flex; align-items: center; border-radius: var(--radius); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); overflow: hidden; text-align: left; color: var(--text); }
+.lr-thumb { position: relative; flex: none; width: 6.6rem; height: 100%; overflow: hidden; background: var(--surface-2); }
+.lr-thumb .ph, .lr-thumb img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
+.lr-thumb.is-logo { display: grid; place-items: center; }
+.lr-thumb.is-logo .logo-box { width: 5rem; height: 3.2rem; }
+.lr-txt { display: flex; flex-direction: column; min-width: 0; padding: 0 .8rem; }
+.lr-txt b { font-size: .92rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lr-txt small { margin-top: .2rem; color: var(--muted); font-size: .78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lr-live { font-style: normal; font-size: .62rem; font-weight: 800; letter-spacing: .04em; color: #fff; background: var(--live); padding: .05rem .32rem; border-radius: .25rem; margin-right: .4rem; vertical-align: .1em; }
+.lr-bar { position: absolute; left: 0; right: 0; bottom: 0; height: .22rem; background: var(--line-2); }
+.lr-bar i { display: block; height: 100%; background: var(--accent-2); }
+body.kbd .lr-card.f:focus, body.is-tv .lr-card.f:focus { transform: scale(1.04); }
+
+/* Fußleiste auf dem Startbildschirm: MAC und KEY groß, Uhr und Datum rechts */
+.sb-clock { display: none; }
 .shell.is-launcher .statusbar { padding: .85rem var(--pad) 1.05rem; }
+.shell.is-launcher .sb-days { display: none; }
+.shell.is-launcher .sb-clock { display: flex; align-items: baseline; margin-left: auto; color: var(--muted); font-size: 1.05rem; }
+.shell.is-launcher .sb-clock b { color: var(--text); font-size: 1.3rem; font-weight: 700; font-variant-numeric: tabular-nums; margin-right: .7rem; }
 .shell.is-launcher .statusbar .mac-tag { font-size: 1.2rem; }
 .shell.is-launcher .statusbar .mac-tag span { font-size: .78rem; }
 .shell.is-launcher .statusbar .mac-tag b { color: var(--text); font-weight: 600; }
@@ -1177,42 +1229,54 @@ body.kbd .ln-act.f:focus, body.is-tv .ln-act.f:focus { background: var(--text); 
 
 /* Startbildschirm auf kleinen Bildschirmen */
 @media (orientation: landscape) and (max-height: 540px) {
-  html:not(.tv) .launcher { padding: calc(.9rem + env(safe-area-inset-top)) var(--pad) .6rem calc(var(--pad) + env(safe-area-inset-left)); }
-  html:not(.tv) .ln-head .brand { font-size: 1.3rem; }
-  html:not(.tv) .ln-head .brand-mark { width: 2.1rem; height: 2.1rem; }
-  html:not(.tv) .ln-clock { font-size: 1.35rem; margin-left: 1rem; }
-  html:not(.tv) .ln-head .hero-status { font-size: .85rem; padding: .35rem .8rem; }
-  html:not(.tv) .ln-tiles > * + * { margin-left: .9rem; }
-  html:not(.tv) .ln-tile { width: 11.5rem; height: 11rem; padding: .8rem; }
-  html:not(.tv) .ln-tile.k-live { width: 13.5rem; }
-  html:not(.tv) .lt-ic { width: 4.4rem; height: 4.4rem; }
-  html:not(.tv) .lt-txt { margin-top: .6rem; }
-  html:not(.tv) .lt-label { font-size: 1.35rem; }
-  html:not(.tv) .lt-sub { font-size: .78rem; margin-top: .25rem; }
-  html:not(.tv) .ln-acts { margin-top: 1.1rem; }
-  html:not(.tv) .ln-act { padding: .5rem .95rem; font-size: .85rem; }
-  html:not(.tv) .shell.is-launcher .statusbar { padding: .45rem var(--pad) calc(.5rem + env(safe-area-inset-bottom)); }
-  html:not(.tv) .shell.is-launcher .statusbar .mac-tag { font-size: 1rem; }
+  html:not(.tv) .launcher { padding: calc(.7rem + env(safe-area-inset-top)) var(--pad) .4rem calc(var(--pad) + env(safe-area-inset-left)); }
+  html:not(.tv) .ln-head .brand { font-size: 1.25rem; }
+  html:not(.tv) .ln-head .brand-mark { width: 2rem; height: 2rem; }
+  html:not(.tv) .ln-search { width: 12rem; height: 2.5rem; }
+  html:not(.tv) .ln-btn { height: 2.5rem; padding: 0 .9rem; }
+  html:not(.tv) .ln-round { width: 2.5rem; height: 2.5rem; }
+  html:not(.tv) .ln-grid { margin-top: .9rem; min-height: 9.5rem; max-height: 12.5rem; grid-gap: .7rem; gap: .7rem; }
+  html:not(.tv) .ln-tile { padding: 1.6rem .6rem .8rem; }
+  html:not(.tv) .lt-upd { top: .55rem; font-size: .66rem; }
+  html:not(.tv) .lt-ic { width: 3.3rem; height: 3.3rem; }
+  html:not(.tv) .lt-label { font-size: 1.3rem; margin-top: .5rem; }
+  html:not(.tv) .lt-sub { font-size: .78rem; }
+  html:not(.tv) .ln-side > * + * { margin-top: .7rem; }
+  html:not(.tv) .ln-fav { padding: .6rem .8rem; }
+  html:not(.tv) .ln-pl { padding: .6rem .8rem .7rem; }
+  html:not(.tv) .lc-ic { width: 2.2rem; height: 2.2rem; border-radius: .7rem; }
+  html:not(.tv) .lc-ic .i { width: 1.2rem; height: 1.2rem; }
+  html:not(.tv) .lc-txt b { font-size: 1rem; }
+  html:not(.tv) .lp-row { padding-top: .5rem; margin-top: .5rem; }
+  html:not(.tv) .lp-cell b { font-size: .9rem; }
+  html:not(.tv) .ln-recent { margin-top: .8rem; }
+  html:not(.tv) .lr-title { font-size: .95rem; margin-bottom: .5rem; }
+  html:not(.tv) .lr-card { width: 12.5rem; height: 3.8rem; }
+  html:not(.tv) .lr-thumb { width: 5.2rem; }
+  html:not(.tv) .shell.is-launcher .statusbar { padding: .4rem var(--pad) calc(.45rem + env(safe-area-inset-bottom)); }
+  html:not(.tv) .shell.is-launcher .statusbar .mac-tag { font-size: .95rem; }
+  html:not(.tv) .shell.is-launcher .sb-clock { font-size: .85rem; }
+  html:not(.tv) .shell.is-launcher .sb-clock b { font-size: 1rem; }
 }
 @media (max-width: 700px) and (orientation: portrait) {
-  html:not(.tv) .shell.is-launcher .content { padding-bottom: 2.4rem; }
-  html:not(.tv) .shell.is-launcher .statusbar { bottom: 0; padding: .5rem .6rem calc(.5rem + env(safe-area-inset-bottom)); flex-wrap: wrap; }
+  html:not(.tv) .shell.is-launcher .content { padding-bottom: 4.4rem; }
+  html:not(.tv) .shell.is-launcher .statusbar { bottom: 0; padding: .5rem .6rem calc(.5rem + env(safe-area-inset-bottom)); flex-wrap: wrap; justify-content: center; }
   html:not(.tv) .shell.is-launcher .statusbar .mac-tag { font-size: .9rem; flex-wrap: wrap; justify-content: center; }
   html:not(.tv) .shell.is-launcher .statusbar .copy-btn { display: none; }
-  html:not(.tv) .shell.is-launcher .sb-days { margin-left: 0; }
-  html:not(.tv) .shell.is-launcher .content { padding-bottom: 4.4rem; }
-  html:not(.tv) .launcher { overflow-y: auto; padding-top: calc(1.2rem + env(safe-area-inset-top)); }
+  html:not(.tv) .shell.is-launcher .sb-clock { display: none; }
+  html:not(.tv) .launcher { overflow-y: auto; padding-top: calc(1rem + env(safe-area-inset-top)); }
   html:not(.tv) .ln-head { flex-wrap: wrap; }
-  html:not(.tv) .ln-head .hero-status { order: 3; margin: 1rem 0 0; font-size: .85rem; padding: .35rem .8rem; }
-  html:not(.tv) .ln-clock { margin-left: auto; font-size: 1.4rem; }
-  html:not(.tv) .ln-main { flex: none; justify-content: flex-start; padding-top: 1.4rem; }
-  html:not(.tv) .ln-tiles { flex-direction: column; width: 100%; }
-  html:not(.tv) .ln-tiles > * + * { margin-left: 0; margin-top: .8rem; }
-  html:not(.tv) .ln-tile, html:not(.tv) .ln-tile.k-live { width: 100%; height: auto; flex-direction: row; justify-content: flex-start; padding: 1rem 1.1rem; text-align: left; }
-  html:not(.tv) .ln-tile::before { background: radial-gradient(60% 120% at 10% 50%, var(--k), transparent 72%); }
-  html:not(.tv) .lt-ic { width: 3.6rem; height: 3.6rem; flex: none; margin-right: 1rem; }
-  html:not(.tv) .lt-txt { align-items: flex-start; margin-top: 0; }
-  html:not(.tv) .lt-label { font-size: 1.45rem; }
-  html:not(.tv) .lt-sub { font-size: .85rem; }
-  html:not(.tv) .ln-acts { margin-top: 1.3rem; }
+  html:not(.tv) .ln-tools { width: 100%; margin: .9rem 0 0; }
+  html:not(.tv) .ln-search { flex: 1; width: auto; }
+  html:not(.tv) .ln-btn span { display: none; }
+  html:not(.tv) .ln-btn { width: 3.2rem; padding: 0; justify-content: center; }
+  html:not(.tv) .ln-btn .i { margin: 0; }
+  html:not(.tv) .ln-grid { flex: none; max-height: none; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 1.1rem; grid-gap: .6rem; gap: .6rem; }
+  html:not(.tv) .ln-tile { padding: 1.7rem .4rem .8rem; min-height: 9.5rem; }
+  html:not(.tv) .lt-upd { font-size: .6rem; top: .5rem; }
+  html:not(.tv) .lt-ic { width: 2.8rem; height: 2.8rem; }
+  html:not(.tv) .lt-label { font-size: 1.1rem; }
+  html:not(.tv) .lt-sub { font-size: .72rem; }
+  html:not(.tv) .ln-side { grid-column: 1 / -1; }
+  html:not(.tv) .lr-card { width: 13rem; }
 }
