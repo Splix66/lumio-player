@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Lumio Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.5.4',
+    version: '1.5.5',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     hlsCdn: 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js',
     requestTimeout: 30000,
@@ -2825,6 +2825,8 @@
     var main = h('div', { class: 'detail-main' }, h('div', { class: 'poster' }, posterArt(item)), info);
     var close = h('button', { class: 'd-close f', title: T('Schließen'), onclick: goBack }, icon('close'), h('span', { text: T('Schließen') }));
     var panel = h('div', { class: 'detail modal-panel' }, top, main);
+    // Mit der Fernbedienung nach oben bis „Schließen“: wieder ganz nach oben scrollen, damit man den Film sieht
+    close.addEventListener('focus', function () { if (panel.scrollTop > 0) panel.scrollTop = 0; });
     var el = h('div', { class: 'modal' }, h('div', { class: 'modal-backdrop', onclick: goBack }), h('div', { class: 'modal-wrap' }, close, panel));
     return {
       el: el, panel: panel, info: info,
@@ -3303,7 +3305,7 @@
       if (!v || v.paused || v.ended || this.err.style.display !== 'none') { this.wdStill = 0; return; }
       if (v.currentTime === this.wdLastT) this.wdStill += 2; else { this.wdStill = 0; if (this.playedSince && Date.now() - this.playedSince > 30000) this.stallRetries = 0; }
       this.wdLastT = v.currentTime;
-      if (this.wdStill < 18) return;
+      if (this.wdStill < (this.item && this.item.kind === 'live' ? 10 : 18)) return;   // Live: nach 10 s Stillstand neu verbinden
       this.wdStill = 0;
       if (this.stallRetries >= 3) { this.onError(T('Der Stream hängt und lässt sich gerade nicht wiederherstellen.')); return; }
       this.stallRetries++;
@@ -3325,7 +3327,7 @@
       var nativeHls = !!video.canPlayType('application/vnd.apple.mpegurl');
       // Android-App: zuerst den eingebauten Android-Player nutzen (zuverlässiger für Live-Sender),
       // nur wenn das scheitert, hls.js versuchen
-      var preferNative = Platform.safari || Platform.tizen || Platform.webos || (Platform.android && !self.forceHlsJs);
+      var preferNative = Platform.safari || Platform.tizen || Platform.webos || (Platform.android && !self.forceHlsJs && Settings.get('engine') !== 'hlsjs');
       if (isHlsUrl(url) && !(nativeHls && preferNative)) {
         ensureHls().then(function (Hls) {
           if (self.video !== video) return;
@@ -3334,7 +3336,11 @@
               enableWorker: true, lowLatencyMode: false, backBufferLength: Platform.lite ? 10 : 30,
               maxBufferLength: 30, maxMaxBufferLength: Platform.lite ? 40 : 60,          // genug Puffer, ohne alten TVs den Speicher zu füllen
               capLevelToPlayerSize: true,                           // im kleinen Player keine volle Auflösung laden
-              fragLoadingMaxRetry: 4, levelLoadingMaxRetry: 3, manifestLoadingMaxRetry: 2
+              fragLoadingMaxRetry: 4, levelLoadingMaxRetry: 3, manifestLoadingMaxRetry: 2,
+              // Gegen Hänger bei Live-Sendern: kleine Lücken im Stream überspringen und nach einem Hänger
+              // wieder an die aktuelle Stelle springen statt immer weiter hinterherzulaufen
+              maxBufferHole: 0.5, nudgeMaxRetry: 6, highBufferWatchdogPeriod: 2,
+              liveSyncDurationCount: 3, liveMaxLatencyDurationCount: 8
             });
             self.hls = hls;
             hls.on(Hls.Events.ERROR, function (ev, data) {
@@ -3494,6 +3500,13 @@
         sections.push([T('Stream-Format'), [['m3u8', 'HLS (.m3u8)'], ['ts', 'MPEG-TS (.ts)']].map(function (f) {
           // Wechsel lädt den Sender sofort neu; gilt danach für alle Live-Sender
           return { label: f[1], on: lf === f[0], pick: function () { if (lf === f[0]) return; Settings.set('liveFormat', f[0]); self.load(self.item); } };
+        })]);
+      }
+      // Android: eingebauter Android-Player oder der Lumio-eigene Player (hls.js) – je nach Gerät läuft einer stabiler
+      if (Platform.android) {
+        var en = Settings.get('engine') === 'hlsjs' ? 'hlsjs' : 'auto';
+        sections.push([T('Wiedergabe'), [['auto', T('Android-Player')], ['hlsjs', T('Lumio-Player')]].map(function (f) {
+          return { label: f[1], on: en === f[0], pick: function () { if (en === f[0]) return; Settings.set('engine', f[0]); self.forceHlsJs = false; self.load(self.item); } };
         })]);
       }
       self.openPanel(sections);
@@ -3726,9 +3739,11 @@
     volumeUi: function () {
       var self = this, v = Settings.get('volume');
       if (typeof v !== 'number') v = 1;
+      if (Platform.tv) v = 1;   // Fernseher / Android-Box: Lautstärke regelt die Fernbedienung – hier kein Regler
       self.video.volume = v;
       self.video.muted = !!Settings.get('muted');
       self.muteBtn = h('button', { class: 'cbtn f', 'data-c': 'mute', title: T('Ton an/aus'), 'aria-label': T('Ton an/aus'), onclick: function () { self.setMuted(!self.video.muted); } });
+      if (Platform.tv) { self.range = null; self.paintVol(); return h('div', { class: 'vol is-tv-vol' }, self.muteBtn); }
       self.range = h('input', { class: 'f vol-range', type: 'range', min: '0', max: '100', step: '5', value: String(Math.round(v * 100)), 'aria-label': T('Lautstärke') });
       self.range.addEventListener('input', function () { self.setVolume(Number(self.range.value) / 100); self.showOsd(); });
       self.paintVol();

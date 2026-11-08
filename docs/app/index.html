@@ -30,6 +30,8 @@
     ol li + li { margin-top: .45rem; }
     ol b { color: var(--text); }
     .small { font-size: .85rem; color: #6f6f80; }
+    .code { display: flex; align-items: baseline; gap: .8rem; flex-wrap: wrap; color: var(--muted); }
+    .code b { font: 800 2rem/1 ui-monospace, Menlo, Consolas, monospace; letter-spacing: .08em; color: var(--text); }
     @media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
   </style>
 </head>
@@ -47,6 +49,7 @@
       <li data-t>Fragt das Gerät nach einer Erlaubnis: „Apps unbekannter Herkunft“ für Downloader einschalten.</li>
       <li data-t>Danach <b>Öffnen</b> wählen – fertig. Die Datei kann anschließend gelöscht werden.</li>
     </ol>
+    <p class="code"><span data-t>Downloader-Code:</span> <b>5619512</b></p>
     <p class="small" data-t>Für Fire TV, Android-TV-Boxen, Android-Handys und Tablets. Es wird immer die neueste Version geladen.</p>
   </main>
   <script>
@@ -55,7 +58,7 @@
       var D = {
         en: {
           'Der Download startet gleich von selbst …': 'The download starts automatically …',
-          'Jetzt herunterladen': 'Download now',
+          'Jetzt herunterladen': 'Download now', 'Downloader-Code:': 'Downloader code:',
           'Nach dem Download auf <b>Installieren</b> drücken.': 'After the download, press <b>Install</b>.',
           'Fragt das Gerät nach einer Erlaubnis: „Apps unbekannter Herkunft“ für Downloader einschalten.': 'If your device asks for permission: allow “unknown apps” for Downloader.',
           'Danach <b>Öffnen</b> wählen – fertig. Die Datei kann anschließend gelöscht werden.': 'Then choose <b>Open</b> – done. You can delete the file afterwards.',
@@ -63,7 +66,7 @@
         },
         tr: {
           'Der Download startet gleich von selbst …': 'İndirme birazdan kendiliğinden başlar …',
-          'Jetzt herunterladen': 'Şimdi indir',
+          'Jetzt herunterladen': 'Şimdi indir', 'Downloader-Code:': 'Downloader kodu:',
           'Nach dem Download auf <b>Installieren</b> drücken.': 'İndirmeden sonra <b>Yükle</b>’ye bas.',
           'Fragt das Gerät nach einer Erlaubnis: „Apps unbekannter Herkunft“ für Downloader einschalten.': 'Cihaz izin isterse: Downloader için “bilinmeyen uygulamalar” iznini aç.',
           'Danach <b>Öffnen</b> wählen – fertig. Die Datei kann anschließend gelöscht werden.': 'Sonra <b>Aç</b>’ı seç – bitti. Dosyayı ardından silebilirsin.',
