@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Lumio Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.2.0',
+    version: '1.3.0',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     hlsCdn: 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js',
     requestTimeout: 30000,
@@ -1052,6 +1052,20 @@
     clear: function () { Store.del('resume.' + pid()); }
   };
 
+  /* Was zuletzt lief (Sender, Film oder Serie) – beim nächsten App-Start landet man genau dort */
+  var Last = {
+    get: function () { return Store.get('last.' + pid(), null); },
+    set: function (item) {
+      var it = item;
+      if (item.kind === 'episode') {
+        var s = App.openSeries && App.openSeries.id === item.seriesId ? App.openSeries : { kind: 'series', id: item.seriesId, name: item.seriesName, logo: item.logo };
+        it = s;
+      }
+      if (!it || !it.id) return;
+      Store.set('last.' + pid(), { item: slim(it), at: Date.now() });
+    }
+  };
+
   var Recent = {
     list: function () { return Store.get('recent.' + pid(), []); },
     push: function (item) {
@@ -1073,6 +1087,9 @@
     open: false, prevFocus: null, onClose: null,
     show: function (title, text, buttons, cls) {
       var layer = $('#dialog-layer');
+      // Im Vollbild ist nur der Player sichtbar – dann muss die Abfrage in den Player hinein
+      var fs = document.fullscreenElement || document.webkitFullscreenElement;
+      if (fs && layer.parentNode !== fs) fs.appendChild(layer);
       var self = this;
       self.prevFocus = document.activeElement;
       clear(layer);
@@ -1088,7 +1105,9 @@
       setTimeout(function () { Nav.focus(first); }, 30);
     },
     close: function () {
-      clear($('#dialog-layer')); this.open = false;
+      var layer = $('#dialog-layer'), app = $('#app');
+      clear(layer); this.open = false;
+      if (app && layer.parentNode !== app) app.appendChild(layer);
       if (this.prevFocus && document.body.contains(this.prevFocus)) Nav.focus(this.prevFocus);
     }
   };
@@ -1368,6 +1387,7 @@
     scroller.addEventListener('scroll', function () {
       if (scroller.scrollTop + scroller.clientHeight > scroller.scrollHeight - 600) more();
     });
+    return { upTo: function (idx) { while (done <= idx && done < items.length) more(); } };
   }
 
   /* ==========================================================
@@ -1488,13 +1508,13 @@
     return { input: input, wrap: h('label', { class: 'field' }, h('span', { text: label }), input) };
   }
 
-  function activateProfile(p, isNew) {
+  function activateProfile(p, isNew, restore) {
     App.profile = p;
     App.provider = makeProvider(p);
     Store.set('active', p.id);
     if (isNew || p.type === 'demo') { Shell.open(); Expiry.check(); return; }
     // Kurz prüfen, ob der Zugang noch funktioniert – die Startseite erscheint trotzdem sofort
-    Shell.open();
+    Shell.open(restore);
     App.provider.login().catch(function (e) { toast(T('Hinweis: {0}', e.message), 4000); });
     Expiry.check();
   }
@@ -1503,14 +1523,14 @@
      Hauptansicht mit Seitenleiste
      ========================================================== */
   var Shell = {
-    el: null, view: null, current: null, buttons: {},
-    open: function () {
+    el: null, view: null, current: null, buttons: {}, pendingFocus: null,
+    open: function (restore) {
       var self = this;
       self.buttons = {};
       self.view = h('div', { class: 'view' });
       var tabs = h('nav', { class: 'main-tabs', 'aria-label': T('Hauptmenü') });
       [['home', T('Start'), 'home'], ['live', T('Live TV'), 'live'], ['movie', T('Filme'), 'movie'], ['series', T('Serien'), 'series']].forEach(function (it) {
-        var b = h('button', { class: 'tab f k-' + it[0], title: it[1], onclick: function () { self.show(it[0], true); } }, icon(it[2]), h('span', { text: it[1] }));
+        var b = h('button', { class: 'tab f k-' + it[0] + (it[0] === 'home' ? ' tab-home' : ''), title: it[1], 'aria-label': it[1], onclick: function () { self.show(it[0], true); } }, icon(it[2]), h('span', { text: it[1] }));
         self.buttons[it[0]] = b;
         tabs.appendChild(b);
       });
@@ -1533,6 +1553,19 @@
         onShow: function () { if (self.current === 'home') self.show('home', false, true); }
       });
       self.show('home');
+      if (restore) self.restoreLast();
+    },
+    /* Beim App-Start dort weitermachen, wo man aufgehört hat */
+    restoreLast: function () {
+      var r = Last.get();
+      if (!r || !r.item || Date.now() - r.at > 30 * 86400000) return;
+      var it = r.item, kind = it.kind === 'live' ? 'live' : it.kind === 'series' ? 'series' : it.kind === 'movie' ? 'movie' : null;
+      if (!kind) return;
+      if (it.catId) lastCat[pid() + kind] = String(it.catId);
+      this.pendingFocus = { kind: kind, id: it.id };
+      this.show(kind, false);
+      if (kind === 'movie') setTimeout(function () { showMovie(it); }, 150);
+      if (kind === 'series') setTimeout(function () { showSeries(it); }, 150);
     },
     show: function (name, focusContent, keepFocus) {
       var self = this;
@@ -1567,27 +1600,37 @@
     if (!searchCache[k]) { searchCache[k] = App.provider.items(kind, '__all'); searchCache[k].catch(function () { delete searchCache[k]; }); }
     return searchCache[k];
   }
+  /* Sprache der Filme und Serien auf der Startseite: frei wählbar (pro Playlist), sonst die App-Sprache */
+  function homeLang() { return Settings.get('homeLang.' + pid()) || Lang.cur; }
+  function pickGroup(groups) {
+    if (!groups) return null;
+    var want = homeLang(), g = groups.filter(function (x) { return x.key === want; })[0];
+    return g || groups.filter(function (x) { return x.key !== '_'; })[0] || null;
+  }
   /* Auswahl für die Startseite: bei Xtream nur die ersten Kategorien (schnell, auch auf schwachen Geräten).
-     Sind die Kategorien nach Sprachen benannt, werden die der App-Sprache bevorzugt. */
+     Sind die Kategorien nach Sprachen benannt, kommen nur Filme/Serien der gewählten Sprache. */
   function sampleItems(kind) {
-    var k = pid() + kind;
-    if (searchCache[k]) return searchCache[k];
+    var k = pid() + kind + '|' + homeLang();
     if (homeCache[k]) return homeCache[k];
-    var prov = App.provider, pr;
-    if (prov.type === 'xtream') {
-      pr = prov.categories(kind).then(function (cats) {
-        cats = cats || [];
-        var groups = groupCats(cats), mine = groups && groups.filter(function (g) { return g.key === Lang.cur; })[0];
-        if (mine) cats = mine.cats;
-        return Promise.all(cats.slice(0, 3).map(function (c) { return prov.items(kind, c.id).catch(function () { return []; }); }));
-      }).then(function (lists) {
-        var seen = {}, out = [];
-        lists.forEach(function (l) { l.forEach(function (x) { if (!seen[x.id]) { seen[x.id] = 1; out.push(x); } }); });
-        return out;
+    var prov = App.provider;
+    var pr = prov.categories(kind).then(function (cats) {
+      cats = cats || [];
+      var mine = pickGroup(groupCats(cats));
+      if (prov.type === 'xtream') {
+        return Promise.all((mine ? mine.cats : cats).slice(0, 3).map(function (c) { return prov.items(kind, c.id).catch(function () { return []; }); }))
+          .then(function (lists) {
+            var seen = {}, out = [];
+            lists.forEach(function (l) { l.forEach(function (x) { if (!seen[x.id]) { seen[x.id] = 1; out.push(x); } }); });
+            return out;
+          });
+      }
+      return prov.items(kind, '__all').then(function (all) {
+        if (!mine) return all;
+        var ids = {};
+        mine.cats.forEach(function (c) { ids[c.id] = 1; });
+        return all.filter(function (x) { return ids[x.catId]; });
       });
-    } else {
-      pr = prov.items(kind, '__all');
-    }
+    });
     homeCache[k] = pr;
     pr.catch(function () { delete homeCache[k]; });
     return pr;
@@ -1621,6 +1664,26 @@
     });
   }
 
+  /* Auswahl „Filme & Serien auf: Deutsch / Türkisch / …“ – erscheint nur, wenn die Playlist Sprachen kennt */
+  function homeLangBar() {
+    var bar = h('div', { class: 'home-lang' });
+    App.provider.categories('movie').then(function (cats) {
+      var groups = groupCats(cats || []), cur = pickGroup(groups);
+      if (!groups || !cur) return;
+      bar.appendChild(h('span', { class: 'hl-label', text: T('Filme & Serien auf') }));
+      groups.filter(function (g) { return g.key !== '_'; }).slice(0, 8).forEach(function (g) {
+        var b = h('button', { class: 'hl-chip f' + (g === cur ? ' is-on' : ''), title: g.name, 'data-k': g.key, onclick: function () {
+          if (g === cur) return;
+          Settings.set('homeLang.' + pid(), g.key);
+          Shell.show('home', false, true);
+          setTimeout(function () { var nb = $('.hl-chip[data-k="' + g.key + '"]'); if (nb) Nav.focus(nb); }, 80);
+        } }, h('span', { class: 'lc-code', text: g.code }), h('span', { text: g.name }));
+        bar.appendChild(b);
+      });
+    }).catch(function () {});
+    return bar;
+  }
+
   /* ---------- Startseite ---------- */
   function HomeView() {
     var p = App.profile, season = Season.current();
@@ -1638,7 +1701,8 @@
         h('h1', { class: 'hero-title' },
           h('span', { class: 'hero-kicker', text: season ? T(SEASONS[season].greet) : T('Willkommen bei') }),
           wordmark()),
-        h('p', { class: 'hero-sub', text: p.type === 'demo' ? T('Probiere die App mit freien Test-Videos aus.') : T('Dein Licht für Live TV, Filme und Serien.') })));
+        h('p', { class: 'hero-sub', text: p.type === 'demo' ? T('Probiere die App mit freien Test-Videos aus.') : T('Dein Licht für Live TV, Filme und Serien.') }),
+        homeLangBar()));
     var rows = h('div', { class: 'rows' });
     var el = h('div', { class: 'page home' }, hero, rows);
 
@@ -1787,6 +1851,22 @@
     return groups;
   }
 
+  /* Anzahl der Einträge je Kategorie (aus der Gesamtliste, die beim Anbieter ohnehin zwischengespeichert wird) */
+  var countCache = {};
+  function catCounts(kind) {
+    var k = pid() + kind;
+    if (!countCache[k]) {
+      countCache[k] = App.provider.items(kind, '__all').then(function (list) {
+        var by = {};
+        list.forEach(function (x) { var c = String(x.catId); by[c] = (by[c] || 0) + 1; });
+        return { by: by, total: list.length };
+      });
+      countCache[k].catch(function () { delete countCache[k]; });
+    }
+    return countCache[k];
+  }
+  function fmtCount(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, Lang.cur === 'en' ? ',' : '.'); }
+
   /* ---------- Live TV / Filme / Serien ---------- */
   var lastCat = {}, lastGroup = {};
   function SectionView(kind) {
@@ -1801,7 +1881,18 @@
       h('div', { class: 'section-body' }, cats, items, panel ? panel.el : null));
     var key = pid() + kind;
     var allCat = { id: '__all', name: allNames[kind] };
-    var groups = null, curGroup = null, activeId = null, req = 0;
+    var groups = null, curGroup = null, activeId = null, req = 0, counts = null;
+    // Zahlen hinter Sprachen und Kategorien: bei einer Sprache alle Einträge dieser Sprache, sonst je Kategorie
+    function paintCounts() {
+      if (!counts) return;
+      for (var i = 0; i < cats.children.length; i++) {
+        var b = cats.children[i], n = null, slot = b.querySelector('.lc-n');
+        if (!slot) continue;
+        if (b._group) { n = 0; b._group.cats.forEach(function (c) { n += counts.by[c.id] || 0; }); }
+        else if (b._cat) n = b._cat.id === '__all' ? counts.total : (counts.by[b._cat.id] || 0);
+        if (n !== null) slot.textContent = fmtCount(n);
+      }
+    }
 
     function inGroup(g, id) { for (var i = 0; i < g.cats.length; i++) if (g.cats[i].id === id) return g.cats[i]; return null; }
     function markActive() {
@@ -1816,7 +1907,7 @@
       return null;
     }
     function catBtn(c) {
-      var b = h('button', { class: 'cat f', title: c.full || c.name }, c.name);
+      var b = h('button', { class: 'cat f has-n', title: c.full || c.name }, h('span', { class: 'cat-name', text: c.name }), h('span', { class: 'lc-n' }));
       b._cat = c;
       b.addEventListener('click', function () { selectCat(c, true); });
       return b;
@@ -1824,7 +1915,7 @@
     function langBtn(g) {
       var b = h('button', { class: 'cat lang-cat f', title: g.name },
         h('span', { class: 'lc-code', text: g.code || '…' }), h('span', { class: 'lc-name', text: g.name }),
-        h('span', { class: 'lc-n', text: String(g.cats.length) }), icon('next'));
+        h('span', { class: 'lc-n' }), icon('next'));
       b._group = g;
       b.addEventListener('click', function () { openGroup(g, true); });
       return b;
@@ -1836,7 +1927,7 @@
       cats.appendChild(catBtn(allCat));
       var focusBtn = null;
       groups.forEach(function (g) { var b = langBtn(g); cats.appendChild(b); if (g === focusGroup) focusBtn = b; });
-      markActive();
+      markActive(); paintCounts();
       if (focusBtn) { Nav.focus(focusBtn); }
     }
     // Eine Sprache geöffnet: Zurück-Knopf und ihre Kategorien
@@ -1849,7 +1940,7 @@
       cats.appendChild(back);
       g.cats.forEach(function (c) { cats.appendChild(catBtn(c)); });
       cats.scrollTop = 0;
-      markActive();
+      markActive(); paintCounts();
       if (byUser) {
         if (!inGroup(g, activeId)) selectCat(g.cats[0], false);
         Nav.focus(activeButton() || cats.children[1] || back);
@@ -1877,10 +1968,31 @@
         if (!list.length) { items.appendChild(stateBox(T('Keine Einträge'), T('In dieser Kategorie ist gerade nichts enthalten.'))); return; }
         var box = h('div', { class: kind === 'live' ? 'chan-list' : 'poster-grid' });
         items.appendChild(box);
-        renderChunked(box, items, list, function (it, i) {
+        var rc = renderChunked(box, items, list, function (it, i) {
           return kind === 'live' ? channelRow(it, function () { playItem(it, { list: list, index: i }); }, panel ? panel.show : null)
             : posterCard(it, function () { openItem(it); });
         });
+        // Nach dem App-Start: zuletzt geschauten Sender markieren
+        var pf = Shell.pendingFocus;
+        if (pf && pf.kind === kind) {
+          Shell.pendingFocus = null;
+          var at = -1;
+          for (var k = 0; k < list.length; k++) if (list[k].id === pf.id) { at = k; break; }
+          if (at >= 0) {
+            rc.upTo(at);
+            if (panel) panel.show(list[at]);
+            var target = box.querySelector('[data-idx="' + at + '"]');
+            if (target) {
+              setTimeout(function () {
+                // Liegt schon die Film-/Serienseite darüber, wird der Fokus erst beim Schließen dorthin gesetzt
+                var st = Screens.stack, own = null;
+                for (var q = 0; q < st.length; q++) if (st[q].el.contains(box)) own = st[q];
+                if (own && Screens.top() === own) Nav.focus(target); else if (own) own.lastFocus = target;
+              }, 60);
+              return;
+            }
+          }
+        }
         if (panel && !panel.current()) panel.show(list[0]);
         if (focusList) Nav.focusFirst(box);
       }, function (e) {
@@ -1901,6 +2013,7 @@
       } else {
         var g = null;
         groups.forEach(function (x) { if (x.key === lastGroup[key]) g = x; });
+        if (!g && Shell.pendingFocus && Shell.pendingFocus.kind === kind && want) groups.forEach(function (x) { if (!g && inGroup(x, want)) g = x; });
         if (g) { openGroup(g, false); target = inGroup(g, want) || g.cats[0]; }
         else {
           showLanguages(null);
@@ -1911,6 +2024,7 @@
       }
       selectCat(target, false);
       if (document.activeElement === document.body) Nav.focus(activeButton() || cats.children[0]);
+      catCounts(kind).then(function (c) { counts = c; paintCounts(); }).catch(function () {});
     }, function (e) {
       clear(items).appendChild(stateBox(T('Laden fehlgeschlagen'), e.message, T('Erneut versuchen'), function () { Shell.show(kind, true); }));
     });
@@ -2040,6 +2154,59 @@
   function panel(ic, title, kids, cls) {
     return h('div', { class: 'panel' + (cls ? ' ' + cls : '') }, h('h3', null, icon(ic), title), kids);
   }
+  /* „Schaust du noch?“ – wie bei Netflix: Wurde lange keine Taste gedrückt und nichts angetippt,
+     fragt die App nach. Kommt keine Antwort, stoppt die Wiedergabe – so bleibt der Zugang beim Anbieter frei. */
+  var StillWatching = {
+    last: Date.now(), timer: null, countdown: null,
+    hours: function () { var v = Settings.get('idleHours'); return typeof v === 'number' ? v : 3; },
+    touch: function () { StillWatching.last = Date.now(); },
+    start: function () {
+      var self = this, lastMove = 0;
+      ['keydown', 'pointerdown', 'touchstart', 'wheel'].forEach(function (ev) { document.addEventListener(ev, self.touch, true); });
+      document.addEventListener('mousemove', function () { var n = Date.now(); if (n - lastMove > 5000) { lastMove = n; self.touch(); } }, true);
+      clearInterval(self.timer);
+      self.timer = setInterval(function () { self.check(); }, 30000);
+    },
+    playing: function () { var v = Player.video; return !!(Player.el && v && !v.paused && !v.ended); },
+    check: function () {
+      var hrs = this.hours();
+      if (!hrs || this.countdown || Dialog.open || !this.playing()) return;
+      if (Date.now() - this.last >= hrs * 3600000) this.ask();
+    },
+    ask: function () {
+      var self = this, left = 60;
+      Dialog.show(T('Schaust du noch?'), T('Die Wiedergabe stoppt in {0} Sekunden, damit dein Zugang nicht unnötig belegt bleibt.', left), [
+        { label: T('Wiedergabe beenden'), action: function () { self.stop(false); } },
+        { label: T('Weiter schauen'), primary: true }
+      ], 'dlg-idle');
+      self.countdown = setInterval(function () {
+        var box = $('#dialog-layer .dlg-idle');
+        if (!box) { clearInterval(self.countdown); self.countdown = null; return; }   // jemand hat reagiert
+        left--;
+        var p = $('p', box);
+        if (p) p.textContent = T('Die Wiedergabe stoppt in {0} Sekunden, damit dein Zugang nicht unnötig belegt bleibt.', left);
+        if (left <= 0) self.stop(true);
+      }, 1000);
+    },
+    stop: function (auto) {
+      clearInterval(this.countdown); this.countdown = null;
+      if (Dialog.open) Dialog.close();
+      if (Player.el) Player.close();
+      if (auto) toast(T('Wiedergabe beendet – du warst eine Weile nicht aktiv.'), 5000);
+    }
+  };
+
+  /* „Daten neu laden“: die ganze App startet sichtbar neu und holt alles frisch vom Anbieter */
+  function reloadApp() {
+    if (Player.el) Player.close();
+    document.body.appendChild(h('div', { class: 'reload-screen' },
+      h('div', { class: 'brand' }, brandMark(), wordmark()),
+      h('div', { class: 'spinner' }),
+      h('p', { text: T('Daten werden neu geladen …') })));
+    try { sessionStorage.setItem('lumio.reloaded', '1'); } catch (e) {}
+    setTimeout(function () { try { location.reload(); } catch (e) {} }, 1200);
+  }
+
   /* ---------- Profil: Zugangsdaten und Gerät (eigene Seite, oben rechts über das Profil-Symbol) ---------- */
   function ProfileView() {
     var p = App.profile;
@@ -2072,7 +2239,7 @@
         h('div', { class: 'pc-txt' }, h('h2', { text: p.name }), user && user !== p.name ? h('p', { text: user }) : null, status),
         h('div', { class: 'row' },
           h('button', { class: 'btn f primary', onclick: showProfiles, 'data-autofocus': true }, icon('profile'), h('span', { text: T('Playlist wechseln') })),
-          h('button', { class: 'btn f', onclick: function () { App.provider.reset(); searchCache = {}; homeCache = {}; EpgCache.data = {}; toast(T('Daten werden neu geladen')); } }, icon('restart'), h('span', { text: T('Daten neu laden') })))),
+          h('button', { class: 'btn f', onclick: reloadApp }, icon('restart'), h('span', { text: T('Daten neu laden') })))),
       h('div', { class: 'settings-grid' },
         panel('live', T('Zugang'), [acc]),
         panel('phone', T('Dieses Gerät'), [dev, h('p', { class: 'hint', text: T('Mit MAC-Adresse und KEY kannst du Playlists per Handy oder über die Webseite auf dieses Gerät schicken.') })])));
@@ -2094,6 +2261,15 @@
         h('p', { class: 'hint', text: T('Wenn Sender nicht starten, probiere das andere Format. HLS funktioniert auf den meisten Geräten am besten.') })]);
     }
 
+    var idleSeg = h('div', { class: 'seg' });
+    var idleBtns = [[0, T('Aus')], [2, T('{0} Std.', 2)], [3, T('{0} Std.', 3)], [4, T('{0} Std.', 4)]].map(function (o) {
+      var b = h('button', { class: 'btn f', onclick: function () { Settings.set('idleHours', o[0]); paintIdle(); } }, o[1]);
+      idleSeg.appendChild(b);
+      return [o[0], b];
+    });
+    function paintIdle() { var v = StillWatching.hours(); idleBtns.forEach(function (x) { x[1].classList.toggle('is-on', x[0] === v); }); }
+    paintIdle();
+
     return h('div', { class: 'page settings' },
       h('div', { class: 'page-head' }, h('h1', { text: T('Einstellungen') })),
       h('div', { class: 'settings-grid' },
@@ -2107,6 +2283,8 @@
           h('p', { class: 'hint', text: T('Deutsch ist voreingestellt. Drücke auf die Sprache, um sie zu ändern.') })]),
         h('div', { class: 'panel wide' }, remotePanel()),
         fmtRow,
+        panel('play', T('Schaust du noch?'), [idleSeg,
+          h('p', { class: 'hint', text: T('Wie bei Netflix: Wurde so lange keine Taste gedrückt, fragt die App nach. Ohne Antwort stoppt die Wiedergabe nach einer Minute – das hält deinen Zugang frei.') })]),
         panel('history', T('Verlauf'), [
           h('p', { class: 'hint', text: T('„Weiterschauen“ und „Zuletzt gesehene Sender“ auf diesem Gerät.') }),
           h('div', { class: 'row' },
@@ -2189,6 +2367,7 @@
   }
 
   function showSeries(item) {
+    App.openSeries = item;
     var f = detailFrame(item);
     var seasonsBar = h('div', { class: 'seasons' });
     var epBox = h('div', { class: 'episodes' }, loader());
@@ -2518,6 +2697,7 @@
       self.resumeAt = self.isVod() && r && !(self.ctx && self.ctx.fromStart) ? r.t : 0;
       if (self.ctx) self.ctx.fromStart = false;
       if (item.kind === 'live') { Recent.push(item); self.loadEpg(); }
+      Last.set(item);
 
       var src = App.provider.streamUrl(item);
       self.alt = src.alt;
@@ -2902,7 +3082,7 @@
     if (dirs[k] || k === 13) document.body.classList.add('kbd');
 
     if (isBackKey(e)) { e.preventDefault(); goBack(); return; }
-    if (Player.el && Screens.top() && Screens.top().el === Player.el && Player.handleKey(k)) { e.preventDefault(); return; }
+    if (!Dialog.open && Player.el && Screens.top() && Screens.top().el === Player.el && Player.handleKey(k)) { e.preventDefault(); return; }
 
     var t = e.target;
     var inInput = t && t.tagName === 'INPUT';
@@ -2958,13 +3138,17 @@
     registerTvKeys();
 
     var active = Profiles.get(Store.get('active'));
-    if (active) activateProfile(active);
+    if (active) activateProfile(active, false, true);
     else showProfiles();
     Cloud.start();
+    StillWatching.start();
+    var reloaded = false;
+    try { reloaded = sessionStorage.getItem('lumio.reloaded'); sessionStorage.removeItem('lumio.reloaded'); } catch (e) {}
+    if (reloaded) setTimeout(function () { toast(T('Daten neu geladen')); }, 600);
   }
 
   // Für automatische Tests von außen erreichbar
-  window.LumioDebug = { parseM3U: parseM3U, parseXtreamLink: parseXtreamLink, normalizeServer: normalizeServer, Nav: Nav, Screens: Screens };
+  window.LumioDebug = { parseM3U: parseM3U, parseXtreamLink: parseXtreamLink, normalizeServer: normalizeServer, Nav: Nav, Screens: Screens, StillWatching: StillWatching };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
