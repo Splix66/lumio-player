@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Lumio Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.7.4',
+    version: '1.7.5',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     hlsCdn: 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js',
     requestTimeout: 30000,
@@ -794,6 +794,10 @@
         if (Player.el && !Player.mini) toast(T('Playlist „{0}“ wurde geändert – gilt nach dem nächsten Start.', cur.name), 5000);
         else { toast(T('Playlist „{0}“ wurde geändert.', cur.name), 2000); reloadApp(); }
       }
+      else if (top && top.name === 'profiles' && !App.profile && added.length) {
+        // Erste Playlist kommt von der Webseite, während der QR-Code angezeigt wird: direkt öffnen
+        activateProfile(added[0]);
+      }
       else if (top && top.name === 'profiles') showProfiles();
       return { changed: true, added: added, removed: removed, edited: edited };
     },
@@ -1247,6 +1251,10 @@
       }
       var list = this.candidates();
       if (!cur || list.indexOf(cur) < 0) { if (list[0]) this.focus(list[0]); return; }
+      // Links/Rechts im Inhalt springt nie in die Menüleiste oben (dorthin nur mit Hoch)
+      if ((dir === 'left' || dir === 'right') && cur.closest && !cur.closest('.topnav')) {
+        list = list.filter(function (el) { return !(el.closest && el.closest('.topnav')); });
+      }
       var hit = this.pick(cur, list, dir);
       if (hit) this.focus(hit.el);
       return !!hit;
