@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Lumio Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.5.5',
+    version: '1.6.0',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     hlsCdn: 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js',
     requestTimeout: 30000,
@@ -2774,6 +2774,21 @@
         h('p', { class: 'hint', text: T('Wenn Sender nicht starten, probiere das andere Format. HLS funktioniert auf den meisten Geräten am besten.') })]);
     }
 
+    var engineRow = null;
+    if (Platform.android) {
+      var eSeg = h('div', { class: 'seg' }), eOpts = [['auto', T('Android-Player')], ['hlsjs', T('Lumio-Player')]];
+      if (NativePlayer.available()) eOpts.unshift(['native', T('TV-Player')]);
+      var eBtns = eOpts.map(function (o) {
+        var b = h('button', { class: 'btn f', onclick: function () { Settings.set('engine', o[0]); paintEngine(); toast(T('Wiedergabe: {0}', o[1])); } }, o[1]);
+        eSeg.appendChild(b);
+        return [o[0], b];
+      });
+      var paintEngine = function () { var v = NativePlayer.engine(); eBtns.forEach(function (x) { x[1].classList.toggle('is-on', x[0] === v); }); };
+      paintEngine();
+      engineRow = panel('play', T('Wiedergabe'), [eSeg,
+        h('p', { class: 'hint', text: T('Hängen Sender oder Filme, probiere einen anderen Player. Der TV-Player ist für Android-Boxen gemacht.') })]);
+    }
+
     var idleSeg = h('div', { class: 'seg' });
     var idleBtns = [[0, T('Aus')], [2, T('{0} Std.', 2)], [3, T('{0} Std.', 3)], [4, T('{0} Std.', 4)]].map(function (o) {
       var b = h('button', { class: 'btn f', onclick: function () { Settings.set('idleHours', o[0]); paintIdle(); } }, o[1]);
@@ -2796,6 +2811,7 @@
           h('p', { class: 'hint', text: T('Deutsch ist voreingestellt. Drücke auf die Sprache, um sie zu ändern.') })]),
         h('div', { class: 'panel wide' }, remotePanel()),
         fmtRow,
+        engineRow,
         panel('play', T('Schaust du noch?'), [idleSeg,
           h('p', { class: 'hint', text: T('Wie bei Netflix: Wurde so lange keine Taste gedrückt, fragt die App nach. Ohne Antwort stoppt die Wiedergabe nach einer Minute – das hält deinen Zugang frei.') })]),
         panel('history', T('Verlauf'), [
@@ -3006,8 +3022,76 @@
   }
   function isHlsUrl(u) { return /\.m3u8(\?|$)/i.test(u) || /\/hls\//i.test(u) || /\.ism\/\.m3u8/i.test(u); }
 
+  /* ==========================================================
+     TV-Player (nur Android-App): eigener Android-Videoplayer (ExoPlayer)
+     Spielt Streams direkt über Android ab – stabiler auf schwachen Android-Boxen als der Browser-Player.
+     ========================================================== */
+  var NativePlayer = {
+    failed: false,
+    plugin: function () {
+      var C = window.Capacitor;
+      if (!C || !Platform.capacitor || !Platform.android) return null;
+      var heads = C.PluginHeaders;
+      if (heads && !some(heads, function (x) { return x.name === 'NativePlayer'; })) return null;   // ältere App-Version ohne TV-Player
+      try { return C.Plugins && C.Plugins.NativePlayer ? C.Plugins.NativePlayer : (C.registerPlugin ? C.registerPlugin('NativePlayer') : null); } catch (e) { return null; }
+    },
+    available: function () { return !this.failed && !!this.plugin(); },
+    /* Gewählte Wiedergabe: 'native' (TV-Player), 'auto' (Android-Player im Browser), 'hlsjs' (Lumio-Player).
+       Auf Android-Boxen ist der TV-Player voreingestellt. */
+    engine: function () { var e = Settings.get('engine'); return e || (Platform.androidTV && this.available() ? 'native' : 'auto'); },
+    use: function (item) { return item && item.kind !== 'series' && this.engine() === 'native' && this.available(); },
+    play: function (item, ctx) {
+      var self = this, live = item.kind === 'live';
+      var list = ctx && ctx.list && ctx.list.length ? ctx.list : [item];
+      var idx = ctx && ctx.index >= 0 && list[ctx.index] === item ? ctx.index : list.indexOf(item);
+      if (idx < 0 || (!live && item.kind !== 'episode')) { list = [item]; idx = 0; }
+      if (list.length > 1500) { var st = Math.max(0, Math.min(idx - 750, list.length - 1500)); list = list.slice(st, st + 1500); idx -= st; }
+      var items = list.map(function (it) {
+        var s = App.provider.streamUrl(it);
+        var title = it.kind === 'episode' ? (it.seriesName ? it.seriesName + ' · ' : '') + 'S' + it.season + ' E' + it.num + ' – ' + it.name
+          : (live && it.num ? it.num + '   ' : '') + it.name;
+        return { url: s.url, alt: s.alt || '', title: title };
+      });
+      var r = !live ? Resume.get(item) : null;
+      var startMs = r && !(ctx && ctx.fromStart) ? Math.round(r.t * 1000) : 0;
+      if (ctx) ctx.fromStart = false;
+      if (live) Recent.push(item);
+      Last.set(item);
+      return self.plugin().play({
+        items: items, index: idx, startMs: startMs, live: live,
+        txtReconnect: T('Verbindung wird wiederhergestellt …'),
+        txtFailed: T('Wiedergabe nicht möglich. Mit „Zurück“ schließen.')
+      }).then(function (res) {
+        res = res || {};
+        var i = typeof res.index === 'number' ? res.index : idx, cur = list[i] || item;
+        if (live) { Recent.push(cur); Last.set(cur); markPlaying(null); }
+        else {
+          for (var k = idx; k < i; k++) Seen.add(list[k]);            // automatisch weitergespielte Folgen
+          var t = (res.positionMs || 0) / 1000, d = (res.durationMs || 0) / 1000;
+          if (res.ended) { Resume.set(cur, 0, 0); Seen.add(cur); }
+          else if (d > 0) Resume.set(cur, t, d);
+          Last.set(cur);
+        }
+        // „Weiterschauen“, Häkchen und Knöpfe auffrischen
+        var top = Screens.top();
+        if (top && top.onShow) top.onShow();
+        var v = Shell.view && Shell.view.firstChild;
+        if (v && v._refresh && (!top || top.name === 'shell')) v._refresh();
+      });
+    }
+  };
+
   function playItem(item, ctx) {
     ctx = ctx || { list: [item], index: 0 };
+    if (NativePlayer.use(item)) {
+      if (Player.el) Player.close();
+      NativePlayer.play(item, ctx).catch(function () {
+        // TV-Player fehlt oder startet nicht: für diese Sitzung den eingebauten Player nehmen
+        NativePlayer.failed = true;
+        Player.open(item, ctx);
+      });
+      return;
+    }
     if (Player.mini) {
       // Mini-Player läuft: anderer Sender = Vorschau wechseln, derselbe Sender = Vollbild
       if (item.kind === 'live' && Player.item && Player.item.kind === 'live') {
@@ -3504,9 +3588,16 @@
       }
       // Android: eingebauter Android-Player oder der Lumio-eigene Player (hls.js) – je nach Gerät läuft einer stabiler
       if (Platform.android) {
-        var en = Settings.get('engine') === 'hlsjs' ? 'hlsjs' : 'auto';
-        sections.push([T('Wiedergabe'), [['auto', T('Android-Player')], ['hlsjs', T('Lumio-Player')]].map(function (f) {
-          return { label: f[1], on: en === f[0], pick: function () { if (en === f[0]) return; Settings.set('engine', f[0]); self.forceHlsJs = false; self.load(self.item); } };
+        var en = NativePlayer.engine();
+        var opts = [['auto', T('Android-Player')], ['hlsjs', T('Lumio-Player')]];
+        if (NativePlayer.available()) opts.unshift(['native', T('TV-Player')]);
+        sections.push([T('Wiedergabe'), opts.map(function (f) {
+          return { label: f[1], on: en === f[0], pick: function () {
+            if (en === f[0]) return;
+            Settings.set('engine', f[0]); self.forceHlsJs = false;
+            if (f[0] === 'native') { var it = self.item, c = self.ctx; self.close(); setTimeout(function () { playItem(it, c); }, 60); }
+            else self.load(self.item);
+          } };
         })]);
       }
       self.openPanel(sections);

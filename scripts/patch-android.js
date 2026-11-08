@@ -56,4 +56,39 @@ const drawable = path.join(base, 'android', 'app', 'src', 'main', 'res', 'drawab
 fs.mkdirSync(drawable, { recursive: true });
 fs.copyFileSync(path.join(base, 'assets', 'banner.png'), path.join(drawable, 'banner.png'));
 
-console.log('Android fuer TV und Handy vorbereitet (Leanback, Banner, http-Streams, dunkler Start)');
+// 5) TV-Player (ExoPlayer): Java-Dateien, Bildschirm im Manifest und Bibliotheken
+const javaDir = path.join(base, 'android', 'app', 'src', 'main', 'java', 'de', 'lumio', 'player');
+fs.mkdirSync(javaDir, { recursive: true });
+const nativeSrc = path.join(base, 'platforms', 'android', 'java');
+fs.readdirSync(nativeSrc).filter(f => f.endsWith('.java')).forEach(f => {
+  fs.copyFileSync(path.join(nativeSrc, f), path.join(javaDir, f));
+});
+
+let m2 = fs.readFileSync(manifestPath, 'utf8');
+if (!m2.includes('.PlayerActivity')) {
+  m2 = m2.replace(/<\/application>/, [
+    '    <activity',
+    '            android:name=".PlayerActivity"',
+    '            android:exported="false"',
+    '            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboard|keyboardHidden|navigation|uiMode"',
+    '            android:screenOrientation="sensorLandscape"',
+    '            android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" />',
+    '    </application>'
+  ].join('\n'));
+  fs.writeFileSync(manifestPath, m2);
+}
+
+const gradlePath = path.join(base, 'android', 'app', 'build.gradle');
+let g = fs.readFileSync(gradlePath, 'utf8');
+if (!g.includes('media3-exoplayer')) {
+  g = g.replace(/\ndependencies\s*\{/, [
+    '',
+    'dependencies {',
+    '    implementation "androidx.media3:media3-exoplayer:1.4.1"',
+    '    implementation "androidx.media3:media3-exoplayer-hls:1.4.1"',
+    '    implementation "androidx.media3:media3-ui:1.4.1"'
+  ].join('\n'));
+  fs.writeFileSync(gradlePath, g);
+}
+
+console.log('Android fuer TV und Handy vorbereitet (Leanback, Banner, http-Streams, dunkler Start, TV-Player)');
