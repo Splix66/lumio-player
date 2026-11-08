@@ -8,9 +8,9 @@
   <title>Lumio Player – Playlist hinzufügen</title>
   <style>
     :root {
-      --bg: #0a0c11; --surface: #171b24; --surface-2: #1f2430; --surface-3: #2a3040;
-      --line: rgba(255, 255, 255, 0.08); --text: #f3f5f9; --muted: #98a1b3; --dim: #6b7487;
-      --accent: #ff7849; --accent-2: #ffb347; --accent-ink: #1a0d06; --ok: #3ddc97; --bad: #ff8a95;
+      --bg: #0b0a1a; --surface: #171430; --surface-2: #211c40; --surface-3: #2d2753;
+      --line: rgba(196, 181, 253, 0.12); --text: #f5f3ff; --muted: #a6a1c8; --dim: #736d9a;
+      --accent: #8b5cf6; --accent-2: #c084fc; --accent-ink: #ffffff; --ok: #34d399; --bad: #ff8aa0;
       --mono: ui-monospace, Menlo, Consolas, "DejaVu Sans Mono", monospace;
       color-scheme: dark;
     }
@@ -19,7 +19,7 @@
     body {
       font: 16px/1.45 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       -webkit-font-smoothing: antialiased; min-height: 100vh;
-      background: radial-gradient(900px 500px at 50% -10%, rgba(255,120,73,.16), transparent 60%), var(--bg);
+      background: radial-gradient(900px 520px at 70% -10%, rgba(139,92,246,.28), transparent 62%), var(--bg);
       padding: max(24px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 48px max(16px, env(safe-area-inset-left));
     }
     main { max-width: 34rem; margin: 0 auto; display: flex; flex-direction: column; gap: 1.2rem; }
@@ -74,7 +74,7 @@
 <body>
   <main>
     <div class="brand">
-      <span class="mark"><svg viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="lumioPlay" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff7849"/><stop offset="1" stop-color="#ff3d8b"/></linearGradient></defs><path d="M14 20v44a20 20 0 0 0 20 20h44" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round"/><path class="play" d="M38 23.6c0-3.6 3.9-5.8 7-4l35.4 22.2c3 1.8 3 6.2 0 8L45 72c-3.1 1.8-7-.4-7-4z"/><circle class="dot" cx="84" cy="22" r="6"/></svg></span>
+      <span class="mark"><svg viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="lumioPlay" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c084fc"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs><path d="M14 20v44a20 20 0 0 0 20 20h44" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round"/><path class="play" d="M38 23.6c0-3.6 3.9-5.8 7-4l35.4 22.2c3 1.8 3 6.2 0 8L45 72c-3.1 1.8-7-.4-7-4z"/><circle class="dot" cx="84" cy="22" r="6"/></svg></span>
       Lumio Player
     </div>
     <div>
