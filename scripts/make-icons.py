@@ -109,7 +109,7 @@ fg.save(p('assets', 'icon-foreground.png'))
 gradient(1024, 1024, BG_TOP, BG_BOTTOM).save(p('assets', 'icon-background.png'))
 
 # Startbildschirm
-sp = Image.new('RGBA', (2732, 2732), (10, 12, 17, 255))
+sp = Image.new('RGBA', (2732, 2732), (11, 10, 26, 255))
 sm = mark(520)
 sp.alpha_composite(sm, ((2732 - 520) // 2, (2732 - 520) // 2))
 sp.convert('RGB').save(p('assets', 'splash.png'))

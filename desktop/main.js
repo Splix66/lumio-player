@@ -9,7 +9,7 @@ function createWindow() {
     height: 860,
     minWidth: 800,
     minHeight: 500,
-    backgroundColor: '#0a0c11',
+    backgroundColor: '#0b0a1a',
     title: 'Lumio Player',
     autoHideMenuBar: true,
     webPreferences: {

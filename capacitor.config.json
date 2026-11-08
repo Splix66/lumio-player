@@ -2,7 +2,7 @@
   "appId": "de.lumio.player",
   "appName": "Lumio Player",
   "webDir": "www",
-  "backgroundColor": "#0a0c11",
+  "backgroundColor": "#0b0a1a",
   "server": {
     "androidScheme": "http",
     "cleartext": true
@@ -12,7 +12,7 @@
   },
   "ios": {
     "contentInset": "never",
-    "backgroundColor": "#0a0c11"
+    "backgroundColor": "#0b0a1a"
   },
   "plugins": {
     "CapacitorHttp": {

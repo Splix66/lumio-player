@@ -40,9 +40,20 @@ if (!m.includes('LEANBACK_LAUNCHER')) {
 
 fs.writeFileSync(manifestPath, m);
 
+// 4) Startbildschirm dunkel statt weiß (Android 12 und neuer)
+const stylesPath = path.join(base, 'android', 'app', 'src', 'main', 'res', 'values', 'styles.xml');
+if (fs.existsSync(stylesPath)) {
+  let st = fs.readFileSync(stylesPath, 'utf8');
+  if (!st.includes('windowSplashScreenBackground')) {
+    st = st.replace(/(<style name="AppTheme\.NoActionBarLaunch"[^>]*>)/,
+      '$1\n        <item name="windowSplashScreenBackground">#0b0a1a</item>\n        <item name="android:windowBackground">#0b0a1a</item>');
+    fs.writeFileSync(stylesPath, st);
+  }
+}
+
 // Banner-Bild kopieren
 const drawable = path.join(base, 'android', 'app', 'src', 'main', 'res', 'drawable');
 fs.mkdirSync(drawable, { recursive: true });
 fs.copyFileSync(path.join(base, 'assets', 'banner.png'), path.join(drawable, 'banner.png'));
 
-console.log('✓ Android für TV & Handy vorbereitet (Leanback, Banner, http-Streams)');
+console.log('Android fuer TV und Handy vorbereitet (Leanback, Banner, http-Streams, dunkler Start)');

@@ -78,58 +78,56 @@
       Lumio Player
     </div>
     <div>
-      <h1>Playlist zu deinem Gerät hinzufügen</h1>
-      <p class="lead">MAC-Adresse und Key stehen in der App ganz oben. Wenn du den QR-Code gescannt hast, sind sie schon eingetragen.</p>
+      <h1 data-t>Playlist zu deinem Gerät hinzufügen</h1>
+      <p class="lead" data-t>MAC-Adresse und Key findest du in der App ganz unten oder auf dem Startbildschirm. Wenn du den QR-Code gescannt oder angetippt hast, sind sie schon eingetragen.</p>
     </div>
 
     <form class="card" id="loginForm" novalidate>
-      <h2><span class="step">1</span>Gerät verbinden</h2>
+      <h2><span class="step">1</span><span data-t>Gerät verbinden</span></h2>
       <div class="row">
-        <label>MAC-Adresse<input class="mono" id="mac" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="AA:BB:CC:DD:EE:FF"></label>
+        <label><span data-t>MAC-Adresse</span><input class="mono" id="mac" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="AA:BB:CC:DD:EE:FF"></label>
         <label>Key<input class="mono" id="key" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABC123" maxlength="12"></label>
       </div>
-      <button class="primary" id="loginBtn" type="submit">Verbinden</button>
+      <button class="primary" id="loginBtn" type="submit" data-t>Verbinden</button>
       <p class="msg" id="loginMsg" role="status"></p>
     </form>
 
     <section class="card" id="deviceCard" hidden>
       <div class="device">
-        <span><span class="dot"></span>Gerät <b id="devMac"></b></span>
-        <button type="button" id="switchBtn">Anderes Gerät</button>
+        <span><span class="dot"></span><span data-t>Gerät</span> <b id="devMac"></b></span>
+        <button type="button" id="switchBtn" data-t>Anderes Gerät</button>
       </div>
-      <h2>Playlists auf diesem Gerät</h2>
+      <h2 data-t>Playlists auf diesem Gerät</h2>
       <ul id="list"></ul>
-      <p class="empty" id="empty">Noch keine Playlist hinzugefügt.</p>
+      <p class="empty" id="empty" data-t>Noch keine Playlist hinzugefügt.</p>
     </section>
 
     <form class="card" id="addForm" novalidate hidden>
-      <h2><span class="step">2</span>Playlist hinzufügen</h2>
+      <h2><span class="step">2</span><span data-t>Playlist hinzufügen</span></h2>
       <div class="tabs" role="tablist">
-        <button type="button" role="tab" id="tabM3u" aria-selected="true">M3U-Link</button>
+        <button type="button" role="tab" id="tabM3u" aria-selected="true" data-t>M3U-Link</button>
         <button type="button" role="tab" id="tabXt" aria-selected="false">Xtream Codes</button>
       </div>
-      <label>Name<input id="name" maxlength="60" placeholder="z. B. Wohnzimmer" autocomplete="off"></label>
+      <label><span data-t>Name</span><input id="name" maxlength="60" data-tp placeholder="z. B. Wohnzimmer" autocomplete="off"></label>
       <div id="m3uFields">
-        <label>M3U-Link<input id="url" type="url" inputmode="url" placeholder="http://…/playlist.m3u" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+        <label><span data-t>M3U-Link</span><input id="url" type="url" inputmode="url" placeholder="http://…/playlist.m3u" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
       </div>
       <div id="xtFields" hidden>
         <div style="display:flex;flex-direction:column;gap:.9rem">
-          <label>Server-Adresse<input id="server" type="url" inputmode="url" placeholder="http://beispiel.de:8080" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+          <label><span data-t>Server-Adresse</span><input id="server" type="url" inputmode="url" placeholder="http://beispiel.de:8080" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
           <div class="row">
-            <label>Benutzername<input id="user" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
-            <label>Passwort<input id="pass" type="password" autocomplete="off"></label>
+            <label><span data-t>Benutzername</span><input id="user" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+            <label><span data-t>Passwort</span><input id="pass" type="password" autocomplete="off"></label>
           </div>
         </div>
       </div>
-      <button class="primary" id="addBtn" type="submit">Zum Gerät senden</button>
+      <button class="primary" id="addBtn" type="submit" data-t>Zum Gerät senden</button>
       <p class="msg" id="addMsg" role="status"></p>
-      <p class="hint">Die Playlist erscheint innerhalb von etwa 30 Sekunden in der App.</p>
+      <p class="hint" data-t>Die Playlist erscheint innerhalb von etwa 30 Sekunden in der App.</p>
     </form>
 
-    <p class="hint">Lumio Player enthält keine Sender oder Inhalte. Nutze nur Zugänge, für die du eine Berechtigung hast.
-      Deine Angaben werden verschlüsselt übertragen und nur gespeichert, damit dein Gerät sie abrufen kann.
-      Löschst du eine Playlist hier, wird sie auch vom Gerät entfernt.</p>
-    <p class="hint"><a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></p>
+    <p class="hint" data-t>Lumio Player enthält keine Sender oder Inhalte. Nutze nur Zugänge, für die du eine Berechtigung hast. Deine Angaben werden verschlüsselt übertragen und nur gespeichert, damit dein Gerät sie abrufen kann. Löschst du eine Playlist hier, wird sie auch vom Gerät entfernt.</p>
+    <p class="hint"><a href="impressum.html" data-t>Impressum</a> · <a href="datenschutz.html" data-t>Datenschutz</a></p>
   </main>
 
   <script>
@@ -138,6 +136,68 @@
       var API = 'https://oofzhklrbrpxjoicwbsf.supabase.co/rest/v1/rpc/';
       var KEY = 'sb_publishable_cx6n8buREFat_yE7kKW6FA_SnMsOQX7';
       var $ = function (id) { return document.getElementById(id); };
+
+      /* ---------- Sprachen (Deutsch, Englisch, Türkisch) ---------- */
+      var I18N = {
+        en: {
+          'Lumio Player – Playlist hinzufügen': 'Lumio Player – Add playlist',
+          'Playlist zu deinem Gerät hinzufügen': 'Add a playlist to your device',
+          'MAC-Adresse und Key findest du in der App ganz unten oder auf dem Startbildschirm. Wenn du den QR-Code gescannt oder angetippt hast, sind sie schon eingetragen.': 'You find the MAC address and key at the very bottom of the app or on its start screen. If you scanned or tapped the QR code, they are already filled in.',
+          'Gerät verbinden': 'Connect device', 'MAC-Adresse': 'MAC address', 'Verbinden': 'Connect', 'Gerät': 'Device', 'Anderes Gerät': 'Other device',
+          'Playlists auf diesem Gerät': 'Playlists on this device', 'Noch keine Playlist hinzugefügt.': 'No playlist added yet.',
+          'Playlist hinzufügen': 'Add playlist', 'M3U-Link': 'M3U link', 'Name': 'Name', 'z. B. Wohnzimmer': 'e.g. Living room',
+          'Server-Adresse': 'Server address', 'Benutzername': 'Username', 'Passwort': 'Password', 'Zum Gerät senden': 'Send to device',
+          'Die Playlist erscheint innerhalb von etwa 30 Sekunden in der App.': 'The playlist appears in the app within about 30 seconds.',
+          'Lumio Player enthält keine Sender oder Inhalte. Nutze nur Zugänge, für die du eine Berechtigung hast. Deine Angaben werden verschlüsselt übertragen und nur gespeichert, damit dein Gerät sie abrufen kann. Löschst du eine Playlist hier, wird sie auch vom Gerät entfernt.': 'Lumio Player contains no channels or content. Only use logins you are entitled to. Your details are transmitted encrypted and stored only so your device can fetch them. If you delete a playlist here, it is also removed from the device.',
+          'Impressum': 'Legal notice', 'Datenschutz': 'Privacy',
+          'Keine Verbindung. Bitte Internet prüfen und erneut versuchen.': 'No connection. Please check your internet and try again.',
+          'Löschen': 'Delete', 'Wirklich löschen?': 'Really delete?', 'Verbinde …': 'Connecting …', 'Sende …': 'Sending …',
+          'Bitte eine vollständige MAC-Adresse eingeben (12 Zeichen).': 'Please enter a complete MAC address (12 characters).',
+          'Bitte den Key aus der App eingeben.': 'Please enter the key from the app.',
+          'Als Xtream-Zugang erkannt und gesendet.': 'Detected as Xtream login and sent.', 'Gesendet.': 'Sent.',
+          'Die Playlist erscheint gleich in der App.': 'The playlist will appear in the app shortly.', 'Meine Playlist': 'My playlist',
+          'Gerät nicht gefunden. Öffne die App einmal mit Internetverbindung.': 'Device not found. Open the app once with an internet connection.',
+          'Zu viele Fehlversuche. Bitte in einer Stunde erneut versuchen.': 'Too many failed attempts. Please try again in an hour.',
+          'MAC-Adresse oder Geräteschlüssel falsch.': 'Wrong MAC address or device key.',
+          'Bitte Server, Benutzername und Passwort eingeben.': 'Please enter server, username and password.',
+          'Bitte einen gültigen M3U-Link (http:// oder https://) eingeben.': 'Please enter a valid M3U link (http:// or https://).',
+          'Maximal 20 Playlists pro Gerät.': 'A maximum of 20 playlists per device.', 'Unbekannter Playlist-Typ.': 'Unknown playlist type.', 'Ungültige Geräte-Daten.': 'Invalid device data.'
+        },
+        tr: {
+          'Lumio Player – Playlist hinzufügen': 'Lumio Player – Liste ekle',
+          'Playlist zu deinem Gerät hinzufügen': 'Cihazına liste ekle',
+          'MAC-Adresse und Key findest du in der App ganz unten oder auf dem Startbildschirm. Wenn du den QR-Code gescannt oder angetippt hast, sind sie schon eingetragen.': 'MAC adresini ve anahtarı uygulamanın en altında veya başlangıç ekranında bulursun. QR kodunu taradıysan veya dokunduysan zaten girilmiş olur.',
+          'Gerät verbinden': 'Cihazı bağla', 'MAC-Adresse': 'MAC adresi', 'Verbinden': 'Bağlan', 'Gerät': 'Cihaz', 'Anderes Gerät': 'Başka cihaz',
+          'Playlists auf diesem Gerät': 'Bu cihazdaki listeler', 'Noch keine Playlist hinzugefügt.': 'Henüz liste eklenmedi.',
+          'Playlist hinzufügen': 'Liste ekle', 'M3U-Link': 'M3U bağlantısı', 'Name': 'Ad', 'z. B. Wohnzimmer': 'örn. Oturma odası',
+          'Server-Adresse': 'Sunucu adresi', 'Benutzername': 'Kullanıcı adı', 'Passwort': 'Şifre', 'Zum Gerät senden': 'Cihaza gönder',
+          'Die Playlist erscheint innerhalb von etwa 30 Sekunden in der App.': 'Liste yaklaşık 30 saniye içinde uygulamada görünür.',
+          'Lumio Player enthält keine Sender oder Inhalte. Nutze nur Zugänge, für die du eine Berechtigung hast. Deine Angaben werden verschlüsselt übertragen und nur gespeichert, damit dein Gerät sie abrufen kann. Löschst du eine Playlist hier, wird sie auch vom Gerät entfernt.': 'Lumio Player kanal veya içerik içermez. Yalnızca izin sahibi olduğun erişimleri kullan. Bilgilerin şifreli iletilir ve yalnızca cihazının alabilmesi için saklanır. Burada bir listeyi silersen cihazdan da kaldırılır.',
+          'Impressum': 'Künye', 'Datenschutz': 'Gizlilik',
+          'Keine Verbindung. Bitte Internet prüfen und erneut versuchen.': 'Bağlantı yok. Lütfen internetini kontrol edip tekrar dene.',
+          'Löschen': 'Sil', 'Wirklich löschen?': 'Gerçekten silinsin mi?', 'Verbinde …': 'Bağlanıyor …', 'Sende …': 'Gönderiliyor …',
+          'Bitte eine vollständige MAC-Adresse eingeben (12 Zeichen).': 'Lütfen tam bir MAC adresi gir (12 karakter).',
+          'Bitte den Key aus der App eingeben.': 'Lütfen uygulamadaki anahtarı gir.',
+          'Als Xtream-Zugang erkannt und gesendet.': 'Xtream girişi olarak tanındı ve gönderildi.', 'Gesendet.': 'Gönderildi.',
+          'Die Playlist erscheint gleich in der App.': 'Liste birazdan uygulamada görünecek.', 'Meine Playlist': 'Listem',
+          'Gerät nicht gefunden. Öffne die App einmal mit Internetverbindung.': 'Cihaz bulunamadı. Uygulamayı bir kez internet bağlantısıyla aç.',
+          'Zu viele Fehlversuche. Bitte in einer Stunde erneut versuchen.': 'Çok fazla hatalı deneme. Lütfen bir saat sonra tekrar dene.',
+          'MAC-Adresse oder Geräteschlüssel falsch.': 'MAC adresi veya cihaz anahtarı yanlış.',
+          'Bitte Server, Benutzername und Passwort eingeben.': 'Lütfen sunucu, kullanıcı adı ve şifreyi gir.',
+          'Bitte einen gültigen M3U-Link (http:// oder https://) eingeben.': 'Lütfen geçerli bir M3U bağlantısı gir (http:// veya https://).',
+          'Maximal 20 Playlists pro Gerät.': 'Cihaz başına en fazla 20 liste.', 'Unbekannter Playlist-Typ.': 'Bilinmeyen liste türü.', 'Ungültige Geräte-Daten.': 'Geçersiz cihaz bilgileri.'
+        }
+      };
+      var qs0 = new URLSearchParams(location.search);
+      var lang = (qs0.get('lang') || navigator.language || 'de').slice(0, 2).toLowerCase();
+      if (lang !== 'de' && !I18N[lang]) lang = 'en';
+      try { if (qs0.get('lang')) sessionStorage.setItem('lumio.lang', lang); else lang = sessionStorage.getItem('lumio.lang') || lang; } catch (e) {}
+      if (lang !== 'de' && !I18N[lang]) lang = 'de';
+      function t(s) { var d = I18N[lang]; return d && d[s] != null ? d[s] : s; }
+      document.documentElement.setAttribute('lang', lang);
+      document.title = t(document.title);
+      Array.prototype.forEach.call(document.querySelectorAll('[data-t]'), function (el) { el.textContent = t(el.textContent.trim()); });
+      Array.prototype.forEach.call(document.querySelectorAll('[data-tp]'), function (el) { el.placeholder = t(el.placeholder); });
       var device = null, mode = 'm3u';
 
       function rpc(fn, body) {
@@ -146,10 +206,10 @@
           headers: { apikey: KEY, 'Content-Type': 'application/json' },
           body: JSON.stringify(body)
         }).then(function (r) { return r.json(); }).catch(function () {
-          return { ok: false, error: 'Keine Verbindung. Bitte Internet prüfen und erneut versuchen.' };
+          return { ok: false, error: t('Keine Verbindung. Bitte Internet prüfen und erneut versuchen.') };
         });
       }
-      function say(el, text, kind) { el.textContent = text || ''; el.className = 'msg' + (kind ? ' ' + kind : ''); }
+      function say(el, text, kind) { el.textContent = t(text || ''); el.className = 'msg' + (kind ? ' ' + kind : ''); }
       function normMac(v) {
         var hex = String(v || '').toUpperCase().replace(/[^0-9A-F]/g, '');
         if (hex.length !== 12) return null;
@@ -175,9 +235,9 @@
           s.textContent = it.type === 'xtream' ? 'Xtream · ' + it.server + ' · ' + it.username : 'M3U · ' + it.url;
           t.appendChild(b); t.appendChild(s);
           var del = document.createElement('button');
-          del.type = 'button'; del.textContent = 'Löschen';
+          del.type = 'button'; del.textContent = t('Löschen');
           del.addEventListener('click', function () {
-            if (del.dataset.confirm !== '1') { del.dataset.confirm = '1'; del.textContent = 'Wirklich löschen?'; return; }
+            if (del.dataset.confirm !== '1') { del.dataset.confirm = '1'; del.textContent = t('Wirklich löschen?'); return; }
             del.disabled = true;
             rpc('delete_playlist', { p_mac: device.mac, p_key: device.key, p_id: it.id }).then(function (r) {
               if (!r.ok) { say($('addMsg'), r.error, 'bad'); del.disabled = false; return; }
@@ -197,9 +257,9 @@
 
       function connect(mac, key) {
         var btn = $('loginBtn');
-        btn.disabled = true; btn.textContent = 'Verbinde …';
+        btn.disabled = true; btn.textContent = t('Verbinde …');
         rpc('list_playlists', { p_mac: mac, p_key: key }).then(function (r) {
-          btn.disabled = false; btn.textContent = 'Verbinden';
+          btn.disabled = false; btn.textContent = t('Verbinden');
           if (!r.ok) { say($('loginMsg'), r.error, 'bad'); return; }
           device = { mac: mac, key: key };
           try { sessionStorage.setItem('lumio.device', JSON.stringify(device)); } catch (e) {}
@@ -254,20 +314,20 @@
           body.p_type = 'xtream'; body.p_server = srv.replace(/\/+$/, '');
           body.p_username = $('user').value.trim(); body.p_password = $('pass').value;
         }
-        if (!body.p_name) body.p_name = body.p_type === 'xtream' ? (body.p_username || 'Xtream') : 'Meine Playlist';
+        if (!body.p_name) body.p_name = body.p_type === 'xtream' ? (body.p_username || 'Xtream') : t('Meine Playlist');
         var btn = $('addBtn');
-        btn.disabled = true; btn.textContent = 'Sende …';
+        btn.disabled = true; btn.textContent = t('Sende …');
         rpc('add_playlist', body).then(function (r) {
-          btn.disabled = false; btn.textContent = 'Zum Gerät senden';
+          btn.disabled = false; btn.textContent = t('Zum Gerät senden');
           if (!r.ok) { say($('addMsg'), r.error, 'bad'); return; }
-          say($('addMsg'), (x && mode === 'm3u' ? 'Als Xtream-Zugang erkannt und gesendet.' : 'Gesendet.') + ' Die Playlist erscheint gleich in der App.', 'ok');
+          say($('addMsg'), t(x && mode === 'm3u' ? 'Als Xtream-Zugang erkannt und gesendet.' : 'Gesendet.') + ' ' + t('Die Playlist erscheint gleich in der App.'), 'ok');
           ['name', 'url', 'server', 'user', 'pass'].forEach(function (id) { $(id).value = ''; });
           refresh();
         });
       });
 
       // Werte aus dem QR-Code übernehmen
-      var q = new URLSearchParams(location.search);
+      var q = qs0;
       var qm = normMac(q.get('mac')), qk = (q.get('key') || '').toUpperCase();
       if (qm) $('mac').value = qm;
       if (qk) $('key').value = qk;
