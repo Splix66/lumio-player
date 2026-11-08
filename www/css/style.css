@@ -430,6 +430,21 @@ body.kbd .qs-item.f:focus, body.is-tv .qs-item.f:focus { background: var(--surfa
 /* Cover von Filmen und Serien */
 .poster { display: flex; flex-direction: column; border-radius: var(--radius); width: 100%; }
 .rail .poster { width: 11rem; }
+
+/* Top 10: große Platzziffer, das Cover schiebt sich leicht darüber */
+.rail-note { font-size: .8rem; font-weight: 600; color: var(--dim); margin-left: .8rem; letter-spacing: 0; }
+.mv-top .rail { margin-top: 1.6rem; }
+.t10 { display: flex; align-items: flex-end; border-radius: var(--radius); padding-left: .2rem; }
+.t10-n { font-size: 9rem; font-weight: 900; line-height: .74; letter-spacing: -.05em; color: var(--bg); -webkit-text-stroke: .16rem var(--k, var(--accent)); margin-right: -1.3rem; flex: none; user-select: none; }
+.t10-n.is-wide { letter-spacing: -.14em; margin-right: -1rem; }
+.t10 .art { position: relative; z-index: 1; display: block; flex: none; width: 9.5rem; height: 14.25rem; border-radius: var(--radius); overflow: hidden; background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line), -.7rem 0 1.4rem rgba(0, 0, 0, .55); transition: box-shadow .18s ease; }
+.t10 .art img, .t10 .art .ph { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
+.t10 .art .ph { display: flex; align-items: flex-end; padding: .8rem; font-weight: 800; font-size: .95rem; line-height: 1.15; color: rgba(255, 255, 255, .94); }
+@media (hover: hover) { .t10:hover { transform: translateY(-.2rem); } .t10:hover .art { box-shadow: inset 0 0 0 1.5px var(--accent-line), 0 .8rem 2rem var(--accent-soft); } }
+body.kbd .t10.f:focus, body.is-tv .t10.f:focus { box-shadow: none; transform: scale(1.05); }
+body.kbd .t10.f:focus .art, body.is-tv .t10.f:focus .art { box-shadow: 0 0 0 .2rem var(--accent-line), 0 .8rem 2.2rem var(--accent-soft); }
+body.kbd .t10.f:focus .t10-n, body.is-tv .t10.f:focus .t10-n { color: var(--k, var(--accent)); }
 .poster .art { aspect-ratio: 2 / 3; width: 100%; border-radius: var(--radius); overflow: hidden; background: var(--surface); position: relative; box-shadow: inset 0 0 0 1px var(--line); }
 @supports not (aspect-ratio: 2 / 3) { .poster .art { height: 0; padding-bottom: 150%; } }
 .poster .art img, .poster .art .ph { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
@@ -526,6 +541,11 @@ body.kbd .cat-back.f:focus, body.is-tv .cat-back.f:focus { position: sticky; z-i
 :root[data-theme="light"] .logo-box { background: var(--surface-2); }
 .logo-box img { max-width: 86%; max-height: 80%; object-fit: contain; }
 .logo-box .ph { font-weight: 800; color: var(--dim); font-size: .85rem; }
+/* Logo und Initialen liegen übereinander; die Initialen verschwinden erst, wenn das Logo da ist */
+.logo-box > img, .logo-box > .ph, .ct-logo > img, .ct-logo > .ph { grid-area: 1 / 1; }
+.logo-box > img, .ct-logo > img { opacity: 0; transition: opacity .2s ease; }
+.logo-box.has-logo > img, .ct-logo.has-logo > img { opacity: 1; }
+.logo-box.has-logo > .ph, .ct-logo.has-logo > .ph { visibility: hidden; }
 .chan .ch-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .chan .name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chan .now { font-size: .8rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: .12rem; }
@@ -944,6 +964,9 @@ body.has-mini .screen.modal { padding-right: calc(min(26rem, 46vw) + 3rem); }
   html:not(.tv) .cw { width: 18rem; height: 7rem; }
   html:not(.tv) .cw-title { font-size: 1.05rem; }
   html:not(.tv) .rail .poster, html:not(.tv) .sk.poster-sk { width: 8.2rem; }
+  html:not(.tv) .t10-n { font-size: 6.4rem; margin-right: -.9rem; }
+  html:not(.tv) .t10 .art { width: 7.2rem; height: 10.8rem; }
+  html:not(.tv) .rail-note { display: none; }
   html:not(.tv) .sk.poster-sk, html:not(.tv) .rail .more-card { height: 12.3rem; }
   html:not(.tv) .rail .more-card { width: 7rem; }
   html:not(.tv) .chan-tile { width: 8.8rem; }

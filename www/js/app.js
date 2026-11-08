@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Lumio Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.5.2',
+    version: '1.5.3',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     hlsCdn: 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js',
     requestTimeout: 30000,
@@ -86,6 +86,7 @@
     check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
     tracks: '<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M7 11h3M13 11h4M7 15h7M16 15h1"/>',
     fullscreen: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+    aspect: '<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M6.5 11.5V9h3M17.5 12.5V15h-3"/>',
     copy: '<rect x="8.5" y="8.5" width="12" height="12" rx="2"/><path d="M15.5 8.5V5.5a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h3"/>',
     globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/>',
     star: '<path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/>',
@@ -1353,25 +1354,34 @@
     if (!src) return null;
     // erst „lazy“ setzen, dann die Adresse – sonst laden manche Browser sofort alle Bilder
     var i = h('img', { class: cls || '', loading: 'lazy', decoding: 'async', alt: '' });
+    // ohne Herkunftsangabe laden: viele Logo-Server sperren fremde Apps/Webseiten („Hotlink-Schutz“)
+    i.setAttribute('referrerpolicy', 'no-referrer');
+    try { i.referrerPolicy = 'no-referrer'; } catch (e) {}
     i.src = src;
     i.onerror = function () { if (onFail) onFail(i); else i.style.display = 'none'; };
     return i;
   }
 
-  function logoBox(item) {
-    var box = h('span', { class: 'logo-box' });
-    var ph = h('span', { class: 'ph', text: initials(item.name) });
-    if (item.logo) {
-      box.appendChild(img(item.logo, '', function (i) { i.parentNode.replaceChild(ph, i); }));
-    } else box.appendChild(ph);
+  /* Senderlogo: die Initialen liegen immer darunter und verschwinden erst, wenn das Logo wirklich geladen ist.
+     So bleibt kein Feld leer – auch nicht bei langsamen Logo-Servern oder leeren Platzhalter-Bildern des Anbieters. */
+  function fillLogo(box, item) {
+    box.appendChild(h('span', { class: 'ph', text: initials(item.name) }));
+    if (!item.logo) return box;
+    var i = img(item.logo, '', function (x) { if (x.parentNode) x.parentNode.removeChild(x); });
+    i.onload = function () {
+      if (i.naturalWidth > 2 && i.naturalHeight > 2) box.classList.add('has-logo');
+      else if (i.parentNode) i.parentNode.removeChild(i);   // 1×1-Pixel = kein echtes Logo
+    };
+    box.appendChild(i);
     return box;
   }
+  function logoBox(item) { return fillLogo(h('span', { class: 'logo-box' }), item); }
 
   function posterArt(item, extra) {
     var art = h('span', { class: 'art' });
-    var ph = h('span', { class: 'ph', style: 'background:' + gradientFor(item.name), text: item.name });
-    if (item.logo) art.appendChild(img(item.logo, '', function (i) { i.parentNode.replaceChild(ph, i); }));
-    else art.appendChild(ph);
+    // Titelbild liegt über dem Platzhalter: lädt es langsam oder gar nicht, sieht man den Titel
+    art.appendChild(h('span', { class: 'ph', style: 'background:' + gradientFor(item.name), text: item.name }));
+    if (item.logo) art.appendChild(img(item.logo, '', function (i) { if (i.parentNode) i.parentNode.removeChild(i); }));
     if (extra) add(art, extra);
     return art;
   }
@@ -1421,10 +1431,7 @@
 
   /* Sender als Kachel (Startseite, Favoriten, Suche) */
   function chanTile(item, onClick) {
-    var box = h('span', { class: 'ct-logo' });
-    var ph = h('span', { class: 'ph', text: initials(item.name) });
-    if (item.logo) box.appendChild(img(item.logo, '', function (i) { if (i.parentNode) i.parentNode.replaceChild(ph, i); }));
-    else box.appendChild(ph);
+    var box = fillLogo(h('span', { class: 'ct-logo' }), item);
     box.appendChild(h('span', { class: 'ct-live', text: 'LIVE' }));
     return h('button', { class: 'chan-tile f', title: item.name, onclick: onClick }, box, h('span', { class: 'ct-name', text: item.name }));
   }
@@ -1506,6 +1513,27 @@
     Resume.recent().forEach(function (r) { var it = r.item; if (it.kind === 'episode' && it.seriesId && !out[it.seriesId]) out[it.seriesId] = 'S' + it.season + ' E' + it.num; });
     return out;
   }
+  /* Top 10 (wie bei Streaming-Diensten): große Platzziffer neben dem Cover */
+  function top10Card(it, n) {
+    return h('button', { class: 't10 f', title: it.name, 'aria-label': n + '. ' + it.name, onclick: function () { openItem(it); } },
+      h('span', { class: 't10-n' + (n > 9 ? ' is-wide' : ''), text: String(n) }), posterArt(it));
+  }
+  /* Gleicher Titel in mehreren Qualitäten (4K, HD …) zählt nur einmal */
+  function titleKey(s) { return norm(s).replace(/\b(4k|uhd|fhd|hd|sd|hevc|h265|multi|dual|dublaj|altyazili)\b/g, '').replace(/[^a-z0-9]/g, ''); }
+  /* Die 10 bestbewerteten Titel – bevorzugt unter den neuesten, damit die Liste aktuell bleibt.
+     Echte Abrufzahlen liefern IPTV-Anbieter nicht; Bewertungen von 9,8 und mehr sind meist Platzhalter und zählen nicht. */
+  function topTen(list, newestFirst) {
+    function best(pool) {
+      var seen = {};
+      return pool.filter(function (x) { var r = Number(x.rating); return r > 0 && r < 9.8; })
+        .sort(function (a, b) { return Number(b.rating) - Number(a.rating) || Number(b.added || 0) - Number(a.added || 0); })
+        .filter(function (x) { var k = titleKey(x.name); if (!k || seen[k]) return false; seen[k] = 1; return true; })
+        .slice(0, 10);
+    }
+    var top = newestFirst ? best(list.slice(0, 400)) : [];
+    return top.length >= 10 ? top : best(list);
+  }
+
   function mediaCard(it, badges) {
     var r = it.kind === 'movie' ? Resume.get(it) : null;
     return posterCard(it, function () { openItem(it); }, {
@@ -1580,8 +1608,9 @@
     var barWrap = h('div', { class: 'chipbar-wrap' }, bar);
     var title = h('h2', { class: 'mv-title' }), count = h('span', { class: 'count' });
     var resumeSlot = h('div', { class: 'mv-resume' });
+    var topSlot = h('div', { class: 'mv-top' });
     var grid = h('div', { class: 'poster-grid mv-grid' });
-    var el = h('div', { class: 'page media media-' + kind + ' k-' + kind }, heroSlot, barWrap, resumeSlot, h('div', { class: 'mv-head' }, title, count), grid);
+    var el = h('div', { class: 'page media media-' + kind + ' k-' + kind }, heroSlot, barWrap, resumeSlot, topSlot, h('div', { class: 'mv-head' }, title, count), grid);
     el._stickyTop = function () { return barWrap.offsetHeight; };
     var flat = [], groups = null, curGroup = null, activeId = null, counts = null, req = 0, chunker = null, heroId = null;
 
@@ -1667,6 +1696,17 @@
       var mine = Resume.recent().filter(function (r) { return isSeries ? r.item.kind === 'episode' : r.item.kind === 'movie'; }).slice(0, 12);
       if (mine.length) resumeSlot.appendChild(railEl(T('Weiterschauen'), mine.map(continueCard), kind));
     }
+    function paintTop(list, cat) {
+      clear(topSlot);
+      if (cat.id !== '__all' && !cat.group) return;
+      var top = topTen(list, some(list, function (x) { return Number(x.added) > 0; }));
+      if (top.length < 5) return;
+      var label = cat.group ? T('Top 10 in {0}', cat.group.name) : isSeries ? T('Top 10 Serien') : T('Top 10 Filme');
+      var sec = railEl(label, top.map(function (it, i) { return top10Card(it, i + 1); }), kind);
+      sec.classList.add('rail-top');
+      $('h2', sec).appendChild(h('span', { class: 'rail-note', text: T('nach Bewertung') }));
+      topSlot.appendChild(sec);
+    }
     function pickHero(list, cat) {
       var it = null;
       for (var i = 0; i < Math.min(list.length, 40); i++) if (list[i].logo) { it = list[i]; break; }
@@ -1684,6 +1724,7 @@
       title.textContent = cat.group ? T('Alle in {0}', cat.group.name) : cat.name;
       count.textContent = '';
       paintResume();
+      if (cat.id !== '__all' && !cat.group) clear(topSlot);
       itemsFor(cat).then(function (list) {
         if (my !== req) return;
         clear(grid);
@@ -1692,6 +1733,7 @@
         var badges = isSeries ? seriesBadges() : null;
         var rc = chunker = renderChunked(grid, el, list, function (it) { return mediaCard(it, badges); });
         pickHero(list, cat);
+        paintTop(list, cat);
         var pf = Shell.pendingFocus;
         if (pf && pf.kind === kind) {
           Shell.pendingFocus = null;
@@ -2996,12 +3038,14 @@
       self.zap = h('div', { class: 'zap is-hidden' });
       // Ton & Untertitel: der Knopf erscheint nur, wenn der Stream wirklich mehrere Tonspuren oder Untertitel hat
       self.tracksBtn = h('button', { class: 'cbtn f is-gone', 'data-c': 'tracks', title: T('Ton & Untertitel'), 'aria-label': T('Ton & Untertitel'), onclick: function () { self.openTracks(); } }, icon('tracks'));
+      // Bildformat (Original, Zoom, Strecken, 16:9, 4:3) und bei Live-Sendern das Stream-Format (HLS / MPEG-TS)
+      self.fmtBtn = h('button', { class: 'cbtn f', 'data-c': 'format', title: T('Format'), 'aria-label': T('Format'), onclick: function () { self.openFormat(); } }, icon('aspect'));
       var fsOk = !Platform.tv && (document.fullscreenEnabled || document.webkitFullscreenEnabled);
       self.fsBtn = fsOk ? h('button', { class: 'cbtn f', 'data-c': 'fs', title: T('Vollbild (F)'), 'aria-label': T('Vollbild'), onclick: function () { self.toggleFullscreen(); } }, icon('fullscreen')) : null;
       self.osd = h('div', { class: 'osd' },
         h('div', { class: 'osd-top' }, h('button', { class: 'btn f', onclick: goBack }, icon('back'), h('span', { text: T('Zurück') })), self.liveTag, self.title),
         h('div', { class: 'osd-bottom' }, self.info, self.barWrap, self.times,
-          h('div', { class: 'ctrl-row' }, self.ctrlLeft, self.ctrls, h('div', { class: 'ctrl-side right' }, self.tracksBtn, self.fsBtn, self.volumeUi()))));
+          h('div', { class: 'ctrl-row' }, self.ctrlLeft, self.ctrls, h('div', { class: 'ctrl-side right' }, self.fmtBtn, self.tracksBtn, self.fsBtn, self.volumeUi()))));
       self.miniTitle = h('span', { class: 'mini-title' });
       self.miniUi = h('div', { class: 'mini-ui' },
         h('button', { class: 'mini-open f', title: T('Vollbild'), onclick: function () { self.maximize(); } }, self.miniTitle),
@@ -3009,6 +3053,9 @@
         h('button', { class: 'mini-close f', title: T('Schließen'), onclick: function () { self.close(); } }, icon('close')));
       self.el = h('div', { class: 'player' }, video, self.spinner, self.osd, self.zap, self.err, self.miniUi);
       self.paintVol();
+      self.onResize = function () { self.applyAspect(); };
+      window.addEventListener('resize', self.onResize);
+      setTimeout(function () { self.applyAspect(); }, 0);
 
       // Spulen mit Maus oder Finger: Vorschau beim Bewegen, beim Loslassen wird gesprungen
       var barWrap = self.barWrap, dragging = false;
@@ -3119,6 +3166,7 @@
       self.exitFullscreen();
       self.el.classList.add('is-mini');
       document.body.classList.add('has-mini');
+      self.applyAspect();
       var prev = Screens.top();
       if (prev) {
         prev.el.classList.remove('is-off');
@@ -3145,6 +3193,7 @@
       Screens.push('player', self.el, self.screenOpts());
       self.enterFullscreen();
       self.showOsd();
+      self.applyAspect();
     },
 
     close: function () {
@@ -3404,24 +3453,56 @@
       this.tracksBtn.classList.toggle('is-gone', !(t.audio.length > 1 || t.subs.length > 1));
     },
     openTracks: function () {
-      var self = this, t = self.tracks();
+      var t = this.tracks();
+      this.openPanel([[T('Tonspur'), t.audio], [T('Untertitel'), t.subs]]);
+    },
+    /* Auswahlfenster im Player (Ton & Untertitel, Format). Abschnitte mit nur einer Möglichkeit werden weggelassen. */
+    openPanel: function (sections) {
+      var self = this;
       self.closeTracks();
       var box = h('div', { class: 'track-panel' });
-      function section(title, list) {
-        var sec = h('div', { class: 'tp-sec' }, h('h3', { text: title }));
-        list.forEach(function (o) {
+      sections.forEach(function (s) {
+        if (!s || s[1].length < 2) return;
+        var title = s[0], sec = h('div', { class: 'tp-sec' }, h('h3', { text: title }));
+        s[1].forEach(function (o) {
           sec.appendChild(h('button', { class: 'tp-opt f' + (o.on ? ' is-on' : ''), onclick: function () { o.pick(); self.closeTracks(); self.showOsd(); toast(title + ': ' + o.label); } },
             h('span', { text: o.label }), o.on ? icon('check') : null));
         });
         box.appendChild(sec);
-      }
-      if (t.audio.length > 1) section(T('Tonspur'), t.audio);
-      if (t.subs.length > 1) section(T('Untertitel'), t.subs);
+      });
       if (!box.firstChild) return;
       self.trackPanel = box;
       self.el.appendChild(box);
       clearTimeout(self.hideTimer);
       setTimeout(function () { Nav.focus($('.tp-opt.is-on', box) || $('.tp-opt', box)); }, 30);
+    },
+    openFormat: function () {
+      var self = this, cur = Settings.get('aspect') || 'fit';
+      var aspects = [['fit', T('Original')], ['fill', T('Bild füllen (Zoom)')], ['stretch', T('Strecken')], ['16:9', '16:9'], ['4:3', '4:3']].map(function (a) {
+        return { label: a[1], on: cur === a[0], pick: function () { Settings.set('aspect', a[0]); self.applyAspect(); } };
+      });
+      var sections = [[T('Bildformat'), aspects]];
+      if (self.item && self.item.kind === 'live' && App.provider && App.provider.type === 'xtream') {
+        var lf = Settings.get('liveFormat') === 'ts' ? 'ts' : 'm3u8';
+        sections.push([T('Stream-Format'), [['m3u8', 'HLS (.m3u8)'], ['ts', 'MPEG-TS (.ts)']].map(function (f) {
+          // Wechsel lädt den Sender sofort neu; gilt danach für alle Live-Sender
+          return { label: f[1], on: lf === f[0], pick: function () { if (lf === f[0]) return; Settings.set('liveFormat', f[0]); self.load(self.item); } };
+        })]);
+      }
+      self.openPanel(sections);
+    },
+    /* Bildformat anwenden. Im kleinen Vorschaufenster immer „Original“. */
+    applyAspect: function () {
+      var v = this.video, el = this.el;
+      if (!v || !el) return;
+      var a = this.mini ? 'fit' : (Settings.get('aspect') || 'fit'), st = v.style;
+      st.objectFit = a === 'fill' ? 'cover' : (a === 'stretch' || a === '16:9' || a === '4:3') ? 'fill' : '';
+      if (a === '16:9' || a === '4:3') {
+        var W = el.clientWidth, H = el.clientHeight, r = a === '16:9' ? 16 / 9 : 4 / 3;
+        var w = Math.min(W, H * r), hh = w / r;
+        st.width = Math.round(w) + 'px'; st.height = Math.round(hh) + 'px';
+        st.left = Math.round((W - w) / 2) + 'px'; st.top = Math.round((H - hh) / 2) + 'px';
+      } else st.width = st.height = st.left = st.top = '';
     },
     closeTracks: function () {
       var had = !!this.trackPanel;
@@ -3723,6 +3804,7 @@
       clearInterval(this.placeTimer);
       this.mini = false;
       document.body.classList.remove('has-mini');
+      window.removeEventListener('resize', this.onResize);
       this.el = null; this.video = null; this.item = null; this.ctx = null;
       markPlaying(null);
     }
