@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Lumio Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.6.0',
+    version: '1.6.1',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     hlsCdn: 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js',
     requestTimeout: 30000,
@@ -3900,7 +3900,8 @@
     },
     exitFullscreen: function () {
       try {
-        if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock();
+        // In der Android-App bleibt es immer quer (fest im Manifest) – nur im Browser wieder freigeben
+        if (!Platform.capacitor && screen.orientation && screen.orientation.unlock) screen.orientation.unlock();
         var fe = document.fullscreenElement || document.webkitFullscreenElement;
         if (fe) { var ex = document.exitFullscreen || document.webkitExitFullscreen; var r = ex.call(document); if (r && r.catch) r.catch(function () {}); }
       } catch (e) {}

@@ -78,13 +78,19 @@ jobs:
             echo "⚠️ Secret LUMIO_SIGNING fehlt – APK hat einen wechselnden Test-Schlüssel (Updates nur nach Deinstallieren)." >> $GITHUB_STEP_SUMMARY
           fi
 
+      - name: Versionsnummer lesen
+        id: ver
+        run: |
+          V=$(grep -oE "version: '[^']+'" www/js/app.js | head -n 1 | cut -d"'" -f2)
+          echo "v=${V:-neu}" >> "$GITHUB_OUTPUT"
+
       - name: APK unter "Releases" bereitstellen
         uses: softprops/action-gh-release@v2
         with:
           tag_name: neueste
-          name: Lumio Player – neueste Version
+          name: Lumio Player ${{ steps.ver.outputs.v }} – neueste Version
           body: |
-            Automatisch gebaut aus Version ${{ github.sha }}.
+            Version ${{ steps.ver.outputs.v }}, automatisch gebaut aus ${{ github.sha }}.
             Download: lumio-player.apk (Handy, Tablet, Fire TV, Android TV)
           files: lumio-player.apk
           make_latest: true

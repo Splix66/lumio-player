@@ -38,6 +38,12 @@ if (!m.includes('LEANBACK_LAUNCHER')) {
   );
 }
 
+// 3b) Handy und Tablet nur im Querformat (seitlich, beide Richtungen). Fernseher sind ohnehin quer.
+m = m.replace(/<activity\b[^>]*android:name="\.MainActivity"[^>]*>/, (tag) => {
+  if (tag.includes('android:screenOrientation')) return tag;
+  return tag.replace(/<activity\b/, '<activity\n            android:screenOrientation="sensorLandscape"');
+});
+
 fs.writeFileSync(manifestPath, m);
 
 // 4) Startbildschirm dunkel statt weiß (Android 12 und neuer)
