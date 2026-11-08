@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Lumio Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.8.1',
+    version: '1.8.2',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     hlsCdn: 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js',
     requestTimeout: 30000,
@@ -2118,15 +2118,25 @@
       recent.appendChild(track);
     }
 
-    function doRefresh(byUser) {
+    // byUser: Knopf gedrückt (mit Bestätigung). quiet: automatisch im Hintergrund (ohne Fehlermeldung)
+    function doRefresh(byUser, quiet) {
       if (busy) return;
       busy = true; reloadBtn.classList.add('is-busy'); paintStats();
       refreshPlaylist().then(function (r) {
         busy = false; reloadBtn.classList.remove('is-busy');
         paintStats(); paintExpiry();
-        if (r.error) toast(T('Hinweis: {0}', r.error.message || T('Verbindung fehlgeschlagen.')), 4000);
+        // alles frisch: die 30-Minuten-Pause gilt nur nach einem Fehlschlag
+        if (!Stats.stale()) autoTried = 0;
+        if (r.error) { if (!quiet) toast(T('Hinweis: {0}', r.error.message || T('Verbindung fehlgeschlagen.')), 4000); }
         else if (byUser) toast(T('Playlist aktualisiert'));
       });
+    }
+    // Listen veraltet? Dann still im Hintergrund neu laden
+    function autoCheck() {
+      if (busy || !el.parentNode || !autoRefreshDue()) return;
+      var first = !Stats.get().live && !Stats.get().movie && !Stats.get().series;
+      autoTried = Date.now();
+      doRefresh(false, !first);
     }
 
     var el = h('div', { class: 'launcher' }, heroArt(), head,
@@ -2146,17 +2156,20 @@
       if (!busy) paintStats();
     }
     setTimeout(tick, 0);
-    var timer = setInterval(tick, 20000);
-    // Noch nie geladen (erste Nutzung dieser Playlist): Anzahl im Hintergrund holen
-    var st0 = Stats.get();
-    if (!st0.live && !st0.movie && !st0.series) setTimeout(function () { if (el.parentNode) doRefresh(false); }, 1500);
+    // alle 20 Sekunden: Uhr und „vor X Min.“ aktualisieren, veraltete Listen nachladen (Box bleibt oft tagelang an)
+    var timer = setInterval(function () { tick(); autoCheck(); }, 20000);
+    // Erste Nutzung oder Listen älter als 12 Stunden: kurz nach dem Öffnen im Hintergrund neu laden
+    setTimeout(autoCheck, 1500);
 
     // nach dem Schauen nur die Inhalte auffrischen, Fokus bleibt auf derselben Karte
     el._refresh = function () {
       var sc = Screens.top(), lf = sc && sc.lastFocus, key = lf && lf.getAttribute && lf.getAttribute('data-key');
       paintRecent(); paintFavs(); paintStats();
       if (sc && key && !el.contains(lf)) sc.lastFocus = $('[data-key="' + key + '"]', el) || tiles[0];
+      setTimeout(autoCheck, 1500);
     };
+    // App kommt aus dem Hintergrund zurück (z. B. Box-Fernbedienung, Handy entsperrt)
+    el._wake = function () { setTimeout(autoCheck, 800); };
     el._dispose = function () { clearInterval(timer); };
     return el;
   }
@@ -2298,8 +2311,25 @@
   /* Anzahl Sender/Filme/Serien und wann zuletzt geladen – pro Playlist gespeichert, für den Startbildschirm */
   var Stats = {
     get: function () { return Store.get('stats.' + pid(), {}); },
-    set: function (kind, n) { var s = this.get(); s[kind] = { n: n, at: Date.now() }; Store.set('stats.' + pid(), s); }
+    set: function (kind, n) { var s = this.get(); s[kind] = { n: n, at: Date.now() }; Store.set('stats.' + pid(), s); },
+    // Listen zu alt (älter als 12 Stunden) oder noch nie geladen?
+    stale: function () {
+      var s = this.get(), oldest = Infinity;
+      ['live', 'movie', 'series'].forEach(function (k) { if (s[k] && s[k].at < oldest) oldest = s[k].at; });
+      return oldest === Infinity || Date.now() - oldest > AUTO_REFRESH_MS;
+    }
   };
+  /* Automatisch aktualisieren: Boxen lassen die App oft tagelang im Hintergrund laufen.
+     Sind die Listen älter als 12 Stunden, lädt der Startbildschirm sie selbst neu – nie während etwas läuft,
+     und nach einem Fehlschlag (z. B. kein Internet) erst nach 30 Minuten wieder. */
+  var AUTO_REFRESH_MS = 12 * 3600000, AUTO_RETRY_MS = 30 * 60000, autoTried = 0;
+  function autoRefreshDue() {
+    if (!App.profile || !App.provider || refreshing || Player.el) return false;
+    var top = Screens.top();
+    if (top && top.name !== 'shell') return false;
+    if (Date.now() - autoTried < AUTO_RETRY_MS) return false;
+    return Stats.stale();
+  }
   /* Playlist mit einem Klick neu laden: alles frisch vom Anbieter holen und neu zählen */
   var refreshing = null;
   function refreshPlaylist() {
@@ -4019,6 +4049,8 @@
     }
     if (Platform.capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
       try { window.Capacitor.Plugins.App.addListener('backButton', function () { goBack(); }); } catch (e) {}
+      // App wieder im Vordergrund (Android): Startbildschirm prüft, ob die Listen veraltet sind
+      try { window.Capacitor.Plugins.App.addListener('resume', function () { var ln = $('.launcher'); if (ln && ln._wake) ln._wake(); }); } catch (e) {}
     }
   }
 
@@ -4042,7 +4074,12 @@
     document.addEventListener('keydown', onKeyDown, true);
     document.addEventListener('pointerdown', function () { INPUT.mode = 'pointer'; if (!Platform.tv) document.body.classList.remove('kbd'); }, true);
     // Video weiterlaufen lassen, aber beim Verlassen der App den Fortschritt sichern
-    document.addEventListener('visibilitychange', function () { if (document.hidden && Player.el) Player.saveResume(); });
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) { if (Player.el) Player.saveResume(); return; }
+      // zurück in der App: Startbildschirm prüft, ob die Listen veraltet sind
+      var ln = $('.launcher');
+      if (ln && ln._wake) ln._wake();
+    });
     registerTvKeys();
 
     var active = Profiles.get(Store.get('active'));
