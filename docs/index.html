@@ -189,7 +189,7 @@
         }
       };
       var qs0 = new URLSearchParams(location.search);
-      var lang = (qs0.get('lang') || navigator.language || 'de').slice(0, 2).toLowerCase();
+      var lang = (qs0.get('lang') || 'de').slice(0, 2).toLowerCase();   // Deutsch ist die Grundsprache
       if (lang !== 'de' && !I18N[lang]) lang = 'en';
       try { if (qs0.get('lang')) sessionStorage.setItem('lumio.lang', lang); else lang = sessionStorage.getItem('lumio.lang') || lang; } catch (e) {}
       if (lang !== 'de' && !I18N[lang]) lang = 'de';

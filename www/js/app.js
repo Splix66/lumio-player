@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Lumio Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.1.0',
+    version: '1.2.0',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     hlsCdn: 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js',
     requestTimeout: 30000,
@@ -82,6 +82,8 @@
     play: '<path d="M7 4l13 8-13 8z" fill="currentColor"/>',
     pause: '<path d="M7 4h4v16H7zM13 4h4v16h-4z" fill="currentColor" stroke="none"/>',
     back: '<path d="M15 18l-6-6 6-6"/>',
+    next: '<path d="M9 6l6 6-6 6"/>',
+    globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/>',
     star: '<path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/>',
     starFill: '<path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z" fill="currentColor"/>',
     plus: '<path d="M12 5v14M5 12h14"/>',
@@ -159,11 +161,8 @@
   var Lang = {
     cur: 'de',
     init: function () {
-      var l = Settings.get('lang');
-      if (!l) {
-        var n = String(navigator.language || navigator.userLanguage || 'de').slice(0, 2).toLowerCase();
-        l = n === 'tr' ? 'tr' : n === 'de' ? 'de' : 'en';
-      }
+      // Deutsch ist immer die Grundsprache – andere Sprachen nur, wenn man sie selbst auswählt
+      var l = Settings.get('lang') || 'de';
       this.cur = (l === 'de' || I18N[l]) ? l : 'de';
       document.documentElement.setAttribute('lang', this.cur);
     },
@@ -178,12 +177,16 @@
     for (var i = 1; i < arguments.length; i++) out = out.split('{' + (i - 1) + '}').join(String(arguments[i]));
     return out;
   }
-  function langSeg() {
-    var seg = h('div', { class: 'seg lang-seg', role: 'group', 'aria-label': 'Sprache / Language / Dil' });
-    LANGS.forEach(function (l) {
-      seg.appendChild(h('button', { class: 'btn f' + (l[0] === Lang.cur ? ' is-on' : ''), lang: l[0], onclick: function () { if (l[0] !== Lang.cur) Lang.set(l[0]); } }, l[1]));
-    });
-    return seg;
+  /* Ein Knopf mit der aktuellen Sprache („Deutsch“) – erst ein Druck darauf zeigt die Auswahl */
+  function langButton() {
+    var name = LANGS.filter(function (l) { return l[0] === Lang.cur; })[0][1];
+    return h('button', { class: 'btn f lang-btn', title: 'Sprache / Language / Dil', 'aria-label': 'Sprache / Language / Dil: ' + name, onclick: pickLanguage },
+      icon('globe'), h('span', { text: name }), icon('down'));
+  }
+  function pickLanguage() {
+    Dialog.show('Sprache / Language / Dil', null, LANGS.map(function (l) {
+      return { label: l[1], primary: l[0] === Lang.cur, action: function () { if (l[0] !== Lang.cur) Lang.set(l[0]); } };
+    }), 'dlg-list');
   }
 
   /* ---------------- Geräte-Kennung (MAC-Adresse) ----------------
@@ -215,8 +218,17 @@
     },
     portalLink: function () { return CONFIG.portalUrl + '?mac=' + encodeURIComponent(this.mac()) + '&key=' + this.key() + '&lang=' + Lang.cur; }
   };
-  function macTag() {
-    return h('div', { class: 'mac-tag' }, h('span', { text: 'MAC' }), h('b', { text: Device.mac() }), h('span', { text: 'KEY' }), h('b', { text: Device.key() }));
+  function macTag(user) {
+    return h('div', { class: 'mac-tag' }, h('span', { text: 'MAC' }), h('b', { text: Device.mac() }), h('span', { text: 'KEY' }), h('b', { text: Device.key() }),
+      user ? h('span', { text: T('Benutzer') }) : null, user ? h('b', { text: user }) : null);
+  }
+  /* Benutzername des Zugangs: bei Xtream direkt, bei M3U aus dem Link (…?username=…), sonst der Profilname */
+  function profileUser(p) {
+    if (!p) return '';
+    if (p.username) return p.username;
+    var m = /[?&]username=([^&#]+)/i.exec(p.url || '');
+    if (m) { try { return decodeURIComponent(m[1]); } catch (e) { return m[1]; } }
+    return p.type === 'demo' ? '' : (p.name || '');
   }
 
   /* ---------------- Darstellung: Hell/Dunkel mit fester Lumio-Farbe (Violett) ----------------
@@ -1059,7 +1071,7 @@
 
   var Dialog = {
     open: false, prevFocus: null, onClose: null,
-    show: function (title, text, buttons) {
+    show: function (title, text, buttons, cls) {
       var layer = $('#dialog-layer');
       var self = this;
       self.prevFocus = document.activeElement;
@@ -1071,7 +1083,7 @@
         if (b.primary || !first) first = btn;
         row.appendChild(btn);
       });
-      layer.appendChild(h('div', { class: 'dialog', role: 'dialog' }, h('h3', { text: title }), text ? h('p', { text: text }) : null, row));
+      layer.appendChild(h('div', { class: 'dialog' + (cls ? ' ' + cls : ''), role: 'dialog' }, h('h3', { text: title }), text ? h('p', { text: text }) : null, row));
       self.open = true;
       setTimeout(function () { Nav.focus(first); }, 30);
     },
@@ -1329,7 +1341,7 @@
     var sub = ep ? 'S' + it.season + ' E' + it.num : T('Noch {0}', fmtLeft(r.d - r.t));
     var src = it.backdrop || it.logo;
     var pic = src ? h('span', { class: 'cw-img' }, img(src, '', function (i) { var b = i.parentNode; if (b && b.parentNode) b.parentNode.removeChild(b); })) : null;
-    return h('button', { class: 'cw f' + (it.backdrop ? '' : ' is-poster'), title: title, onclick: function () { playItem(it, { list: [it], index: 0 }); } },
+    return h('button', { class: 'cw f k-' + (ep || it.kind === 'series' ? 'series' : it.kind === 'live' ? 'live' : 'movie') + (it.backdrop ? '' : ' is-poster'), title: title, onclick: function () { playItem(it, { list: [it], index: 0 }); } },
       pic,
       h('span', { class: 'cw-txt' },
         h('span', { class: 'cw-title', text: title }),
@@ -1365,7 +1377,7 @@
     var list = Profiles.list();
     if (!list.length) {
       var welcome = h('div', { class: 'profiles is-empty' }, heroArt(),
-        h('div', { class: 'profiles-top' }, h('div', { class: 'brand' }, brandMark(), wordmark()), langSeg()),
+        h('div', { class: 'profiles-top' }, h('div', { class: 'brand' }, brandMark(), wordmark()), langButton()),
         h('div', { class: 'welcome' },
           h('div', { class: 'qr-hero' },
             qrBox(Device.portalLink(), 'big'),
@@ -1400,7 +1412,7 @@
       h('button', { class: 'card add f', onclick: showAddProfile, 'data-autofocus': list.length ? null : true },
         icon('plus'), h('span', { class: 'label', text: T('Playlist hinzufügen') }), h('span', { class: 'sub', text: T('Xtream oder M3U') }))));
     var el = h('div', { class: 'profiles' }, heroArt(),
-      h('div', { class: 'profiles-top' }, h('div', { class: 'brand' }, brandMark(), wordmark()), langSeg()),
+      h('div', { class: 'profiles-top' }, h('div', { class: 'brand' }, brandMark(), wordmark()), langButton()),
       h('div', { class: 'profiles-in' },
         h('h2', { text: T('Welche Playlist möchtest du öffnen?') }),
         grid,
@@ -1497,23 +1509,24 @@
       self.buttons = {};
       self.view = h('div', { class: 'view' });
       var tabs = h('nav', { class: 'main-tabs', 'aria-label': T('Hauptmenü') });
-      [['home', T('Start'), 'home'], ['live', T('Live TV'), 'live'], ['movie', T('Filme'), 'movie'], ['series', T('Serien'), 'series'], ['favs', T('Favoriten'), 'heart']].forEach(function (it) {
-        var b = h('button', { class: 'tab f', title: it[1], onclick: function () { self.show(it[0], true); } }, icon(it[2]), h('span', { text: it[1] }));
+      [['home', T('Start'), 'home'], ['live', T('Live TV'), 'live'], ['movie', T('Filme'), 'movie'], ['series', T('Serien'), 'series']].forEach(function (it) {
+        var b = h('button', { class: 'tab f k-' + it[0], title: it[1], onclick: function () { self.show(it[0], true); } }, icon(it[2]), h('span', { text: it[1] }));
         self.buttons[it[0]] = b;
         tabs.appendChild(b);
       });
-      function tool(name, label) {
-        var b = h('button', { class: 'icon-btn f', title: label, 'aria-label': label, onclick: function () { self.show(name, true); } }, icon(name));
+      function tool(name, label, ic) {
+        var b = h('button', { class: 'icon-btn f', title: label, 'aria-label': label, onclick: function () { self.show(name, true); } }, icon(ic || name));
         self.buttons[name] = b;
         return b;
       }
       var head = h('header', { class: 'topnav' },
         h('div', { class: 'brand' }, brandMark(), wordmark()),
         tabs,
-        h('div', { class: 'top-tools' }, tool('search', T('Suche')), tool('settings', T('Einstellungen'))));
-      self.el = h('div', { class: 'shell' }, head, h('main', { class: 'content' }, self.view), h('footer', { class: 'statusbar' }, macTag()));
+        h('div', { class: 'top-tools' }, tool('search', T('Suche')), tool('favs', T('Favoriten'), 'heart'), tool('settings', T('Einstellungen')), tool('profile', T('Profil'))));
+      self.el = h('div', { class: 'shell' }, head, h('main', { class: 'content' }, self.view), h('footer', { class: 'statusbar' }, macTag(profileUser(App.profile))));
       Screens.reset('shell', self.el, {
         onBack: function () {
+          if (self.viewBack && self.viewBack() === true) return true;
           if (self.current !== 'home') { self.show('home', true); return true; }
           return false;
         },
@@ -1527,11 +1540,13 @@
       // Mini-Player beenden, wenn man zu Filmen oder Serien wechselt
       if ((name === 'movie' || name === 'series') && Player.mini) Player.close();
       Object.keys(self.buttons).forEach(function (k) { self.buttons[k].classList.toggle('is-on', k === name); });
+      self.viewBack = null;
       clear(self.view);
       var view;
       if (name === 'home') view = HomeView();
       else if (name === 'search') view = SearchView();
       else if (name === 'settings') view = SettingsView();
+      else if (name === 'profile') view = ProfileView();
       else if (name === 'favs') view = FavoritesView();
       else view = SectionView(name);
       self.view.appendChild(view);
@@ -1552,7 +1567,8 @@
     if (!searchCache[k]) { searchCache[k] = App.provider.items(kind, '__all'); searchCache[k].catch(function () { delete searchCache[k]; }); }
     return searchCache[k];
   }
-  /* Auswahl für die Startseite: bei Xtream nur die ersten Kategorien (schnell, auch auf schwachen Geräten) */
+  /* Auswahl für die Startseite: bei Xtream nur die ersten Kategorien (schnell, auch auf schwachen Geräten).
+     Sind die Kategorien nach Sprachen benannt, werden die der App-Sprache bevorzugt. */
   function sampleItems(kind) {
     var k = pid() + kind;
     if (searchCache[k]) return searchCache[k];
@@ -1560,7 +1576,10 @@
     var prov = App.provider, pr;
     if (prov.type === 'xtream') {
       pr = prov.categories(kind).then(function (cats) {
-        return Promise.all((cats || []).slice(0, 3).map(function (c) { return prov.items(kind, c.id).catch(function () { return []; }); }));
+        cats = cats || [];
+        var groups = groupCats(cats), mine = groups && groups.filter(function (g) { return g.key === Lang.cur; })[0];
+        if (mine) cats = mine.cats;
+        return Promise.all(cats.slice(0, 3).map(function (c) { return prov.items(kind, c.id).catch(function () { return []; }); }));
       }).then(function (lists) {
         var seen = {}, out = [];
         lists.forEach(function (l) { l.forEach(function (x) { if (!seen[x.id]) { seen[x.id] = 1; out.push(x); } }); });
@@ -1610,27 +1629,24 @@
       if (!a || !a.expires) return;
       var days = Math.ceil((Number(a.expires) * 1000 - Date.now()) / 86400000);
       if (days <= 0) { status.classList.add('is-off'); status.lastChild.textContent = T('{0} – abgelaufen am {1}', p.name, fmtDate(a.expires)); }
-      else if (days <= 30) { status.classList.add('is-warn'); status.lastChild.textContent = T('{0} – läuft in {1} Tagen ab', p.name, days); }
+      else if (days <= 30) { status.classList.add('is-warn'); status.lastChild.textContent = days === 1 ? T('{0} – läuft in 1 Tag ab', p.name) : T('{0} – läuft in {1} Tagen ab', p.name, days); }
       else status.lastChild.textContent = T('{0} – gültig bis {1}', p.name, fmtDate(a.expires));
     }).catch(function () { status.classList.add('is-off'); status.lastChild.textContent = T('{0} – keine Verbindung', p.name); });
-    function quick(kind, label, ic) {
-      return h('button', { class: 'quick f', onclick: function () { Shell.show(kind, true); } }, icon(ic || kind), h('span', { text: label }));
-    }
     var hero = h('section', { class: 'hero' }, heroArt(),
       h('div', { class: 'hero-in' },
         status,
         h('h1', { class: 'hero-title' },
           h('span', { class: 'hero-kicker', text: season ? T(SEASONS[season].greet) : T('Willkommen bei') }),
           wordmark()),
-        h('p', { class: 'hero-sub', text: p.type === 'demo' ? T('Probiere die App mit freien Test-Videos aus.') : T('Dein Licht für Live TV, Filme und Serien.') }),
-        h('div', { class: 'quick-row' }, quick('live', T('Live TV')), quick('movie', T('Filme')), quick('series', T('Serien')), quick('favs', T('Favoriten'), 'heart'))));
+        h('p', { class: 'hero-sub', text: p.type === 'demo' ? T('Probiere die App mit freien Test-Videos aus.') : T('Dein Licht für Live TV, Filme und Serien.') })));
     var rows = h('div', { class: 'rows' });
     var el = h('div', { class: 'page home' }, hero, rows);
 
-    function rail(title, kids, moreKind) {
+    function rail(title, kids, moreKind, kind) {
       var track = h('div', { class: 'rail-track' }, kids);
       if (moreKind) track.appendChild(h('button', { class: 'more-card f', onclick: function () { Shell.show(moreKind, true); } }, icon('arrowR'), h('span', { text: T('Mehr anzeigen') })));
-      return h('section', { class: 'rail' }, h('h2', { text: title }), track);
+      kind = kind || moreKind;
+      return h('section', { class: 'rail' + (kind ? ' k-' + kind : '') }, h('h2', null, kind ? icon(kind) : null, h('span', { text: title })), track);
     }
     function asyncRail(title, pr, build) {
       var kids = [];
@@ -1647,11 +1663,11 @@
     var resume = Resume.recent().slice(0, 12);
     if (resume.length) rows.appendChild(rail(T('Weiterschauen'), resume.map(continueCard)));
     var recent = Recent.list();
-    if (recent.length) rows.appendChild(rail(T('Zuletzt gesehene Sender'), recent.map(function (it, i) { return chanTile(it, function () { playItem(it, { list: recent, index: i }); }); })));
+    if (recent.length) rows.appendChild(rail(T('Zuletzt gesehene Sender'), recent.map(function (it, i) { return chanTile(it, function () { playItem(it, { list: recent, index: i }); }); }), null, 'live'));
 
     var shown = {};
     var moviesP = sampleItems('movie'), seriesP = sampleItems('series');
-    asyncRail(T('Beliebte Filme'), moviesP, function (list) {
+    asyncRail(T('Top bewertet'), moviesP, function (list) {
       if (!list.length) return null;
       var fresh = some(list, function (x) { return Number(x.added) > 0; });
       var rated = some(list, function (x) { return Number(x.rating) > 0; });
@@ -1660,7 +1676,8 @@
       if (rated) pool.sort(byRating);
       var top = pool.slice(0, 18);
       top.forEach(function (x) { shown[x.kind + x.id] = 1; });
-      return rail(rated ? T('Beliebte Filme') : (fresh ? T('Neue Filme') : T('Filme')), top.map(function (it) { return posterCard(it, function () { openItem(it); }); }), 'movie');
+      // Echte Zuschauerzahlen gibt es nicht – sortiert wird nach der Bewertung, die der Anbieter mitschickt
+      return rail(rated ? T('Top bewertet') : (fresh ? T('Neue Filme') : T('Filme')), top.map(function (it) { return posterCard(it, function () { openItem(it); }); }), 'movie');
     });
     asyncRail(T('Neue Serien'), seriesP, function (list) {
       if (!list.length) return null;
@@ -1678,8 +1695,100 @@
     return el;
   }
 
+  /* ---------- Kategorien nach Sprache ordnen ----------
+     Viele Anbieter schreiben die Sprache vor den Namen, z. B. „TR ⚡ AKSİYON“ oder „DE | Action“.
+     Wird das erkannt, zeigt die App zuerst die Sprachen und darin die Kategorien (ohne das Kürzel). */
+  var LANG_CODES = {
+    de: 'DE GER DEU DEUTSCH DEUTSCHLAND GERMAN GERMANY AT AUT AUSTRIA OSTERREICH CH',
+    en: 'EN ENG ENGLISH UK GB US USA',
+    tr: 'TR TUR TURK TURKEY TURKISH TURKIYE TURKCE',
+    fr: 'FR FRA FRENCH FRANCE',
+    it: 'IT ITA ITALY ITALIA',
+    es: 'ES ESP SPAIN ESPANA SPANISH LAT LATINO',
+    nl: 'NL NLD NED DUTCH NEDERLAND',
+    pl: 'PL POL POLSKA POLISH',
+    pt: 'PT POR PORTUGAL BR BRA BRASIL BRAZIL',
+    ar: 'AR ARA ARAB ARABIC',
+    ru: 'RU RUS RUSSIA',
+    ua: 'UA UKR UKRAINE',
+    ku: 'KU KUR KRD KURD KURDI KURDISH',
+    al: 'AL ALB ALBANIA SHQIP',
+    bg: 'BG BUL BULGARIA',
+    ro: 'RO ROM ROU ROMANIA',
+    gr: 'GR GRE GREECE',
+    yu: 'EXYU YU HR CRO RS SRB BA BIH MK SI SLO',
+    se: 'SE SWE SWEDEN',
+    no: 'NOR NORWAY',
+    dk: 'DK DEN DENMARK',
+    fi: 'FI FIN FINLAND',
+    hu: 'HU HUN HUNGARY',
+    cz: 'CZ CZE',
+    sk: 'SK SVK',
+    in: 'IND INDIA HINDI',
+    fa: 'IR IRAN FA PERSIAN FARSI',
+    az: 'AZ AZE AZERBAIJAN'
+  };
+  var LANG_NAMES = {
+    de: 'Deutsch', en: 'Englisch', tr: 'Türkisch', fr: 'Französisch', it: 'Italienisch', es: 'Spanisch',
+    nl: 'Niederländisch', pl: 'Polnisch', pt: 'Portugiesisch', ar: 'Arabisch', ru: 'Russisch', ua: 'Ukrainisch',
+    ku: 'Kurdisch', al: 'Albanisch', bg: 'Bulgarisch', ro: 'Rumänisch', gr: 'Griechisch', yu: 'Ex-Jugoslawien',
+    se: 'Schwedisch', no: 'Norwegisch', dk: 'Dänisch', fi: 'Finnisch', hu: 'Ungarisch', cz: 'Tschechisch',
+    sk: 'Slowakisch', 'in': 'Indisch', fa: 'Persisch', az: 'Aserbaidschanisch'
+  };
+  var CODE_MAP = null;
+  var WORD_CH = '0-9A-Za-z\\u00C0-\\u024F\\u0370-\\u03FF\\u0400-\\u04FF\\u0600-\\u06FF';
+  var WORD_RE = new RegExp('[' + WORD_CH + ']+', 'g');
+  var SEP_HEAD = new RegExp('^[^' + WORD_CH + '(\\[]+'), SEP_TAIL = new RegExp('[^' + WORD_CH + ')\\]!?]+$');
+  function foldUp(s) {
+    return s.replace(/[İı]/g, 'I').replace(/[Üü]/g, 'U').replace(/[Öö]/g, 'O').replace(/[Çç]/g, 'C')
+      .replace(/[Şş]/g, 'S').replace(/[Ğğ]/g, 'G').replace(/[Ää]/g, 'A').replace(/[Ññ]/g, 'N').toUpperCase();
+  }
+  function trimSep(x) { return x.replace(SEP_HEAD, '').replace(SEP_TAIL, '').replace(/^[(\[]\s*[)\]]$/, ''); }
+  /* Liefert { g: 'tr', label: 'AKSİYON' } oder null, wenn kein Sprach-Kürzel erkannt wird */
+  function langOf(name) {
+    var s = String(name || ''), m, tokens = [];
+    if (!CODE_MAP) {
+      CODE_MAP = {};
+      Object.keys(LANG_CODES).forEach(function (k) { LANG_CODES[k].split(' ').forEach(function (c) { CODE_MAP[c] = k; }); });
+    }
+    WORD_RE.lastIndex = 0;
+    while ((m = WORD_RE.exec(s)) && tokens.length < 16) tokens.push({ t: m[0], i: m.index });
+    function hit(k) {
+      var tk = tokens[k];
+      // nur groß geschriebene Kürzel zählen („DE“, nicht „De Niro“)
+      if (!tk || /^[0-9]/.test(tk.t) || tk.t !== tk.t.toUpperCase()) return null;
+      var g = CODE_MAP[foldUp(tk.t)];
+      return g ? { g: g, tk: tk } : null;
+    }
+    if (!tokens.length) return null;
+    var r = hit(0) || (tokens.length > 1 && tokens[0].t.length <= 4 ? hit(1) : null) || (tokens.length > 1 ? hit(tokens.length - 1) : null);
+    if (!r) return null;
+    var before = trimSep(s.slice(0, r.tk.i)), after = trimSep(s.slice(r.tk.i + r.tk.t.length));
+    var label = (before + ' ' + after).replace(/\s+/g, ' ').replace(/^\s+|\s+$/g, '');
+    return { g: r.g, label: label || s };
+  }
+  /* Teilt die Kategorien in Sprachen auf – oder null, wenn sich das nicht lohnt */
+  function groupCats(list) {
+    var groups = [], byKey = {}, tagged = 0;
+    (list || []).forEach(function (c) {
+      var r = langOf(c.name), key = r ? r.g : '_';
+      if (r) tagged++;
+      var g = byKey[key];
+      if (!g) {
+        g = byKey[key] = { key: key, ord: groups.length, code: key === '_' ? '' : key.toUpperCase(), name: key === '_' ? T('Weitere') : T(LANG_NAMES[key]), cats: [] };
+        groups.push(g);
+      }
+      g.cats.push({ id: c.id, name: r ? r.label : c.name, full: c.name });
+    });
+    if (groups.filter(function (g) { return g.key !== '_'; }).length < 2 || tagged < list.length * 0.4) return null;
+    // Sprache der App zuerst, „Weitere“ zuletzt, sonst wie beim Anbieter sortiert
+    function rank(g) { return g.key === Lang.cur ? -1 : g.key === '_' ? 1e6 : g.ord; }
+    groups.sort(function (a, b) { return rank(a) - rank(b); });
+    return groups;
+  }
+
   /* ---------- Live TV / Filme / Serien ---------- */
-  var lastCat = {};
+  var lastCat = {}, lastGroup = {};
   function SectionView(kind) {
     var titles = { live: T('Live TV'), movie: T('Filme'), series: T('Serien') };
     var allNames = { live: T('Alle Sender'), movie: T('Alle Filme'), series: T('Alle Serien') };
@@ -1687,19 +1796,81 @@
     var cats = h('div', { class: 'cats' });
     var items = h('div', { class: 'items' }, loader());
     var panel = kind === 'live' ? LivePanel() : null;
-    var el = h('div', { class: 'section section-' + kind },
-      h('div', { class: 'section-head' }, h('h1', { text: titles[kind] }), count),
+    var el = h('div', { class: 'section section-' + kind + ' k-' + kind },
+      h('div', { class: 'section-head' }, h('h1', null, icon(kind), h('span', { text: titles[kind] })), count),
       h('div', { class: 'section-body' }, cats, items, panel ? panel.el : null));
+    var key = pid() + kind;
+    var allCat = { id: '__all', name: allNames[kind] };
+    var groups = null, curGroup = null, activeId = null, req = 0;
 
-    var activeBtn = null;
-    function selectCat(cat, btn, focusList) {
-      lastCat[pid() + kind] = cat.id;
-      if (activeBtn) activeBtn.classList.remove('is-on');
-      btn.classList.add('is-on'); activeBtn = btn;
+    function inGroup(g, id) { for (var i = 0; i < g.cats.length; i++) if (g.cats[i].id === id) return g.cats[i]; return null; }
+    function markActive() {
+      for (var i = 0; i < cats.children.length; i++) {
+        var b = cats.children[i];
+        if (b._cat) b.classList.toggle('is-on', b._cat.id === activeId);
+        else if (b._group) b.classList.toggle('is-on', !!inGroup(b._group, activeId));
+      }
+    }
+    function activeButton() {
+      for (var i = 0; i < cats.children.length; i++) if (cats.children[i].classList.contains('is-on')) return cats.children[i];
+      return null;
+    }
+    function catBtn(c) {
+      var b = h('button', { class: 'cat f', title: c.full || c.name }, c.name);
+      b._cat = c;
+      b.addEventListener('click', function () { selectCat(c, true); });
+      return b;
+    }
+    function langBtn(g) {
+      var b = h('button', { class: 'cat lang-cat f', title: g.name },
+        h('span', { class: 'lc-code', text: g.code || '…' }), h('span', { class: 'lc-name', text: g.name }),
+        h('span', { class: 'lc-n', text: String(g.cats.length) }), icon('next'));
+      b._group = g;
+      b.addEventListener('click', function () { openGroup(g, true); });
+      return b;
+    }
+    // Oberste Ebene: „Alle …“ und die Sprachen
+    function showLanguages(focusGroup) {
+      curGroup = null; lastGroup[key] = null;
+      clear(cats);
+      cats.appendChild(catBtn(allCat));
+      var focusBtn = null;
+      groups.forEach(function (g) { var b = langBtn(g); cats.appendChild(b); if (g === focusGroup) focusBtn = b; });
+      markActive();
+      if (focusBtn) { Nav.focus(focusBtn); }
+    }
+    // Eine Sprache geöffnet: Zurück-Knopf und ihre Kategorien
+    function openGroup(g, byUser) {
+      curGroup = g; lastGroup[key] = g.key;
+      clear(cats);
+      var back = h('button', { class: 'cat cat-back f', title: T('Zurück zu den Sprachen') },
+        icon('back'), h('span', { class: 'lc-code', text: g.code || '…' }), h('span', { class: 'lc-name', text: g.name }));
+      back.addEventListener('click', function () { showLanguages(g); });
+      cats.appendChild(back);
+      g.cats.forEach(function (c) { cats.appendChild(catBtn(c)); });
+      cats.scrollTop = 0;
+      markActive();
+      if (byUser) {
+        if (!inGroup(g, activeId)) selectCat(g.cats[0], false);
+        Nav.focus(activeButton() || cats.children[1] || back);
+      }
+    }
+    Shell.viewBack = function () {
+      if (curGroup && document.body.contains(el)) { showLanguages(curGroup); return true; }
+      return false;
+    };
+
+    function selectCat(cat, focusList) {
+      lastCat[key] = cat.id;
+      activeId = cat.id;
+      markActive();
+      var my = ++req;
       clear(items).appendChild(loader());
       count.textContent = '';
       App.provider.items(kind, cat.id).then(function (list) {
-        if (activeBtn !== btn) return;
+        if (my !== req) return;
+        // „Alle Filme/Serien“: die neuesten zuerst
+        if (cat.id === '__all' && kind !== 'live' && some(list, function (x) { return Number(x.added) > 0; })) list = list.slice().sort(byAdded);
         clear(items);
         items.scrollTop = 0;
         count.textContent = String(list.length);
@@ -1713,24 +1884,33 @@
         if (panel && !panel.current()) panel.show(list[0]);
         if (focusList) Nav.focusFirst(box);
       }, function (e) {
-        if (activeBtn !== btn) return;
-        clear(items).appendChild(stateBox(T('Laden fehlgeschlagen'), e.message, T('Erneut versuchen'), function () { selectCat(cat, btn, true); }));
+        if (my !== req) return;
+        clear(items).appendChild(stateBox(T('Laden fehlgeschlagen'), e.message, T('Erneut versuchen'), function () { selectCat(cat, true); }));
       });
     }
 
     App.provider.categories(kind).then(function (list) {
-      var all = [{ id: '__all', name: allNames[kind] }].concat(list || []);
-      var want = lastCat[pid() + kind] || (list && list[0] ? list[0].id : '__all');
-      var toSelect = null;
-      all.forEach(function (c) {
-        var b = h('button', { class: 'cat f', title: c.name }, c.name);
-        b.addEventListener('click', function () { selectCat(c, b, true); });
-        cats.appendChild(b);
-        if (c.id === want) toSelect = [c, b];
-      });
-      if (!toSelect) toSelect = [all[0], cats.children[0]];
-      selectCat(toSelect[0], toSelect[1], false);
-      if (document.activeElement === document.body) Nav.focus(toSelect[1]);
+      list = list || [];
+      var want = lastCat[key], target = null;
+      groups = groupCats(list);
+      if (!groups) {
+        // Keine Sprachen erkannt: alle Kategorien untereinander wie bisher
+        var all = [allCat].concat(list);
+        all.forEach(function (c) { cats.appendChild(catBtn(c)); if (c.id === want) target = c; });
+        if (!target) target = kind === 'live' ? (list[0] || allCat) : allCat;
+      } else {
+        var g = null;
+        groups.forEach(function (x) { if (x.key === lastGroup[key]) g = x; });
+        if (g) { openGroup(g, false); target = inGroup(g, want) || g.cats[0]; }
+        else {
+          showLanguages(null);
+          if (want === '__all' || (!want && kind !== 'live')) target = allCat;
+          else groups.forEach(function (x) { target = target || inGroup(x, want); });
+          if (!target) target = groups[0].cats[0];
+        }
+      }
+      selectCat(target, false);
+      if (document.activeElement === document.body) Nav.focus(activeButton() || cats.children[0]);
     }, function (e) {
       clear(items).appendChild(stateBox(T('Laden fehlgeschlagen'), e.message, T('Erneut versuchen'), function () { Shell.show(kind, true); }));
     });
@@ -1796,8 +1976,8 @@
     var seg = h('div', { class: 'seg' });
     var body = h('div', { class: 'fav-body' });
     var btns = kinds.map(function (k) {
-      var b = h('button', { class: 'btn f', onclick: function () { favTab = k[0]; paint(); render(); } },
-        h('span', { text: k[1] }), h('span', { class: 'count-pill', text: String(Favs.list(k[0]).length) }));
+      var b = h('button', { class: 'btn f k-' + k[0], onclick: function () { favTab = k[0]; paint(); render(); } },
+        icon(k[0]), h('span', { text: k[1] }), h('span', { class: 'count-pill', text: String(Favs.list(k[0]).length) }));
       seg.appendChild(b);
       return [k[0], b];
     });
@@ -1833,7 +2013,7 @@
       Promise.all(['live', 'movie', 'series'].map(function (k) { return allItems(k).catch(function () { return []; }); })).then(function (lists) {
         if (norm(input.value.trim()) !== q) return;
         clear(results);
-        var labels = [T('Sender'), T('Filme'), T('Serien')], total = 0;
+        var labels = [T('Sender'), T('Filme'), T('Serien')], kinds = ['live', 'movie', 'series'], total = 0;
         lists.forEach(function (list, i) {
           var hits = list.filter(function (x) { return norm(x.name).indexOf(q) >= 0; }).slice(0, 60);
           total += hits.length;
@@ -1842,7 +2022,7 @@
           hits.forEach(function (it, j) {
             box.appendChild(i === 0 ? chanTile(it, function () { playItem(it, { list: hits, index: j }); }) : posterCard(it, function () { openItem(it); }));
           });
-          results.appendChild(h('section', null, h('h2', null, labels[i], h('small', { text: String(hits.length) })), box));
+          results.appendChild(h('section', { class: 'k-' + kinds[i] }, h('h2', null, icon(kinds[i]), h('span', { text: labels[i] }), h('small', { text: String(hits.length) })), box));
         });
         if (!total) results.appendChild(stateBox(T('Nichts gefunden'), T('Prüfe die Schreibweise oder versuche einen kürzeren Begriff.')));
       });
@@ -1860,23 +2040,46 @@
   function panel(ic, title, kids, cls) {
     return h('div', { class: 'panel' + (cls ? ' ' + cls : '') }, h('h3', null, icon(ic), title), kids);
   }
+  /* ---------- Profil: Zugangsdaten und Gerät (eigene Seite, oben rechts über das Profil-Symbol) ---------- */
+  function ProfileView() {
+    var p = App.profile;
+    function kvBox() { return h('div', { class: 'kv' }); }
+    function row(kv, k, v) { if (v === undefined || v === null || v === '') return; kv.appendChild(h('span', { text: k })); kv.appendChild(h('b', { text: String(v) })); }
+    var user = profileUser(p);
+    var status = h('span', { class: 'hero-status' }, h('i', { class: 'dot' }), h('span', { text: T('Wird geprüft …') }));
+    var acc = kvBox();
+    row(acc, T('Typ'), p.type === 'xtream' ? T('Xtream Codes') : p.type === 'm3u' ? T('M3U-Playlist') : T('Demo'));
+    if (p.type === 'xtream') { row(acc, T('Server'), p.server); row(acc, T('Benutzer'), p.username); }
+    if (p.type === 'm3u') { row(acc, T('Benutzer'), user !== p.name ? user : ''); row(acc, T('Playlist'), p.url); }
+    App.provider.account().then(function (a) {
+      if (!a || a.expires === undefined) { status.lastChild.textContent = T('Verbunden'); return; }
+      var days = a.expires ? Math.ceil((Number(a.expires) * 1000 - Date.now()) / 86400000) : null;
+      if (days !== null && days <= 0) { status.classList.add('is-off'); status.lastChild.textContent = T('Abgelaufen am {0}', fmtDate(a.expires)); }
+      else if (days !== null && days <= 30) { status.classList.add('is-warn'); status.lastChild.textContent = days === 1 ? T('Läuft in 1 Tag ab') : T('Läuft in {0} Tagen ab', days); }
+      else status.lastChild.textContent = T('Gültig bis {0}', fmtDate(a.expires));
+      row(acc, T('Gültig bis'), fmtDate(a.expires));
+      row(acc, T('Status'), a.status);
+      if (a.maxCons) row(acc, T('Verbindungen'), T('{0} von {1} aktiv', a.activeCons || 0, a.maxCons));
+    }).catch(function () { status.classList.add('is-off'); status.lastChild.textContent = T('Keine Verbindung'); });
+    var dev = kvBox();
+    row(dev, T('MAC-Adresse'), Device.mac());
+    row(dev, 'KEY', Device.key());
+    var initial = String(p.name || user || 'L').replace(/^\s+/, '').charAt(0).toUpperCase() || 'L';
+    return h('div', { class: 'page profile-page' },
+      h('div', { class: 'page-head' }, h('h1', { text: T('Profil') })),
+      h('div', { class: 'profile-card' },
+        h('span', { class: 'avatar', text: initial }),
+        h('div', { class: 'pc-txt' }, h('h2', { text: p.name }), user && user !== p.name ? h('p', { text: user }) : null, status),
+        h('div', { class: 'row' },
+          h('button', { class: 'btn f primary', onclick: showProfiles, 'data-autofocus': true }, icon('profile'), h('span', { text: T('Playlist wechseln') })),
+          h('button', { class: 'btn f', onclick: function () { App.provider.reset(); searchCache = {}; homeCache = {}; EpgCache.data = {}; toast(T('Daten werden neu geladen')); } }, icon('restart'), h('span', { text: T('Daten neu laden') })))),
+      h('div', { class: 'settings-grid' },
+        panel('live', T('Zugang'), [acc]),
+        panel('phone', T('Dieses Gerät'), [dev, h('p', { class: 'hint', text: T('Mit MAC-Adresse und KEY kannst du Playlists per Handy oder über die Webseite auf dieses Gerät schicken.') })])));
+  }
+
   function SettingsView() {
     var p = App.profile;
-    var kv = h('div', { class: 'kv' });
-    function row(k, v) { kv.appendChild(h('span', { text: k })); kv.appendChild(h('b', { text: v })); }
-    row(T('MAC-Adresse'), Device.mac());
-    row('KEY', Device.key());
-    row(T('Profil'), p.name);
-    row(T('Typ'), p.type === 'xtream' ? T('Xtream Codes') : p.type === 'm3u' ? T('M3U-Playlist') : T('Demo'));
-    if (p.type === 'xtream') { row(T('Server'), p.server); row(T('Benutzer'), p.username); }
-    if (p.type === 'm3u') row(T('Playlist'), p.url);
-    App.provider.account().then(function (a) {
-      if (!a) return;
-      if (a.expires !== undefined) row(T('Gültig bis'), fmtDate(a.expires));
-      if (a.status) row(T('Status'), a.status);
-      if (a.maxCons) row(T('Verbindungen'), (a.activeCons || 0) + ' von ' + a.maxCons + ' aktiv');
-    }).catch(function () {});
-
     var fmtRow = null;
     if (p.type === 'xtream') {
       var seg = h('div', { class: 'seg' });
@@ -1894,11 +2097,14 @@
     return h('div', { class: 'page settings' },
       h('div', { class: 'page-head' }, h('h1', { text: T('Einstellungen') })),
       h('div', { class: 'settings-grid' },
-        panel('profile', T('Konto'), [kv,
+        panel('profile', T('Profil'), [
+          h('p', { class: 'hint', text: T('Zugangsdaten, Ablaufdatum und Geräte-Kennung findest du auf deiner Profilseite.') }),
           h('div', { class: 'row' },
-            h('button', { class: 'btn f primary', onclick: showProfiles, 'data-autofocus': true }, icon('profile'), h('span', { text: T('Playlist wechseln') })),
-            h('button', { class: 'btn f', onclick: function () { App.provider.reset(); searchCache = {}; homeCache = {}; EpgCache.data = {}; toast(T('Daten werden neu geladen')); } }, icon('restart'), h('span', { text: T('Daten neu laden') })))]),
+            h('button', { class: 'btn f primary', onclick: function () { Shell.show('profile', true); }, 'data-autofocus': true }, icon('profile'), h('span', { text: T('Profil öffnen') })),
+            h('button', { class: 'btn f', onclick: showProfiles }, icon('restart'), h('span', { text: T('Playlist wechseln') })))]),
         appearancePanel(),
+        panel('globe', T('Sprache'), [h('div', { class: 'row' }, langButton()),
+          h('p', { class: 'hint', text: T('Deutsch ist voreingestellt. Drücke auf die Sprache, um sie zu ändern.') })]),
         h('div', { class: 'panel wide' }, remotePanel()),
         fmtRow,
         panel('history', T('Verlauf'), [
@@ -2107,8 +2313,10 @@
       self.miniTitle = h('span', { class: 'mini-title' });
       self.miniUi = h('div', { class: 'mini-ui' },
         h('button', { class: 'mini-open f', title: T('Vollbild'), onclick: function () { self.maximize(); } }, self.miniTitle),
+        self.miniMute = h('button', { class: 'mini-mute f', title: T('Ton an/aus'), 'aria-label': T('Ton an/aus'), onclick: function () { self.setMuted(!self.video.muted); } }),
         h('button', { class: 'mini-close f', title: T('Schließen'), onclick: function () { self.close(); } }, icon('close')));
       self.el = h('div', { class: 'player' }, video, self.spinner, self.osd, self.zap, self.err, self.miniUi);
+      self.paintVol();
 
       // Spulen mit Maus oder Finger: Vorschau beim Bewegen, beim Loslassen wird gesprungen
       var barWrap = self.barWrap, dragging = false;
@@ -2622,12 +2830,16 @@
       this.video.muted = m;
       Settings.set('muted', m);
       this.paintVol();
-      this.showOsd();
+      if (!this.mini) this.showOsd();
     },
     paintVol: function () {
-      if (!this.muteBtn) return;
-      clear(this.muteBtn);
-      this.muteBtn.appendChild(icon(this.video.muted || this.video.volume === 0 ? 'volOff' : 'vol'));
+      var off = this.video && (this.video.muted || this.video.volume === 0);
+      [this.muteBtn, this.miniMute].forEach(function (b) {
+        if (!b) return;
+        clear(b);
+        b.appendChild(icon(off ? 'volOff' : 'vol'));
+        b.classList.toggle('is-muted', !!off);
+      });
     },
     destroyHls: function () { if (this.hls) { try { this.hls.destroy(); } catch (e) {} this.hls = null; } },
 
