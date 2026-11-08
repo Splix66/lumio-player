@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Lumio Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.7.2',
+    version: '1.7.3',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     hlsCdn: 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js',
     requestTimeout: 30000,
@@ -1629,13 +1629,13 @@
         bar.appendChild(chip(allCat, allCat.name));
         groups.forEach(function (g) {
           var b = h('button', { class: 'chip chip-lang f', title: g.name, onclick: function () { openGroup(g); } },
-            h('span', { class: 'lc-code', text: g.code || '…' }), h('span', { class: 'chip-name', text: g.name }), h('span', { class: 'lc-n' }), icon('next'));
+            langBadge(g), h('span', { class: 'chip-name', text: g.name }), h('span', { class: 'lc-n' }), icon('next'));
           b._group = g;
           bar.appendChild(b);
         });
       } else if (groups && curGroup) {
         bar.appendChild(h('button', { class: 'chip chip-back f', title: T('Zurück zu den Sprachen'), onclick: function () { showLanguages(curGroup); } },
-          icon('back'), h('span', { class: 'lc-code', text: curGroup.code || '…' }), h('span', { class: 'chip-name', text: curGroup.name })));
+          icon('back'), langBadge(curGroup), h('span', { class: 'chip-name', text: curGroup.name })));
         bar.appendChild(chip(grpCat(curGroup), T('Alle')));
         curGroup.cats.forEach(function (c) { bar.appendChild(chip(c, c.name)); });
       } else {
@@ -2107,6 +2107,46 @@
     se: 'Schwedisch', no: 'Norwegisch', dk: 'Dänisch', fi: 'Finnisch', hu: 'Ungarisch', cz: 'Tschechisch',
     sk: 'Slowakisch', 'in': 'Indisch', fa: 'Persisch', az: 'Aserbaidschanisch'
   };
+  /* Flaggen für die Sprachen (vereinfacht, 3:2) */
+  var FLAGS = {
+    de: "<path fill=\"#000\" d=\"M0 0h30v6.67H0z\"/><path fill=\"#DD0000\" d=\"M0 6.67h30v6.67H0z\"/><path fill=\"#FFCE00\" d=\"M0 13.33h30v6.67H0z\"/>",
+    en: "<path fill=\"#012169\" d=\"M0 0h30v20H0z\"/><path d=\"M0 0l30 20M30 0L0 20\" stroke=\"#fff\" stroke-width=\"4\"/><path d=\"M0 0l30 20M30 0L0 20\" stroke=\"#C8102E\" stroke-width=\"1.5\"/><path d=\"M15 0v20M0 10h30\" stroke=\"#fff\" stroke-width=\"6.5\"/><path d=\"M15 0v20M0 10h30\" stroke=\"#C8102E\" stroke-width=\"3.6\"/>",
+    tr: "<path fill=\"#E30A17\" d=\"M0 0h30v20H0z\"/><circle cx=\"11\" cy=\"10\" r=\"5\" fill=\"#fff\"/><circle cx=\"12.3\" cy=\"10\" r=\"4\" fill=\"#E30A17\"/><path fill=\"#fff\" d=\"M14.7 10L16.33 9.44L16.36 7.72L17.39 9.1L19.04 8.59L18.05 10L19.04 11.41L17.39 10.9L16.36 12.28L16.33 10.56Z\"/>",
+    fr: "<path fill=\"#002395\" d=\"M0 0h10v20H0z\"/><path fill=\"#fff\" d=\"M10 0h10v20H10z\"/><path fill=\"#ED2939\" d=\"M20 0h10v20H20z\"/>",
+    it: "<path fill=\"#009246\" d=\"M0 0h10v20H0z\"/><path fill=\"#fff\" d=\"M10 0h10v20H10z\"/><path fill=\"#CE2B37\" d=\"M20 0h10v20H20z\"/>",
+    es: "<path fill=\"#AA151B\" d=\"M0 0h30v5H0z\"/><path fill=\"#F1BF00\" d=\"M0 5h30v10H0z\"/><path fill=\"#AA151B\" d=\"M0 15h30v5H0z\"/>",
+    nl: "<path fill=\"#AE1C28\" d=\"M0 0h30v6.67H0z\"/><path fill=\"#fff\" d=\"M0 6.67h30v6.67H0z\"/><path fill=\"#21468B\" d=\"M0 13.33h30v6.67H0z\"/>",
+    pl: "<path fill=\"#fff\" d=\"M0 0h30v10H0z\"/><path fill=\"#DC143C\" d=\"M0 10h30v10H0z\"/>",
+    pt: "<path fill=\"#006600\" d=\"M0 0h12v20H0z\"/><path fill=\"#FF0000\" d=\"M12 0h18v20H12z\"/><circle cx=\"12\" cy=\"10\" r=\"3.6\" fill=\"none\" stroke=\"#FFCC00\" stroke-width=\"1.2\"/><path fill=\"#fff\" stroke=\"#D00\" stroke-width=\".5\" d=\"M10.4 8.2h3.2v2.6a1.6 1.6 0 0 1-3.2 0z\"/>",
+    ar: "<path fill=\"#006C35\" d=\"M0 0h30v20H0z\"/><path d=\"M8.5 7.6c1.2-1 2 .8 3 0s1.6-1 2.6 0 1.8.7 2.6-.2 1.6-.6 2.4.3 1.4.4 2.4-.4\" fill=\"none\" stroke=\"#fff\" stroke-width=\".9\" stroke-linecap=\"round\"/><path d=\"M9 12.6h12.5\" stroke=\"#fff\" stroke-width=\"1\" stroke-linecap=\"round\"/><path d=\"M21.5 12.6l-1.6-1v2z\" fill=\"#fff\"/>",
+    ru: "<path fill=\"#fff\" d=\"M0 0h30v6.67H0z\"/><path fill=\"#0039A6\" d=\"M0 6.67h30v6.67H0z\"/><path fill=\"#D52B1E\" d=\"M0 13.33h30v6.67H0z\"/>",
+    ua: "<path fill=\"#0057B7\" d=\"M0 0h30v10H0z\"/><path fill=\"#FFD700\" d=\"M0 10h30v10H0z\"/>",
+    ku: "<path fill=\"#ED2024\" d=\"M0 0h30v6.67H0z\"/><path fill=\"#fff\" d=\"M0 6.67h30v6.67H0z\"/><path fill=\"#278E43\" d=\"M0 13.33h30v6.67H0z\"/><path fill=\"#FEBD11\" d=\"M15 6.4L15.34 7.73L16.06 6.56L16 7.93L17.03 7.03L16.56 8.31L17.81 7.76L16.99 8.85L18.35 8.68L17.24 9.49L18.59 9.73L17.29 10.17L18.51 10.8L17.14 10.84L18.12 11.8L16.8 11.43L17.45 12.64L16.3 11.9L16.56 13.24L15.68 12.2L15.54 13.56L15 12.3L14.46 13.56L14.32 12.2L13.44 13.24L13.7 11.9L12.55 12.64L13.2 11.43L11.88 11.8L12.86 10.84L11.49 10.8L12.71 10.17L11.41 9.73L12.76 9.49L11.65 8.68L13.01 8.85L12.19 7.76L13.44 8.31L12.97 7.03L14 7.93L13.94 6.56L14.66 7.73Z\"/>",
+    al: "<path fill=\"#E41E20\" d=\"M0 0h30v20H0z\"/><path fill=\"#000\" d=\"M15 5.2l1 1.6 1.6-1.6.4 1.4 2.4-1.4-.4 2.2 2.6-.8-1.2 2.2 2.2.2-2.4 1.6 1.4 1-3 .2-1.6 1.8-1.4-.6.8 2.4-1.4.6-.6-1.6-.6 1.6-1.4-.6.8-2.4-1.4.6-1.6-1.8-3-.2 1.4-1-2.4-1.6 2.2-.2-1.2-2.2 2.6.8-.4-2.2 2.4 1.4.4-1.4 1.6 1.6z\"/>",
+    bg: "<path fill=\"#fff\" d=\"M0 0h30v6.67H0z\"/><path fill=\"#00966E\" d=\"M0 6.67h30v6.67H0z\"/><path fill=\"#D62612\" d=\"M0 13.33h30v6.67H0z\"/>",
+    ro: "<path fill=\"#002B7F\" d=\"M0 0h10v20H0z\"/><path fill=\"#FCD116\" d=\"M10 0h10v20H10z\"/><path fill=\"#CE1126\" d=\"M20 0h10v20H20z\"/>",
+    gr: "<path fill=\"#0D5EAF\" d=\"M0 0h30v20H0z\"/><path fill=\"#fff\" d=\"M0 2.22h30v2.22H0z\"/><path fill=\"#fff\" d=\"M0 6.67h30v2.22H0z\"/><path fill=\"#fff\" d=\"M0 11.11h30v2.22H0z\"/><path fill=\"#fff\" d=\"M0 15.56h30v2.22H0z\"/><path fill=\"#0D5EAF\" d=\"M0 0h11.11v11.11H0z\"/><path fill=\"#fff\" d=\"M0 4.44h11.11v2.22H0z\"/><path fill=\"#fff\" d=\"M4.44 0h2.22v11.11H4.44z\"/>",
+    yu: "<path fill=\"#003893\" d=\"M0 0h30v6.67H0z\"/><path fill=\"#fff\" d=\"M0 6.67h30v6.67H0z\"/><path fill=\"#DE0000\" d=\"M0 13.33h30v6.67H0z\"/><path fill=\"#DE0000\" stroke=\"#FFD100\" stroke-width=\".6\" d=\"M15 6.3L15.94 9.01L18.8 9.06L16.52 10.79L17.35 13.54L15 11.9L12.65 13.54L13.48 10.79L11.2 9.06L14.06 9.01Z\"/>",
+    se: "<path fill=\"#006AA7\" d=\"M0 0h30v20H0z\"/><path fill=\"#FECC00\" d=\"M9 0h3.4v20H9z\"/><path fill=\"#FECC00\" d=\"M0 8.3h30v3.4H0z\"/>",
+    no: "<path fill=\"#BA0C2F\" d=\"M0 0h30v20H0z\"/><path fill=\"#fff\" d=\"M8 0h5.6v20H8z\"/><path fill=\"#fff\" d=\"M0 7.2h30v5.6H0z\"/><path fill=\"#00205B\" d=\"M9.4 0h2.8v20H9.4z\"/><path fill=\"#00205B\" d=\"M0 8.6h30v2.8H0z\"/>",
+    dk: "<path fill=\"#C8102E\" d=\"M0 0h30v20H0z\"/><path fill=\"#fff\" d=\"M9 0h3.2v20H9z\"/><path fill=\"#fff\" d=\"M0 8.4h30v3.2H0z\"/>",
+    fi: "<path fill=\"#fff\" d=\"M0 0h30v20H0z\"/><path fill=\"#002F6C\" d=\"M8.5 0h5v20H8.5z\"/><path fill=\"#002F6C\" d=\"M0 7.5h30v5H0z\"/>",
+    hu: "<path fill=\"#CE2939\" d=\"M0 0h30v6.67H0z\"/><path fill=\"#fff\" d=\"M0 6.67h30v6.67H0z\"/><path fill=\"#477050\" d=\"M0 13.33h30v6.67H0z\"/>",
+    cz: "<path fill=\"#fff\" d=\"M0 0h30v10H0z\"/><path fill=\"#D7141A\" d=\"M0 10h30v10H0z\"/><path fill=\"#11457E\" d=\"M0 0l15 10L0 20z\"/>",
+    sk: "<path fill=\"#fff\" d=\"M0 0h30v6.67H0z\"/><path fill=\"#0B4EA2\" d=\"M0 6.67h30v6.67H0z\"/><path fill=\"#EE1C25\" d=\"M0 13.33h30v6.67H0z\"/><path fill=\"#EE1C25\" stroke=\"#fff\" stroke-width=\".6\" d=\"M6.5 4.6h7.5v6.2c0 3-1.9 4.6-3.75 5.4-1.85-.8-3.75-2.4-3.75-5.4z\"/><path d=\"M10.25 6v8M8.5 8.2h3.5M8 10.6h4.5\" stroke=\"#fff\" stroke-width=\"1\"/><path fill=\"#0B4EA2\" d=\"M7.4 13.2c.8-.9 1.8-.9 2.85 0 1-.9 2-.9 2.85 0-.6 1.1-1.6 1.9-2.85 2.5-1.25-.6-2.25-1.4-2.85-2.5z\"/>",
+    'in': "<path fill=\"#FF9933\" d=\"M0 0h30v6.67H0z\"/><path fill=\"#fff\" d=\"M0 6.67h30v6.67H0z\"/><path fill=\"#138808\" d=\"M0 13.33h30v6.67H0z\"/><circle cx=\"15\" cy=\"10\" r=\"2.6\" fill=\"none\" stroke=\"#000080\" stroke-width=\".55\"/><circle cx=\"15\" cy=\"10\" r=\".7\" fill=\"#000080\"/>",
+    fa: "<path fill=\"#239F40\" d=\"M0 0h30v6.67H0z\"/><path fill=\"#fff\" d=\"M0 6.67h30v6.67H0z\"/><path fill=\"#DA0000\" d=\"M0 13.33h30v6.67H0z\"/><path d=\"M15 7.6v4.6M13.6 8.4c-.9 1.4-.4 3 .9 3.6M16.4 8.4c.9 1.4.4 3-.9 3.6\" fill=\"none\" stroke=\"#DA0000\" stroke-width=\".7\" stroke-linecap=\"round\"/>",
+    az: "<path fill=\"#0092BC\" d=\"M0 0h30v6.67H0z\"/><path fill=\"#E4002B\" d=\"M0 6.67h30v6.67H0z\"/><path fill=\"#00AF66\" d=\"M0 13.33h30v6.67H0z\"/><circle cx=\"14.2\" cy=\"10\" r=\"2.6\" fill=\"#fff\"/><circle cx=\"14.85\" cy=\"10\" r=\"2.1\" fill=\"#E4002B\"/><path fill=\"#fff\" d=\"M17.4 8.7L17.63 9.45L18.32 9.08L17.95 9.77L18.7 10L17.95 10.23L18.32 10.92L17.63 10.55L17.4 11.3L17.17 10.55L16.48 10.92L16.85 10.23L16.1 10L16.85 9.77L16.48 9.08L17.17 9.45Z\"/>"
+  };
+  /* Flagge der Sprache statt „DE“, „TR“ … – ohne Flagge (z. B. „Weitere“) bleibt das Kürzel */
+  function langBadge(g) {
+    var svg = FLAGS[g.key];
+    if (!svg && g.key === '_') return h('span', { class: 'lc-code lc-globe', title: g.name }, icon('globe'));
+    if (!svg) return h('span', { class: 'lc-code', text: g.code || '…' });
+    var f = h('span', { class: 'flag', title: g.name });
+    f.innerHTML = '<svg viewBox="0 0 30 20" preserveAspectRatio="none" aria-hidden="true">' + svg + '</svg>';
+    return f;
+  }
   var CODE_MAP = null;
   var WORD_CH = '0-9A-Za-z\\u00C0-\\u024F\\u0370-\\u03FF\\u0400-\\u04FF\\u0600-\\u06FF';
   var WORD_RE = new RegExp('[' + WORD_CH + ']+', 'g');
@@ -2228,7 +2268,7 @@
     }
     function langBtn(g) {
       var b = h('button', { class: 'cat lang-cat f', title: g.name },
-        h('span', { class: 'lc-code', text: g.code || '…' }), h('span', { class: 'lc-name', text: g.name }),
+        langBadge(g), h('span', { class: 'lc-name', text: g.name }),
         h('span', { class: 'lc-n' }), icon('next'));
       b._group = g;
       b.addEventListener('click', function () { openGroup(g, true); });
@@ -2250,7 +2290,7 @@
       curGroup = g; lastGroup[key] = g.key;
       clear(cats);
       var back = h('button', { class: 'cat cat-back f', title: T('Zurück zu den Sprachen') },
-        icon('back'), h('span', { class: 'lc-code', text: g.code || '…' }), h('span', { class: 'lc-name', text: g.name }));
+        icon('back'), langBadge(g), h('span', { class: 'lc-name', text: g.name }));
       back.addEventListener('click', function () { showLanguages(g); });
       cats.appendChild(back);
       g.cats.forEach(function (c) { cats.appendChild(catBtn(c)); });
