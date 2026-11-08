@@ -329,7 +329,7 @@ body.kbd .qs-item.f:focus, body.is-tv .qs-item.f:focus { background: var(--surfa
 .rail { margin-top: 1.9rem; }
 .rail:first-child { margin-top: 0; }
 .rail h2 { font-size: 1.4rem; font-weight: 700; letter-spacing: -.02em; padding: 0 var(--pad); margin-bottom: .95rem; display: flex; align-items: center; }
-.rail h2 .i, .results h2 .i { width: 1.15em; height: 1.15em; margin-right: .5rem; color: var(--k); }
+.rail h2 .i { width: 1.15em; height: 1.15em; margin-right: .5rem; color: var(--k); }
 .rail-track { display: flex; overflow-x: auto; overflow-y: hidden; padding: .7rem var(--pad) 1.1rem; margin: -.7rem 0 -.6rem; scrollbar-width: none; }
 .rail-track::-webkit-scrollbar { display: none; }
 .rail-track > * { flex: none; }
@@ -498,17 +498,6 @@ body.has-mini .lp-hint { display: block; }
    ========================================================== */
 .tile-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr)); grid-gap: 1.4rem 1.1rem; gap: 1.4rem 1.1rem; }
 .tile-grid .chan-tile { width: 100%; }
-.results > section + section { margin-top: 2.2rem; }
-.results h2 { font-size: 1.3rem; font-weight: 700; letter-spacing: -.02em; margin-bottom: 1rem; display: flex; align-items: center; }
-.results h2 small { color: var(--muted); font-weight: 600; font-size: .9rem; margin-left: .5rem; }
-.search-box { display: block; position: relative; max-width: 46rem; margin-bottom: 2rem; }
-.search-box .i { position: absolute; left: 1.3rem; top: 50%; margin-top: -.75rem; width: 1.5rem; height: 1.5rem; color: var(--muted); pointer-events: none; }
-.search-box input {
-  width: 100%; padding: 1.1rem 1.3rem 1.1rem 3.5rem; border-radius: 999px; border: 0; outline: none; font-size: 1.15rem;
-  background: var(--surface); box-shadow: inset 0 0 0 1px var(--line-2);
-}
-.search-box input:focus { box-shadow: inset 0 0 0 1.5px var(--accent-line), 0 0 1.6rem var(--accent-soft); }
-body.kbd .search-box input.f:focus, body.is-tv .search-box input.f:focus { box-shadow: inset 0 0 0 .16rem var(--accent-line), 0 0 1.6rem var(--accent-soft); }
 
 /* ==========================================================
    Einstellungen
@@ -875,8 +864,6 @@ body.has-mini .screen.modal { padding-right: calc(min(26rem, 46vw) + 3rem); }
   html:not(.tv) .kv b { margin-bottom: .4rem; }
   html:not(.tv) .remote { flex-direction: column; text-align: center; }
   html:not(.tv) .remote > * + * { margin-left: 0; margin-top: 1rem; }
-  html:not(.tv) .search-box input { font-size: 1rem; padding: .95rem 1.1rem .95rem 3.1rem; }
-  html:not(.tv) .search-box .i { left: 1.1rem; }
 
   html:not(.tv) .screen.modal { padding: 2.5rem 0 0; align-items: stretch; justify-content: flex-end; }
   html:not(.tv) .modal-panel { border-radius: 1.4rem 1.4rem 0 0; max-width: none; }

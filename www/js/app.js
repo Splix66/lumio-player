@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Lumio Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.3.0',
+    version: '1.4.0',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     hlsCdn: 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js',
     requestTimeout: 30000,
@@ -414,7 +414,7 @@
   function XtreamProvider(p) {
     var base = normalizeServer(p.server);
     var user = encodeURIComponent(p.username), pass = encodeURIComponent(p.password);
-    var cache = {};
+    var cache = {}, lists = {};
     var ACTIONS = {
       live: ['get_live_categories', 'get_live_streams'],
       movie: ['get_vod_categories', 'get_vod_streams'],
@@ -453,11 +453,20 @@
           return (Array.isArray(list) ? list : []).map(function (c) { return { id: String(c.category_id), name: c.category_name || T('Ohne Name') }; });
         });
       },
+      /* Listen werden nur einmal geladen und umgewandelt. Liegt die Gesamtliste schon vor,
+         wird eine Kategorie daraus gefiltert – ohne neue Anfrage an den Server. */
       items: function (kind, catId) {
-        var extra = catId && catId !== '__all' ? '&category_id=' + encodeURIComponent(catId) : '';
-        return api(ACTIONS[kind][1], extra).then(function (list) {
-          return (Array.isArray(list) ? list : []).map(function (s) { return mapItem(kind, s); });
-        });
+        var all = !catId || catId === '__all', key = kind + '|' + (all ? '__all' : catId);
+        if (lists[key]) return lists[key];
+        var whole = lists[kind + '|__all'];
+        var pr = whole && whole.done
+          ? whole.then(function (l) { return l.filter(function (x) { return x.catId === String(catId); }); })
+          : api(ACTIONS[kind][1], all ? '' : '&category_id=' + encodeURIComponent(catId), true).then(function (list) {
+            return (Array.isArray(list) ? list : []).map(function (s) { return mapItem(kind, s); });
+          });
+        lists[key] = pr;
+        pr.then(function () { pr.done = true; }, function () { delete lists[key]; });
+        return pr;
       },
       movieInfo: function (item) {
         return api('get_vod_info', '&vod_id=' + item.id).then(function (d) {
@@ -522,7 +531,7 @@
         var dir = item.kind === 'movie' ? 'movie' : 'series';
         return { url: base + '/' + dir + '/' + user + '/' + pass + '/' + item.id + '.' + (item.ext || 'mp4') };
       },
-      reset: function () { cache = {}; }
+      reset: function () { cache = {}; lists = {}; }
     };
   }
 
@@ -1171,17 +1180,16 @@
       var el = $('[data-autofocus]', root) || $('.f.is-on', root) || $('.f', root);
       if (el) this.focus(el);
     },
-    move: function (dir) {
-      var cur = document.activeElement;
-      var list = this.candidates();
-      if (!cur || list.indexOf(cur) < 0) { if (list[0]) this.focus(list[0]); return; }
+    /* Bestes Ziel in Pfeilrichtung: nah, und möglichst in derselben Zeile/Spalte */
+    pick: function (cur, list, dir) {
       var a = cur.getBoundingClientRect();
       var ax = a.left + a.width / 2, ay = a.top + a.height / 2;
-      var best = null, bestScore = Infinity;
+      var best = null, bestScore = Infinity, bestOverlap = false;
       for (var i = 0; i < list.length; i++) {
         var el = list[i];
         if (el === cur) continue;
         var b = el.getBoundingClientRect();
+        if (!b.width || !b.height) continue;
         var bx = b.left + b.width / 2, by = b.top + b.height / 2;
         var main, side, overlap;
         if (dir === 'right') { if (b.left < a.right - 2 && bx <= ax + 1) continue; main = b.left - a.right; side = Math.abs(by - ay); overlap = b.bottom > a.top && b.top < a.bottom; }
@@ -1189,10 +1197,25 @@
         else if (dir === 'down') { if (b.top < a.bottom - 2 && by <= ay + 1) continue; main = b.top - a.bottom; side = Math.abs(bx - ax); overlap = b.right > a.left && b.left < a.right; }
         else { if (b.bottom > a.top + 2 && by >= ay - 1) continue; main = a.top - b.bottom; side = Math.abs(bx - ax); overlap = b.right > a.left && b.left < a.right; }
         var score = Math.max(main, 0) + (overlap ? side * 0.1 : side * 2.5 + 200);
-        if (score < bestScore) { bestScore = score; best = el; }
+        if (score < bestScore) { bestScore = score; best = el; bestOverlap = overlap; }
       }
-      if (best) this.focus(best);
-      return !!best;
+      return best ? { el: best, overlap: bestOverlap } : null;
+    },
+    move: function (dir) {
+      var cur = document.activeElement;
+      // Schnellweg für große Listen und Raster: zuerst nur die Nachbarn in derselben Liste prüfen
+      var par = cur && cur.parentNode;
+      if (par && par.children && par.children.length > 60 && !Dialog.open) {
+        var sib = Array.prototype.slice.call(par.children), idx = sib.indexOf(cur);
+        var local = sib.slice(Math.max(0, idx - 40), idx + 41).filter(function (el) { return el.classList && el.classList.contains('f') && !el.disabled; });
+        var near = this.pick(cur, local, dir);
+        if (near && near.overlap) { this.focus(near.el); return true; }
+      }
+      var list = this.candidates();
+      if (!cur || list.indexOf(cur) < 0) { if (list[0]) this.focus(list[0]); return; }
+      var hit = this.pick(cur, list, dir);
+      if (hit) this.focus(hit.el);
+      return !!hit;
     }
   };
 
@@ -1294,7 +1317,9 @@
   }
   function img(src, cls, onFail) {
     if (!src) return null;
-    var i = h('img', { src: src, class: cls || '', loading: 'lazy', alt: '' });
+    // erst „lazy“ setzen, dann die Adresse – sonst laden manche Browser sofort alle Bilder
+    var i = h('img', { class: cls || '', loading: 'lazy', decoding: 'async', alt: '' });
+    i.src = src;
     i.onerror = function () { if (onFail) onFail(i); else i.style.display = 'none'; };
     return i;
   }
@@ -1326,6 +1351,8 @@
       c = { at: Date.now(), list: null };
       c.pr = App.provider.epg(item, 6).then(function (l) { c.list = l || []; return c.list; }, function () { c.list = []; return c.list; });
       this.data[k] = c;
+      var keys = Object.keys(this.data);
+      if (keys.length > 300) { var d = this.data; keys.sort(function (a, b) { return d[a].at - d[b].at; }).slice(0, keys.length - 250).forEach(function (x) { delete d[x]; }); }
       return c.pr;
     },
     now: function (item) {
@@ -1386,7 +1413,7 @@
     var sub = ep ? 'S' + it.season + ' E' + it.num : T('Noch {0}', fmtLeft(r.d - r.t));
     var src = it.backdrop || it.logo;
     var pic = src ? h('span', { class: 'cw-img' }, img(src, '', function (i) { var b = i.parentNode; if (b && b.parentNode) b.parentNode.removeChild(b); })) : null;
-    return h('button', { class: 'cw f k-' + (ep || it.kind === 'series' ? 'series' : it.kind === 'live' ? 'live' : 'movie') + (it.backdrop ? '' : ' is-poster'), title: title, onclick: function () { playItem(it, { list: [it], index: 0 }); } },
+    return h('button', { class: 'cw f k-' + (ep || it.kind === 'series' ? 'series' : it.kind === 'live' ? 'live' : 'movie') + (it.backdrop ? '' : ' is-poster'), 'data-key': (ep ? 'series:' + it.seriesId : it.kind + ':' + it.id), title: title, onclick: function () { playItem(it, { list: [it], index: 0 }); } },
       pic,
       h('span', { class: 'cw-txt' },
         h('span', { class: 'cw-title', text: title }),
@@ -1410,10 +1437,20 @@
       var idx = Number(e.target.getAttribute('data-idx'));
       if (idx >= done - 18) more();
     });
-    scroller.addEventListener('scroll', function () {
-      if (scroller.scrollTop + scroller.clientHeight > scroller.scrollHeight - 600) more();
-    });
-    return { upTo: function (idx) { while (done <= idx && done < items.length) more(); } };
+    var ticking = false;
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      setTimeout(function () {
+        ticking = false;
+        if (scroller.scrollTop + scroller.clientHeight > scroller.scrollHeight - 900) more();
+      }, 80);
+    }
+    scroller.addEventListener('scroll', onScroll);
+    return {
+      upTo: function (idx) { while (done <= idx && done < items.length) more(); },
+      dispose: function () { scroller.removeEventListener('scroll', onScroll); }
+    };
   }
 
   /* ==========================================================
@@ -1588,7 +1625,11 @@
           if (self.current !== 'home') { self.show('home', true); return true; }
           return false;
         },
-        onShow: function () { if (self.current === 'home') self.show('home', false, true); }
+        onShow: function () {
+          if (self.current !== 'home') return;
+          var v = self.view.firstChild;
+          if (v && v._refresh) v._refresh(); else self.show('home', false, true);
+        }
       });
       self.show('home');
       if (restore) self.restoreLast();
@@ -1615,7 +1656,6 @@
       clear(self.view);
       var view;
       if (name === 'home') view = HomeView();
-      else if (name === 'search') view = SearchView();
       else if (name === 'settings') view = SettingsView();
       else if (name === 'profile') view = ProfileView();
       else if (name === 'favs') view = FavoritesView();
@@ -1762,10 +1802,24 @@
       }, function () { if (sk.parentNode) rows.removeChild(sk); });
     }
 
-    var resume = Resume.recent().slice(0, 12);
-    if (resume.length) rows.appendChild(rail(T('Weiterschauen'), resume.map(continueCard)));
-    var recent = Recent.list();
-    if (recent.length) rows.appendChild(rail(T('Zuletzt gesehene Sender'), recent.map(function (it, i) { return chanTile(it, function () { playItem(it, { list: recent, index: i }); }); }), null, 'live'));
+    // „Weiterschauen“ und „Zuletzt gesehene Sender“ werden nach dem Schauen nur aufgefrischt –
+    // die Startseite wird nicht komplett neu aufgebaut (Scroll-Position und Fokus bleiben erhalten)
+    var personal = h('div', { class: 'rows-personal' });
+    rows.appendChild(personal);
+    function paintPersonal() {
+      clear(personal);
+      var resume = Resume.recent().slice(0, 12);
+      if (resume.length) personal.appendChild(rail(T('Weiterschauen'), resume.map(continueCard)));
+      var recent = Recent.list();
+      if (recent.length) personal.appendChild(rail(T('Zuletzt gesehene Sender'), recent.map(function (it, i) { var t = chanTile(it, function () { playItem(it, { list: recent, index: i }); }); t.setAttribute('data-key', 'live:' + it.id); return t; }), null, 'live'));
+    }
+    paintPersonal();
+    el._refresh = function () {
+      var st = Screens.top(), lf = st && st.lastFocus, key = lf && lf.getAttribute && lf.getAttribute('data-key');
+      var inPersonal = lf && personal.contains(lf);
+      paintPersonal();
+      if (inPersonal && st) st.lastFocus = (key && $('[data-key="' + key + '"]', personal)) || $('.f', personal) || $('.f', el);
+    };
 
     var shown = {};
     var moviesP = sampleItems('movie'), seriesP = sampleItems('series');
@@ -1919,7 +1973,7 @@
       h('div', { class: 'section-body' }, cats, items, panel ? panel.el : null));
     var key = pid() + kind;
     var allCat = { id: '__all', name: allNames[kind] };
-    var groups = null, curGroup = null, activeId = null, req = 0, counts = null;
+    var groups = null, curGroup = null, activeId = null, req = 0, counts = null, chunker = null;
     // Zahlen hinter Sprachen und Kategorien: bei einer Sprache alle Einträge dieser Sprache, sonst je Kategorie
     function paintCounts() {
       if (!counts) return;
@@ -1994,6 +2048,7 @@
       activeId = cat.id;
       markActive();
       var my = ++req;
+      if (chunker) { chunker.dispose(); chunker = null; }
       clear(items).appendChild(loader());
       count.textContent = '';
       App.provider.items(kind, cat.id).then(function (list) {
@@ -2006,7 +2061,7 @@
         if (!list.length) { items.appendChild(stateBox(T('Keine Einträge'), T('In dieser Kategorie ist gerade nichts enthalten.'))); return; }
         var box = h('div', { class: kind === 'live' ? 'chan-list' : 'poster-grid' });
         items.appendChild(box);
-        var rc = renderChunked(box, items, list, function (it, i) {
+        var rc = chunker = renderChunked(box, items, list, function (it, i) {
           return kind === 'live' ? channelRow(it, function () { playItem(it, { list: list, index: i }); }, panel ? panel.show : null)
             : posterCard(it, function () { openItem(it); });
         });
@@ -2241,43 +2296,6 @@
     }
   };
 
-  /* ---------- Suche (ganze Seite, wird nicht mehr über das Menü geöffnet) ---------- */
-  function SearchView() {
-    var input = h('input', { class: 'f', type: 'search', placeholder: T('Sender, Filme oder Serien suchen …'), autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false', 'data-autofocus': '', 'aria-label': T('Suche') });
-    var results = h('div', { class: 'results' });
-    var timer = null;
-    function hint() { clear(results).appendChild(h('p', { class: 'hint', text: T('Gib mindestens zwei Buchstaben ein. Gesucht wird in allen Sendern, Filmen und Serien deiner Playlist.') })); }
-    function run() {
-      var q = norm(input.value.trim());
-      if (q.length < 2) { hint(); return; }
-      clear(results).appendChild(loader());
-      Promise.all(['live', 'movie', 'series'].map(function (k) { return allItems(k).catch(function () { return []; }); })).then(function (lists) {
-        if (norm(input.value.trim()) !== q) return;
-        clear(results);
-        var labels = [T('Sender'), T('Filme'), T('Serien')], kinds = ['live', 'movie', 'series'], total = 0;
-        lists.forEach(function (list, i) {
-          var hits = list.filter(function (x) { return norm(x.name).indexOf(q) >= 0; }).slice(0, 60);
-          total += hits.length;
-          if (!hits.length) return;
-          var box = h('div', { class: i === 0 ? 'tile-grid' : 'poster-grid' });
-          hits.forEach(function (it, j) {
-            box.appendChild(i === 0 ? chanTile(it, function () { playItem(it, { list: hits, index: j }); }) : posterCard(it, function () { openItem(it); }));
-          });
-          results.appendChild(h('section', { class: 'k-' + kinds[i] }, h('h2', null, icon(kinds[i]), h('span', { text: labels[i] }), h('small', { text: String(hits.length) })), box));
-        });
-        if (!total) results.appendChild(stateBox(T('Nichts gefunden'), T('Prüfe die Schreibweise oder versuche einen kürzeren Begriff.')));
-      });
-    }
-    input.addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(run, 400); });
-    input.addEventListener('keydown', function (e) { if (e.keyCode === 13) { clearTimeout(timer); run(); } });
-    hint();
-    return h('div', { class: 'page search' },
-      h('div', { class: 'page-head' }, h('h1', { text: T('Suche') })),
-      h('label', { class: 'search-box' }, icon('search'), input),
-      results);
-  }
-
-  /* ---------- Einstellungen ---------- */
   function panel(ic, title, kids, cls) {
     return h('div', { class: 'panel' + (cls ? ' ' + cls : '') }, h('h3', null, icon(ic), title), kids);
   }
@@ -2686,7 +2704,10 @@
       });
       video.addEventListener('timeupdate', function () { self.paintProgress(); });
       video.addEventListener('ended', function () { self.onEnded(); });
-      video.addEventListener('error', function () { self.onError(T('Das Video konnte nicht abgespielt werden (Format oder Verbindung).')); });
+      video.addEventListener('error', function () {
+        if (self.hls) return;   // hls.js meldet seine Fehler selbst (und versucht es erst noch einmal)
+        self.onError(T('Das Video konnte nicht abgespielt werden (Format oder Verbindung).'));
+      });
 
       Screens.push('player', self.el, self.screenOpts());
       self.enterFullscreen();
@@ -2806,6 +2827,7 @@
       self.spinner.style.display = '';
       self.loadTxt.textContent = item.kind === 'live' ? T('{0} wird geladen …', item.name) : T('Wird geladen …');
       self.epgNow = ''; self.epgNext = '';
+      clearInterval(self.epgTimer);
       if (self.miniTitle) self.miniTitle.textContent = item.name;
       self.lastPlace = '';
       self.title.textContent = item.kind === 'episode' ? (item.seriesName ? item.seriesName + ' · ' : '') + 'S' + item.season + ' E' + item.num + ' – ' + item.name : item.name;
