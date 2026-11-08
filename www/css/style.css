@@ -176,6 +176,23 @@ body.kbd .f:focus, body.is-tv .f:focus {
 .mac-tag span { font-weight: 700; letter-spacing: .04em; font-size: .68rem; color: var(--dim); }
 .mac-tag b { color: var(--text); font-family: ui-monospace, Menlo, Consolas, "DejaVu Sans Mono", monospace; letter-spacing: .03em; font-variant-numeric: tabular-nums; font-weight: 600; }
 .mac-tag b + span { margin-left: .8rem; }
+.mac-tag .copy-btn + span { margin-left: .8rem; }
+/* Kopieren-Knopf neben MAC und KEY */
+.copy-btn { display: inline-grid; place-items: center; width: 1.9rem; height: 1.9rem; border-radius: .5rem; color: var(--muted); flex: none; vertical-align: middle; transition: background-color .15s ease, color .15s ease; }
+.copy-btn .i { width: 1rem; height: 1rem; }
+.copy-btn:hover { color: var(--text); background: var(--surface-2); }
+.copy-btn:active { transform: scale(.92); }
+.mac-tag .copy-btn { width: 1.45rem; height: 1.45rem; margin-left: .15rem; }
+.mac-tag .copy-btn .i { width: .8rem; height: .8rem; }
+.id-row .copy-btn { align-self: center; width: 2.3rem; height: 2.3rem; margin-left: .7rem; }
+.id-row .copy-btn .i { width: 1.15rem; height: 1.15rem; }
+.kv-copy { display: flex; align-items: center; }
+.kv-copy .copy-btn { margin-left: .5rem; }
+/* Laufzeit ganz rechts in der Fußleiste */
+.sb-days { margin-left: auto; }
+.sb-days:empty { display: none; }
+.statusbar .sb-days.is-warn b { color: var(--warn); }
+.statusbar .sb-days.is-expired b { color: var(--live); }
 
 /* ==========================================================
    Grundgerüst: Menüleiste oben, Inhalt darunter
@@ -245,6 +262,39 @@ body.kbd .tab.f:focus .i, body.is-tv .tab.f:focus .i { color: var(--bg); }
 .hero-status.is-warn { color: var(--warn); box-shadow: inset 0 0 0 1px var(--warn); }
 .hero-status.is-warn .dot { background: var(--warn); }
 .hero-status.is-off .dot { background: var(--live); }
+/* Schnellsuche: Leiste neben der Lupe, Treffer direkt darunter */
+.qs {
+  position: fixed; z-index: 46; height: 2.8rem; display: flex; align-items: center; padding: 0 .5rem 0 1rem;
+  background: var(--surface-2); border-radius: 999px; box-shadow: 0 .6rem 1.8rem rgba(0, 0, 0, .35), inset 0 0 0 1px var(--line-2);
+  transform-origin: right center; animation: qsIn .18s ease;
+}
+@keyframes qsIn { from { opacity: 0; transform: scaleX(.85); } }
+.qs.is-hidden, .qs-pop.is-hidden { display: none; }
+.qs > .i { width: 1.2rem; height: 1.2rem; color: var(--muted); flex: none; margin-right: .6rem; }
+.qs input { flex: 1; min-width: 0; height: 100%; background: transparent; border: 0; color: var(--text); font: inherit; font-size: .98rem; outline: none; -webkit-appearance: none; appearance: none; }
+.qs input::placeholder { color: var(--dim); }
+body.kbd .qs input.f:focus, body.is-tv .qs input.f:focus { box-shadow: none; }
+.qs:focus-within { box-shadow: 0 .6rem 1.8rem rgba(0, 0, 0, .35), inset 0 0 0 2px var(--accent-line); }
+.qs-pop {
+  position: fixed; z-index: 45; max-height: min(70vh, 36rem); overflow-y: auto; padding: .5rem;
+  background: var(--surface); border-radius: var(--radius-lg); box-shadow: 0 1.2rem 3rem rgba(0, 0, 0, .5), 0 0 0 1px var(--line-2);
+}
+.qs-pop > .state { min-height: 6rem; }
+.qs-hint { padding: .8rem .9rem; }
+.qs-sec + .qs-sec { margin-top: .4rem; border-top: 1px solid var(--line); padding-top: .4rem; }
+.qs-sec h3 { display: flex; align-items: center; font-size: .82rem; font-weight: 700; color: var(--muted); padding: .55rem .7rem .35rem; }
+.qs-sec h3 .i { width: 1rem; height: 1rem; margin-right: .45rem; color: var(--k); }
+.qs-sec h3 small { margin-left: .45rem; color: var(--dim); font-weight: 600; }
+.qs-item { display: flex; align-items: center; width: 100%; text-align: left; padding: .4rem .6rem; border-radius: .7rem; }
+.qs-item:hover { background: var(--surface-2); }
+body.kbd .qs-item.f:focus, body.is-tv .qs-item.f:focus { background: var(--surface-2); box-shadow: inset 0 0 0 .14rem var(--accent-line); }
+.qs-item .logo-box { width: 3.6rem; height: 2.4rem; flex: none; margin-right: .8rem; }
+.qs-poster { width: 2.2rem; flex: none; margin-right: .8rem; }
+.qs-poster .art { display: block; position: relative; width: 100%; height: 3.3rem; border-radius: .4rem; overflow: hidden; background: var(--surface-2); }
+.qs-poster .art img, .qs-poster .art .ph { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
+.qs-poster .art .ph { display: block; font-size: 0; }
+.qs-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; font-size: .95rem; }
+
 /* Startseite: Sprache der Filme und Serien */
 .home-lang { display: flex; align-items: center; flex-wrap: wrap; margin: 1.5rem -.25rem 0; }
 .home-lang:empty { display: none; }
@@ -738,6 +788,8 @@ body.has-mini .screen.modal { padding-right: calc(min(26rem, 46vw) + 3rem); }
   html:not(.tv) .topnav .brand > span:not(.brand-mark) { display: none; }
   html:not(.tv) .topnav .brand { margin-right: 1rem; }
   html:not(.tv) .mac-tag span { display: none; }
+  html:not(.tv) .statusbar .copy-btn { display: none; }
+  html:not(.tv) .sb-days { margin-left: .9rem; }
   html:not(.tv) .mac-tag b + span { margin-left: 0; }
   html:not(.tv) .mac-tag b + span + b { margin-left: .5rem; }
   html:not(.tv) .cats { width: 13rem; }

@@ -83,6 +83,7 @@
     pause: '<path d="M7 4h4v16H7zM13 4h4v16h-4z" fill="currentColor" stroke="none"/>',
     back: '<path d="M15 18l-6-6 6-6"/>',
     next: '<path d="M9 6l6 6-6 6"/>',
+    copy: '<rect x="8.5" y="8.5" width="12" height="12" rx="2"/><path d="M15.5 8.5V5.5a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h3"/>',
     globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/>',
     star: '<path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/>',
     starFill: '<path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z" fill="currentColor"/>',
@@ -219,8 +220,33 @@
     portalLink: function () { return CONFIG.portalUrl + '?mac=' + encodeURIComponent(this.mac()) + '&key=' + this.key() + '&lang=' + Lang.cur; }
   };
   function macTag(user) {
-    return h('div', { class: 'mac-tag' }, h('span', { text: 'MAC' }), h('b', { text: Device.mac() }), h('span', { text: 'KEY' }), h('b', { text: Device.key() }),
+    return h('div', { class: 'mac-tag' }, h('span', { text: 'MAC' }), h('b', { text: Device.mac() }), copyBtn(Device.mac(), 'MAC'),
+      h('span', { text: 'KEY' }), h('b', { text: Device.key() }), copyBtn(Device.key(), 'KEY'),
       user ? h('span', { text: T('Benutzer') }) : null, user ? h('b', { text: user }) : null);
+  }
+  /* In die Zwischenablage kopieren (Handy, iPad, Windows/Mac). Fernseher haben keine Zwischenablage – dort kein Knopf. */
+  function copyText(text) {
+    function done() { toast(T('{0} kopiert', text)); }
+    function fallback() {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed'; ta.style.top = '0'; ta.style.left = '0'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { ta.setSelectionRange(0, text.length); } catch (e) {}
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta);
+      if (ok) done(); else toast(T('Kopieren hat nicht geklappt'));
+    }
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(done, fallback); return; }
+    } catch (e) {}
+    fallback();
+  }
+  function copyBtn(text, label) {
+    if (Platform.tv) return null;
+    var t = T('{0} kopieren', label);
+    return h('button', { class: 'copy-btn', type: 'button', title: t, 'aria-label': t, onclick: function (e) { if (e && e.stopPropagation) e.stopPropagation(); copyText(text); } }, icon('copy'));
   }
   /* Benutzername des Zugangs: bei Xtream direkt, bei M3U aus dem Link (…?username=…), sonst der Profilname */
   function profileUser(p) {
@@ -1405,8 +1431,8 @@
               h('h1', { text: T('Playlist hinzufügen') }),
               h('p', { class: 'lead', text: T('Scanne den QR-Code mit deinem Handy. Dort gibst du nur noch deinen M3U-Link oder Xtream-Zugang ein – die Playlist erscheint dann automatisch hier.') }),
               h('div', { class: 'id-box' },
-                h('div', { class: 'id-row' }, h('span', { text: 'MAC' }), h('b', { text: Device.mac() })),
-                h('div', { class: 'id-row' }, h('span', { text: 'KEY' }), h('b', { text: Device.key() }))),
+                h('div', { class: 'id-row' }, h('span', { text: 'MAC' }), h('b', { text: Device.mac() }), copyBtn(Device.mac(), 'MAC')),
+                h('div', { class: 'id-row' }, h('span', { text: 'KEY' }), h('b', { text: Device.key() }), copyBtn(Device.key(), 'KEY'))),
               h('p', { class: 'hint', text: T('Oder öffne diese Seite und gib MAC und KEY ein:') }),
               portalLinkBtn(),
               h('div', { class: 'row small-actions' },
@@ -1539,13 +1565,25 @@
         self.buttons[name] = b;
         return b;
       }
+      var searchBtn = h('button', { class: 'icon-btn f', title: T('Suche'), 'aria-label': T('Suche'), onclick: function () { QuickSearch.toggle(); } }, icon('search'));
       var head = h('header', { class: 'topnav' },
         h('div', { class: 'brand' }, brandMark(), wordmark()),
         tabs,
-        h('div', { class: 'top-tools' }, tool('search', T('Suche')), tool('favs', T('Favoriten'), 'heart'), tool('settings', T('Einstellungen')), tool('profile', T('Profil'))));
-      self.el = h('div', { class: 'shell' }, head, h('main', { class: 'content' }, self.view), h('footer', { class: 'statusbar' }, macTag(profileUser(App.profile))));
+        h('div', { class: 'top-tools' }, searchBtn, tool('favs', T('Favoriten'), 'heart'), tool('settings', T('Einstellungen')), tool('profile', T('Profil'))));
+      var runTime = h('div', { class: 'mac-tag sb-days' });
+      App.provider.account().then(function (a) {
+        if (!a || a.expires === undefined) return;
+        var d = a.expires ? Math.ceil((Number(a.expires) * 1000 - Date.now()) / 86400000) : null;
+        var txt = d === null ? T('unbegrenzt') : d <= 0 ? T('abgelaufen') : d === 1 ? T('1 Tag') : T('{0} Tage', d);
+        runTime.appendChild(h('span', { text: T('Laufzeit') }));
+        runTime.appendChild(h('b', { text: txt }));
+        if (d !== null && d <= 30) runTime.classList.add(d <= 0 ? 'is-expired' : 'is-warn');
+      }).catch(function () {});
+      self.el = h('div', { class: 'shell' }, head, h('main', { class: 'content' }, self.view), h('footer', { class: 'statusbar' }, macTag(profileUser(App.profile)), runTime));
+      QuickSearch.build(self.el, searchBtn);
       Screens.reset('shell', self.el, {
         onBack: function () {
+          if (QuickSearch.isOpen) { QuickSearch.close(); return true; }
           if (self.viewBack && self.viewBack() === true) return true;
           if (self.current !== 'home') { self.show('home', true); return true; }
           return false;
@@ -2114,7 +2152,96 @@
     return h('div', { class: 'page favs' }, h('div', { class: 'page-head' }, h('h1', { text: T('Favoriten') }), seg), body);
   }
 
-  /* ---------- Suche ---------- */
+  /* ---------- Schnellsuche: Leiste klappt oben links neben der Lupe auf, Treffer erscheinen direkt darunter ---------- */
+  var QuickSearch = {
+    isOpen: false, el: null, input: null, pop: null, btn: null, timer: null, wired: false,
+    build: function (root, btn) {
+      var self = this;
+      self.btn = btn;
+      self.input = h('input', { class: 'f', type: 'search', placeholder: T('Sender, Filme oder Serien suchen …'), autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false', 'aria-label': T('Suche') });
+      self.input.addEventListener('input', function () { clearTimeout(self.timer); self.timer = setTimeout(function () { self.run(); }, 350); });
+      self.input.addEventListener('keydown', function (e) {
+        if (e.keyCode === 13) { var f = self.pop.querySelector('.f'); if (f) { e.preventDefault(); e.stopPropagation(); Nav.focus(f); } }
+      });
+      self.el = h('div', { class: 'qs is-hidden' }, icon('search'), self.input);
+      self.pop = h('div', { class: 'qs-pop is-hidden' });
+      root.appendChild(self.el); root.appendChild(self.pop);
+      self.isOpen = false;
+      if (self.wired) return;
+      self.wired = true;
+      function outside(t) { return !(self.el.contains(t) || self.pop.contains(t) || (self.btn && self.btn.contains(t))); }
+      document.addEventListener('pointerdown', function (e) { if (self.isOpen && outside(e.target)) self.close(true); }, true);
+      document.addEventListener('focusin', function (e) { if (self.isOpen && !Dialog.open && outside(e.target)) self.close(true); });
+      window.addEventListener('resize', function () { if (self.isOpen) self.place(); });
+    },
+    place: function () {
+      var r = this.btn.getBoundingClientRect(), W = window.innerWidth;
+      var rem = parseFloat(window.getComputedStyle(document.documentElement).fontSize) || 16, hh = 2.8 * rem;
+      var nav = this.btn.closest ? this.btn.closest('.topnav').getBoundingClientRect() : { right: 0, bottom: r.bottom };
+      var st = this.el.style, ps = this.pop.style;
+      st.left = st.right = ps.left = ps.right = 'auto';
+      if (r.left < W * 0.3) {
+        // Seitenleiste (Handy quer): Leiste oben im Inhaltsbereich
+        var left = nav.right + 12;
+        st.left = left + 'px'; st.top = '8px'; st.width = Math.min(30 * rem, W - left - 12) + 'px';
+        ps.left = left + 'px'; ps.top = (8 + hh + 8) + 'px'; ps.width = Math.min(40 * rem, W - left - 12) + 'px';
+      } else {
+        st.right = (W - r.left + 8) + 'px'; st.top = (r.top + (r.height - hh) / 2) + 'px';
+        st.width = Math.min(28 * rem, r.left - 20) + 'px';
+        ps.top = (nav.bottom + 8) + 'px';
+        if (W < 700) { ps.left = '12px'; ps.right = '12px'; ps.width = 'auto'; }
+        else { var pr = W - r.left + 8; ps.right = pr + 'px'; ps.width = Math.min(40 * rem, W - pr - 12) + 'px'; }
+      }
+    },
+    open: function () {
+      var self = this;
+      self.isOpen = true;
+      self.el.classList.remove('is-hidden'); self.pop.classList.remove('is-hidden');
+      self.btn.classList.add('is-on');
+      self.place();
+      self.run();
+      setTimeout(function () { Nav.focus(self.input); }, 30);
+    },
+    close: function (keepFocus) {
+      if (!this.isOpen) return;
+      this.isOpen = false;
+      clearTimeout(this.timer);
+      clear(this.pop);
+      this.el.classList.add('is-hidden'); this.pop.classList.add('is-hidden');
+      this.btn.classList.remove('is-on');
+      if (!keepFocus) Nav.focus(this.btn);
+    },
+    toggle: function () { if (this.isOpen) this.close(); else this.open(); },
+    run: function () {
+      var self = this, pop = self.pop, q = norm(self.input.value.trim());
+      if (q.length < 2) { clear(pop).appendChild(h('p', { class: 'hint qs-hint', text: T('Gib mindestens zwei Buchstaben ein. Gesucht wird in allen Sendern, Filmen und Serien deiner Playlist.') })); return; }
+      clear(pop).appendChild(loader());
+      var kinds = ['live', 'movie', 'series'], labels = [T('Sender'), T('Filme'), T('Serien')];
+      Promise.all(kinds.map(function (k) { return allItems(k).catch(function () { return []; }); })).then(function (lists) {
+        if (!self.isOpen || norm(self.input.value.trim()) !== q) return;
+        clear(pop);
+        var total = 0;
+        lists.forEach(function (list, i) {
+          var all = list.filter(function (x) { return norm(x.name).indexOf(q) >= 0; });
+          if (!all.length) return;
+          total += all.length;
+          var hits = all.slice(0, 12), kind = kinds[i];
+          var sec = h('section', { class: 'qs-sec k-' + kind }, h('h3', null, icon(kind), h('span', { text: labels[i] }), h('small', { text: String(all.length) })));
+          hits.forEach(function (it, j) {
+            var thumb = kind === 'live' ? logoBox(it) : h('span', { class: 'qs-poster' }, posterArt(it));
+            sec.appendChild(h('button', { class: 'qs-item f', title: it.name, onclick: function () {
+              self.close();
+              if (kind === 'live') playItem(it, { list: hits, index: j }); else openItem(it);
+            } }, thumb, h('span', { class: 'qs-name', text: it.name })));
+          });
+          pop.appendChild(sec);
+        });
+        if (!total) pop.appendChild(h('p', { class: 'hint qs-hint', text: T('Nichts gefunden') }));
+      });
+    }
+  };
+
+  /* ---------- Suche (ganze Seite, wird nicht mehr über das Menü geöffnet) ---------- */
   function SearchView() {
     var input = h('input', { class: 'f', type: 'search', placeholder: T('Sender, Filme oder Serien suchen …'), autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false', 'data-autofocus': '', 'aria-label': T('Suche') });
     var results = h('div', { class: 'results' });
@@ -2229,8 +2356,9 @@
       if (a.maxCons) row(acc, T('Verbindungen'), T('{0} von {1} aktiv', a.activeCons || 0, a.maxCons));
     }).catch(function () { status.classList.add('is-off'); status.lastChild.textContent = T('Keine Verbindung'); });
     var dev = kvBox();
-    row(dev, T('MAC-Adresse'), Device.mac());
-    row(dev, 'KEY', Device.key());
+    function copyRow(k, v, label) { dev.appendChild(h('span', { text: k })); dev.appendChild(h('b', { class: 'kv-copy' }, h('span', { text: v }), copyBtn(v, label))); }
+    copyRow(T('MAC-Adresse'), Device.mac(), 'MAC');
+    copyRow('KEY', Device.key(), 'KEY');
     var initial = String(p.name || user || 'L').replace(/^\s+/, '').charAt(0).toUpperCase() || 'L';
     return h('div', { class: 'page profile-page' },
       h('div', { class: 'page-head' }, h('h1', { text: T('Profil') })),
