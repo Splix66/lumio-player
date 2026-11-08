@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Lumio Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.5.0',
+    version: '1.5.1',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     hlsCdn: 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js',
     requestTimeout: 30000,
@@ -438,7 +438,10 @@
     return {
       type: 'xtream',
       login: function () {
-        return api('', '', true).then(function (d) {
+        // frische Abfrage – und gleich für account() merken, damit die Kontodaten nicht doppelt geladen werden
+        var key = base + '/player_api.php?username=' + user + '&password=' + pass, pr = api('', '', true);
+        cache[key] = pr; pr.catch(function () { delete cache[key]; });
+        return pr.then(function (d) {
           if (!d || !d.user_info) throw new Error(T('Das ist kein gültiger Xtream-Server.'));
           if (String(d.user_info.auth) !== '1') throw new Error(T('Benutzername oder Passwort falsch.'));
           if (d.user_info.status && d.user_info.status !== 'Active') throw new Error(T('Konto-Status: {0}', d.user_info.status));
@@ -1388,7 +1391,8 @@
   /* Sender als Zeile (Senderliste) */
   function channelRow(item, onClick, onFocus) {
     var cur = EpgCache.now(item);
-    var row = h('button', { class: 'chan f', 'data-cid': item.id, onclick: onClick },
+    var playing = Player.item && Player.item.kind === 'live' && String(Player.item.id) === String(item.id);
+    var row = h('button', { class: 'chan f' + (playing ? ' is-playing' : ''), 'data-cid': item.id, onclick: onClick },
       h('span', { class: 'num', text: item.num ? String(item.num) : '' }),
       logoBox(item),
       h('span', { class: 'ch-txt' }, h('span', { class: 'name', text: item.name }), h('span', { class: 'now', text: cur ? cur.title : '' })),
@@ -1398,6 +1402,12 @@
       row.addEventListener('mouseenter', function () { onFocus(item); });
     }
     return row;
+  }
+
+  /* Laufenden Sender in allen sichtbaren Senderlisten markieren */
+  function markPlaying(item) {
+    var id = item && item.kind === 'live' ? String(item.id) : null;
+    $all('.chan[data-cid]').forEach(function (r) { r.classList.toggle('is-playing', r.getAttribute('data-cid') === id); });
   }
 
   /* Sender als Kachel (Startseite, Favoriten, Suche) */
@@ -1847,8 +1857,8 @@
     Store.set('active', p.id);
     if (isNew || p.type === 'demo') { Shell.open(); Expiry.check(); return; }
     // Kurz prüfen, ob der Zugang noch funktioniert – die Startseite erscheint trotzdem sofort
-    Shell.open(restore);
     App.provider.login().catch(function (e) { toast(T('Hinweis: {0}', e.message), 4000); });
+    Shell.open(restore);
     Expiry.check();
   }
 
@@ -1931,6 +1941,7 @@
       else if (name === 'favs') view = FavoritesView();
       else if (name === 'movie' || name === 'series') view = MediaView(name);
       else view = SectionView(name);
+      if (!keepFocus) view.classList.add('view-in');
       self.view.appendChild(view);
       if (keepFocus) return;
       setTimeout(function () {
@@ -3179,6 +3190,7 @@
     load: function (item) {
       var self = this;
       self.item = item;
+      markPlaying(item);
       self.triedAlt = false; self.retried = false; self.forceHlsJs = false;
       self.netRetries = 0; self.stallRetries = 0; self.swappedCodec = false; self.mediaRecoverAt = 0; self.reconnect = false;
       self.closeTracks();
@@ -3703,6 +3715,7 @@
       this.mini = false;
       document.body.classList.remove('has-mini');
       this.el = null; this.video = null; this.item = null; this.ctx = null;
+      markPlaying(null);
     }
   };
 

@@ -108,6 +108,10 @@ svg.i { width: 1.25em; height: 1.25em; flex: none; fill: none; stroke: currentCo
 ::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 1rem; border: .12rem solid transparent; background-clip: padding-box; }
 ::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
 
+/* Sanftes Einblenden beim Wechsel zwischen Start, Live TV, Filme, Serien … */
+.view-in { animation: viewIn .26s ease-out; }
+@keyframes viewIn { from { opacity: 0; transform: translateY(.45rem); } }
+
 /* ---------- Fokus (Fernbedienung / Tastatur) ---------- */
 .f { outline: none; transition: transform .18s ease, box-shadow .18s ease, background-color .18s ease, color .18s ease; }
 body.kbd .f:focus, body.is-tv .f:focus {
@@ -290,6 +294,8 @@ body.kbd .tab.f:focus .i, body.is-tv .tab.f:focus .i { color: var(--bg); }
 .fh-actions { margin-top: 1.3rem; }
 .fh-in .home-lang { margin-top: 1.4rem; }
 .home-hero { max-height: 38rem; }
+.home-hero .fh-in { max-width: 64rem; }          /* Sprachleiste passt in eine Zeile */
+.home-hero .fh-title { max-width: 46rem; }
 
 /* ==========================================================
    Filme & Serien: Leiste mit Sprachen/Genres und große Cover
@@ -448,7 +454,6 @@ body.kbd .qs-item.f:focus, body.is-tv .qs-item.f:focus { background: var(--surfa
 .more-card .i { width: 1.6rem; height: 1.6rem; margin-bottom: .7rem; color: var(--text-2); }
 .sk { background: var(--surface); border-radius: var(--radius); }
 .sk.poster-sk { width: 11rem; height: 16.5rem; }
-.sk.cw-sk { width: 26rem; height: 8.6rem; }
 .sk { animation: skPulse 1.4s ease-in-out infinite; }
 @keyframes skPulse { 50% { opacity: .55; } }
 
@@ -512,7 +517,10 @@ body.kbd .cat-back.f:focus, body.is-tv .cat-back.f:focus { position: sticky; z-i
 }
 .chan > * + * { margin-left: .95rem; }
 .chan:hover { background: var(--surface); }
-.chan.is-playing { background: var(--accent-soft); }
+.chan.is-playing { background: var(--surface); box-shadow: inset .22rem 0 0 var(--c-live); }
+.chan.is-playing .name { color: var(--c-live); }
+.chan.is-playing::after { content: ""; flex: none; width: .55rem; height: .55rem; border-radius: 50%; background: var(--c-live); margin-left: .9rem; box-shadow: 0 0 .6rem var(--c-live); animation: livePulse 1.6s ease-in-out infinite; }
+@keyframes livePulse { 50% { opacity: .35; } }
 .chan .num { width: 2.4rem; color: var(--dim); font-variant-numeric: tabular-nums; font-size: .88rem; text-align: right; flex: none; font-weight: 600; }
 .logo-box { width: 4.4rem; height: 2.9rem; flex: none; border-radius: .55rem; background: var(--surface-2); display: grid; place-items: center; overflow: hidden; }
 :root[data-theme="light"] .logo-box { background: var(--surface-2); }
@@ -802,7 +810,6 @@ body.kbd .tp-opt.f:focus .i, body.is-tv .tp-opt.f:focus .i { color: #0b0b0f; }
 
 /* Untertitel gut lesbar */
 .player video::cue { background: rgba(0, 0, 0, .62); color: #fff; font-family: var(--font); line-height: 1.35; }
-.cbtn.is-fav { color: var(--accent-2); }
 body.kbd .cbtn.f:focus, body.is-tv .cbtn.f:focus { box-shadow: 0 0 0 .2rem #000, 0 0 0 .38rem #fff; transform: scale(1.08); }
 .vol { display: flex; align-items: center; padding: .6rem 1rem .6rem .4rem; margin: -.6rem -1rem -.6rem 0; cursor: pointer; touch-action: none; }
 .vol > * + * { margin-left: .6rem; }
@@ -871,7 +878,7 @@ body.has-mini .screen.modal { padding-right: calc(min(26rem, 46vw) + 3rem); }
 @keyframes toastIn { from { opacity: 0; transform: translateY(10px); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .modal-panel, .sk { animation: none; }
+  .modal-panel, .sk, .view-in, .chan.is-playing::after { animation: none; }
   .f { transition: none; }
 }
 
@@ -936,7 +943,6 @@ body.has-mini .screen.modal { padding-right: calc(min(26rem, 46vw) + 3rem); }
   html:not(.tv) .rail-track > * + * { margin-left: .8rem; }
   html:not(.tv) .cw { width: 18rem; height: 7rem; }
   html:not(.tv) .cw-title { font-size: 1.05rem; }
-  html:not(.tv) .sk.cw-sk { width: 18rem; height: 7rem; }
   html:not(.tv) .rail .poster, html:not(.tv) .sk.poster-sk { width: 8.2rem; }
   html:not(.tv) .sk.poster-sk, html:not(.tv) .rail .more-card { height: 12.3rem; }
   html:not(.tv) .rail .more-card { width: 7rem; }
@@ -990,6 +996,7 @@ body.has-mini .screen.modal { padding-right: calc(min(26rem, 46vw) + 3rem); }
   html:not(.tv) .detail-info { padding-top: 0; align-items: center; display: flex; flex-direction: column; }
   html:not(.tv) .detail-info h1 { font-size: 1.65rem; }
   html:not(.tv) .meta, html:not(.tv) .detail-info .row { justify-content: center; }
+  html:not(.tv) .fh-meta .meta { justify-content: flex-start; }
   html:not(.tv) .seasons { padding: .2rem 1.1rem 0; }
   html:not(.tv) .episodes { padding: 1rem .6rem 2rem; }
   html:not(.tv) .ep .thumb { width: 7.6rem; height: 4.3rem; }
@@ -1060,6 +1067,8 @@ body.has-mini .screen.modal { padding-right: calc(min(26rem, 46vw) + 3rem); }
   html:not(.tv) .logo-box { width: 3.4rem; height: 2.2rem; }
   html:not(.tv) .poster-grid { grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr)); }
   html:not(.tv) .fhero { min-height: 0; height: 74vh; }
+  html:not(.tv) .home-hero { height: auto; min-height: 74vh; max-height: none; }
+  html:not(.tv) .home-hero .fh-in { padding-top: 1.2rem; }
   html:not(.tv) .fh-title { font-size: 1.9rem; }
   html:not(.tv) .fh-plot { -webkit-line-clamp: 2; }
   html:not(.tv) .player.is-mini { width: 38vw; height: calc(38vw * .5625); max-width: none; max-height: none; right: 1rem; bottom: 1.8rem; }
