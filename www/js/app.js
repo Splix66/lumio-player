@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Lumio Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.7.1',
+    version: '1.7.2',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     hlsCdn: 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js',
     requestTimeout: 30000,

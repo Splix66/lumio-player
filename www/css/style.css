@@ -918,6 +918,11 @@ body.lite .fh-title { text-shadow: none; }
   html:not(.tv) .statusbar .copy-btn { display: none; }
   html:not(.tv) .sb-days { margin-left: .9rem; }
   html:not(.tv) .mac-tag b + span { margin-left: 0; }
+  /* Startbildschirm: Beschriftung MAC / KEY / Laufzeit trotzdem zeigen */
+  html:not(.tv) .shell.is-launcher .statusbar .mac-tag span { display: inline; margin-right: .35rem; }
+  html:not(.tv) .shell.is-launcher .statusbar .mac-tag b + span { margin-left: 1.1rem; }
+  html:not(.tv) .shell.is-launcher .statusbar .copy-btn { display: inline-grid; }
+  html:not(.tv) .shell.is-launcher .sb-days { margin-left: auto; }
   html:not(.tv) .mac-tag b + span + b { margin-left: .5rem; }
   html:not(.tv) .cats { width: 13rem; }
 }
@@ -960,6 +965,14 @@ body.kbd .ln-tile.f:focus .lt-sub, body.is-tv .ln-tile.f:focus .lt-sub { color: 
 .ln-act .i { width: 1.3rem; height: 1.3rem; margin-right: .6rem; }
 .ln-act:hover { background: var(--surface-3); color: var(--text); }
 body.kbd .ln-act.f:focus, body.is-tv .ln-act.f:focus { background: var(--text); color: var(--bg); box-shadow: none; }
+/* Auf dem Startbildschirm MAC, KEY und Laufzeit groß – in Live TV, Filmen und Serien bleiben sie klein unten */
+.shell.is-launcher .statusbar { padding: .85rem var(--pad) 1.05rem; }
+.shell.is-launcher .statusbar .mac-tag { font-size: 1.2rem; }
+.shell.is-launcher .statusbar .mac-tag span { font-size: .78rem; }
+.shell.is-launcher .statusbar .mac-tag b { color: var(--text); font-weight: 600; }
+.shell.is-launcher .statusbar .mac-tag b + span, .shell.is-launcher .statusbar .mac-tag .copy-btn + span { margin-left: 1.6rem; }
+.shell.is-launcher .statusbar .mac-tag .copy-btn { width: 1.9rem; height: 1.9rem; margin-left: .3rem; }
+.shell.is-launcher .statusbar .mac-tag .copy-btn .i { width: 1rem; height: 1rem; }
 
 /* ==========================================================
    Handy & kleines Tablet: Menü unten
@@ -1169,10 +1182,16 @@ body.kbd .ln-act.f:focus, body.is-tv .ln-act.f:focus { background: var(--text); 
   html:not(.tv) .lt-sub { font-size: .78rem; margin-top: .25rem; }
   html:not(.tv) .ln-acts { margin-top: 1.1rem; }
   html:not(.tv) .ln-act { padding: .5rem .95rem; font-size: .85rem; }
+  html:not(.tv) .shell.is-launcher .statusbar { padding: .45rem var(--pad) calc(.5rem + env(safe-area-inset-bottom)); }
+  html:not(.tv) .shell.is-launcher .statusbar .mac-tag { font-size: 1rem; }
 }
 @media (max-width: 700px) and (orientation: portrait) {
   html:not(.tv) .shell.is-launcher .content { padding-bottom: 2.4rem; }
-  html:not(.tv) .shell.is-launcher .statusbar { bottom: 0; padding-bottom: calc(.25rem + env(safe-area-inset-bottom)); }
+  html:not(.tv) .shell.is-launcher .statusbar { bottom: 0; padding: .5rem .6rem calc(.5rem + env(safe-area-inset-bottom)); flex-wrap: wrap; }
+  html:not(.tv) .shell.is-launcher .statusbar .mac-tag { font-size: .9rem; flex-wrap: wrap; justify-content: center; }
+  html:not(.tv) .shell.is-launcher .statusbar .copy-btn { display: none; }
+  html:not(.tv) .shell.is-launcher .sb-days { margin-left: 0; }
+  html:not(.tv) .shell.is-launcher .content { padding-bottom: 4.4rem; }
   html:not(.tv) .launcher { overflow-y: auto; padding-top: calc(1.2rem + env(safe-area-inset-top)); }
   html:not(.tv) .ln-head { flex-wrap: wrap; }
   html:not(.tv) .ln-head .hero-status { order: 3; margin: 1rem 0 0; font-size: .85rem; padding: .35rem .8rem; }
