@@ -3,6 +3,12 @@
 const { app, BrowserWindow, Menu, shell } = require('electron');
 const path = require('path');
 
+// Videos über die Grafikkarte abspielen und skalieren (schärfer und flüssiger, auch auf 2K/4K-Monitoren mit 144/240 Hz).
+// Laptops mit zwei Grafikchips nutzen dafür den stärkeren.
+app.commandLine.appendSwitch('force_high_performance_gpu');
+app.commandLine.appendSwitch('ignore-gpu-blocklist');
+app.commandLine.appendSwitch('enable-gpu-rasterization');
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1400,

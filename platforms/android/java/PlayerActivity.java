@@ -28,7 +28,9 @@ import androidx.media3.datasource.DefaultHttpDataSource;
 import androidx.media3.exoplayer.DefaultLoadControl;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
+import androidx.media3.ui.CaptionStyleCompat;
 import androidx.media3.ui.PlayerView;
+import androidx.media3.ui.SubtitleView;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -89,6 +91,31 @@ public class PlayerActivity extends Activity {
         }
     };
 
+    /** Untertitel wie in den App-Einstellungen: Größe, Schriftfarbe, Hintergrund (mit dunklem Rand für Lesbarkeit). */
+    private void applySubtitleStyle(Intent in) {
+        try {
+            SubtitleView sv = view.getSubtitleView();
+            if (sv == null) return;
+            int fg = parseColor(in.getStringExtra("subColor"), Color.WHITE);
+            int bg = parseColor(in.getStringExtra("subBg"), Color.TRANSPARENT);
+            sv.setStyle(new CaptionStyleCompat(fg, bg, Color.TRANSPARENT,
+                    bg == Color.TRANSPARENT ? CaptionStyleCompat.EDGE_TYPE_OUTLINE : CaptionStyleCompat.EDGE_TYPE_NONE,
+                    Color.BLACK, null));
+            float scale = in.getFloatExtra("subScale", 1f);
+            if (scale > 0.3f && scale < 3f) sv.setFractionalTextSize(SubtitleView.DEFAULT_TEXT_SIZE_FRACTION * scale);
+        } catch (Exception ignored) {
+        }
+    }
+
+    private static int parseColor(String s, int def) {
+        if (s == null || s.isEmpty()) return def;
+        try {
+            return Color.parseColor(s);
+        } catch (Exception e) {
+            return def;
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -127,6 +154,7 @@ public class PlayerActivity extends Activity {
         view.setControllerShowTimeoutMs(4000);
         view.setControllerAutoShow(false);
         root.addView(view, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+        applySubtitleStyle(in);
 
         info = makeLabel(24);
         FrameLayout.LayoutParams lpInfo = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.TOP | Gravity.START);

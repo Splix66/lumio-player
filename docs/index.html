@@ -214,6 +214,19 @@
     .dl-top { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 2rem; align-items: start; }
     .dl-top .dl-tv { margin-top: 2.3rem; }
     #dlFaq { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem 1rem; align-items: start; }
+    /* Systemanforderungen */
+    .req-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top: .9rem; }
+    .req { padding: 1.2rem 1.25rem 1.3rem; border-radius: var(--r); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); }
+    .req .head { display: flex; align-items: center; margin-bottom: .75rem; }
+    .req .head .i { width: 1.5rem; height: 1.5rem; color: var(--accent-2); margin-right: .65rem; flex: none; }
+    .req .head b { font-size: 1.05rem; }
+    .req ul { list-style: none; margin: 0; padding: 0; }
+    .req li { position: relative; padding-left: 1.15rem; color: var(--text-2, #d2d2d8); font-size: .92rem; line-height: 1.5; }
+    .req li + li { margin-top: .35rem; }
+    .req li::before { content: ""; position: absolute; left: .1rem; top: .62em; width: .4rem; height: .4rem; border-radius: 50%; background: var(--ok, #34d399); }
+    .req li.no::before { background: #ff8aa0; }
+    .req li.no { color: var(--muted); }
+    .req-note { margin-top: .9rem; }
     .dl-tv { display: flex; flex-direction: column; gap: 1rem; box-shadow: inset 0 0 0 1.5px var(--accent-soft); }
     .dl-tv .head { display: flex; align-items: center; gap: .8rem; }
     .dl-tv .head .ic { width: 2.6rem; height: 2.6rem; border-radius: .7rem; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent-2); flex: none; }
@@ -259,6 +272,7 @@
     @media (max-width: 720px) {
       .steps { grid-template-columns: 1fr; }
       #dlFaq { grid-template-columns: 1fr; }
+      .req-grid { grid-template-columns: 1fr; }
       .foot-in { flex-direction: column; gap: .8rem; }
       main.wrap { padding-top: 1.6rem; }
       .connect { grid-template-columns: 1fr; }
@@ -503,6 +517,43 @@
           </div>
 
         </div>
+          <div class="req-wrap">
+            <h2 data-t>Systemanforderungen</h2>
+            <p class="lead" data-t>Das brauchst du mindestens, damit Lumio Player läuft.</p>
+            <div class="req-grid">
+              <div class="req"><div class="head"><svg class="i"><use href="#i-tv"/></svg><b>Fire TV</b></div><ul>
+                <li data-t>Fire OS 6 oder neuer</li>
+                <li data-t>Fire TV Stick 4K (ab 2018), Fire TV Stick 3. Generation und Lite (ab 2020), Fire TV Stick 4K Max, Fire TV Cube</li>
+                <li class="no" data-t>Nicht möglich: alte Fire TV Sticks mit Fire OS 5 (2. Generation und Basic Edition, bis 2019)</li>
+                <li class="no" data-t>Nicht möglich: neue Modelle mit Vega OS (Fire TV Stick 4K Select 2025, Fire TV Stick HD 2026, Fire TV Stick 4K 3. Generation 2026) – darauf lassen sich keine Android-Apps installieren</li>
+              </ul></div>
+              <div class="req"><div class="head"><svg class="i"><use href="#i-box"/></svg><b data-t>Android-TV-Box und Google TV</b></div><ul>
+                <li data-t>Android 6.0 oder neuer</li>
+                <li data-t>Mindestens 1 GB Arbeitsspeicher, empfohlen 2 GB</li>
+                <li data-t>Etwa 50 MB freier Speicher</li>
+              </ul></div>
+              <div class="req"><div class="head"><svg class="i"><use href="#i-phone"/></svg><b data-t>Android-Handy und Tablet</b></div><ul>
+                <li data-t>Android 6.0 oder neuer</li>
+                <li data-t>Etwa 50 MB freier Speicher</li>
+                <li class="no" data-t>iPhone und iPad: noch nicht verfügbar</li>
+              </ul></div>
+              <div class="req"><div class="head"><svg class="i"><use href="#i-monitor"/></svg><b>Windows</b></div><ul>
+                <li data-t>Windows 10 oder 11, 64 Bit</li>
+                <li data-t>Mindestens 4 GB Arbeitsspeicher</li>
+                <li data-t>Etwa 300 MB freier Speicher</li>
+              </ul></div>
+              <div class="req"><div class="head"><svg class="i"><use href="#i-laptop"/></svg><b>Mac</b></div><ul>
+                <li data-t>macOS 11 Big Sur oder neuer</li>
+                <li data-t>Apple-Chip (M1 bis M4) oder Intel</li>
+                <li data-t>Etwa 400 MB freier Speicher</li>
+              </ul></div>
+              <div class="req"><div class="head"><svg class="i"><use href="#i-bolt"/></svg><b data-t>Internet</b></div><ul>
+                <li data-t>Mindestens 10 Mbit/s für HD, 25 Mbit/s für 4K</li>
+                <li data-t>Am besten per LAN-Kabel oder WLAN mit 5 GHz</li>
+                <li data-t>Eine eigene IPTV-Playlist (M3U-Link oder Xtream-Zugang) von deinem Anbieter</li>
+              </ul></div>
+            </div>
+          </div>
           <div>
             <h2 data-t>Hilfe bei der Installation</h2>
             <div class="faq" id="dlFaq"></div>
@@ -621,6 +672,27 @@
       var I18N = {
         en: {
           'Lumio Player – Kundenbereich': 'Lumio Player – Customer area',
+          "Systemanforderungen": "System requirements",
+          "Das brauchst du mindestens, damit Lumio Player läuft.": "The minimum you need to run Lumio Player.",
+          "Fire OS 6 oder neuer": "Fire OS 6 or newer",
+          "Fire TV Stick 4K (ab 2018), Fire TV Stick 3. Generation und Lite (ab 2020), Fire TV Stick 4K Max, Fire TV Cube": "Fire TV Stick 4K (2018 and later), Fire TV Stick 3rd Gen and Lite (2020 and later), Fire TV Stick 4K Max, Fire TV Cube",
+          "Nicht möglich: alte Fire TV Sticks mit Fire OS 5 (2. Generation und Basic Edition, bis 2019)": "Not supported: older Fire TV Sticks with Fire OS 5 (2nd Gen and Basic Edition, up to 2019)",
+          "Nicht möglich: neue Modelle mit Vega OS (Fire TV Stick 4K Select 2025, Fire TV Stick HD 2026, Fire TV Stick 4K 3. Generation 2026) – darauf lassen sich keine Android-Apps installieren": "Not supported: new models with Vega OS (Fire TV Stick 4K Select 2025, Fire TV Stick HD 2026, Fire TV Stick 4K 3rd Gen 2026) – they cannot install Android apps",
+          "Android-TV-Box und Google TV": "Android TV box and Google TV",
+          "Android 6.0 oder neuer": "Android 6.0 or newer",
+          "Mindestens 1 GB Arbeitsspeicher, empfohlen 2 GB": "At least 1 GB of RAM, 2 GB recommended",
+          "Etwa 50 MB freier Speicher": "About 50 MB of free storage",
+          "iPhone und iPad: noch nicht verfügbar": "iPhone and iPad: not available yet",
+          "Windows 10 oder 11, 64 Bit": "Windows 10 or 11, 64-bit",
+          "Mindestens 4 GB Arbeitsspeicher": "At least 4 GB of RAM",
+          "Etwa 300 MB freier Speicher": "About 300 MB of free storage",
+          "macOS 11 Big Sur oder neuer": "macOS 11 Big Sur or newer",
+          "Apple-Chip (M1 bis M4) oder Intel": "Apple silicon (M1 to M4) or Intel",
+          "Etwa 400 MB freier Speicher": "About 400 MB of free storage",
+          "Internet": "Internet",
+          "Mindestens 10 Mbit/s für HD, 25 Mbit/s für 4K": "At least 10 Mbit/s for HD, 25 Mbit/s for 4K",
+          "Am besten per LAN-Kabel oder WLAN mit 5 GHz": "Ideally via LAN cable or 5 GHz Wi-Fi",
+          "Eine eigene IPTV-Playlist (M3U-Link oder Xtream-Zugang) von deinem Anbieter": "Your own IPTV playlist (M3U link or Xtream login) from your provider",
           "Start": "Home",
           "Playlist hochladen": "Upload playlist",
           "Media-Player – ohne Sender": "Media player – no channels included",
@@ -771,6 +843,27 @@
         },
         tr: {
           'Lumio Player – Kundenbereich': 'Lumio Player – Müşteri alanı',
+          "Systemanforderungen": "Sistem gereksinimleri",
+          "Das brauchst du mindestens, damit Lumio Player läuft.": "Lumio Player’ın çalışması için en az bunlara ihtiyacın var.",
+          "Fire OS 6 oder neuer": "Fire OS 6 veya daha yeni",
+          "Fire TV Stick 4K (ab 2018), Fire TV Stick 3. Generation und Lite (ab 2020), Fire TV Stick 4K Max, Fire TV Cube": "Fire TV Stick 4K (2018 ve sonrası), Fire TV Stick 3. nesil ve Lite (2020 ve sonrası), Fire TV Stick 4K Max, Fire TV Cube",
+          "Nicht möglich: alte Fire TV Sticks mit Fire OS 5 (2. Generation und Basic Edition, bis 2019)": "Desteklenmez: Fire OS 5’li eski Fire TV Stick’ler (2. nesil ve Basic Edition, 2019’a kadar)",
+          "Nicht möglich: neue Modelle mit Vega OS (Fire TV Stick 4K Select 2025, Fire TV Stick HD 2026, Fire TV Stick 4K 3. Generation 2026) – darauf lassen sich keine Android-Apps installieren": "Desteklenmez: Vega OS’lu yeni modeller (Fire TV Stick 4K Select 2025, Fire TV Stick HD 2026, Fire TV Stick 4K 3. nesil 2026) – bunlara Android uygulaması kurulamaz",
+          "Android-TV-Box und Google TV": "Android TV kutusu ve Google TV",
+          "Android 6.0 oder neuer": "Android 6.0 veya daha yeni",
+          "Mindestens 1 GB Arbeitsspeicher, empfohlen 2 GB": "En az 1 GB RAM, 2 GB önerilir",
+          "Etwa 50 MB freier Speicher": "Yaklaşık 50 MB boş alan",
+          "iPhone und iPad: noch nicht verfügbar": "iPhone ve iPad: henüz mevcut değil",
+          "Windows 10 oder 11, 64 Bit": "Windows 10 veya 11, 64 bit",
+          "Mindestens 4 GB Arbeitsspeicher": "En az 4 GB RAM",
+          "Etwa 300 MB freier Speicher": "Yaklaşık 300 MB boş alan",
+          "macOS 11 Big Sur oder neuer": "macOS 11 Big Sur veya daha yeni",
+          "Apple-Chip (M1 bis M4) oder Intel": "Apple çipi (M1–M4) veya Intel",
+          "Etwa 400 MB freier Speicher": "Yaklaşık 400 MB boş alan",
+          "Internet": "İnternet",
+          "Mindestens 10 Mbit/s für HD, 25 Mbit/s für 4K": "HD için en az 10 Mbit/s, 4K için 25 Mbit/s",
+          "Am besten per LAN-Kabel oder WLAN mit 5 GHz": "En iyisi LAN kablosu veya 5 GHz Wi-Fi ile",
+          "Eine eigene IPTV-Playlist (M3U-Link oder Xtream-Zugang) von deinem Anbieter": "Sağlayıcından kendi IPTV listen (M3U bağlantısı veya Xtream erişimi)",
           "Start": "Ana sayfa",
           "Playlist hochladen": "Liste yükle",
           "Media-Player – ohne Sender": "Medya oynatıcı – kanal içermez",
