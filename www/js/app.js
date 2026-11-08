@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Lumio Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.7.0',
+    version: '1.7.1',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     hlsCdn: 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js',
     requestTimeout: 30000,
@@ -2054,12 +2054,13 @@
     var searchAct = act('search', T('Suche'), function () { QuickSearch.toggle(searchAct); });
     var el = h('div', { class: 'launcher' }, heroArt(),
       h('header', { class: 'ln-head' }, h('div', { class: 'brand' }, brandMark(), wordmark()), status, clock),
-      h('div', { class: 'ln-tiles' }, tLive, tMovie, tSeries),
-      h('div', { class: 'ln-acts' },
-        searchAct,
-        act('heart', T('Favoriten'), function () { Shell.show('favs', true); }),
-        act('profile', T('Playlist'), function () { Shell.show('profile', true); }),
-        act('settings', T('Einstellungen'), function () { Shell.show('settings', true); })));
+      h('div', { class: 'ln-main' },
+        h('div', { class: 'ln-tiles' }, tLive, tMovie, tSeries),
+        h('div', { class: 'ln-acts' },
+          searchAct,
+          act('heart', T('Favoriten'), function () { Shell.show('favs', true); }),
+          act('profile', T('Playlist'), function () { Shell.show('profile', true); }),
+          act('settings', T('Einstellungen'), function () { Shell.show('settings', true); }))));
     // nach dem Schauen nur die Zeilen „Zuletzt“ / „Weiterschauen“ auffrischen, Fokus bleibt
     el._refresh = paintSubs;
     el._dispose = function () { clearInterval(timer); };
