@@ -26,7 +26,8 @@ Bis zum offiziellen Start bleiben alle Versionen unter 2.0 (1.11.x, 1.12 …).
 
 1. ✅ **Kopplung per QR sicherer:** MAC und KEY stehen jetzt hinter „#“ – dieser Teil wird nie an einen Server geschickt.
    (Später möglich: kurzlebiger Einmal-Code statt KEY.)
-2. ✅ **Media3 (ExoPlayer) aktualisiert:** von 1.4.1 auf 1.11.1. Noch offen: Test auf echten Boxen.
+2. ✅ **Media3 (ExoPlayer) aktualisiert:** von 1.4.1 auf 1.9.4 (neueste Version für unser Android-Bausystem;
+   ab 1.10 erst mit Capacitor 8). Noch offen: Test auf echten Boxen.
 3. **Fehlerberichte:** freiwillig (Zustimmung), ohne Playlist-Adressen und Passwörter, z. B. in die eigene Datenbank.
 4. **Rechtliches und Store-Paket:** Impressum vollständig, Nutzungsbedingungen beim ersten Start, Seite mit
    Open-Source-Lizenzen, Store-Texte und Bilder ohne fremde Senderlogos und ohne Begriffe, die nach Piraterie klingen.

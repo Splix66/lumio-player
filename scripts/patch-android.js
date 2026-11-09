@@ -88,7 +88,9 @@ const gradlePath = path.join(base, 'android', 'app', 'build.gradle');
 let g = fs.readFileSync(gradlePath, 'utf8');
 // Media3 (ExoPlayer): Version hier zentral – bei einem Wechsel die Änderungshinweise prüfen
 // (https://github.com/androidx/media/blob/release/RELEASENOTES.md) und auf echten Boxen testen.
-const MEDIA3 = '1.11.1';
+// 1.9.x ist die neueste Reihe für compileSdk 35 (Capacitor 7, Android Gradle Plugin 8.7).
+// Ab Media3 1.10 ist compileSdk 36 Pflicht – erst nach einem Wechsel auf Capacitor 8 / neueres Gradle-Plugin möglich.
+const MEDIA3 = '1.9.4';
 if (!g.includes('media3-exoplayer')) {
   g = g.replace(/\ndependencies\s*\{/, [
     '',
