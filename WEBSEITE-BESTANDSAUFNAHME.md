@@ -139,8 +139,23 @@ keine JavaScript-Fehler.
 (Windows, macOS, Fire TV) sind nach bestem Wissen übernommen – vor einer großen Werbeaktion in einer Sprache lohnt sich
 ein kurzer Blick durch Muttersprachler.
 
-## 10. Nächste sinnvolle Schritte
+## 10. Erledigt im vierten Schritt
 
-1. Kontaktmöglichkeit ohne Gerät (braucht eine Kontakt-E-Mail oder eine neue, abgesicherte Datenbankfunktion)
-2. Sicherheits-Kopfzeile (Content-Security-Policy) auch für die öffentliche Webseite – der Admin-Bereich hat sie schon
-3. Impressum ausfüllen → danach Google-Sperre aufheben und veröffentlichen (Merge nach `main`)
+- **Sicherheitsregel (Content-Security-Policy)** für Startseite/Kundenportal und Rechtsseiten: Der Browser führt nur
+  Code von der eigenen Seite aus und verbindet sich nur mit Supabase und GitHub. Eingeschleuster Code wird blockiert
+  (mit absichtlich eingebautem Verstoß gegengeprüft). Fire-TV-Seite und 404-Seite haben keine Eingabefelder und
+  bleiben ohne strenge Regel, weil sie Code direkt im HTML enthalten.
+- **Automatischer Webseiten-Test** `tests/site.e2e.js` (54 Prüfungen) läuft bei jeder Änderung an `docs/` auf GitHub
+  („Actions“ → „Webseite testen“): Seiten, Sicherheitsregel, Navigation, alle 14 Sprachen auf Desktop und Handy,
+  Sprachauswahl, Kundenportal mit erfundenem Online-Dienst, Kontakt-Kasten.
+- **Kontakt per E-Mail** für Besucher ohne App vorbereitet: erscheint automatisch, sobald `CONTACT_EMAIL` in
+  `docs/assets/site.js` eingetragen ist. Bewusst **kein** öffentliches Formular ohne Gerät: Das wäre ohne
+  IP-Speicherung nicht gegen Spam zu schützen.
+
+## 11. Nächste sinnvolle Schritte
+
+1. **Domain + E-Mail-Adresse** (Empfehlung: eigene Domain + Zoho Mail Free, später mailbox.org) → Impressum,
+   Datenschutz und `CONTACT_EMAIL` ausfüllen.
+2. Webseite auf die eigene Domain umstellen (GitHub Pages „Custom domain“, Datei `docs/CNAME`), dann
+   Adressen in App, QR-Code, Canonical/Vorschaubild und CSP anpassen.
+3. Google-Sperre aufheben und veröffentlichen (Merge nach `main`).
