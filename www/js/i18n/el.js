@@ -1,4 +1,4 @@
-/* Lumio Player – Übersetzung: Griechisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
+/* Telvo Player – Übersetzung: Griechisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["el"] = {
   "Dein Zugang ist abgelaufen": "Η συνδρομή σου έχει λήξει",
@@ -57,7 +57,7 @@ window.LUMIO_I18N["el"] = {
   "Hell": "Ανοιχτό",
   "Automatisch": "Αυτόματα",
   "Darstellung": "Εμφάνιση",
-  "Gerade läuft das {0}-Design. Danach gilt wieder das Lumio-Violett.": "Αυτή τη στιγμή ισχύει το θέμα {0}. Μετά επιστρέφει το μοβ του Lumio.",
+  "Gerade läuft das {0}-Design. Danach gilt wieder das Telvo-Violett.": "Αυτή τη στιγμή ισχύει το θέμα {0}. Μετά επιστρέφει το μοβ του Telvo.",
   "Automatisch richtet sich nach deinem Gerät. Fernseher bleiben dunkel.": "Το αυτόματο ακολουθεί τη συσκευή σου. Οι τηλεοράσεις μένουν πάντα σκούρες.",
   "Playlist per Handy hinzufügen": "Πρόσθεσε playlist με το κινητό",
   "QR-Code scannen oder antippen. MAC und KEY sind auf der Seite schon eingetragen – du gibst nur noch deinen M3U-Link oder Xtream-Zugang ein.": "Σάρωσε ή πάτησε τον κωδικό QR. Τα MAC και KEY είναι ήδη συμπληρωμένα στη σελίδα – εσύ βάζεις μόνο τον σύνδεσμο M3U ή τα στοιχεία Xtream.",
@@ -191,7 +191,7 @@ window.LUMIO_I18N["el"] = {
   "{0} – gültig bis {1}": "{0} – ισχύει έως {1}",
   "{0} – keine Verbindung": "{0} – χωρίς σύνδεση",
   "Willkommen bei": "Καλώς ήρθες στο",
-  "mit Lumio Player": "με το Lumio Player",
+  "mit Telvo Player": "με το Telvo Player",
   "Probiere die App mit freien Test-Videos aus.": "Δοκίμασε την εφαρμογή με δωρεάν δοκιμαστικά βίντεο.",
   "Dein Licht für Live TV, Filme und Serien.": "Το φως σου για Live TV, ταινίες και σειρές.",
   "Mehr anzeigen": "Περισσότερα",
@@ -232,7 +232,7 @@ window.LUMIO_I18N["el"] = {
   "Wiedergabe nicht möglich. Mit „Zurück“ schließen.": "Η αναπαραγωγή δεν είναι δυνατή. Κλείσε με «Πίσω».",
   "Wiedergabe": "Αναπαραγωγή",
   "Android-Player": "Πρόγραμμα Android",
-  "Lumio-Player": "Πρόγραμμα Lumio",
+  "Telvo-Player": "Πρόγραμμα Telvo",
   "Top 10 Filme": "Top 10 ταινίες",
   "Top 10 Serien": "Top 10 σειρές",
   "Top 10 in {0}": "Top 10 σε {0}",
@@ -464,7 +464,7 @@ window.LUMIO_I18N["el"] = {
   "Name Z–A": "Όνομα Ω–Α",
   "Funktioniert auf den meisten Geräten am besten.": "Δουλεύει καλύτερα στις περισσότερες συσκευές.",
   "Probiere das, wenn Sender nicht starten oder ruckeln.": "Δοκίμασέ το αν τα κανάλια δεν ξεκινούν ή κολλάνε.",
-  "Aus – Lumio-Player verwenden": "Ανενεργό – χρήση προγράμματος Lumio",
+  "Aus – Telvo-Player verwenden": "Ανενεργό – χρήση προγράμματος Telvo",
   "Jedes Mal fragen": "Ερώτηση κάθε φορά",
   "Android zeigt eine Auswahl deiner Player-Apps.": "Το Android εμφανίζει μια επιλογή από τα προγράμματα αναπαραγωγής σου.",
   "Alle 6 Stunden": "Κάθε 6 ώρες",
@@ -586,4 +586,17 @@ window.LUMIO_I18N["el"] = {
   "Trailer": "Τρέιλερ",
   "Trailer: {0}": "Τρέιλερ: {0}",
   "Solche Sender heißen beim Anbieter oft „RAW“. Sie werden unverändert durchgeleitet. Auf einer Android-TV-Box oder einem Fire TV Stick laufen sie meist – notfalls über einen externen Player wie VLC (Einstellungen → Wiedergabe).": "Οι πάροχοι συχνά ονομάζουν αυτά τα κανάλια «RAW» – μεταδίδονται χωρίς αλλαγές. Συνήθως λειτουργούν σε Android TV box ή Fire TV Stick, αλλιώς μέσω εξωτερικού player όπως το VLC (Ρυθμίσεις → Αναπαραγωγή).",
+  "Auch auf der Webseite verwalten": "Διαχείριση και από τον ιστότοπο",
+  "Speichert die Zugangsdaten online, damit du die Playlist im Browser bearbeiten kannst. Ohne diese Option bleiben sie nur auf diesem Gerät.": "Αποθηκεύει τα στοιχεία σύνδεσης online, ώστε να μπορείς να επεξεργαστείς τη λίστα στο πρόγραμμα περιήγησης. Χωρίς αυτή την επιλογή μένουν μόνο σε αυτή τη συσκευή.",
+  "Webseite: an": "Ιστότοπος: ενεργό",
+  "Webseite: aus": "Ιστότοπος: ανενεργό",
+  "„{0}“ ist jetzt auf der Webseite verfügbar.": "Το «{0}» είναι πλέον διαθέσιμο στον ιστότοπο.",
+  "Von der Webseite entfernen?": "Αφαίρεση από τον ιστότοπο;",
+  "„{0}“ bleibt auf diesem Gerät, die Online-Kopie samt Zugangsdaten wird gelöscht.": "Το «{0}» μένει σε αυτή τη συσκευή· το online αντίγραφο μαζί με τα στοιχεία σύνδεσης θα διαγραφεί.",
+  "Entfernen": "Αφαίρεση",
+  "Neuen KEY erzeugen": "Δημιουργία νέου KEY",
+  "Neuen KEY erzeugen?": "Δημιουργία νέου KEY;",
+  "Der alte KEY funktioniert danach nicht mehr – auch nicht auf der Webseite. Deine Playlists bleiben erhalten.": "Το παλιό KEY δεν θα λειτουργεί πια – ούτε στον ιστότοπο. Οι λίστες σου παραμένουν.",
+  "KEY konnte nicht erneuert werden.": "Δεν ήταν δυνατή η ανανέωση του KEY.",
+  "Neuer KEY: {0}": "Νέο KEY: {0}"
 };

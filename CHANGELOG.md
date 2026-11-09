@@ -1,4 +1,34 @@
-# Änderungsprotokoll – Lumio Player
+# Änderungsprotokoll – Telvo Player (früher Lumio Player)
+
+## 1.11.0 – 2026-11-09 · Telvo: neuer Name, neue Webseite, mehr Sicherheit
+
+**App – behobene Fehler:** endloses Hängen beim Aktualisieren, wenn der Server mitten in der Übertragung stehen blieb ·
+Kindersicherung über Favoriten/Zuletzt gesehen/Weiterschauen umgehbar · gelöschte Playlists kamen zurück ·
+doppelte Playlists bei langsamer Verbindung · abgelaufener Xtream-Zugang erschien als leere Playlist ·
+Zahlen bei falscher Playlist gespeichert · Umlaute in Latin-1-Playlists · zwei Videoplayer gleichzeitig ·
+Links unter Windows/Mac doppelt geöffnet · möglicher Absturz des TV-Players bei langen Senderlisten ·
+Favoriten rutschten auf Nachbarsender, wenn der Anbieter die M3U-Liste umsortierte (stabile Kennungen, automatische Umstellung).
+
+**App – Datenschutz & Sicherheit:** Zugangsdaten gehen nur noch mit Zustimmung online („Auch auf der Webseite verwalten“,
+„Webseite: an/aus“) · eigener App-Schlüssel (Token) für den Online-Abgleich · „Neuen KEY erzeugen“ · Bibliotheken fest
+eingebaut mit fester Version und Prüfsumme. Datenbank: `server/sicherheit-2026-11.sql` (am 09.11.2026 eingespielt).
+
+**Tests:** 43 App-Tests, 54 Webseiten-Tests, Datenbank-Tests gegen PostgreSQL.
+
+### Umbenennung in „Telvo“
+
+**Neuer Name: Telvo Player** (vorher „Lumio Player“ – den Namen nutzen bereits andere Apps, u. a. ein
+Android-Videoplayer und eine Schul-Software). Geändert ist nur der **sichtbare** Name und das Logo:
+- Neues Logo „T mit Play-Zeichen und Lichtpunkt“ (Webseite, App, Favicon, App-Symbole über `scripts/make-icons.py`)
+- App-Name in App, Android/Fire TV (Capacitor), Samsung, LG, Windows/Mac (`productName` → Mac-App heißt jetzt
+  „Telvo Player.app“), Release-Titel auf GitHub
+- **Bewusst unverändert** (damit bestehende Installationen, Updates, QR-Codes und der Downloader-Code 5619512
+  weiter funktionieren): Repository und Webadresse `splix66.github.io/lumio-player`, Dateinamen `lumio-player.apk` /
+  `lumio-player-setup.exe` / `lumio-player-mac.dmg`, App-Kennung `de.lumio.player`, Datenbankfunktionen `lumio_*`,
+  gespeicherte Einstellungen `lumio.*`, Test-Schnittstelle `window.LumioDebug`
+
+Webseite (`docs/`): neues Design, 14 Sprachen mit Sprachauswahl wie in der App, Sicherheitsregel (CSP),
+automatischer Webseiten-Test – Details in `WEBSEITE-BESTANDSAUFNAHME.md`.
 
 ## 1.10.0 – 2026-11-09 · Automatische Tests
 

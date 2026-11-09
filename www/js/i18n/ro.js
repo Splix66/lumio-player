@@ -1,4 +1,4 @@
-/* Lumio Player – Übersetzung: Rumänisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
+/* Telvo Player – Übersetzung: Rumänisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["ro"] = {
   "Dein Zugang ist abgelaufen": "Accesul tău a expirat",
@@ -57,7 +57,7 @@ window.LUMIO_I18N["ro"] = {
   "Hell": "Luminos",
   "Automatisch": "Automat",
   "Darstellung": "Aspect",
-  "Gerade läuft das {0}-Design. Danach gilt wieder das Lumio-Violett.": "Acum este activă tema {0}. După aceea revine violetul Lumio.",
+  "Gerade läuft das {0}-Design. Danach gilt wieder das Telvo-Violett.": "Acum este activă tema {0}. După aceea revine violetul Telvo.",
   "Automatisch richtet sich nach deinem Gerät. Fernseher bleiben dunkel.": "Automat se potrivește cu dispozitivul tău. Televizoarele rămân întunecate.",
   "Playlist per Handy hinzufügen": "Adaugă o listă cu telefonul",
   "QR-Code scannen oder antippen. MAC und KEY sind auf der Seite schon eingetragen – du gibst nur noch deinen M3U-Link oder Xtream-Zugang ein.": "Scanează sau atinge codul QR. MAC și KEY sunt deja completate pe pagină – tu introduci doar linkul M3U sau datele Xtream.",
@@ -191,7 +191,7 @@ window.LUMIO_I18N["ro"] = {
   "{0} – gültig bis {1}": "{0} – valabil până la {1}",
   "{0} – keine Verbindung": "{0} – fără conexiune",
   "Willkommen bei": "Bun venit la",
-  "mit Lumio Player": "cu Lumio Player",
+  "mit Telvo Player": "cu Telvo Player",
   "Probiere die App mit freien Test-Videos aus.": "Încearcă aplicația cu videoclipuri de test gratuite.",
   "Dein Licht für Live TV, Filme und Serien.": "Lumina ta pentru Live TV, filme și seriale.",
   "Mehr anzeigen": "Arată mai multe",
@@ -232,7 +232,7 @@ window.LUMIO_I18N["ro"] = {
   "Wiedergabe nicht möglich. Mit „Zurück“ schließen.": "Redarea nu este posibilă. Închide cu „Înapoi”.",
   "Wiedergabe": "Redare",
   "Android-Player": "Player Android",
-  "Lumio-Player": "Player Lumio",
+  "Telvo-Player": "Player Telvo",
   "Top 10 Filme": "Top 10 filme",
   "Top 10 Serien": "Top 10 seriale",
   "Top 10 in {0}": "Top 10 în {0}",
@@ -464,7 +464,7 @@ window.LUMIO_I18N["ro"] = {
   "Name Z–A": "Nume Z–A",
   "Funktioniert auf den meisten Geräten am besten.": "Funcționează cel mai bine pe majoritatea dispozitivelor.",
   "Probiere das, wenn Sender nicht starten oder ruckeln.": "Încearcă dacă canalele nu pornesc sau se blochează.",
-  "Aus – Lumio-Player verwenden": "Oprit – folosește playerul Lumio",
+  "Aus – Telvo-Player verwenden": "Oprit – folosește playerul Telvo",
   "Jedes Mal fragen": "Întreabă de fiecare dată",
   "Android zeigt eine Auswahl deiner Player-Apps.": "Android afișează o listă cu aplicațiile tale de redare.",
   "Alle 6 Stunden": "La fiecare 6 ore",
@@ -586,4 +586,17 @@ window.LUMIO_I18N["ro"] = {
   "Trailer": "Trailer",
   "Trailer: {0}": "Trailer: {0}",
   "Solche Sender heißen beim Anbieter oft „RAW“. Sie werden unverändert durchgeleitet. Auf einer Android-TV-Box oder einem Fire TV Stick laufen sie meist – notfalls über einen externen Player wie VLC (Einstellungen → Wiedergabe).": "Furnizorii numesc adesea aceste canale „RAW” – sunt transmise nemodificate. De obicei funcționează pe un Android TV box sau pe un Fire TV Stick, iar la nevoie printr-un player extern precum VLC (Setări → Redare).",
+  "Auch auf der Webseite verwalten": "Gestionează și pe site",
+  "Speichert die Zugangsdaten online, damit du die Playlist im Browser bearbeiten kannst. Ohne diese Option bleiben sie nur auf diesem Gerät.": "Salvează datele de autentificare online, ca să poți edita lista în browser. Fără această opțiune rămân doar pe acest dispozitiv.",
+  "Webseite: an": "Site: pornit",
+  "Webseite: aus": "Site: oprit",
+  "„{0}“ ist jetzt auf der Webseite verfügbar.": "„{0}” este acum disponibilă pe site.",
+  "Von der Webseite entfernen?": "Elimini de pe site?",
+  "„{0}“ bleibt auf diesem Gerät, die Online-Kopie samt Zugangsdaten wird gelöscht.": "„{0}” rămâne pe acest dispozitiv, copia online împreună cu datele de autentificare va fi ștearsă.",
+  "Entfernen": "Elimină",
+  "Neuen KEY erzeugen": "Generează un KEY nou",
+  "Neuen KEY erzeugen?": "Generezi un KEY nou?",
+  "Der alte KEY funktioniert danach nicht mehr – auch nicht auf der Webseite. Deine Playlists bleiben erhalten.": "Vechiul KEY nu va mai funcționa – nici pe site. Listele tale rămân.",
+  "KEY konnte nicht erneuert werden.": "KEY-ul nu a putut fi reînnoit.",
+  "Neuer KEY: {0}": "KEY nou: {0}"
 };

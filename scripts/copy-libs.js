@@ -1,9 +1,11 @@
-// Kopiert die Video-Bibliothek hls.js nach www/lib, damit die App sie offline dabei hat.
+// Kopiert die Bibliotheken (hls.js, mpegts.js, QR-Code) nach www/lib, damit die App sie fest dabei hat
+// und nichts aus dem Internet nachladen muss. Auf GitHub (CI) bricht der Bau ab, wenn eine fehlt.
 const fs = require('fs');
 const path = require('path');
 
 const libs = [
   ['hls.js', 'dist/hls.min.js', 'hls.min.js'],
+  ['mpegts.js', 'dist/mpegts.js', 'mpegts.js'],
   ['qrcode-generator', 'qrcode.js', 'qrcode.js']
 ];
 const libDir = path.join(__dirname, '..', 'www', 'lib');
@@ -13,6 +15,7 @@ for (const [pkg, file, target] of libs) {
   const src = path.join(__dirname, '..', 'node_modules', pkg, file);
   if (!fs.existsSync(src)) {
     console.log(pkg + ' nicht gefunden – die App lädt es dann aus dem Internet.');
+    if (process.env.CI) { console.error('FEHLER: ' + pkg + ' fehlt – die App wäre unvollständig.'); process.exitCode = 1; }
     continue;
   }
   fs.copyFileSync(src, path.join(libDir, target));

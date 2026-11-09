@@ -1,5 +1,5 @@
 /* ==========================================================
-   Lumio Player – Übersetzungen
+   Telvo Player – Übersetzungen
    Links steht der deutsche Text aus app.js, rechts die Übersetzung.
    {0}, {1} … sind Platzhalter (z. B. Datum, Name) und müssen erhalten bleiben.
    Fehlt eine Übersetzung, wird automatisch der deutsche Text gezeigt.
@@ -7,6 +7,19 @@
 window.LUMIO_I18N = {
   /* ---------------- English ---------------- */
   en: {
+    "Neuen KEY erzeugen": "Create new KEY",
+    "Neuen KEY erzeugen?": "Create a new KEY?",
+    "Der alte KEY funktioniert danach nicht mehr – auch nicht auf der Webseite. Deine Playlists bleiben erhalten.": "The old KEY will stop working – on the website too. Your playlists are kept.",
+    "KEY konnte nicht erneuert werden.": "The KEY could not be renewed.",
+    "Neuer KEY: {0}": "New KEY: {0}",
+    "Auch auf der Webseite verwalten": "Also manage on the website",
+    "Speichert die Zugangsdaten online, damit du die Playlist im Browser bearbeiten kannst. Ohne diese Option bleiben sie nur auf diesem Gerät.": "Stores your login details online so you can edit the playlist in a browser. Without this option they stay on this device only.",
+    "Webseite: an": "Website: on",
+    "Webseite: aus": "Website: off",
+    "„{0}“ ist jetzt auf der Webseite verfügbar.": "“{0}” is now available on the website.",
+    "Von der Webseite entfernen?": "Remove from the website?",
+    "„{0}“ bleibt auf diesem Gerät, die Online-Kopie samt Zugangsdaten wird gelöscht.": "“{0}” stays on this device; the online copy including login details will be deleted.",
+    "Entfernen": "Remove",
     'Dein Zugang ist abgelaufen': 'Your subscription has expired',
     'Dein Zugang läuft bald ab': 'Your subscription expires soon',
     '„{0}“ ist am {1} abgelaufen. Bitte melde dich bei deinem Anbieter, um den Zugang zu verlängern.': '“{0}” expired on {1}. Please contact your provider to renew your subscription.',
@@ -63,7 +76,7 @@ window.LUMIO_I18N = {
     'Hell': 'Light',
     'Automatisch': 'Automatic',
     'Darstellung': 'Appearance',
-    'Gerade läuft das {0}-Design. Danach gilt wieder das Lumio-Violett.': 'The {0} design is active right now. Afterwards the Lumio violet returns.',
+    'Gerade läuft das {0}-Design. Danach gilt wieder das Telvo-Violett.': 'The {0} design is active right now. Afterwards the Telvo violet returns.',
     'Automatisch richtet sich nach deinem Gerät. Fernseher bleiben dunkel.': 'Automatic follows your device. TVs always stay dark.',
     'Playlist per Handy hinzufügen': 'Add a playlist with your phone',
     'QR-Code scannen oder antippen. MAC und KEY sind auf der Seite schon eingetragen – du gibst nur noch deinen M3U-Link oder Xtream-Zugang ein.': 'Scan or tap the QR code. MAC and KEY are already filled in on the page – you only enter your M3U link or Xtream login.',
@@ -200,7 +213,7 @@ window.LUMIO_I18N = {
     '{0} – gültig bis {1}': '{0} – valid until {1}',
     '{0} – keine Verbindung': '{0} – no connection',
     'Willkommen bei': 'Welcome to',
-    'mit Lumio Player': 'with Lumio Player',
+    'mit Telvo Player': 'with Telvo Player',
     'Probiere die App mit freien Test-Videos aus.': 'Try the app with free test videos.',
     'Dein Licht für Live TV, Filme und Serien.': 'Your light for live TV, movies and series.',
     'Mehr anzeigen': 'Show more',
@@ -262,7 +275,7 @@ window.LUMIO_I18N = {
     "Name Z–A": "Name Z–A",
     "Funktioniert auf den meisten Geräten am besten.": "Works best on most devices.",
     "Probiere das, wenn Sender nicht starten oder ruckeln.": "Try this if channels don't start or stutter.",
-    "Aus – Lumio-Player verwenden": "Off – use Lumio Player",
+    "Aus – Telvo-Player verwenden": "Off – use Telvo Player",
     "Jedes Mal fragen": "Ask every time",
     "Android zeigt eine Auswahl deiner Player-Apps.": "Android shows a choice of your player apps.",
     "Alle 6 Stunden": "Every 6 hours",
@@ -414,7 +427,7 @@ window.LUMIO_I18N = {
     "Wiedergabe nicht möglich. Mit „Zurück“ schließen.": "Playback not possible. Press “Back” to close.",
     "Wiedergabe": "Playback",
     "Android-Player": "Android player",
-    "Lumio-Player": "Lumio player",
+    "Telvo-Player": "Telvo player",
     "Top 10 Filme": "Top 10 movies",
     "Top 10 Serien": "Top 10 series",
     "Top 10 in {0}": "Top 10 in {0}",
@@ -596,6 +609,19 @@ window.LUMIO_I18N = {
 
   /* ---------------- Türkçe ---------------- */
   tr: {
+    "Neuen KEY erzeugen": "Yeni KEY oluştur",
+    "Neuen KEY erzeugen?": "Yeni KEY oluşturulsun mu?",
+    "Der alte KEY funktioniert danach nicht mehr – auch nicht auf der Webseite. Deine Playlists bleiben erhalten.": "Eski KEY artık çalışmaz – web sitesinde de. Listelerin korunur.",
+    "KEY konnte nicht erneuert werden.": "KEY yenilenemedi.",
+    "Neuer KEY: {0}": "Yeni KEY: {0}",
+    "Auch auf der Webseite verwalten": "Web sitesinde de yönet",
+    "Speichert die Zugangsdaten online, damit du die Playlist im Browser bearbeiten kannst. Ohne diese Option bleiben sie nur auf diesem Gerät.": "Listeyi tarayıcıda düzenleyebilmen için giriş bilgilerini çevrimiçi kaydeder. Bu seçenek kapalıyken bilgiler yalnızca bu cihazda kalır.",
+    "Webseite: an": "Web sitesi: açık",
+    "Webseite: aus": "Web sitesi: kapalı",
+    "„{0}“ ist jetzt auf der Webseite verfügbar.": "“{0}” artık web sitesinde kullanılabilir.",
+    "Von der Webseite entfernen?": "Web sitesinden kaldırılsın mı?",
+    "„{0}“ bleibt auf diesem Gerät, die Online-Kopie samt Zugangsdaten wird gelöscht.": "“{0}” bu cihazda kalır; giriş bilgileri dahil çevrimiçi kopya silinir.",
+    "Entfernen": "Kaldır",
     'Dein Zugang ist abgelaufen': 'Aboneliğinin süresi doldu',
     'Dein Zugang läuft bald ab': 'Aboneliğin yakında sona eriyor',
     '„{0}“ ist am {1} abgelaufen. Bitte melde dich bei deinem Anbieter, um den Zugang zu verlängern.': '“{0}” {1} tarihinde sona erdi. Aboneliğini uzatmak için lütfen sağlayıcınla iletişime geç.',
@@ -652,7 +678,7 @@ window.LUMIO_I18N = {
     'Hell': 'Açık',
     'Automatisch': 'Otomatik',
     'Darstellung': 'Görünüm',
-    'Gerade läuft das {0}-Design. Danach gilt wieder das Lumio-Violett.': 'Şu anda {0} tasarımı etkin. Ardından yeniden Lumio moru gelir.',
+    'Gerade läuft das {0}-Design. Danach gilt wieder das Telvo-Violett.': 'Şu anda {0} tasarımı etkin. Ardından yeniden Telvo moru gelir.',
     'Automatisch richtet sich nach deinem Gerät. Fernseher bleiben dunkel.': 'Otomatik, cihazına göre ayarlanır. Televizyonlar her zaman koyu kalır.',
     'Playlist per Handy hinzufügen': 'Telefonla liste ekle',
     'QR-Code scannen oder antippen. MAC und KEY sind auf der Seite schon eingetragen – du gibst nur noch deinen M3U-Link oder Xtream-Zugang ein.': 'QR kodunu tara veya dokun. MAC ve KEY sayfada zaten girili – sadece M3U bağlantını veya Xtream bilgilerini girersin.',
@@ -789,7 +815,7 @@ window.LUMIO_I18N = {
     '{0} – gültig bis {1}': '{0} – {1} tarihine kadar geçerli',
     '{0} – keine Verbindung': '{0} – bağlantı yok',
     'Willkommen bei': 'Hoş geldin',
-    'mit Lumio Player': 'Lumio Player ile',
+    'mit Telvo Player': 'Telvo Player ile',
     'Probiere die App mit freien Test-Videos aus.': 'Uygulamayı ücretsiz test videolarıyla dene.',
     'Dein Licht für Live TV, Filme und Serien.': 'Canlı TV, filmler ve diziler için ışığın.',
     'Mehr anzeigen': 'Daha fazla',
@@ -851,7 +877,7 @@ window.LUMIO_I18N = {
     "Name Z–A": "Ad Z–A",
     "Funktioniert auf den meisten Geräten am besten.": "Çoğu cihazda en iyi çalışır.",
     "Probiere das, wenn Sender nicht starten oder ruckeln.": "Kanallar açılmıyorsa veya takılıyorsa bunu dene.",
-    "Aus – Lumio-Player verwenden": "Kapalı – Lumio Player kullan",
+    "Aus – Telvo-Player verwenden": "Kapalı – Telvo Player kullan",
     "Jedes Mal fragen": "Her seferinde sor",
     "Android zeigt eine Auswahl deiner Player-Apps.": "Android, oynatıcı uygulamalarından bir seçim gösterir.",
     "Alle 6 Stunden": "6 saatte bir",
@@ -1003,7 +1029,7 @@ window.LUMIO_I18N = {
     "Wiedergabe nicht möglich. Mit „Zurück“ schließen.": "Oynatma mümkün değil. Kapatmak için “Geri”ye bas.",
     "Wiedergabe": "Oynatma",
     "Android-Player": "Android oynatıcı",
-    "Lumio-Player": "Lumio oynatıcı",
+    "Telvo-Player": "Telvo oynatıcı",
     "Top 10 Filme": "En iyi 10 film",
     "Top 10 Serien": "En iyi 10 dizi",
     "Top 10 in {0}": "{0} içinde en iyi 10",

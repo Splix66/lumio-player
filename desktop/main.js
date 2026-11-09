@@ -1,4 +1,4 @@
-// Lumio Player für Windows und Mac (Electron).
+// Telvo Player für Windows und Mac (Electron).
 // Lädt dieselbe App wie auf Handy und TV aus dem Ordner "app".
 const { app, BrowserWindow, Menu, shell } = require('electron');
 const path = require('path');
@@ -16,7 +16,7 @@ function createWindow() {
     minWidth: 800,
     minHeight: 500,
     backgroundColor: '#0b0a1a',
-    title: 'Lumio Player',
+    title: 'Telvo Player',
     autoHideMenuBar: true,
     webPreferences: {
       // IPTV-Server erlauben meist keinen Browser-Zugriff (CORS) und nutzen oft http.

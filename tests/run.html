@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Lumio Tests</title>
+  <title>Telvo Tests</title>
   <style>
     body { font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; margin: 2rem auto; max-width: 60rem; padding: 0 1rem; background: #0b0b0f; color: #f4f4f6; }
     h1 { font-size: 1.5rem; margin: 0 0 1rem; }
@@ -18,7 +18,7 @@
   </style>
 </head>
 <body>
-  <h1>Lumio Player – automatische Tests</h1>
+  <h1>Telvo Player – automatische Tests</h1>
   <p>Prüft Kernfunktionen der App mit erfundenen Testdaten. Es werden keine Kundendaten und kein Online-Dienst verwendet.</p>
   <div id="summary" data-status="running">Tests laufen …</div>
   <ol id="results"></ol>
@@ -37,6 +37,7 @@
   <script src="epg.test.js"></script>
   <script src="app.test.js"></script>
   <script src="i18n.test.js"></script>
+  <script src="robust.test.js"></script>
   <script>Test.run();</script>
 </body>
 </html>

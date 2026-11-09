@@ -1,0 +1,39 @@
+# Prüft die Datenbank-Skripte (server/*.sql) gegen eine echte, leere PostgreSQL-Datenbank:
+# bisheriger Weg mit MAC + KEY, Sperre nach Fehlversuchen, Token-Weg der App, KEY erneuern, Gerät löschen, Aufräumen.
+# Es werden keine Kundendaten und nicht der echte Online-Dienst verwendet.
+name: Datenbank testen
+
+on:
+  push:
+    paths: ['server/**', 'tests/sql/**', '.github/workflows/sql-tests.yml']
+  pull_request:
+    paths: ['server/**', 'tests/sql/**', '.github/workflows/sql-tests.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 2s --health-timeout 5s --health-retries 20
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: test
+      PGDATABASE: postgres
+    steps:
+      - name: Projekt holen
+        uses: actions/checkout@v4
+
+      - name: Datenbank-Skripte einspielen und prüfen
+        run: tests/sql/run.sh

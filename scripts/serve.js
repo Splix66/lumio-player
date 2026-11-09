@@ -31,7 +31,7 @@ http.createServer((req, res) => {
     res.end(data);
   });
 }).listen(port, () => {
-  console.log('\n  Lumio Player läuft:');
+  console.log('\n  Telvo Player läuft:');
   console.log('  → Auf diesem Computer:  http://localhost:' + port);
   console.log('  → Ohne Online-Abgleich testen:  http://localhost:' + port + '/?nocloud');
   Object.values(os.networkInterfaces()).flat().filter(i => i && i.family === 'IPv4' && !i.internal)

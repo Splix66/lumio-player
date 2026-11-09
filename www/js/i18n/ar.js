@@ -1,4 +1,4 @@
-/* Lumio Player – Übersetzung: Arabisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
+/* Telvo Player – Übersetzung: Arabisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["ar"] = {
   "Dein Zugang ist abgelaufen": "انتهى اشتراكك",
@@ -57,7 +57,7 @@ window.LUMIO_I18N["ar"] = {
   "Hell": "فاتح",
   "Automatisch": "تلقائي",
   "Darstellung": "المظهر",
-  "Gerade läuft das {0}-Design. Danach gilt wieder das Lumio-Violett.": "يعمل الآن تصميم {0}. بعده يعود اللون البنفسجي الخاص بـ Lumio.",
+  "Gerade läuft das {0}-Design. Danach gilt wieder das Telvo-Violett.": "يعمل الآن تصميم {0}. بعده يعود اللون البنفسجي الخاص بـ Telvo.",
   "Automatisch richtet sich nach deinem Gerät. Fernseher bleiben dunkel.": "الوضع التلقائي يتبع جهازك. أجهزة التلفاز تبقى داكنة.",
   "Playlist per Handy hinzufügen": "أضف قائمة تشغيل بالهاتف",
   "QR-Code scannen oder antippen. MAC und KEY sind auf der Seite schon eingetragen – du gibst nur noch deinen M3U-Link oder Xtream-Zugang ein.": "امسح رمز QR أو المسه. MAC وKEY مكتوبان مسبقًا في الصفحة – عليك فقط إدخال رابط M3U أو بيانات Xtream.",
@@ -191,7 +191,7 @@ window.LUMIO_I18N["ar"] = {
   "{0} – gültig bis {1}": "{0} – صالح حتى {1}",
   "{0} – keine Verbindung": "{0} – لا يوجد اتصال",
   "Willkommen bei": "مرحبًا بك في",
-  "mit Lumio Player": "مع Lumio Player",
+  "mit Telvo Player": "مع Telvo Player",
   "Probiere die App mit freien Test-Videos aus.": "جرّب التطبيق بفيديوهات اختبار مجانية.",
   "Dein Licht für Live TV, Filme und Serien.": "نورك للبث المباشر والأفلام والمسلسلات.",
   "Mehr anzeigen": "عرض المزيد",
@@ -232,7 +232,7 @@ window.LUMIO_I18N["ar"] = {
   "Wiedergabe nicht möglich. Mit „Zurück“ schließen.": "تعذّر التشغيل. اضغط “رجوع” للإغلاق.",
   "Wiedergabe": "التشغيل",
   "Android-Player": "مشغّل Android",
-  "Lumio-Player": "مشغّل Lumio",
+  "Telvo-Player": "مشغّل Telvo",
   "Top 10 Filme": "أفضل 10 أفلام",
   "Top 10 Serien": "أفضل 10 مسلسلات",
   "Top 10 in {0}": "أفضل 10 في {0}",
@@ -464,7 +464,7 @@ window.LUMIO_I18N["ar"] = {
   "Name Z–A": "الاسم ي–أ",
   "Funktioniert auf den meisten Geräten am besten.": "الأفضل على معظم الأجهزة.",
   "Probiere das, wenn Sender nicht starten oder ruckeln.": "جرّب هذا إذا لم تبدأ القنوات أو كانت متقطعة.",
-  "Aus – Lumio-Player verwenden": "إيقاف – استخدام مشغّل Lumio",
+  "Aus – Telvo-Player verwenden": "إيقاف – استخدام مشغّل Telvo",
   "Jedes Mal fragen": "اسأل في كل مرة",
   "Android zeigt eine Auswahl deiner Player-Apps.": "يعرض Android قائمة بتطبيقات التشغيل لديك.",
   "Alle 6 Stunden": "كل 6 ساعات",
@@ -586,4 +586,17 @@ window.LUMIO_I18N["ar"] = {
   "Trailer": "الإعلان الترويجي",
   "Trailer: {0}": "الإعلان الترويجي: {0}",
   "Solche Sender heißen beim Anbieter oft „RAW“. Sie werden unverändert durchgeleitet. Auf einer Android-TV-Box oder einem Fire TV Stick laufen sie meist – notfalls über einen externen Player wie VLC (Einstellungen → Wiedergabe).": "غالبًا ما يسمّي المزوّد هذه القنوات «RAW»، إذ تُمرَّر كما هي دون تحويل. عادةً ما تعمل على جهاز Android TV أو Fire TV Stick، وإن لم تعمل فعبر مشغّل خارجي مثل VLC (الإعدادات ← التشغيل).",
+  "Auch auf der Webseite verwalten": "الإدارة عبر الموقع أيضًا",
+  "Speichert die Zugangsdaten online, damit du die Playlist im Browser bearbeiten kannst. Ohne diese Option bleiben sie nur auf diesem Gerät.": "يحفظ بيانات الدخول عبر الإنترنت لتتمكن من تعديل قائمة التشغيل في المتصفح. بدون هذا الخيار تبقى على هذا الجهاز فقط.",
+  "Webseite: an": "الموقع: مفعّل",
+  "Webseite: aus": "الموقع: معطّل",
+  "„{0}“ ist jetzt auf der Webseite verfügbar.": "“{0}” متاحة الآن على الموقع.",
+  "Von der Webseite entfernen?": "إزالتها من الموقع؟",
+  "„{0}“ bleibt auf diesem Gerät, die Online-Kopie samt Zugangsdaten wird gelöscht.": "تبقى “{0}” على هذا الجهاز، وستُحذف النسخة عبر الإنترنت مع بيانات الدخول.",
+  "Entfernen": "إزالة",
+  "Neuen KEY erzeugen": "إنشاء KEY جديد",
+  "Neuen KEY erzeugen?": "إنشاء KEY جديد؟",
+  "Der alte KEY funktioniert danach nicht mehr – auch nicht auf der Webseite. Deine Playlists bleiben erhalten.": "لن يعمل KEY القديم بعد ذلك – ولا على الموقع أيضًا. تبقى قوائم التشغيل الخاصة بك.",
+  "KEY konnte nicht erneuert werden.": "تعذّر تجديد KEY.",
+  "Neuer KEY: {0}": "KEY الجديد: {0}"
 };

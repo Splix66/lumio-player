@@ -30,7 +30,7 @@ jobs:
           node-version: 20
 
       - name: Bausteine installieren (hls.js, Schrift)
-        run: npm install --ignore-scripts hls.js@1 @fontsource/inter@5 && node scripts/copy-libs.js
+        run: npm install --ignore-scripts hls.js@1.7.3 mpegts.js@1.7.3 qrcode-generator@1.4.4 @fontsource/inter@5 && node scripts/copy-libs.js
 
       - name: Bilder erzeugen
         run: |
@@ -85,7 +85,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: pc
-          name: Lumio Player ${{ steps.ver.outputs.v }} – PC-Version
+          name: Telvo Player ${{ steps.ver.outputs.v }} – PC-Version
           body: |
             Version ${{ steps.ver.outputs.v }}
             Windows: lumio-player-setup.exe

@@ -1,5 +1,5 @@
 /* ==========================================================
-   Lumio Player – Verwaltungsbereich (admin.html)
+   Telvo Player – Verwaltungsbereich (admin.html)
    Anmeldung über Supabase Auth, Daten nur über die Funktionen aus server/admin.sql.
    Sicherheit:
    - Alle Inhalte (Support-Texte kommen von Kunden!) werden ausschließlich als Text
@@ -449,7 +449,7 @@
       var c = el('span'); c.appendChild(el('span', 'lbl', 'Kontakt: '));
       if (it.contact && isEmail(it.contact)) {
         var a = el('a', null, it.contact.trim());
-        a.href = 'mailto:' + it.contact.trim() + '?subject=' + encodeURIComponent('Lumio Player – ' + it.topic);
+        a.href = 'mailto:' + it.contact.trim() + '?subject=' + encodeURIComponent('Telvo Player – ' + it.topic);
         a.rel = 'noopener';
         c.appendChild(a);
       } else c.appendChild(document.createTextNode(it.contact || 'keine Angabe'));

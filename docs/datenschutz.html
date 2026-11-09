@@ -4,34 +4,57 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0b0b0f">
-  <title>Datenschutzerklärung – Lumio Player</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self' data:; font-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta name="referrer" content="no-referrer">
+  <title>Datenschutzerklärung – Telvo Player</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="preload" href="assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="legal.css">
 </head>
 <body>
+  <header class="top">
+    <div class="top-in">
+      <a class="brand" href="./"><img src="favicon.svg" alt=""><span>Telvo</span><span>Player</span></a>
+      <a class="back" href="./">← Zur Startseite</a>
+    </div>
+  </header>
   <main>
-    <a class="back" href="./">← Zurück</a>
     <h1>Datenschutzerklärung</h1>
     <p class="meta">Stand: November 2026</p>
 
     <h2>1. Verantwortlicher</h2>
-    <p>[VORNAME NACHNAME]<br>[STRASSE HAUSNUMMER]<br>[PLZ ORT]<br>E-Mail: [E-MAIL-ADRESSE]</p>
+    <p>[VORNAME NACHNAME]<br>[STRASSE HAUSNUMMER]<br>[PLZ ORT]<br>E-Mail: <a href="mailto:telvo.support@gmail.com">telvo.support@gmail.com</a></p>
 
     <h2>2. Worum es geht</h2>
-    <p>Lumio Player ist eine App zum Abspielen eigener IPTV-Playlists. Die App enthält keine Sender oder Inhalte.
+    <p>Telvo Player ist eine App zum Abspielen eigener IPTV-Playlists. Die App enthält keine Sender oder Inhalte.
       Über diese Webseite kannst du eine Playlist an dein Gerät senden, ohne sie mit der Fernbedienung eintippen zu müssen.
       Diese Erklärung beschreibt, welche Daten dabei verarbeitet werden.</p>
 
     <h2>3. Daten in der App</h2>
-    <p>Die App speichert deine Playlists, Favoriten, den Wiedergabe-Verlauf und Einstellungen <strong>nur lokal auf deinem Gerät</strong>.
-      Beim ersten Start erzeugt die App zufällig eine Geräte-Kennung im Format einer MAC-Adresse und einen Geräteschlüssel (Key).
-      Das ist nicht die echte Hardware-Adresse deines Geräts.</p>
+    <p>Die App speichert deine Playlists, Favoriten, den Wiedergabe-Verlauf und Einstellungen <strong>auf deinem Gerät</strong>.
+      Zugangsdaten einer Playlist werden nur dann online gespeichert, wenn du die Playlist über diese Webseite sendest
+      oder in der App ausdrücklich „Auch auf der Webseite verwalten“ einschaltest (siehe Abschnitt 4). Diese Option ist
+      beim Anlegen einer Playlist ausgeschaltet.</p>
+    <p>Beim ersten Start erzeugt die App zufällig eine Geräte-Kennung im Format einer MAC-Adresse und einen Geräteschlüssel (Key).
+      Das ist nicht die echte Hardware-Adresse deines Geräts. Damit du Playlists per Handy senden kannst, meldet sich die App
+      beim Start mit dieser Kennung bei unserem Online-Dienst an und fragt etwa alle 30 Sekunden nach neuen Playlists
+      (dabei werden keine Playlist-Daten aus der App übertragen).</p>
     <p>Beim Abspielen verbindet sich die App direkt mit den Servern des IPTV-Anbieters, den du selbst eingetragen hast.
       Auf die Datenverarbeitung dieses Anbieters haben wir keinen Einfluss; es gelten dessen Datenschutzbestimmungen.</p>
     <p>Falls Programmbibliotheken nicht in der App enthalten sind, lädt die App sie vom Dienst jsDelivr nach
       (Videowiedergabe, QR-Code). Dabei wird deine IP-Adresse an jsDelivr übermittelt.</p>
+    <p><strong>Update-Prüfung:</strong> Einmal täglich fragt die App bei GitHub (api.github.com) nach, ob es eine neue Version gibt.
+      Dabei wird deine IP-Adresse an GitHub übermittelt; es werden keine Playlist- oder Nutzungsdaten gesendet.</p>
+    <p><strong>Trailer:</strong> Startest du bei einem Film oder einer Serie einen Trailer, wird er von YouTube im erweiterten
+      Datenschutzmodus (youtube-nocookie.com, Google Ireland Limited) geladen. Dabei werden u. a. deine IP-Adresse und technische
+      Daten an Google übermittelt, möglicherweise auch in die USA (EU-US Data Privacy Framework). Ohne Klick auf „Trailer“
+      wird keine Verbindung zu YouTube aufgebaut.</p>
 
-    <h2>4. Playlist per Handy senden</h2>
-    <p>Wenn du diese Funktion nutzt, verarbeiten wir:</p>
+    <h2>4. Playlist per Handy senden und auf der Webseite verwalten</h2>
+    <p>Für jedes Gerät speichern wir beim ersten Start der App die Geräte-Kennung, den Prüfwert des Schlüssels und Zeitpunkte –
+      ohne Playlist-Daten. Sendest du eine Playlist über diese Webseite oder schaltest du in der App „Auch auf der Webseite
+      verwalten“ ein, verarbeiten wir zusätzlich:</p>
     <ul>
       <li>die Geräte-Kennung (MAC-Format) und den Geräteschlüssel – der Schlüssel wird nur als Prüfwert (Hash) gespeichert,</li>
       <li>den Namen der Playlist,</li>
@@ -43,11 +66,21 @@
     <p><strong>Wichtig:</strong> Zugangsdaten (z. B. das Passwort deines Xtream-Zugangs) müssen an dein Gerät übergeben werden
       und liegen deshalb lesbar in der Datenbank. Abrufen kann sie nur, wer Geräte-Kennung <em>und</em> Schlüssel kennt.
       Nach 20 falschen Schlüsseln wird ein Gerät für eine Stunde gesperrt. Alle Verbindungen sind verschlüsselt (HTTPS).</p>
+    <p><strong>Online-Kopie löschen:</strong> In der App unter Playlists bei der jeweiligen Playlist „Webseite: aus“ wählen –
+      die Online-Kopie samt Zugangsdaten wird gelöscht, die Playlist bleibt auf deinem Gerät. Auf dieser Webseite kannst du
+      Playlists ebenfalls löschen.</p>
 
     <h3>Support-Nachrichten</h3>
     <p>Schreibst du uns über die Webseite eine Support-Nachricht, speichern wir das gewählte Thema, deinen Text,
       die Geräte-Kennung und – nur wenn du sie angibst – deine Kontaktangabe (z. B. E-Mail-Adresse), damit wir dir antworten können.
-      <strong>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. b DSGVO. Die Nachricht wird gelöscht, sobald dein Anliegen erledigt ist.</p>
+      <strong>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. b DSGVO. Erledigte Nachrichten werden automatisch nach 30 Tagen gelöscht.</p>
+
+    <h3>Kontakt per E-Mail</h3>
+    <p>Schreibst du uns eine E-Mail (z. B. an <a href="mailto:telvo.support@gmail.com">telvo.support@gmail.com</a>), verarbeiten wir deine E-Mail-Adresse und den Inhalt deiner Nachricht,
+      um dir zu antworten. <strong>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. b bzw. f DSGVO.
+      Unser Postfach wird von Google (Gmail, Google Ireland Limited, Irland) bereitgestellt; dabei kann eine Übermittlung in die USA
+      stattfinden, die sich auf das EU-US Data Privacy Framework stützt. E-Mails löschen wir, sobald dein Anliegen erledigt ist
+      und keine gesetzlichen Aufbewahrungspflichten bestehen.</p>
 
     <h2>5. Speicherort und Dienstleister</h2>
     <p><strong>Datenbank:</strong> Supabase Inc. als Auftragsverarbeiter. Die Daten liegen auf Servern in Frankfurt am Main (EU).</p>
@@ -55,19 +88,28 @@
       technisch notwendige Daten wie deine IP-Adresse, um die Seite auszuliefern und vor Angriffen zu schützen.
       Rechtsgrundlage ist unser berechtigtes Interesse an einer sicheren Bereitstellung (Art. 6 Abs. 1 lit. f DSGVO).
       Die Übermittlung in die USA stützt sich auf das EU-US Data Privacy Framework.</p>
+    <p><strong>Versionsanzeige im Download-Bereich:</strong> Um Version, Datum und Größe der aktuellen App anzuzeigen,
+      fragt dein Browser beim Öffnen des Download-Bereichs die öffentliche Schnittstelle von GitHub (api.github.com) ab.
+      Dabei wird deine IP-Adresse an GitHub übermittelt. Die Downloads selbst werden ebenfalls von GitHub ausgeliefert.
+      Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO.</p>
+    <p><strong>Schriften:</strong> Die Schrift „Inter“ wird direkt von dieser Webseite geladen – es besteht keine Verbindung zu Google oder anderen Schrift-Anbietern.</p>
 
     <h2>6. Cookies und Tracking</h2>
     <p>Wir verwenden keine Cookies, keine Werbung und kein Tracking. Die Webseite merkt sich die Geräte-Kennung
       nur für die Dauer des geöffneten Browser-Tabs (Session-Speicher), damit du nicht alles neu eingeben musst.</p>
 
     <h2>7. Speicherdauer</h2>
-    <p>Playlists bleiben gespeichert, bis du sie auf dieser Webseite oder in der App löschst.
-      Auf Anfrage löschen wir alle Daten zu deiner Geräte-Kennung vollständig.</p>
+    <p>Online gespeicherte Playlists bleiben, bis du sie auf dieser Webseite löschst oder in der App „Webseite: aus“ wählst.
+      Geräte, die sich 12 Monate lang nicht mehr verbunden haben, löschen wir automatisch samt ihren Playlists und
+      Support-Nachrichten. Auf Anfrage löschen wir alle Daten zu deiner Geräte-Kennung sofort vollständig.</p>
 
     <h2>8. Deine Rechte</h2>
     <p>Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit
       und Widerspruch. Schreib dazu an die oben genannte E-Mail-Adresse und nenne deine Geräte-Kennung.
       Außerdem kannst du dich bei einer Datenschutz-Aufsichtsbehörde beschweren.</p>
   </main>
+  <footer class="foot">
+    <span>© 2026 Telvo Player</span><a href="impressum.html">Impressum</a><a href="datenschutz.html">Datenschutz</a><a href="./#hilfe">Hilfe &amp; Support</a>
+  </footer>
 </body>
 </html>

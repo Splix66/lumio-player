@@ -1,5 +1,5 @@
 /* ==========================================================
-   Lumio Player – App-Logik
+   Telvo Player – App-Logik
    Läuft auf: Android, Fire TV, Android TV, iPhone, iPad (über Capacitor),
    Samsung (Tizen), LG (webOS) und im Browser.
    Bewusst ohne Build-Werkzeuge geschrieben, damit auch ältere
@@ -10,17 +10,24 @@
 
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
-    appName: 'Lumio Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.10.0',
+    appName: 'Telvo Player',          // Name der App (auch in config-Dateien ändern)
+    version: '1.11.0',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
-    hlsCdn: 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js',
+    /* Bibliotheken: werden beim Bauen nach www/lib kopiert (scripts/copy-libs.js) und von dort geladen.
+       Nur wenn sie fehlen, aus dem Internet – mit fester Version und Prüfsumme (SRI): eine veränderte Datei
+       führt der Browser nicht aus. Bei einem Versionswechsel Prüfsumme neu berechnen:
+       openssl dgst -sha384 -binary DATEI | openssl base64 -A */
+    hlsCdn: 'https://cdn.jsdelivr.net/npm/hls.js@1.7.3/dist/hls.min.js',
+    hlsSri: 'sha384-cciJ0zi8d1uMKC2zJd7jvPY4HQt7W4ByUI/FlMkltvBi31aW61rcpVBhpmW8/NwX',
     tsCdn: 'https://cdn.jsdelivr.net/npm/mpegts.js@1.7.3/dist/mpegts.js',   // für rohe TV-Signale (.ts / „RAW“)
+    tsSri: 'sha384-gWBszQzp4KdKY3PNUrFbTuvAcChcUSMKpSrt/OjDS3qe16Ef4OZSfP5E/+KcPueP',
     requestTimeout: 30000,
     // Online-Dienst für "Playlist per Handy hinzufügen" (Supabase + Webseite auf GitHub Pages)
     cloudUrl: 'https://oofzhklrbrpxjoicwbsf.supabase.co/rest/v1/rpc/',
     cloudKey: 'sb_publishable_cx6n8buREFat_yE7kKW6FA_SnMsOQX7',
     portalUrl: 'https://splix66.github.io/lumio-player/',
     qrCdn: 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js',
+    qrSri: 'sha384-8FWZA6BGMXhsfO+BLtrJK0We6gg5o1JyO8xQm6peWDEUs17ACA5ziE/NIAkl9z2k',
     syncInterval: 30000,
     cloudTimeout: 15000              // Zeitlimit für Anfragen an den Online-Dienst
   };
@@ -133,10 +140,10 @@
     return span.firstChild;
   }
   /* Logo: "L" und Play-Zeichen in Textfarbe, der Lichtpunkt in der gewählten Akzentfarbe */
-  var LOGO_SVG = '<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M14 20v44a20 20 0 0 0 20 20h44" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round"/><path class="play" d="M38 23.6c0-3.6 3.9-5.8 7-4l35.4 22.2c3 1.8 3 6.2 0 8L45 72c-3.1 1.8-7-.4-7-4z"/><circle class="dot" cx="84" cy="22" r="6"/><path class="star" d="M84 12L86.5 19.5L94 22L86.5 24.5L84 32L81.5 24.5L74 22L81.5 19.5Z"/></svg>';
+  var LOGO_SVG = '<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M14 22h56M34 22v62" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round"/><path class="play" d="M50 38.5c0-3.3 3.6-5.3 6.4-3.6l25.4 15.6c2.7 1.7 2.7 5.6 0 7.2L56.4 73.4C53.6 75.1 50 73.1 50 69.8z"/><circle class="dot" cx="84" cy="22" r="6"/><path class="star" d="M84 12L86.5 19.5L94 22L86.5 24.5L84 32L81.5 24.5L74 22L81.5 19.5Z"/></svg>';
   function brandMark() { var m = h('span', { class: 'brand-mark' }); m.innerHTML = LOGO_SVG; return m; }
-  /* Schriftzug: "Lumio" kräftig, "Player" leicht */
-  function wordmark() { return h('span', { class: 'wordmark' }, h('b', { text: 'Lumio' }), h('span', { text: 'Player' })); }
+  /* Schriftzug: "Telvo" kräftig, "Player" leicht */
+  function wordmark() { return h('span', { class: 'wordmark' }, h('b', { text: 'Telvo' }), h('span', { text: 'Player' })); }
 
   function hashCode(s) { var x = 0; s = String(s || ''); for (var i = 0; i < s.length; i++) x = (x * 31 + s.charCodeAt(i)) | 0; return Math.abs(x); }
   function colorFor(s) { var hue = hashCode(s) % 360; return 'hsl(' + hue + ',55%,38%)'; }
@@ -247,14 +254,26 @@
     },
     key: function () {
       var k = Store.get('devkey');
-      if (!k || !/^[A-Z2-9]{6}$/.test(k)) {
-        var abc = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-        var rnd = window.crypto && window.crypto.getRandomValues ? window.crypto.getRandomValues(new Uint8Array(6)) : null;
-        k = '';
-        for (var i = 0; i < 6; i++) k += abc.charAt((rnd ? rnd[i] : Math.floor(Math.random() * 256)) % abc.length);
-        Store.set('devkey', k);
-      }
+      if (!k || !/^[A-Z2-9]{6}$/.test(k)) { k = this.newKey(); Store.set('devkey', k); }
       return k;
+    },
+    newKey: function () {
+      var abc = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', k = '';
+      var rnd = window.crypto && window.crypto.getRandomValues ? window.crypto.getRandomValues(new Uint8Array(6)) : null;
+      for (var i = 0; i < 6; i++) k += abc.charAt((rnd ? rnd[i] : Math.floor(Math.random() * 256)) % abc.length);
+      return k;
+    },
+    /* Langer Geheimschlüssel nur für die App (128 Bit). Damit gleicht die App ab – ohne Sperre nach Fehlversuchen,
+       weil er sich nicht erraten lässt. Der kurze KEY bleibt für die Webseite. Wird nie angezeigt. */
+    token: function () {
+      var t = Store.get('devtoken');
+      if (!t || !/^[0-9a-f]{32}$/.test(t)) {
+        var rnd = window.crypto && window.crypto.getRandomValues ? window.crypto.getRandomValues(new Uint8Array(16)) : null;
+        t = '';
+        for (var i = 0; i < 16; i++) { var b = rnd ? rnd[i] : Math.floor(Math.random() * 256); t += (b < 16 ? '0' : '') + b.toString(16); }
+        Store.set('devtoken', t);
+      }
+      return t;
     },
     portalLink: function () { return CONFIG.portalUrl + '?mac=' + encodeURIComponent(this.mac()) + '&key=' + this.key() + '&lang=' + Lang.cur; }
   };
@@ -296,7 +315,7 @@
     return p.type === 'demo' ? '' : (p.name || '');
   }
 
-  /* ---------------- Darstellung: Hell/Dunkel mit fester Lumio-Farbe (Violett) ----------------
+  /* ---------------- Darstellung: Hell/Dunkel mit fester Telvo-Farbe (Violett) ----------------
      Die Farben selbst stehen in css/style.css. Nur die Saison-Designs färben kurzzeitig um. */
   function rgba(hex, alpha) {
     var n = parseInt(hex.slice(1), 16);
@@ -408,19 +427,74 @@
 
   /* ---------------- Netzwerk ---------------- */
   function fetchWithTimeout(url, ms) {
+    var limit = ms || CONFIG.requestTimeout;
     var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, ms || CONFIG.requestTimeout);
-    return fetch(url, ctrl ? { signal: ctrl.signal } : {}).then(function (res) {
+    var timer, timedOut = false;
+    // Ohne AbortController (Fernseher bis ca. 2019) bricht das Zeitlimit die Anfrage nicht ab –
+    // deshalb zusätzlich ein Wettlauf gegen den Zeitgeber, damit die App nie endlos wartet.
+    var deadline = new Promise(function (resolve, reject) {
+      timer = setTimeout(function () { timedOut = true; if (ctrl) ctrl.abort(); reject(new Error(T('Zeitüberschreitung – der Server antwortet nicht.'))); }, limit);
+    });
+    var req = fetch(url, ctrl ? { signal: ctrl.signal } : {}).then(function (res) {
       clearTimeout(timer);
       if (!res.ok) throw new Error(T('Server-Fehler (HTTP {0})', res.status));
       return res;
     }, function (err) {
       clearTimeout(timer);
-      if (err && err.name === 'AbortError') throw new Error(T('Zeitüberschreitung – der Server antwortet nicht.'));
+      if (timedOut || (err && err.name === 'AbortError')) throw new Error(T('Zeitüberschreitung – der Server antwortet nicht.'));
       throw new Error(T('Keine Verbindung zum Server. Prüfe Adresse und Internet.'));
     });
+    return Promise.race([req, deadline]);
   }
-  function fetchText(url) { return fetchWithTimeout(url).then(function (r) { return r.text(); }); }
+  /* Antwort als Text lesen – mit Überwachung: Kommen {idle} ms lang keine Daten mehr, wird abgebrochen
+     (vorher hing die App endlos, wenn ein Server nach dem Kopf der Antwort stehen blieb).
+     Große Playlists, die langsam aber stetig laden, werden nicht abgebrochen.
+     Zeichensatz: UTF-8; ist die Datei kein gültiges UTF-8 (alte Playlists in Latin-1/Windows-1252), wird
+     windows-1252 benutzt – sonst erscheinen Umlaute als „�“. */
+  function readText(res, idle) {
+    idle = idle || CONFIG.requestTimeout;
+    var reader = res.body && res.body.getReader ? res.body.getReader() : null;
+    var canDecode = typeof TextDecoder !== 'undefined';
+    if (!reader || !canDecode) {
+      var t;
+      var stall = new Promise(function (resolve, reject) {
+        // ohne Datenstrom kein Fortschritt messbar: großzügiges Gesamtlimit
+        t = setTimeout(function () { reject(new Error(T('Zeitüberschreitung – der Server antwortet nicht.'))); }, Math.max(idle * 6, 180000));
+      });
+      return Promise.race([res.text(), stall]).then(function (x) { clearTimeout(t); return x; }, function (e) { clearTimeout(t); throw e; });
+    }
+    return new Promise(function (resolve, reject) {
+      var parts = [], size = 0, timer = null;
+      function arm() {
+        clearTimeout(timer);
+        timer = setTimeout(function () {
+          try { reader.cancel(); } catch (e) {}
+          reject(new Error(T('Zeitüberschreitung – der Server antwortet nicht.')));
+        }, idle);
+      }
+      function pump() {
+        reader.read().then(function (r) {
+          if (r.done) {
+            clearTimeout(timer);
+            var all = new Uint8Array(size), off = 0;
+            for (var i = 0; i < parts.length; i++) { all.set(parts[i], off); off += parts[i].length; }
+            resolve(decodeBytes(all));
+            return;
+          }
+          parts.push(r.value); size += r.value.length; arm(); pump();
+        }, function (e) { clearTimeout(timer); reject(e); });
+      }
+      arm(); pump();
+    });
+  }
+  function decodeBytes(bytes) {
+    try { return new TextDecoder('utf-8', { fatal: true }).decode(bytes); }
+    catch (e) {
+      try { return new TextDecoder('windows-1252').decode(bytes); }
+      catch (e2) { return new TextDecoder('utf-8').decode(bytes); }
+    }
+  }
+  function fetchText(url) { return fetchWithTimeout(url).then(function (r) { return readText(r); }); }
   function fetchJson(url) {
     return fetchText(url).then(function (t) {
       t = t.replace(/^\uFEFF/, '').trim();
@@ -467,6 +541,24 @@
       if (!noCache) { cache[url] = pr; pr.catch(function () { delete cache[url]; }); }
       return pr;
     }
+    /* Antwort einer Listen-Abfrage prüfen. Bei abgelaufenem oder falschem Zugang schicken viele Server statt der
+       Liste die Kontoauskunft (user_info) – das darf nicht als „leere Playlist“ durchgehen (sonst „Alles aktuell!“ und
+       gespeicherte Zahlen = 0). Manche Server liefern Listen als Objekt {"0": {...}} statt als Array. */
+    function asList(x) {
+      if (Array.isArray(x)) return x;
+      if (!x) return [];
+      if (x.user_info) {
+        var u = x.user_info;
+        if (String(u.auth) !== '1') throw new Error(T('Benutzername oder Passwort falsch.'));
+        if (u.status && u.status !== 'Active') throw new Error(T('Konto-Status: {0}', u.status));
+        throw new Error(T('Unerwartete Antwort vom Server.'));
+      }
+      if (typeof x === 'object') {
+        var v = Object.keys(x).map(function (k) { return x[k]; });
+        if (!v.length || v.every(function (o) { return o && typeof o === 'object'; })) return v;
+      }
+      throw new Error(T('Unerwartete Antwort vom Server.'));
+    }
     function mapItem(kind, s) {
       if (kind === 'live') return { kind: 'live', id: String(s.stream_id), name: s.name || T('Kanal'), logo: s.stream_icon, num: s.num, catId: String(s.category_id) };
       if (kind === 'movie') return { kind: 'movie', id: String(s.stream_id), name: s.name || T('Film'), logo: s.stream_icon, ext: s.container_extension || 'mp4', rating: s.rating, catId: String(s.category_id), added: s.added };
@@ -493,7 +585,7 @@
       },
       categories: function (kind) {
         return api(ACTIONS[kind][0]).then(function (list) {
-          return (Array.isArray(list) ? list : []).map(function (c) { return { id: String(c.category_id), name: c.category_name || T('Ohne Name') }; });
+          return asList(list).map(function (c) { return { id: String(c.category_id), name: c.category_name || T('Ohne Name') }; });
         });
       },
       /* Listen werden nur einmal geladen und umgewandelt. Liegt die Gesamtliste schon vor,
@@ -505,7 +597,7 @@
         var pr = whole && whole.done
           ? whole.then(function (l) { return l.filter(function (x) { return x.catId === String(catId); }); })
           : api(ACTIONS[kind][1], all ? '' : '&category_id=' + encodeURIComponent(catId), true).then(function (list) {
-            return (Array.isArray(list) ? list : []).map(function (s) { return mapItem(kind, s); });
+            return asList(list).map(function (s) { return mapItem(kind, s); });
           });
         lists[key] = pr;
         pr.then(function () { pr.done = true; }, function () { delete lists[key]; });
@@ -878,10 +970,26 @@
       var full = data && data.liveById[item.id];
       return full && full.name === item.name ? full : item;
     }
+    /* Kennung eines Eintrags aus Adresse und Name – NICHT aus der Position in der Datei. Früher 'l' + Position:
+       kam beim Anbieter oben ein Sender dazu, rutschten Favoriten, „Weiterschauen“ und Häkchen auf den Nachbarn.
+       Zwei 32-Bit-Prüfwerte (≈ 64 Bit) machen Verwechslungen auch bei 100.000 Einträgen praktisch unmöglich;
+       exakt doppelte Einträge bekommen ~2, ~3 … */
+    function stableId(prefix, e, used) {
+      var base = prefix + '-' + hashCode(e.url).toString(36) + '-' + hashCode(e.name + '|' + e.group).toString(36);
+      var id = base, k = 1;
+      while (used.has(id)) id = base + '~' + (++k);
+      used.add(id);
+      return id;
+    }
+    // Schneller Merker für schon vergebene Kennungen (Set, wo vorhanden – sonst Objekt für sehr alte Fernseher)
+    function idSet() {
+      if (typeof Set === 'function') { var st = new Set(); return { has: function (x) { return st.has(x); }, add: function (x) { st.add(x); } }; }
+      var o = {}; return { has: function (x) { return o.hasOwnProperty(x); }, add: function (x) { o[x] = 1; } };
+    }
     function build(entries) {
-      var d = { live: [], movie: [], series: [], cats: { live: [], movie: [], series: [] }, seriesMap: {}, liveById: {} };
+      var d = { live: [], movie: [], series: [], cats: { live: [], movie: [], series: [] }, seriesMap: {}, liveById: {}, idAt: [] };
       var seenCat = { live: {}, movie: {}, series: {} };
-      var n = 0;
+      var n = 0, used = idSet();
       function cat(kind, g) { if (!seenCat[kind][g]) { seenCat[kind][g] = 1; d.cats[kind].push({ id: g, name: g }); } }
       entries.forEach(function (e, idx) {
         var u = e.url.toLowerCase();
@@ -894,13 +1002,16 @@
             s = d.seriesMap[key] = { kind: 'series', id: 's' + hashCode(key), name: sName, logo: e.logo, catId: e.group, _eps: [] };
             d.series.push(s); cat('series', e.group);
           }
-          s._eps.push({ kind: 'episode', id: 'e' + idx, url: e.url, name: e.name, season: se ? Number(se[2]) : 1, num: se ? Number(se[3]) : s._eps.length + 1, seriesId: s.id, seriesName: sName, logo: e.logo });
+          var eid = stableId('e', e, used); d.idAt[idx] = eid;
+          s._eps.push({ kind: 'episode', id: eid, url: e.url, name: e.name, season: se ? Number(se[2]) : 1, num: se ? Number(se[3]) : s._eps.length + 1, seriesId: s.id, seriesName: sName, logo: e.logo });
         } else if (u.indexOf('/movie/') >= 0 || /\.(mp4|mkv|avi|mov|m4v)(\?|$)/.test(u)) {
-          d.movie.push({ kind: 'movie', id: 'm' + idx, name: e.name, logo: e.logo, url: e.url, catId: e.group });
+          var mid = stableId('m', e, used); d.idAt[idx] = mid;
+          d.movie.push({ kind: 'movie', id: mid, name: e.name, logo: e.logo, url: e.url, catId: e.group });
           cat('movie', e.group);
         } else {
           n++;
-          var li = { kind: 'live', id: 'l' + idx, name: e.name, logo: e.logo, url: e.url, catId: e.group, num: n };
+          var lid = stableId('l', e, used); d.idAt[idx] = lid;
+          var li = { kind: 'live', id: lid, name: e.name, logo: e.logo, url: e.url, catId: e.group, num: n };
           if (e.tvgId) li.epgId = e.tvgId;
           if (e.tvgName && e.tvgName !== e.name) li.epgName = e.tvgName;
           d.live.push(li);
@@ -917,6 +1028,7 @@
         loading = fetchText(p.url).then(function (t) {
           if (t.indexOf('#EXT') < 0) throw new Error(T('Das ist keine gültige M3U-Playlist.'));
           data = build(parseM3U(t));
+          migrateM3uIds(p.id, data);
           return data;
         });
         loading.catch(function () { loading = null; });
@@ -1053,12 +1165,14 @@
     add: function (p) { var l = this.list(); p.id = p.id || uid(); l.push(p); this.save(l); return p; },
     remove: function (id) {
       var gone = this.get(id);
-      if (gone && gone.remoteId) Cloud.rpc('delete_playlist', { p_mac: Device.mac(), p_key: Device.key(), p_id: gone.remoteId }).catch(function () {});
+      // Online-Kopie löschen. Klappt das gerade nicht (offline, Server weg), wird es gemerkt und beim nächsten
+      // Abgleich wiederholt – sonst käme die gelöschte Playlist mit dem nächsten Abgleich zurück.
+      if (gone && gone.remoteId) { Cloud.markDeleted(gone.remoteId); Cloud.flushDeletes(); }
       this.save(this.list().filter(function (p) { return p.id !== id; }));
       this.dropData(id);
     },
     /* Alles löschen, was zu einer Playlist auf dem Gerät gespeichert ist (Datenschutz: keine Reste) */
-    DATA_KEYS: ['fav', 'resume', 'recent', 'seen', 'last', 'stats', 'seenNew', 'cats', 'expiry'],
+    DATA_KEYS: ['fav', 'resume', 'recent', 'seen', 'last', 'stats', 'seenNew', 'cats', 'expiry', 'idv'],
     dropData: function (id) {
       this.DATA_KEYS.forEach(function (k) { Store.del(k + '.' + id); });
       EpgStore.del('epg.' + id);   // zwischengespeicherter Programmführer
@@ -1070,6 +1184,11 @@
   /* ==========================================================
      Playlist per Handy: Abgleich mit dem Online-Dienst (MAC + Key)
      ========================================================== */
+  function sameConnection(a, b) {
+    if (!a || !b || a.type !== b.type) return false;
+    if (a.type === 'm3u') return String(a.url || '').trim() === String(b.url || '').trim();
+    return normalizeServer(a.server || '') === normalizeServer(b.server || '') && (a.username || '') === (b.username || '') && (a.password || '') === (b.password || '');
+  }
   var Cloud = {
     registered: false, timer: null, busy: false, uploading: {},
     /* Mit Zeitlimit: Hängt eine Anfrage (schlechtes WLAN, Captive Portal), blieb der Abgleich
@@ -1088,16 +1207,52 @@
       }).then(function (r) { return r.json(); });
       return Promise.race([req, limit]).then(function (j) { clearTimeout(timer); return j; }, function (e) { clearTimeout(timer); throw e; });
     },
+    /* Gelöschte Playlists, deren Online-Kopie noch nicht entfernt werden konnte */
+    pendingDeletes: function () { return Store.get('cloudDel', []); },
+    markDeleted: function (remoteId) {
+      var l = this.pendingDeletes();
+      if (l.indexOf(remoteId) < 0) { l.push(remoteId); Store.set('cloudDel', l); }
+    },
+    /* Sicherer Weg (seit server/sicherheit-2026-11.sql): app_*-Funktionen mit Token. Fehlen sie in der Datenbank
+       (SQL noch nicht eingespielt) oder passt das Token nicht, wie bisher mit MAC + KEY ('legacy'). */
+    mode: null,
+    call: function (fn, body) {
+      var b = {}, k;
+      for (k in body) if (body.hasOwnProperty(k)) b[k] = body[k];
+      if (this.mode === 'token') { delete b.p_key; b.p_token = Device.token(); return this.rpc('app_' + fn, b); }
+      b.p_key = Device.key();
+      return this.rpc(fn, b);
+    },
+    register: function () {
+      var self = this, mac = Device.mac(), key = Device.key();
+      function legacy() { self.mode = 'legacy'; return self.rpc('register_device', { p_mac: mac, p_key: key }); }
+      return self.rpc('app_register', { p_mac: mac, p_key: key, p_token: Device.token() }).then(function (r) {
+        if (r && r.ok) { self.mode = 'token'; return r; }
+        return legacy();   // Funktion fehlt (PGRST202) oder Token unbekannt → bisheriger Weg
+      }, legacy);
+    },
+    flushDeletes: function () {
+      var self = this, l = self.pendingDeletes();
+      if (!l.length || !CONFIG.cloudUrl) return Promise.resolve();
+      return Promise.all(l.map(function (rid) {
+        return self.call('delete_playlist', { p_mac: Device.mac(), p_id: rid }).then(function (r) {
+          if (r && r.ok) {
+            Store.set('cloudDel', self.pendingDeletes().filter(function (x) { return x !== rid; }));
+          }
+        }, function () {});
+      }));
+    },
     sync: function () {
       var self = this;
       if (self.busy || !CONFIG.cloudUrl) return Promise.resolve(null);
       self.busy = true;
       var mac = Device.mac(), key = Device.key();
-      var first = self.registered ? Promise.resolve({ ok: true }) : self.rpc('register_device', { p_mac: mac, p_key: key });
+      var first = self.registered ? Promise.resolve({ ok: true }) : self.register();
       return first.then(function (r) {
         if (!r || !r.ok) return null;
         self.registered = true;
-        return self.rpc('list_playlists', { p_mac: mac, p_key: key });
+        // erst ausstehende Löschungen nachholen, dann die Liste holen
+        return self.flushDeletes().then(function () { return self.call('list_playlists', { p_mac: mac }); });
       }).then(function (r) {
         self.busy = false;
         if (!r || !r.ok) return null;
@@ -1107,6 +1262,9 @@
       }, function () { self.busy = false; return null; });
     },
     apply: function (items) {
+      // Playlists, die auf diesem Gerät gelöscht wurden, deren Online-Löschung aber noch aussteht: ignorieren
+      var pend = this.pendingDeletes();
+      if (pend.length) items = items.filter(function (it) { return pend.indexOf(it.id) < 0; });
       var byId = {};
       items.forEach(function (it) { byId[it.id] = it; });
       var list = Profiles.list(), added = [], removed = [], edited = [], changed = false;
@@ -1120,7 +1278,13 @@
           : { type: 'm3u', url: it.url };
         data.name = it.name; data.remoteId = it.id;
         var ex = list.filter(function (p) { return p.remoteId === it.id; })[0];
-        if (!ex) { data.id = uid(); list.push(data); added.push(data); changed = true; return; }
+        if (!ex) {
+          // Gleiche Playlist, die dieses Gerät selbst hochgeladen hat, deren Antwort aber zu spät kam (Zeitlimit):
+          // verknüpfen statt doppelt anlegen – sonst entstünde bei jedem Abgleich eine weitere Kopie.
+          var twin = list.filter(function (p) { return !p.remoteId && sameConnection(p, data); })[0];
+          if (twin) { twin.remoteId = it.id; changed = true; if (App.profile && App.profile.id === twin.id) App.profile.remoteId = it.id; return; }
+          data.id = uid(); list.push(data); added.push(data); changed = true; return;
+        }
         var conn = false;
         ['type', 'name', 'url', 'server', 'username', 'password'].forEach(function (k) {
           if ((ex[k] || '') !== (data[k] || '')) { ex[k] = data[k]; changed = true; if (k !== 'name') conn = true; }
@@ -1147,17 +1311,19 @@
       else if (top && top.name === 'profiles') showProfiles();
       return { changed: true, added: added, removed: removed, edited: edited };
     },
-    /* Playlists, die direkt in der App eingetragen wurden, auch online speichern (damit sie auf der Webseite erscheinen) */
+    /* Playlists, die direkt in der App eingetragen wurden, online speichern (damit sie auf der Webseite erscheinen) –
+       nur wenn man das beim Anlegen oder in der Playlist-Übersicht ausdrücklich eingeschaltet hat. */
     upload: function () {
       var self = this;
       if (!self.registered) return;
       Profiles.list().forEach(function (p) {
-        if (p.remoteId || (p.type !== 'm3u' && p.type !== 'xtream') || self.uploading[p.id]) return;
+        // nur Playlists, bei denen „Auch auf der Webseite verwalten“ eingeschaltet wurde
+        if (p.remoteId || p.cloud !== true || (p.type !== 'm3u' && p.type !== 'xtream') || self.uploading[p.id]) return;
         self.uploading[p.id] = true;
-        var body = { p_mac: Device.mac(), p_key: Device.key(), p_name: p.name || T('Playlist'), p_type: p.type };
+        var body = { p_mac: Device.mac(), p_name: p.name || T('Playlist'), p_type: p.type };
         if (p.type === 'm3u') body.p_url = p.url;
         else { body.p_server = p.server; body.p_username = p.username; body.p_password = p.password; }
-        self.rpc('add_playlist', body).then(function (r) {
+        self.call('add_playlist', body).then(function (r) {
           delete self.uploading[p.id];
           if (!r || !r.ok || !r.id) return;
           var list = Profiles.list();
@@ -1175,18 +1341,24 @@
     }
   };
 
-  var qrLoading = null;
-  function loadQrLib() {
-    if (window.qrcode) return Promise.resolve(window.qrcode);
-    if (!qrLoading) {
-      qrLoading = new Promise(function (resolve) {
+  /* Skript laden: zuerst die mitgelieferte Datei (lib/…), sonst aus dem Internet mit Prüfsumme. get() liefert das Ergebnis. */
+  function loadLib(localSrc, cdnSrc, sri, get) {
+    function add(src, integrity) {
+      return new Promise(function (resolve) {
         var s = document.createElement('script');
-        s.src = CONFIG.qrCdn;
-        s.onload = function () { resolve(window.qrcode || null); };
-        s.onerror = function () { resolve(null); };
+        if (integrity) { s.integrity = integrity; s.crossOrigin = 'anonymous'; }
+        s.src = src;
+        s.onload = function () { resolve(get() || null); };
+        s.onerror = function () { if (s.parentNode) s.parentNode.removeChild(s); resolve(null); };
         document.head.appendChild(s);
       });
     }
+    return add(localSrc).then(function (x) { return x || add(cdnSrc, sri); });
+  }
+  var qrLoading = null;
+  function loadQrLib() {
+    if (window.qrcode) return Promise.resolve(window.qrcode);
+    if (!qrLoading) qrLoading = loadLib('lib/qrcode.js', CONFIG.qrCdn, CONFIG.qrSri, function () { return window.qrcode; });
     return qrLoading;
   }
   /* Webseite im normalen Browser öffnen (Handy/PC). Auf dem Fernseher gibt es keinen Browser – dort scannt man. */
@@ -1195,7 +1367,9 @@
     if (Platform.capacitor) { window.location.href = url; return; }   // Handy-App: öffnet den System-Browser
     var w = null;
     try { w = window.open(url, '_blank'); } catch (e) {}
-    if (!w) window.location.href = url;
+    // Windows/Mac-App (Electron): Das Fenster leitet den Link selbst an den Browser weiter und meldet „kein Fenster“ –
+    // ein zusätzliches location.href würde die Seite ein zweites Mal öffnen.
+    if (!w && !/Electron\//.test(navigator.userAgent || '')) window.location.href = url;
   }
   function qrBox(text, cls) {
     var box = h('button', { class: 'qr f' + (cls ? ' ' + cls : ''), title: T('Webseite öffnen'), 'aria-label': T('Webseite öffnen'), onclick: function () { openExternal(text); } });
@@ -1226,14 +1400,15 @@
     paint();
     var s = Season.current();
     return h('div', { class: 'panel' }, h('h3', null, icon('sun'), T('Darstellung')), seg,
-      h('p', { class: 'hint', text: s ? T('Gerade läuft das {0}-Design. Danach gilt wieder das Lumio-Violett.', T(SEASONS[s].name)) : T('Automatisch richtet sich nach deinem Gerät. Fernseher bleiben dunkel.') }));
+      h('p', { class: 'hint', text: s ? T('Gerade läuft das {0}-Design. Danach gilt wieder das Telvo-Violett.', T(SEASONS[s].name)) : T('Automatisch richtet sich nach deinem Gerät. Fernseher bleiben dunkel.') }));
   }
 
-  /* Hintergrund für Startseite und Playlists: dezenter Lichtschein und ein großes, kaum sichtbares Logo */
+  /* Hintergrund für Startseite und Playlists: dezenter Lichtschein und ein großes, kaum sichtbares Play-Zeichen.
+     Nur das Dreieck aus dem Logo – der Querbalken des „T“ sah hinter der Menüleiste wie ein grauer Fehlerbalken aus. */
   function heroArt() {
     var box = h('div', { class: 'hero-art', 'aria-hidden': 'true' });
-    box.innerHTML = '<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><path d="M14 20v44a20 20 0 0 0 20 20h44" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>' +
-      '<path d="M38 23.6c0-3.6 3.9-5.8 7-4l35.4 22.2c3 1.8 3 6.2 0 8L45 72c-3.1 1.8-7-.4-7-4z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>' +
+    box.innerHTML = '<svg viewBox="44 30 44 50" aria-hidden="true" focusable="false">' +
+      '<path d="M50 38.5c0-3.3 3.6-5.3 6.4-3.6l25.4 15.6c2.7 1.7 2.7 5.6 0 7.2L56.4 73.4C53.6 75.1 50 73.1 50 69.8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>' +
       '</svg>';
     return box;
   }
@@ -1449,6 +1624,55 @@
     }
   };
 
+  /* Einmalige Umstellung gespeicherter M3U-Einträge von der alten Kennung ('l12', 'm3', 'e40' = Position in der Datei)
+     auf die neue, stabile Kennung. Bevorzugt über die gespeicherte Adresse (stimmt auch, wenn sich die Reihenfolge
+     inzwischen geändert hat), sonst über die Position. Danach Merker 'idv.<Playlist>' = 2, läuft nie wieder. */
+  function migrateM3uIds(profileId, d) {
+    if (!profileId || Store.get('idv.' + profileId) === 2) return;
+    // Nichts gespeichert (z. B. neue Playlist)? Dann nur merken – keine großen Nachschlagelisten bauen.
+    var OLD = /^[lme]\d+$/, any = false;
+    function hasOld(x) { return x && OLD.test(String(x.id)); }
+    var f0 = Store.get('fav.' + profileId, null), r0 = Store.get('recent.' + profileId, null), l0 = Store.get('last.' + profileId, null);
+    var s0 = Store.get('seen.' + profileId, null), z0 = Store.get('resume.' + profileId, null);
+    if (f0) Object.keys(f0).forEach(function (k) { if ((f0[k] || []).some(hasOld)) any = true; });
+    if ((r0 || []).some(hasOld) || (l0 && hasOld(l0.item))) any = true;
+    if (s0 && Object.keys(s0).some(function (k) { return OLD.test(k.slice(k.indexOf(':') + 1)); })) any = true;
+    if (z0 && Object.keys(z0).some(function (k) { return OLD.test(k.slice(k.indexOf(':') + 1)); })) any = true;
+    if (!any) { Store.set('idv.' + profileId, 2); return; }
+    var byUrl = {};
+    d.live.forEach(function (x) { byUrl['live|' + x.url] = x.id; });
+    d.movie.forEach(function (x) { byUrl['movie|' + x.url] = x.id; });
+    d.series.forEach(function (sr) { sr._eps.forEach(function (x) { byUrl['episode|' + x.url] = x.id; }); });
+    function conv(kind, id, url) {
+      if (!OLD.test(String(id))) return id;
+      return (url && byUrl[kind + '|' + url]) || d.idAt[Number(String(id).slice(1))] || id;
+    }
+    function fixItem(x) { if (x && x.id !== undefined) x.id = conv(x.kind, x.id, x.url); return x; }
+    var fav = Store.get('fav.' + profileId, null);
+    if (fav) { Object.keys(fav).forEach(function (k) { (fav[k] || []).forEach(fixItem); }); Store.set('fav.' + profileId, fav); }
+    var rec = Store.get('recent.' + profileId, null);
+    if (rec) Store.set('recent.' + profileId, rec.map(fixItem));
+    var last = Store.get('last.' + profileId, null);
+    if (last && last.item) { fixItem(last.item); Store.set('last.' + profileId, last); }
+    var res = Store.get('resume.' + profileId, null);
+    if (res) {
+      var nr = {};
+      Object.keys(res).forEach(function (k) {
+        var v = res[k], i = k.indexOf(':'), kind = k.slice(0, i), id = k.slice(i + 1);
+        var nid = conv(kind, id, v && v.item && v.item.url);
+        if (v && v.item) v.item.id = nid;
+        nr[kind + ':' + nid] = v;
+      });
+      Store.set('resume.' + profileId, nr);
+    }
+    var seen = Store.get('seen.' + profileId, null);
+    if (seen) {
+      var ns = {};
+      Object.keys(seen).forEach(function (k) { var i = k.indexOf(':'), kind = k.slice(0, i); ns[kind + ':' + conv(kind, k.slice(i + 1), null)] = seen[k]; });
+      Store.set('seen.' + profileId, ns);
+    }
+    Store.set('idv.' + profileId, 2);
+  }
   function makeProvider(p) {
     if (p.type === 'xtream') return XtreamProvider(p);
     if (p.type === 'm3u') return M3UProvider(p);
@@ -2206,6 +2430,27 @@
   /* ==========================================================
      Startbildschirm: Profile / Playlists
      ========================================================== */
+  /* „Auch auf der Webseite verwalten“: an = Playlist liegt online (von der Webseite gesendet oder freigegeben) */
+  function onWeb(p) { return !!p.remoteId || p.cloud === true; }
+  function toggleWeb(p) {
+    var list = Profiles.list(), x = list.filter(function (q) { return q.id === p.id; })[0];
+    if (!x) return;
+    if (!onWeb(x)) {
+      x.cloud = true; Profiles.save(list);
+      Cloud.upload();
+      toast(T('„{0}“ ist jetzt auf der Webseite verfügbar.', x.name), 3000);
+      showProfiles();
+      return;
+    }
+    confirmBox(T('Von der Webseite entfernen?'), T('„{0}“ bleibt auf diesem Gerät, die Online-Kopie samt Zugangsdaten wird gelöscht.', x.name), T('Entfernen'), function () {
+      var l2 = Profiles.list(), y = l2.filter(function (q) { return q.id === p.id; })[0];
+      if (!y) return;
+      if (y.remoteId) { Cloud.markDeleted(y.remoteId); Cloud.flushDeletes(); }
+      delete y.remoteId; y.cloud = false; Profiles.save(l2);
+      if (App.profile && App.profile.id === y.id) { delete App.profile.remoteId; App.profile.cloud = false; }
+      showProfiles();
+    });
+  }
   function showProfiles() {
     var list = Profiles.list();
     if (!list.length) {
@@ -2236,6 +2481,10 @@
           h('span', { class: 'avatar', style: 'background:' + colorFor(p.name), text: initials(p.name) }),
           h('span', { class: 'label', text: p.name }),
           h('span', { class: 'sub', text: sub })),
+        p.type === 'demo' ? null : h('button', {
+          class: 'btn small ghost f web-toggle' + (onWeb(p) ? ' is-on' : ''),
+          title: T('Auch auf der Webseite verwalten'), onclick: function () { toggleWeb(p); }
+        }, icon('globe'), h('span', { text: onWeb(p) ? T('Webseite: an') : T('Webseite: aus') })),
         h('button', {
           class: 'btn small ghost f danger', onclick: function () {
             confirmBox(T('„{0}“ löschen?', p.name), T('Favoriten und Verlauf dieses Profils werden ebenfalls entfernt.'), T('Löschen'), function () { Profiles.remove(p.id); showProfiles(); });
@@ -2303,6 +2552,11 @@
       err.textContent = '';
     }
     var saveBtn = h('button', { class: 'btn f primary', onclick: save }, T('Speichern & verbinden'));
+    // Datenschutz: Zugangsdaten verlassen das Gerät nur, wenn man das ausdrücklich einschaltet (Voreinstellung: aus)
+    var toWeb = false;
+    var webRow = toggleRow(T('Auch auf der Webseite verwalten'),
+      T('Speichert die Zugangsdaten online, damit du die Playlist im Browser bearbeiten kannst. Ohne diese Option bleiben sie nur auf diesem Gerät.'),
+      function () { return toWeb; }, function (v) { toWeb = v; });
 
     function save() {
       err.textContent = '';
@@ -2323,6 +2577,7 @@
         else { p = { type: 'm3u', url: u }; if (eu) p.epgUrl = eu; }
       }
       p.name = name || (p.type === 'xtream' ? p.username : T('Meine Playlist'));
+      if (toWeb) p.cloud = true;
       saveBtn.disabled = true; saveBtn.textContent = T('Verbinde …');
       makeProvider(p).login().then(function () {
         var saved = Profiles.add(p);
@@ -2339,7 +2594,7 @@
         h('h1', { text: T('Playlist hinzufügen') }),
         h('div', null, macTag()),
         h('div', { class: 'tabs' }, tX, tM),
-        fName.wrap, xBox, mBox, err,
+        fName.wrap, xBox, mBox, webRow, err,
         h('div', { class: 'row' }, saveBtn, h('button', { class: 'btn f ghost', onclick: goBack }, T('Abbrechen'))),
         h('p', { class: 'hint', text: T('Diese App enthält keine Sender oder Inhalte. Du benötigst einen eigenen Zugang von deinem Anbieter.') })));
     Screens.push('add', el);
@@ -2397,7 +2652,7 @@
       }
       var searchBtn = h('button', { class: 'icon-btn f', title: T('Suche'), 'aria-label': T('Suche'), onclick: function () { QuickSearch.toggle(); } }, icon('search'));
       var head = h('header', { class: 'topnav' },
-        h('div', { class: 'nav-left' }, h('div', { class: 'brand brand-sm' }, brandMark(), h('span', { class: 'wordmark' }, h('b', { text: 'Lumio' }))), homeBtn),
+        h('div', { class: 'nav-left' }, h('div', { class: 'brand brand-sm' }, brandMark(), h('span', { class: 'wordmark' }, h('b', { text: 'Telvo' }))), homeBtn),
         tabs,
         h('div', { class: 'top-tools' }, searchBtn, reloadTop, tool('favs', T('Favoriten'), 'heart'), tool('settings', T('Einstellungen')), tool('profile', T('Profil'))));
       var runTime = h('div', { class: 'mac-tag sb-days' });
@@ -2862,8 +3117,9 @@
   var countCache = {};
   /* Anzahl Sender/Filme/Serien und wann zuletzt geladen – pro Playlist gespeichert, für den Startbildschirm */
   var Stats = {
-    get: function () { return Store.get('stats.' + pid(), {}); },
-    set: function (kind, n, newest) { var s = this.get(); s[kind] = { n: n, at: Date.now(), newest: newest || 0 }; Store.set('stats.' + pid(), s); },
+    get: function (id) { return Store.get('stats.' + (id || pid()), {}); },
+    // id: Playlist, für die gezählt wurde – nicht die, die beim Ende des Ladens gerade aktiv ist
+    set: function (kind, n, newest, id) { id = id || pid(); var s = this.get(id); s[kind] = { n: n, at: Date.now(), newest: newest || 0 }; Store.set('stats.' + id, s); },
     // Listen zu alt (älter als 12 Stunden) oder noch nie geladen?
     stale: function () {
       var s = this.get(), oldest = Infinity;
@@ -2904,15 +3160,15 @@
     return Stats.stale();
   }
   /* Playlist mit einem Klick neu laden: alles frisch vom Anbieter holen und neu zählen */
-  var refreshing = null;
+  var refreshing = null, refreshingFor = null;
 
   /* Aktualisieren mit Ladebildschirm: Der goldene Punkt fällt herunter und hüpft, das Play-Zeichen verliert
      die Anziehung, schwebt kurz und klatscht auf den Boden – dann setzt sich das Logo wieder zusammen.
      Darunter sieht man, was gerade geladen wird. Danach landet man immer auf dem Startbildschirm. */
   var RL_LOGO = '<svg viewBox="0 0 100 100" aria-hidden="true">' +
-    '<g class="rl-l"><path d="M14 20v44a20 20 0 0 0 20 20h44" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round"/></g>' +
+    '<g class="rl-l"><path d="M14 22h56M34 22v62" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round"/></g>' +
     '<g class="rl-dust"><circle cx="41" cy="77.5" r="1.7"/><circle cx="58" cy="76.5" r="1.3"/><circle cx="77" cy="77.5" r="1.7"/></g>' +
-    '<g class="rl-play"><path d="M38 23.6c0-3.6 3.9-5.8 7-4l35.4 22.2c3 1.8 3 6.2 0 8L45 72c-3.1 1.8-7-.4-7-4z"/></g>' +
+    '<g class="rl-play"><path d="M50 38.5c0-3.3 3.6-5.3 6.4-3.6l25.4 15.6c2.7 1.7 2.7 5.6 0 7.2L56.4 73.4C53.6 75.1 50 73.1 50 69.8z"/></g>' +
     '<g class="rl-dot"><circle cx="84" cy="22" r="6"/></g></svg>';
   var reloadingNow = false;
   function reloadWithSplash() {
@@ -2960,6 +3216,8 @@
     });
   }
   function refreshPlaylist(onStep) {
+    // Läuft gerade eine Aktualisierung für eine ANDERE Playlist, nicht auf deren Ergebnis warten
+    if (refreshing && refreshingFor !== pid()) refreshing = null;
     if (refreshing) {
       // läuft schon (z. B. automatisch im Hintergrund): auf das Ergebnis warten und es melden
       return refreshing.then(function (r) {
@@ -2975,11 +3233,12 @@
       return catCounts(k).then(function (c) { if (onStep) onStep(k, true, c.total); return true; }, function () { if (onStep) onStep(k, false, 0); return false; });
     });
     var acc = prov.login ? prov.login().then(function () { return null; }, function (e) { return e; }) : Promise.resolve(null);
-    refreshing = Promise.all([acc].concat(jobs)).then(function (r) {
-      refreshing = null;
-      return { error: r[0], ok: r.slice(1).some(function (x) { return x; }) };
+    var mine = refreshingFor = pid();
+    var job = refreshing = Promise.all([acc].concat(jobs)).then(function (r) {
+      if (refreshing === job) refreshing = null;
+      return { error: r[0], ok: r.slice(1).some(function (x) { return x; }), owner: mine };
     });
-    return refreshing;
+    return job;
   }
   function ago(ts) {
     var m = Math.round((Date.now() - ts) / 60000);
@@ -2991,13 +3250,14 @@
     return d === 1 ? T('vor 1 Tag') : T('vor {0} Tagen', d);
   }
   function catCounts(kind) {
-    var k = pid() + kind;
+    var owner = pid(), k = owner + kind;
     if (!countCache[k]) {
       countCache[k] = App.provider.items(kind, '__all').then(function (list) {
         var by = {};
         var newest = 0;
         list.forEach(function (x) { var c = String(x.catId); by[c] = (by[c] || 0) + 1; var a = Number(x.added) || 0; if (a > newest) newest = a; });
-        Stats.set(kind, list.length, newest);
+        // Ergebnis gehört zur Playlist, die beim Start aktiv war (Wechsel während des Ladens → keine falschen Zahlen)
+        Stats.set(kind, list.length, newest, owner);
         return { by: by, total: list.length };
       });
       countCache[k].catch(function () { delete countCache[k]; });
@@ -3466,8 +3726,22 @@
           h('button', { class: 'btn f', onclick: reloadApp }, icon('restart'), h('span', { text: T('Daten neu laden') })))),
       h('div', { class: 'settings-grid' },
         panel('live', T('Zugang'), [acc]),
-        panel('phone', T('Dieses Gerät'), [dev, h('p', { class: 'hint', text: T('Mit MAC-Adresse und KEY kannst du Playlists per Handy oder über die Webseite auf dieses Gerät schicken.') })]),
+        panel('phone', T('Dieses Gerät'), [dev, h('p', { class: 'hint', text: T('Mit MAC-Adresse und KEY kannst du Playlists per Handy oder über die Webseite auf dieses Gerät schicken.') }),
+          Cloud.mode === 'token' ? h('div', { class: 'row' }, h('button', { class: 'btn f', onclick: rotateKey }, icon('restart'), h('span', { text: T('Neuen KEY erzeugen') }))) : null]),
         epgPanel));
+  }
+
+  /* Neuen KEY erzeugen: Wer den alten kennt (z. B. von einem Foto des Bildschirms), kommt nicht mehr an die Playlists */
+  function rotateKey() {
+    confirmBox(T('Neuen KEY erzeugen?'), T('Der alte KEY funktioniert danach nicht mehr – auch nicht auf der Webseite. Deine Playlists bleiben erhalten.'), T('Neuen KEY erzeugen'), function () {
+      var nk = Device.newKey();
+      Cloud.rpc('app_rotate_key', { p_mac: Device.mac(), p_token: Device.token(), p_new_key: nk }).then(function (r) {
+        if (!r || !r.ok) { toast(T('KEY konnte nicht erneuert werden.'), 3000); return; }
+        Store.set('devkey', nk);
+        toast(T('Neuer KEY: {0}', nk), 3000);
+        setTimeout(function () { location.reload(); }, 1600);   // KEY steht an mehreren Stellen (Fußleiste, QR-Code)
+      }, function () { toast(T('KEY konnte nicht erneuert werden.'), 3000); });
+    });
   }
 
   /* Profil (nur M3U): Programmführer – Stand anzeigen, Adresse ändern, neu laden */
@@ -3915,7 +4189,7 @@
     var POSTERS = [['s', T('Klein'), T('Mehr Cover auf einmal')], ['m', T('Normal')], ['l', T('Groß'), T('Besser lesbar aus der Entfernung')]];
     var SORTS = [['default', T('Wie beim Anbieter')], ['num', T('Nach Sendernummer')], ['az', T('Name A–Z')], ['za', T('Name Z–A')]];
     var FORMATS = [['m3u8', 'HLS (.m3u8)', T('Funktioniert auf den meisten Geräten am besten.')], ['ts', 'MPEG-TS (.ts)', T('Probiere das, wenn Sender nicht starten oder ruckeln.')]];
-    var EXTS = [['off', T('Aus – Lumio-Player verwenden')], ['ask', T('Jedes Mal fragen'), T('Android zeigt eine Auswahl deiner Player-Apps.')], ['vlc', 'VLC'], ['mx', 'MX Player'], ['just', 'Just Player']];
+    var EXTS = [['off', T('Aus – Telvo-Player verwenden')], ['ask', T('Jedes Mal fragen'), T('Android zeigt eine Auswahl deiner Player-Apps.')], ['vlc', 'VLC'], ['mx', 'MX Player'], ['just', 'Just Player']];
     var AUTOS = [[6, T('Alle 6 Stunden')], [12, T('Alle 12 Stunden'), T('Empfohlen')], [24, T('Einmal am Tag')], [0, T('Aus – nur von Hand')]];
     var IDLES = [[0, T('Aus')], [2, T('Nach {0} Stunden', 2)], [3, T('Nach {0} Stunden', 3)], [4, T('Nach {0} Stunden', 4)]];
     var CLOCKS = [[false, T('24 Stunden'), '20:15'], [true, T('12 Stunden'), '8:15 PM']];
@@ -3925,7 +4199,7 @@
     var SBGS = [['none', T('Ohne (mit Schatten)')], ['half', T('Halb durchsichtig')], ['black', T('Schwarz')]];
     function autoH() { var v = Settings.get('autoRefresh'); return typeof v === 'number' ? v : 12; }
     function engines() {
-      var o = [['auto', T('Android-Player'), T('Der eingebaute Player von Android.')], ['hlsjs', T('Lumio-Player'), T('Hilft bei manchen Sendern, die sonst hängen.')]];
+      var o = [['auto', T('Android-Player'), T('Der eingebaute Player von Android.')], ['hlsjs', T('Telvo-Player'), T('Hilft bei manchen Sendern, die sonst hängen.')]];
       if (NativePlayer.available()) o.unshift(['native', T('TV-Player'), T('Für Android-Boxen gemacht: stabil und sparsam.')]);
       return o;
     }
@@ -4046,7 +4320,7 @@
       var s = Season.current();
       openSheet(T('Darstellung'), 'sun', [
         h('h3', { class: 'sh-sub', text: T('Farben') }), choiceList(THEMES, function () { return Settings.get('theme') || 'dark'; }, function (v) { Settings.set('theme', v); Theme.apply(); }),
-        s ? h('p', { class: 'hint', text: T('Gerade läuft das {0}-Design. Danach gilt wieder das Lumio-Violett.', T(SEASONS[s].name)) }) : null,
+        s ? h('p', { class: 'hint', text: T('Gerade läuft das {0}-Design. Danach gilt wieder das Telvo-Violett.', T(SEASONS[s].name)) }) : null,
         h('h3', { class: 'sh-sub', text: T('Größe der Cover bei Filmen und Serien') }), choiceList(POSTERS, function () { return Settings.get('posterSize') || 'm'; }, function (v) { Settings.set('posterSize', v); Theme.apply(); })], { onClose: paint });
     });
     var tClock = tile('clock', T('Zeitformat'), function () { return opt(CLOCKS, !!Settings.get('clock12')); }, function () {
@@ -4112,10 +4386,50 @@
      Detailseite: Film oder Serie
      ========================================================== */
   function openItem(item) {
-    if (item.kind === 'movie') return showMovie(item);
-    if (item.kind === 'series') return showSeries(item);
-    if (item.kind === 'episode') return playItem(item, { list: [item], index: 0 });
+    if (item.kind === 'movie' || item.kind === 'series') {
+      return parentalGate(item, null, function () { if (item.kind === 'movie') showMovie(item); else showSeries(item); });
+    }
     return playItem(item, { list: [item], index: 0 });
+  }
+
+  /* Kindersicherung an der zentralen Stelle prüfen – egal ob man über eine Kategorie, Favoriten, „Zuletzt gesehen“,
+     „Weiterschauen“, die Suche oder „Letzten Sender beim Start“ kommt (vorher wurde nur beim Öffnen einer
+     Kategorie gefragt). Ausgeblendete Kategorien sperren nicht – nur gesperrte. Ohne PIN: sofort weiter. */
+  function lockedCats(kind) {
+    return App.provider.categories(kind).then(function (cats) {
+      var m = null;
+      (cats || []).forEach(function (c) { if (Parental.isLocked(kind, c)) { m = m || {}; m[String(c.id)] = 1; } });
+      return m;
+    }, function () { return null; });
+  }
+  function itemCatId(item) {
+    if (item.catId !== undefined && item.catId !== null && item.catId !== '') return Promise.resolve(item.catId);
+    if (item.kind === 'episode' && item.seriesId !== undefined) {
+      return App.provider.items('series', '__all').then(function (list) {
+        var s = (list || []).filter(function (x) { return String(x.id) === String(item.seriesId); })[0];
+        return s ? s.catId : null;
+      }, function () { return null; });
+    }
+    return Promise.resolve(null);
+  }
+  function parentalGate(item, ctx, go) {
+    if (!Parental.on() || Parental.unlocked || !App.provider) { go(ctx); return; }
+    var kind = item.kind === 'episode' ? 'series' : item.kind;
+    Promise.all([lockedCats(kind), itemCatId(item)]).then(function (r) {
+      var m = r[0], cid = r[1];
+      if (!m) { go(ctx); return; }
+      // Liste zum Umschalten (auch im TV-Player) ohne gesperrte Einträge weitergeben
+      if (ctx && ctx.list && ctx.list.length > 1) {
+        var cur = ctx.list[ctx.index];
+        var list = ctx.list.filter(function (x) { return x === cur || x.catId === undefined || x.catId === null || !m[String(x.catId)]; });
+        var c2 = {};
+        for (var k in ctx) if (ctx.hasOwnProperty(k)) c2[k] = ctx[k];
+        c2.list = list; c2.index = Math.max(0, list.indexOf(cur));
+        ctx = c2;
+      }
+      if (cid !== null && cid !== undefined && m[String(cid)]) Parental.ask(function () { go(ctx); });
+      else go(ctx);
+    }, function () { go(ctx); });
   }
 
   function detailFrame(item) {
@@ -4337,15 +4651,7 @@
 
   function ensureHls() {
     if (window.Hls) return Promise.resolve(window.Hls);
-    if (!hlsLoading) {
-      hlsLoading = new Promise(function (resolve) {
-        var s = document.createElement('script');
-        s.src = CONFIG.hlsCdn;
-        s.onload = function () { resolve(window.Hls || null); };
-        s.onerror = function () { resolve(null); };
-        document.head.appendChild(s);
-      });
-    }
+    if (!hlsLoading) hlsLoading = loadLib('lib/hls.min.js', CONFIG.hlsCdn, CONFIG.hlsSri, function () { return window.Hls; });
     return hlsLoading;
   }
   function isHlsUrl(u) { return /\.m3u8(\?|$)/i.test(u) || /\/hls\//i.test(u) || /\.ism\/\.m3u8/i.test(u); }
@@ -4355,15 +4661,7 @@
   var tsLoading = null;
   function ensureTs() {
     if (window.mpegts) return Promise.resolve(window.mpegts);
-    if (!tsLoading) {
-      tsLoading = new Promise(function (resolve) {
-        var s = document.createElement('script');
-        s.src = CONFIG.tsCdn;
-        s.onload = function () { resolve(window.mpegts || null); };
-        s.onerror = function () { resolve(null); };
-        document.head.appendChild(s);
-      });
-    }
+    if (!tsLoading) tsLoading = loadLib('lib/mpegts.js', CONFIG.tsCdn, CONFIG.tsSri, function () { return window.mpegts; });
     return tsLoading;
   }
 
@@ -4381,7 +4679,7 @@
       try { return C.Plugins && C.Plugins.NativePlayer ? C.Plugins.NativePlayer : (C.registerPlugin ? C.registerPlugin('NativePlayer') : null); } catch (e) { return null; }
     },
     available: function () { return !this.failed && !!this.plugin(); },
-    /* Gewählte Wiedergabe: 'native' (TV-Player), 'auto' (Android-Player im Browser), 'hlsjs' (Lumio-Player).
+    /* Gewählte Wiedergabe: 'native' (TV-Player), 'auto' (Android-Player im Browser), 'hlsjs' (Telvo-Player).
        Auf Android-Boxen ist der TV-Player voreingestellt. */
     engine: function () { var e = Settings.get('engine'); return e || (Platform.androidTV && this.available() ? 'native' : 'auto'); },
     use: function (item) { return item && item.kind !== 'series' && this.engine() === 'native' && this.available(); },
@@ -4390,13 +4688,23 @@
       var list = ctx && ctx.list && ctx.list.length ? ctx.list : [item];
       var idx = ctx && ctx.index >= 0 && list[ctx.index] === item ? ctx.index : list.indexOf(item);
       if (idx < 0 || (!live && item.kind !== 'episode')) { list = [item]; idx = 0; }
-      if (list.length > 1500) { var st = Math.max(0, Math.min(idx - 750, list.length - 1500)); list = list.slice(st, st + 1500); idx -= st; }
-      var items = list.map(function (it) {
+      function toItem(it) {
         var s = App.provider.streamUrl(it);
         var title = it.kind === 'episode' ? (it.seriesName ? it.seriesName + ' · ' : '') + 'S' + it.season + ' E' + it.num + ' – ' + it.name
           : (live && it.num ? it.num + '   ' : '') + it.name;
         return { url: s.url, alt: s.alt || '', title: title };
-      });
+      }
+      /* Android übergibt Daten an den TV-Player in einem Paket von höchstens 1 MB – größer = Absturz
+         (TransactionTooLargeException). Darum nur die Nachbarn zum Umschalten (± 150) und zusätzlich nach Größe
+         begrenzen: lange Adressen mit Zugangs-Token → automatisch weniger Einträge. */
+      var radius = 150, items, full = list, fullIdx = idx;
+      for (;;) {
+        var st = Math.max(0, fullIdx - radius), en = Math.min(full.length, fullIdx + radius + 1);
+        list = full.slice(st, en); idx = fullIdx - st;
+        items = list.map(toItem);
+        if (radius <= 5 || JSON.stringify(items).length <= 200000) break;
+        radius = Math.floor(radius / 2);
+      }
       var r = !live ? Resume.get(item) : null;
       var startMs = r && !(ctx && ctx.fromStart) ? Math.round(r.t * 1000) : 0;
       if (ctx) ctx.fromStart = false;
@@ -4429,6 +4737,9 @@
   };
 
   function playItem(item, ctx) {
+    parentalGate(item, ctx || { list: [item], index: 0 }, function (c) { playItemNow(item, c); });
+  }
+  function playItemNow(item, ctx) {
     ctx = ctx || { list: [item], index: 0 };
     if (extPlayerOn() && item.kind !== 'series') {
       if (Player.el) Player.close();
@@ -4788,7 +5099,8 @@
       var preferNative = Platform.safari || Platform.tizen || Platform.webos || (Platform.android && !self.forceHlsJs && Settings.get('engine') !== 'hlsjs');
       if (isHlsUrl(url) && !(nativeHls && preferNative)) {
         ensureHls().then(function (Hls) {
-          if (self.video !== video) return;
+          // inzwischen umgeschaltet? Dann nicht noch einen zweiten hls.js-Player an dasselbe Video hängen
+          if (self.video !== video || self.curUrl !== url) return;
           if (Hls && Hls.isSupported()) {
             // PC (Windows/Mac): gleich in hoher Qualität starten und nicht an die Fenstergröße koppeln –
             // sonst bleibt das Bild nach der kleinen Vorschau lange unscharf. „Beste Qualität“ hält die höchste Stufe fest.
@@ -4998,10 +5310,10 @@
           return { label: f[1], on: lf === f[0], pick: function () { if (lf === f[0]) return; Settings.set('liveFormat', f[0]); self.load(self.item); } };
         })]);
       }
-      // Android: eingebauter Android-Player oder der Lumio-eigene Player (hls.js) – je nach Gerät läuft einer stabiler
+      // Android: eingebauter Android-Player oder der Telvo-eigene Player (hls.js) – je nach Gerät läuft einer stabiler
       if (Platform.android) {
         var en = NativePlayer.engine();
-        var opts = [['auto', T('Android-Player')], ['hlsjs', T('Lumio-Player')]];
+        var opts = [['auto', T('Android-Player')], ['hlsjs', T('Telvo-Player')]];
         if (NativePlayer.available()) opts.unshift(['native', T('TV-Player')]);
         sections.push([T('Wiedergabe'), opts.map(function (f) {
           return { label: f[1], on: en === f[0], pick: function () {
@@ -5457,6 +5769,7 @@
   window.LumioDebug = {
     parseM3U: parseM3U, parseXtreamLink: parseXtreamLink, normalizeServer: normalizeServer, Nav: Nav, Screens: Screens, StillWatching: StillWatching,
     Xmltv: Xmltv, chanKey: chanKey, EpgStore: EpgStore, makeProvider: makeProvider, Profiles: Profiles, PinGuard: PinGuard, Store: Store, Cloud: Cloud,
+    decodeBytes: decodeBytes, readText: readText, fetchText: fetchText, sameConnection: sameConnection, NativePlayer: NativePlayer, App: App, ensureTs: ensureTs, migrateM3uIds: migrateM3uIds,
     config: CONFIG
   };
 

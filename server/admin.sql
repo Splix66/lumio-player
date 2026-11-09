@@ -1,5 +1,5 @@
 -- ==========================================================
--- Lumio Player – Verwaltungsbereich (Webseite docs/admin.html)
+-- Telvo Player – Verwaltungsbereich (Webseite docs/admin.html)
 --
 -- Voraussetzung: server/supabase.sql wurde bereits ausgeführt.
 -- Einmal im Supabase SQL-Editor ausführen (kann gefahrlos wiederholt werden).

@@ -4,26 +4,39 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0b0b0f">
-  <title>Impressum – Lumio Player</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self' data:; font-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta name="referrer" content="no-referrer">
+  <title>Impressum – Telvo Player</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="preload" href="assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="legal.css">
 </head>
 <body>
+  <header class="top">
+    <div class="top-in">
+      <a class="brand" href="./"><img src="favicon.svg" alt=""><span>Telvo</span><span>Player</span></a>
+      <a class="back" href="./">← Zur Startseite</a>
+    </div>
+  </header>
   <main>
-    <a class="back" href="./">← Zurück</a>
     <h1>Impressum</h1>
 
     <h2>Angaben gemäß § 5 DDG</h2>
     <p>[VORNAME NACHNAME]<br>[STRASSE HAUSNUMMER]<br>[PLZ ORT]<br>Deutschland</p>
 
     <h2>Kontakt</h2>
-    <p>E-Mail: [E-MAIL-ADRESSE]</p>
+    <p>E-Mail: <a href="mailto:telvo.support@gmail.com">telvo.support@gmail.com</a></p>
 
     <h2>Hinweis zu Inhalten</h2>
-    <p>Lumio Player ist ein reiner Abspieler. Die App und diese Webseite stellen keine Sender, Filme, Serien oder
+    <p>Telvo Player ist ein reiner Abspieler. Die App und diese Webseite stellen keine Sender, Filme, Serien oder
       sonstigen Inhalte bereit und vermitteln keine Zugänge. Nutzer sind selbst dafür verantwortlich, nur Inhalte abzuspielen,
       für die sie eine Berechtigung besitzen.</p>
 
     <p><a href="datenschutz.html">Datenschutzerklärung</a></p>
   </main>
+  <footer class="foot">
+    <span>© 2026 Telvo Player</span><a href="impressum.html">Impressum</a><a href="datenschutz.html">Datenschutz</a><a href="./#hilfe">Hilfe &amp; Support</a>
+  </footer>
 </body>
 </html>

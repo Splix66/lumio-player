@@ -1,4 +1,4 @@
-/* Lumio Player – Übersetzung: Ukrainisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
+/* Telvo Player – Übersetzung: Ukrainisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["uk"] = {
   "Dein Zugang ist abgelaufen": "Ваш доступ завершився",
@@ -57,7 +57,7 @@ window.LUMIO_I18N["uk"] = {
   "Hell": "Світла",
   "Automatisch": "Автоматично",
   "Darstellung": "Вигляд",
-  "Gerade läuft das {0}-Design. Danach gilt wieder das Lumio-Violett.": "Зараз діє тема «{0}». Потім знову буде фіолетова тема Lumio.",
+  "Gerade läuft das {0}-Design. Danach gilt wieder das Telvo-Violett.": "Зараз діє тема «{0}». Потім знову буде фіолетова тема Telvo.",
   "Automatisch richtet sich nach deinem Gerät. Fernseher bleiben dunkel.": "Автоматично залежить від вашого пристрою. Телевізори завжди темні.",
   "Playlist per Handy hinzufügen": "Додати плейлист через телефон",
   "QR-Code scannen oder antippen. MAC und KEY sind auf der Seite schon eingetragen – du gibst nur noch deinen M3U-Link oder Xtream-Zugang ein.": "Скануйте QR-код або торкніться його. MAC і KEY на сторінці вже вказані – вам лишається ввести лише посилання M3U або дані Xtream.",
@@ -191,7 +191,7 @@ window.LUMIO_I18N["uk"] = {
   "{0} – gültig bis {1}": "{0} – дійсний до {1}",
   "{0} – keine Verbindung": "{0} – немає зʼєднання",
   "Willkommen bei": "Ласкаво просимо до",
-  "mit Lumio Player": "з Lumio Player",
+  "mit Telvo Player": "з Telvo Player",
   "Probiere die App mit freien Test-Videos aus.": "Спробуйте застосунок із вільними тестовими відео.",
   "Dein Licht für Live TV, Filme und Serien.": "Ваше світло для Live TV, фільмів і серіалів.",
   "Mehr anzeigen": "Показати більше",
@@ -232,7 +232,7 @@ window.LUMIO_I18N["uk"] = {
   "Wiedergabe nicht möglich. Mit „Zurück“ schließen.": "Відтворення неможливе. Натисніть «Назад», щоб закрити.",
   "Wiedergabe": "Відтворення",
   "Android-Player": "Програвач Android",
-  "Lumio-Player": "Програвач Lumio",
+  "Telvo-Player": "Програвач Telvo",
   "Top 10 Filme": "Топ-10 фільмів",
   "Top 10 Serien": "Топ-10 серіалів",
   "Top 10 in {0}": "Топ-10 у {0}",
@@ -464,7 +464,7 @@ window.LUMIO_I18N["uk"] = {
   "Name Z–A": "Назва Я–А",
   "Funktioniert auf den meisten Geräten am besten.": "Найкраще працює на більшості пристроїв.",
   "Probiere das, wenn Sender nicht starten oder ruckeln.": "Спробуйте, якщо канали не запускаються або гальмують.",
-  "Aus – Lumio-Player verwenden": "Вимк. – використовувати програвач Lumio",
+  "Aus – Telvo-Player verwenden": "Вимк. – використовувати програвач Telvo",
   "Jedes Mal fragen": "Питати щоразу",
   "Android zeigt eine Auswahl deiner Player-Apps.": "Android покаже вибір ваших програвачів.",
   "Alle 6 Stunden": "Кожні 6 годин",
@@ -586,4 +586,17 @@ window.LUMIO_I18N["uk"] = {
   "Trailer": "Трейлер",
   "Trailer: {0}": "Трейлер: {0}",
   "Solche Sender heißen beim Anbieter oft „RAW“. Sie werden unverändert durchgeleitet. Auf einer Android-TV-Box oder einem Fire TV Stick laufen sie meist – notfalls über einen externen Player wie VLC (Einstellungen → Wiedergabe).": "Провайдери часто називають такі канали «RAW» — вони передаються без змін. Зазвичай вони працюють на приставці Android TV або Fire TV Stick, а за потреби — через зовнішній програвач, наприклад VLC (Налаштування → Відтворення).",
+  "Auch auf der Webseite verwalten": "Керувати також на сайті",
+  "Speichert die Zugangsdaten online, damit du die Playlist im Browser bearbeiten kannst. Ohne diese Option bleiben sie nur auf diesem Gerät.": "Зберігає дані для входу онлайн, щоб ви могли редагувати плейлист у браузері. Без цієї опції вони залишаються лише на цьому пристрої.",
+  "Webseite: an": "Сайт: увімк.",
+  "Webseite: aus": "Сайт: вимк.",
+  "„{0}“ ist jetzt auf der Webseite verfügbar.": "«{0}» тепер доступний на сайті.",
+  "Von der Webseite entfernen?": "Видалити із сайту?",
+  "„{0}“ bleibt auf diesem Gerät, die Online-Kopie samt Zugangsdaten wird gelöscht.": "«{0}» залишиться на цьому пристрої, а онлайн-копію разом із даними для входу буде видалено.",
+  "Entfernen": "Видалити",
+  "Neuen KEY erzeugen": "Створити новий KEY",
+  "Neuen KEY erzeugen?": "Створити новий KEY?",
+  "Der alte KEY funktioniert danach nicht mehr – auch nicht auf der Webseite. Deine Playlists bleiben erhalten.": "Старий KEY перестане працювати – і на сайті теж. Ваші плейлисти збережуться.",
+  "KEY konnte nicht erneuert werden.": "Не вдалося оновити KEY.",
+  "Neuer KEY: {0}": "Новий KEY: {0}"
 };

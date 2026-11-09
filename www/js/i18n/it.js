@@ -1,4 +1,4 @@
-/* Lumio Player – Übersetzung: Italienisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
+/* Telvo Player – Übersetzung: Italienisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["it"] = {
   "Dein Zugang ist abgelaufen": "Il tuo abbonamento è scaduto",
@@ -57,7 +57,7 @@ window.LUMIO_I18N["it"] = {
   "Hell": "Chiaro",
   "Automatisch": "Automatico",
   "Darstellung": "Aspetto",
-  "Gerade läuft das {0}-Design. Danach gilt wieder das Lumio-Violett.": "Al momento è attivo il tema {0}. Dopo torna il viola Lumio.",
+  "Gerade läuft das {0}-Design. Danach gilt wieder das Telvo-Violett.": "Al momento è attivo il tema {0}. Dopo torna il viola Telvo.",
   "Automatisch richtet sich nach deinem Gerät. Fernseher bleiben dunkel.": "Automatico segue il tuo dispositivo. Le TV restano scure.",
   "Playlist per Handy hinzufügen": "Aggiungi una playlist dal telefono",
   "QR-Code scannen oder antippen. MAC und KEY sind auf der Seite schon eingetragen – du gibst nur noch deinen M3U-Link oder Xtream-Zugang ein.": "Inquadra o tocca il codice QR. MAC e KEY sono già inseriti nella pagina: devi solo inserire il tuo link M3U o i dati Xtream.",
@@ -191,7 +191,7 @@ window.LUMIO_I18N["it"] = {
   "{0} – gültig bis {1}": "{0} – valido fino al {1}",
   "{0} – keine Verbindung": "{0} – nessuna connessione",
   "Willkommen bei": "Benvenuto in",
-  "mit Lumio Player": "con Lumio Player",
+  "mit Telvo Player": "con Telvo Player",
   "Probiere die App mit freien Test-Videos aus.": "Prova l’app con video di prova gratuiti.",
   "Dein Licht für Live TV, Filme und Serien.": "La tua luce per Live TV, film e serie.",
   "Mehr anzeigen": "Mostra di più",
@@ -232,7 +232,7 @@ window.LUMIO_I18N["it"] = {
   "Wiedergabe nicht möglich. Mit „Zurück“ schließen.": "Riproduzione non possibile. Chiudi con “Indietro”.",
   "Wiedergabe": "Riproduzione",
   "Android-Player": "Player Android",
-  "Lumio-Player": "Player Lumio",
+  "Telvo-Player": "Player Telvo",
   "Top 10 Filme": "Top 10 film",
   "Top 10 Serien": "Top 10 serie",
   "Top 10 in {0}": "Top 10 in {0}",
@@ -464,7 +464,7 @@ window.LUMIO_I18N["it"] = {
   "Name Z–A": "Nome Z–A",
   "Funktioniert auf den meisten Geräten am besten.": "Funziona meglio sulla maggior parte dei dispositivi.",
   "Probiere das, wenn Sender nicht starten oder ruckeln.": "Provalo se i canali non partono o vanno a scatti.",
-  "Aus – Lumio-Player verwenden": "No – usa il player Lumio",
+  "Aus – Telvo-Player verwenden": "No – usa il player Telvo",
   "Jedes Mal fragen": "Chiedi ogni volta",
   "Android zeigt eine Auswahl deiner Player-Apps.": "Android mostra una scelta delle tue app player.",
   "Alle 6 Stunden": "Ogni 6 ore",
@@ -586,4 +586,17 @@ window.LUMIO_I18N["it"] = {
   "Trailer": "Trailer",
   "Trailer: {0}": "Trailer: {0}",
   "Solche Sender heißen beim Anbieter oft „RAW“. Sie werden unverändert durchgeleitet. Auf einer Android-TV-Box oder einem Fire TV Stick laufen sie meist – notfalls über einen externen Player wie VLC (Einstellungen → Wiedergabe).": "I provider chiamano spesso questi canali «RAW»: vengono trasmessi senza modifiche. Di solito funzionano su un box Android TV o su un Fire TV Stick, altrimenti con un lettore esterno come VLC (Impostazioni → Riproduzione).",
+  "Auch auf der Webseite verwalten": "Gestisci anche sul sito",
+  "Speichert die Zugangsdaten online, damit du die Playlist im Browser bearbeiten kannst. Ohne diese Option bleiben sie nur auf diesem Gerät.": "Salva i dati di accesso online per poter modificare la playlist nel browser. Senza questa opzione restano solo su questo dispositivo.",
+  "Webseite: an": "Sito: attivo",
+  "Webseite: aus": "Sito: disattivo",
+  "„{0}“ ist jetzt auf der Webseite verfügbar.": "“{0}” è ora disponibile sul sito.",
+  "Von der Webseite entfernen?": "Rimuovere dal sito?",
+  "„{0}“ bleibt auf diesem Gerät, die Online-Kopie samt Zugangsdaten wird gelöscht.": "“{0}” resta su questo dispositivo, la copia online con i dati di accesso verrà eliminata.",
+  "Entfernen": "Rimuovi",
+  "Neuen KEY erzeugen": "Crea un nuovo KEY",
+  "Neuen KEY erzeugen?": "Creare un nuovo KEY?",
+  "Der alte KEY funktioniert danach nicht mehr – auch nicht auf der Webseite. Deine Playlists bleiben erhalten.": "Il vecchio KEY non funzionerà più, nemmeno sul sito. Le tue playlist restano.",
+  "KEY konnte nicht erneuert werden.": "Impossibile rinnovare il KEY.",
+  "Neuer KEY: {0}": "Nuovo KEY: {0}"
 };

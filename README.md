@@ -1,4 +1,4 @@
-# Lumio Player
+# Telvo Player
 
 IPTV-Player für Handy, Tablet, Fernseher und PC (Xtream Codes & M3U).
 Die App enthält keine Inhalte – Nutzer brauchen einen eigenen Zugang ihres Anbieters.
@@ -14,7 +14,7 @@ Die App enthält keine Inhalte – Nutzer brauchen einen eigenen Zugang ihres An
 | Android / Fire TV / iOS | `capacitor.config.json`, `platforms/android/java/` | Capacitor 7, eigener ExoPlayer für TV-Boxen |
 | Samsung / LG | `platforms/tizen/`, `platforms/webos/` | `npm run tv:bauen` kopiert `www/` nach `dist/` |
 | Windows / Mac | `desktop/` | Electron, lädt dieselbe App |
-| Kundenportal | `docs/` (GitHub Pages) | Playlists per MAC + KEY hochladen, bearbeiten, Support |
+| Webseite & Kundenportal | `docs/index.html`, `docs/assets/` (GitHub Pages) | Start, Download, Hilfe, Playlists per MAC + KEY; `site.css`, `site.js`, Sprachen in `assets/i18n/<code>.js` (14 wie die App), Schrift Inter lokal |
 | Verwaltungsbereich | `docs/admin.html`, `admin.css`, `admin.js` | Support-Postfach, Geräte, Kennzahlen, Protokoll – Anmeldung über Supabase Auth |
 | Online-Dienst | `server/supabase.sql`, `server/admin.sql` | Supabase; Zugriff nur über RPC-Funktionen (MAC + Geräteschlüssel bzw. Admin-Konto) |
 
@@ -60,6 +60,28 @@ Playlist-Daten und alle Übersetzungen (u. a. dass `{0}`/`{1}` in jeder Sprache 
 - Testdateien für den Programmführer liegen in `tests/fixtures/` (Sendungen am 01.01.2030;
   die Tests stellen die Uhr auf diesen Tag).
 - Neuer Test: in einer der Dateien `tests/*.test.js` mit `Test.test('Gruppe', 'Name', function () { … })`.
+
+### Webseite testen
+
+`tests/site.e2e.js` prüft die Webseite in einem unsichtbaren Chrome mit erfundenem Online-Dienst: alle Seiten,
+Sicherheitsregel (CSP), Menü und Zurück-Knopf, alle 14 Sprachen auf Desktop und Handy, Sprachauswahl und das
+Kundenportal (verbinden, Playlist anlegen/bearbeiten/löschen, Support). Läuft automatisch bei Änderungen an `docs/`
+(„Actions“ → „Webseite testen“). Lokal: `npm i --no-save playwright`, dann `node tests/site.e2e.js`.
+
+**Neue Texte auf der Webseite:** im HTML mit `data-t` markieren (bzw. `tr('…')` im Skript) und in **allen**
+Dateien unter `docs/assets/i18n/` ergänzen – der Test meldet fehlende Übersetzungen.
+**Neue externe Adressen** (z. B. ein weiterer Dienst) müssen in der `Content-Security-Policy` in `docs/index.html`
+eingetragen werden, sonst blockiert der Browser sie.
+
+## Sicherheits-Update der Datenbank (November 2026)
+
+`server/sicherheit-2026-11.sql` einmal im Supabase SQL-Editor ausführen (wiederholbar, ändert keine Daten):
+lückenlose Zählung von Fehlversuchen (max. 20 pro Stunde und Gerät), eigener langer App-Schlüssel (Token) – die App
+lässt sich dadurch nicht mehr von Fremden aussperren –, „Neuen KEY erzeugen“ in der App und tägliches Aufräumen
+(erledigte Support-Nachrichten nach 30 Tagen, Geräte nach 12 Monaten ohne Verbindung).
+Für das Aufräumen vorher **Database → Extensions → pg_cron** einschalten (sonst gibt das Skript einen Hinweis aus).
+Die App erkennt selbst, ob das Update eingespielt ist; ohne Update arbeitet sie wie bisher mit MAC + KEY.
+Automatischer Test: `tests/sql/run.sh` („Actions“ → „Datenbank testen“).
 
 ## Verwaltungsbereich einrichten
 

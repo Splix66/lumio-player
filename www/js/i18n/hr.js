@@ -1,4 +1,4 @@
-/* Lumio Player – Übersetzung: Bosnisch / Kroatisch / Serbisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
+/* Telvo Player – Übersetzung: Bosnisch / Kroatisch / Serbisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["hr"] = {
   "Dein Zugang ist abgelaufen": "Tvoj pristup je istekao",
@@ -57,7 +57,7 @@ window.LUMIO_I18N["hr"] = {
   "Hell": "Svijetlo",
   "Automatisch": "Automatski",
   "Darstellung": "Izgled",
-  "Gerade läuft das {0}-Design. Danach gilt wieder das Lumio-Violett.": "Trenutno je aktivan dizajn {0}. Poslije toga ponovo vrijedi Lumio ljubičasta.",
+  "Gerade läuft das {0}-Design. Danach gilt wieder das Telvo-Violett.": "Trenutno je aktivan dizajn {0}. Poslije toga ponovo vrijedi Telvo ljubičasta.",
   "Automatisch richtet sich nach deinem Gerät. Fernseher bleiben dunkel.": "Automatski se prilagođava tvom uređaju. Televizori ostaju tamni.",
   "Playlist per Handy hinzufügen": "Dodaj playlistu mobitelom",
   "QR-Code scannen oder antippen. MAC und KEY sind auf der Seite schon eingetragen – du gibst nur noch deinen M3U-Link oder Xtream-Zugang ein.": "Skeniraj ili dodirni QR kod. MAC i KEY već su upisani na stranici – ti samo uneseš svoju M3U poveznicu ili Xtream pristup.",
@@ -191,7 +191,7 @@ window.LUMIO_I18N["hr"] = {
   "{0} – gültig bis {1}": "{0} – vrijedi do {1}",
   "{0} – keine Verbindung": "{0} – nema veze",
   "Willkommen bei": "Dobro došao u",
-  "mit Lumio Player": "uz Lumio Player",
+  "mit Telvo Player": "uz Telvo Player",
   "Probiere die App mit freien Test-Videos aus.": "Isprobaj aplikaciju sa slobodnim testnim videima.",
   "Dein Licht für Live TV, Filme und Serien.": "Tvoje svjetlo za Live TV, filmove i serije.",
   "Mehr anzeigen": "Prikaži više",
@@ -232,7 +232,7 @@ window.LUMIO_I18N["hr"] = {
   "Wiedergabe nicht möglich. Mit „Zurück“ schließen.": "Reprodukcija nije moguća. Zatvori s „Natrag“.",
   "Wiedergabe": "Reprodukcija",
   "Android-Player": "Android player",
-  "Lumio-Player": "Lumio player",
+  "Telvo-Player": "Telvo player",
   "Top 10 Filme": "Top 10 filmova",
   "Top 10 Serien": "Top 10 serija",
   "Top 10 in {0}": "Top 10 u {0}",
@@ -464,7 +464,7 @@ window.LUMIO_I18N["hr"] = {
   "Name Z–A": "Naziv Z–A",
   "Funktioniert auf den meisten Geräten am besten.": "Na većini uređaja radi najbolje.",
   "Probiere das, wenn Sender nicht starten oder ruckeln.": "Probaj ovo ako se kanali ne pokreću ili zapinju.",
-  "Aus – Lumio-Player verwenden": "Isključeno – koristi Lumio player",
+  "Aus – Telvo-Player verwenden": "Isključeno – koristi Telvo player",
   "Jedes Mal fragen": "Pitaj svaki put",
   "Android zeigt eine Auswahl deiner Player-Apps.": "Android prikazuje izbor tvojih player aplikacija.",
   "Alle 6 Stunden": "Svakih 6 sati",
@@ -586,4 +586,17 @@ window.LUMIO_I18N["hr"] = {
   "Trailer": "Trailer",
   "Trailer: {0}": "Trailer: {0}",
   "Solche Sender heißen beim Anbieter oft „RAW“. Sie werden unverändert durchgeleitet. Auf einer Android-TV-Box oder einem Fire TV Stick laufen sie meist – notfalls über einen externen Player wie VLC (Einstellungen → Wiedergabe).": "Davatelji takve kanale često zovu „RAW” – prosljeđuju se nepromijenjeni. Obično rade na Android TV boxu ili Fire TV Sticku, a po potrebi preko vanjskog playera kao što je VLC (Postavke → Reprodukcija).",
+  "Auch auf der Webseite verwalten": "Upravljaj i na web-stranici",
+  "Speichert die Zugangsdaten online, damit du die Playlist im Browser bearbeiten kannst. Ohne diese Option bleiben sie nur auf diesem Gerät.": "Sprema podatke za prijavu online kako bi mogao/la uređivati playlistu u pregledniku. Bez ove opcije ostaju samo na ovom uređaju.",
+  "Webseite: an": "Web-stranica: uklj.",
+  "Webseite: aus": "Web-stranica: isklj.",
+  "„{0}“ ist jetzt auf der Webseite verfügbar.": "„{0}“ je sada dostupna na web-stranici.",
+  "Von der Webseite entfernen?": "Ukloniti s web-stranice?",
+  "„{0}“ bleibt auf diesem Gerät, die Online-Kopie samt Zugangsdaten wird gelöscht.": "„{0}“ ostaje na ovom uređaju, a online kopija zajedno s podacima za prijavu bit će izbrisana.",
+  "Entfernen": "Ukloni",
+  "Neuen KEY erzeugen": "Izradi novi KEY",
+  "Neuen KEY erzeugen?": "Izraditi novi KEY?",
+  "Der alte KEY funktioniert danach nicht mehr – auch nicht auf der Webseite. Deine Playlists bleiben erhalten.": "Stari KEY više neće raditi – ni na web-stranici. Tvoje playliste ostaju.",
+  "KEY konnte nicht erneuert werden.": "KEY nije moguće obnoviti.",
+  "Neuer KEY: {0}": "Novi KEY: {0}"
 };

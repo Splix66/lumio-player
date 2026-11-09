@@ -1,5 +1,5 @@
 /* ==========================================================
-   Lumio Player – Design
+   Telvo Player – Design
    Alle Farben, Größen und Abstände stehen hier oben zentral.
    Dunkel ist der Standard, darunter folgt der helle Modus.
    ========================================================== */
@@ -16,7 +16,7 @@
   --text-2: #d2d2d8;
   --muted: #9b9ba6;
   --dim: #6b6b76;
-  --accent: #8b5cf6;          /* Lumio-Violett */
+  --accent: #8b5cf6;          /* Telvo-Violett */
   --accent-2: #a78bfa;        /* helleres Violett für Verläufe */
   --accent-ink: #ffffff;      /* Schrift auf Violett */
   --accent-soft: rgba(255, 255, 255, .07);   /* neutrale Hervorhebung */
@@ -1671,7 +1671,7 @@ html[data-poster="l"] .poster-grid { grid-template-columns: repeat(auto-fill, mi
 .mv-main .rail h2 { font-size: 1.15rem; margin-bottom: .7rem; }
 
 /* ==========================================================
-   Feinschliff Menüleiste: oben nur „Lumio“ (der volle Name steht auf dem Startbildschirm),
+   Feinschliff Menüleiste: oben nur „Telvo“ (der volle Name steht auf dem Startbildschirm),
    „Start“ als großer Knopf, rechts runde Knöpfe
    ========================================================== */
 .brand.brand-sm { font-size: 1.2rem; }
@@ -1815,3 +1815,7 @@ body.kbd .tr-close.f:focus, body.is-tv .tr-close.f:focus { background: #fff; col
 @media (max-width: 700px) {
   html:not(.tv) .mv2 .mv-head { display: flex; padding: .2rem 0 .8rem; }
 }
+
+/* Playlist-Übersicht: „Webseite: an/aus“ (Zugangsdaten nur mit Zustimmung online) */
+.web-toggle .i { color: var(--muted); }
+.web-toggle.is-on .i { color: var(--ok); }
