@@ -62,6 +62,15 @@ und in `scripts/make-icons.py` (Android, Fire TV, Samsung, LG, Windows/Mac, TV-B
 
 Die neuen Daten gehören zum Profil, werden mitgesichert und von „Verlauf löschen“ entfernt.
 
+**Neue Menüleiste:** in der Mitte eine Glas-Leiste mit Herz (Favoriten) · Live TV · Filme · Serien · Haus (Start).
+Der gewählte Reiter ist farbig hinterlegt (Lila, Sand, Himmelblau, Rosé) und zeigt die Anzahl; Einstellungen und Profil
+oben rechts im gleichen ruhigen Lila. Auf dem Handy dieselben Farben in der Leiste unten bzw. links.
+
+**Profil neu** (wie die Einstellungen): Bereiche Mein Zugang, Personen (mit einem Druck wechseln), Dieses Gerät
+(MAC/KEY, neuer KEY, QR-Code zur Webseite) und bei M3U Programmführer.
+
+**Ruhigere Farben** in Einstellungen und Profil (Lavendel, Rosé, Himmelblau, Sand, Salbei), dezenteres Leuchten.
+
 **Einstellungen neu aufgebaut** (wie Filme, Serien und Live TV): links fünf Bereiche – Playlist, Personen & Kindersicherung,
 Wiedergabe, Darstellung, Gerät & Hilfe – jeder mit eigener Farbe; rechts die Kacheln des Bereichs im Glas-Look.
 Mit der Fernbedienung genügt es, auf einem Bereich stehen zu bleiben; die App merkt sich den zuletzt offenen Bereich.

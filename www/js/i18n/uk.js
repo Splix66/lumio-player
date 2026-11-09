@@ -870,5 +870,12 @@ window.LUMIO_I18N["uk"] = {
   "Player, Stream-Format, Untertitel und Zeitschaltungen.": "Плеєр, формат потоку, субтитри й таймери.",
   "Sprache, Farben, Uhrzeit und Bildschirmschoner.": "Мова, кольори, годинник і заставка.",
   "Gerät & Hilfe": "Пристрій і допомога",
-  "Sichern, Updates, Verbindungstest und Kontakt zum Support.": "Резервна копія, оновлення, перевірка з’єднання та зв’язок із підтримкою."
+  "Sichern, Updates, Verbindungstest und Kontakt zum Support.": "Резервна копія, оновлення, перевірка з’єднання та зв’язок із підтримкою.",
+  "Wechseln": "Перемкнути",
+  "Mein Zugang": "Мій доступ",
+  "Deine aktive Playlist und wie lange sie noch läuft.": "Ваш активний плейлист і скільки він ще діє.",
+  "Wer auf diesem Gerät schaut – jede Person hat eigene Favoriten und Listen.": "Хто дивиться на цьому пристрої — у кожного власні обрані та списки.",
+  "Mit dem Handy scannen": "Скануйте телефоном",
+  "Programmführer": "Телегід",
+  "Woher die Programmdaten kommen und wann sie geladen wurden.": "Звідки беруться дані програми і коли їх завантажено."
 };

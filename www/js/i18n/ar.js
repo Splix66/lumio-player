@@ -870,5 +870,12 @@ window.LUMIO_I18N["ar"] = {
   "Player, Stream-Format, Untertitel und Zeitschaltungen.": "المشغل وصيغة البث والترجمة والمؤقتات.",
   "Sprache, Farben, Uhrzeit und Bildschirmschoner.": "اللغة والألوان والساعة وشاشة التوقف.",
   "Gerät & Hilfe": "الجهاز والمساعدة",
-  "Sichern, Updates, Verbindungstest und Kontakt zum Support.": "النسخ الاحتياطي والتحديثات واختبار الاتصال والتواصل مع الدعم."
+  "Sichern, Updates, Verbindungstest und Kontakt zum Support.": "النسخ الاحتياطي والتحديثات واختبار الاتصال والتواصل مع الدعم.",
+  "Wechseln": "تبديل",
+  "Mein Zugang": "اشتراكي",
+  "Deine aktive Playlist und wie lange sie noch läuft.": "قائمة التشغيل النشطة ومدة صلاحيتها المتبقية.",
+  "Wer auf diesem Gerät schaut – jede Person hat eigene Favoriten und Listen.": "من يشاهد على هذا الجهاز – لكل شخص مفضلاته وقوائمه.",
+  "Mit dem Handy scannen": "امسح بالهاتف",
+  "Programmführer": "دليل البرامج",
+  "Woher die Programmdaten kommen und wann sie geladen wurden.": "مصدر بيانات البرامج ووقت تحميلها."
 };

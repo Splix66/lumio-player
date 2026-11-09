@@ -870,5 +870,12 @@ window.LUMIO_I18N["ku"] = {
   "Player, Stream-Format, Untertitel und Zeitschaltungen.": "Lîstikvan, formata stream, binnivîs û demjimêr.",
   "Sprache, Farben, Uhrzeit und Bildschirmschoner.": "Ziman, reng, saet û parastina dîmenderê.",
   "Gerät & Hilfe": "Cîhaz û alîkarî",
-  "Sichern, Updates, Verbindungstest und Kontakt zum Support.": "Paşvekêşan, nûkirin, ceribandina girêdanê û têkiliya bi piştgiriyê re."
+  "Sichern, Updates, Verbindungstest und Kontakt zum Support.": "Paşvekêşan, nûkirin, ceribandina girêdanê û têkiliya bi piştgiriyê re.",
+  "Wechseln": "Biguherîne",
+  "Mein Zugang": "Gihîştina min",
+  "Deine aktive Playlist und wie lange sie noch läuft.": "Lîsteya te ya çalak û heta kengê derbasdar e.",
+  "Wer auf diesem Gerät schaut – jede Person hat eigene Favoriten und Listen.": "Kî li ser vê cîhazê temaşe dike – her kes xwedî bijarte û lîsteyên xwe ye.",
+  "Mit dem Handy scannen": "Bi telefonê bişopîne",
+  "Programmführer": "Rêbera bernameyan",
+  "Woher die Programmdaten kommen und wann sie geladen wurden.": "Daneyên bernameyê ji ku tên û kengê hatin barkirin."
 };

@@ -870,5 +870,12 @@ window.LUMIO_I18N["hr"] = {
   "Player, Stream-Format, Untertitel und Zeitschaltungen.": "Player, format streama, titlovi i tajmeri.",
   "Sprache, Farben, Uhrzeit und Bildschirmschoner.": "Jezik, boje, sat i čuvar zaslona.",
   "Gerät & Hilfe": "Uređaj i pomoć",
-  "Sichern, Updates, Verbindungstest und Kontakt zum Support.": "Sigurnosna kopija, ažuriranja, test veze i kontakt s podrškom."
+  "Sichern, Updates, Verbindungstest und Kontakt zum Support.": "Sigurnosna kopija, ažuriranja, test veze i kontakt s podrškom.",
+  "Wechseln": "Promijeni",
+  "Mein Zugang": "Moj pristup",
+  "Deine aktive Playlist und wie lange sie noch läuft.": "Tvoja aktivna playlista i koliko još vrijedi.",
+  "Wer auf diesem Gerät schaut – jede Person hat eigene Favoriten und Listen.": "Tko gleda na ovom uređaju – svatko ima vlastite favorite i popise.",
+  "Mit dem Handy scannen": "Skeniraj mobitelom",
+  "Programmführer": "TV vodič",
+  "Woher die Programmdaten kommen und wann sie geladen wurden.": "Odakle dolaze podaci o programu i kada su učitani."
 };

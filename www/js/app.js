@@ -3535,12 +3535,13 @@
       self.buttons = {}; self.current = null;
       self.view = h('div', { class: 'view' });
       var tabs = h('nav', { class: 'main-tabs', 'aria-label': T('Hauptmenü') });
-      var homeBtn = null;
-      [['home', T('Start'), 'home'], ['live', T('Live TV'), 'live'], ['movie', T('Filme'), 'movie'], ['series', T('Serien'), 'series']].forEach(function (it) {
-        var b = h('button', { class: 'tab f k-' + it[0] + (it[0] === 'home' ? ' tab-home' : ''), title: it[1], 'aria-label': it[1], onclick: function () { self.show(it[0], true); } },
-          icon(it[2]), h('span', { class: 'tab-label', text: it[1] }), it[0] === 'home' ? null : h('span', { class: 'tab-n' }));
+      // Mitte: Favoriten (Herz) · Live TV · Filme · Serien · Start (Haus) – der gewählte Reiter leuchtet in seiner Farbe
+      [['favs', T('Favoriten'), 'heart'], ['live', T('Live TV'), 'live'], ['movie', T('Filme'), 'movie'], ['series', T('Serien'), 'series'], ['home', T('Start'), 'home']].forEach(function (it) {
+        var round = it[0] === 'home' || it[0] === 'favs';
+        var b = h('button', { class: 'tab f k-' + it[0] + (round ? ' tab-round' : '') + (it[0] === 'home' ? ' tab-home' : ''), 'data-tab': it[0], title: it[1], 'aria-label': it[1], onclick: function () { self.show(it[0], true); } },
+          icon(it[2]), h('span', { class: 'tab-label', text: it[1] }), round ? null : h('span', { class: 'tab-n' }));
         self.buttons[it[0]] = b;
-        if (it[0] === 'home') homeBtn = b; else tabs.appendChild(b);
+        tabs.appendChild(b);
       });
       // Die drei Reiter reagieren sichtbar aufeinander: der Nachbar des gerade gewählten hebt sich leicht mit
       tabs.addEventListener('focusin', function (e) { self.hint(e.target && e.target._tabKey); });
@@ -3560,9 +3561,9 @@
       }
       var searchBtn = h('button', { class: 'icon-btn f', title: T('Suche'), 'aria-label': T('Suche'), onclick: function () { QuickSearch.toggle(); } }, icon('search'));
       var head = h('header', { class: 'topnav' },
-        h('div', { class: 'nav-left' }, h('div', { class: 'brand brand-sm' }, brandMark(), h('span', { class: 'wordmark' }, h('b', { text: 'Telvo' }))), homeBtn),
+        h('div', { class: 'nav-left' }, h('div', { class: 'brand brand-sm' }, brandMark(), h('span', { class: 'wordmark' }, h('b', { text: 'Telvo' })))),
         tabs,
-        h('div', { class: 'top-tools' }, searchBtn, reloadTop, tool('favs', T('Favoriten'), 'heart'), tool('settings', T('Einstellungen')), tool('profile', T('Profil'))));
+        h('div', { class: 'top-tools' }, searchBtn, reloadTop, tool('settings', T('Einstellungen')), tool('profile', T('Profil'))));
       var runTime = h('div', { class: 'mac-tag sb-days' });
       App.provider.account().then(function (a) {
         if (!a || a.expires === undefined) return;
@@ -5003,21 +5004,39 @@
     function copyRow(k, v, label) { dev.appendChild(h('span', { text: k })); dev.appendChild(h('b', { class: 'kv-copy' }, h('span', { text: v }), copyBtn(v, label))); }
     copyRow(T('MAC-Adresse'), Device.mac(), 'MAC');
     copyRow('KEY', Device.key(), 'KEY');
-    var initial = String(p.name || user || 'L').replace(/^\s+/, '').charAt(0).toUpperCase() || 'L';
     var epgPanel = p.type === 'm3u' && App.provider.epgStatus ? epgSettingsPanel(p) : null;
-    return h('div', { class: 'page profile-page' },
-      h('div', { class: 'page-head' }, h('h1', { text: T('Profil') })),
-      h('div', { class: 'profile-card' },
-        h('span', { class: 'avatar', text: initial }),
-        h('div', { class: 'pc-txt' }, h('h2', { text: p.name }), user && user !== p.name ? h('p', { text: user }) : null, status),
-        h('div', { class: 'row' },
-          h('button', { class: 'btn f primary', onclick: showProfiles, 'data-autofocus': true }, icon('profile'), h('span', { text: T('Playlist wechseln') })),
-          h('button', { class: 'btn f', onclick: reloadApp }, icon('restart'), h('span', { text: T('Daten neu laden') })))),
-      h('div', { class: 'settings-grid' },
-        panel('live', T('Zugang'), [acc]),
-        panel('phone', T('Dieses Gerät'), [dev, h('p', { class: 'hint', text: T('Mit MAC-Adresse und KEY kannst du Playlists per Handy oder über die Webseite auf dieses Gerät schicken.') }),
-          Cloud.mode === 'token' ? h('div', { class: 'row' }, h('button', { class: 'btn f', onclick: rotateKey }, icon('restart'), h('span', { text: T('Neuen KEY erzeugen') }))) : null]),
-        epgPanel));
+    // Personen: wer gerade schaut, mit einem Druck wechseln
+    function personsBody() {
+      var box = h('div', { class: 'pf-persons' }), curId = Persons.curId();
+      Persons.list().forEach(function (pe) {
+        box.appendChild(h('button', { class: 'pf-person f' + (pe.id === curId ? ' is-on' : ''), onclick: function () { if (pe.id !== curId) Persons.switchTo(pe.id); } },
+          avatar(pe, 'av-mid'), h('b', { text: pe.name }), h('small', { text: pe.id === curId ? T('Schaut gerade') : pe.kids ? T('Kinderprofil') : T('Wechseln') })));
+      });
+      return h('div', null, box, h('div', { class: 'row pf-act' },
+        h('button', { class: 'btn f', onclick: function () { Persons.guard(function () { showPersons(function () { el._show('persons'); }); }); } }, icon('users'), h('span', { text: T('Personen verwalten') }))));
+    }
+    var el = sidePage('profile-page', T('Profil'), 'profile', [
+      { id: 'access', ic: 'playlist', c: 'violet', name: T('Mein Zugang'), hint: T('Deine aktive Playlist und wie lange sie noch läuft.'), body: function () {
+        return h('div', null,
+          h('div', { class: 'pf-card pf-hero' },
+            h('span', { class: 'st-ic' }, icon('playlist')),
+            h('div', { class: 'pc-txt' }, h('h3', { text: p.name }), user && user !== p.name ? h('p', { text: user }) : null, status),
+            h('div', { class: 'row' },
+              h('button', { class: 'btn f primary', onclick: showProfiles }, icon('profile'), h('span', { text: T('Playlist wechseln') })),
+              h('button', { class: 'btn f', onclick: reloadApp }, icon('restart'), h('span', { text: T('Daten neu laden') })))),
+          h('div', { class: 'pf-card' }, acc));
+      } },
+      { id: 'persons', ic: 'users', c: 'pink', name: T('Personen'), hint: T('Wer auf diesem Gerät schaut – jede Person hat eigene Favoriten und Listen.'), body: personsBody },
+      { id: 'device', ic: 'phone', c: 'blue', name: T('Dieses Gerät'), hint: T('Mit MAC-Adresse und KEY kannst du Playlists per Handy oder über die Webseite auf dieses Gerät schicken.'), body: function () {
+        return h('div', { class: 'pf-dev' },
+          h('div', { class: 'pf-card' }, dev,
+            Cloud.mode === 'token' ? h('div', { class: 'row pf-act' }, h('button', { class: 'btn f', onclick: rotateKey }, icon('restart'), h('span', { text: T('Neuen KEY erzeugen') }))) : null),
+          h('div', { class: 'pf-card pf-qr' }, qrBox(Device.portalLink(), 'pf-qrcode'), h('small', { text: T('Mit dem Handy scannen') })));
+      } },
+      epgPanel ? { id: 'epg', ic: 'guide', c: 'amber', name: T('Programmführer'), hint: T('Woher die Programmdaten kommen und wann sie geladen wurden.'), body: function () { return h('div', { class: 'pf-card' }, epgPanel); } } : null
+    ].filter(Boolean), 'profile');
+    el._dispose = function () { el._stop(); };
+    return el;
   }
 
   /* Neuen KEY erzeugen: Wer den alten kennt (z. B. von einem Foto des Bildschirms), kommt nicht mehr an die Playlists */
@@ -5532,8 +5551,42 @@
   var LANG_FLAG = { de: 'de', en: 'en', tr: 'tr', pl: 'pl', ru: 'ru', ar: 'ar', uk: 'ua', ro: 'ro', it: 'it', el: 'gr', ku: 'ku', hr: 'yu', es: 'es', fr: 'fr' };
   function flagFor(lang) { return FLAGS[LANG_FLAG[lang]] ? langBadge({ key: LANG_FLAG[lang], name: lang }) : null; }
 
+  /* Seitenaufbau wie Filme, Serien und Live TV: links die Bereiche (je eine Farbe), rechts deren Inhalt.
+     Auf einem Bereich stehen bleiben genügt – rechts wechselt der Inhalt sofort mit. Der zuletzt offene Bereich bleibt gemerkt.
+     sections: [{ id, ic, c, name, hint, body: function () → Element }] */
+  var sideMemo = {};
+  function sidePage(cls, title, titleIc, sections, memo) {
+    var side = h('div', { class: 'st-secs' }), main = h('div', { class: 'st-main' }), cur = null, swTimer = null;
+    var head = h('div', { class: 'st-head' }), content = h('div', { class: 'st-content' });
+    main.appendChild(head); main.appendChild(content);
+    function show(sec) {
+      if (cur === sec) return;
+      cur = sec; sideMemo[memo] = sec.id;
+      $all('.st-sec', side).forEach(function (b) { b.classList.toggle('is-on', b._sec === sec); });
+      main.className = 'st-main c-' + sec.c;
+      clear(head).appendChild(h('span', { class: 'st-hic' }, icon(sec.ic)));
+      head.appendChild(h('div', { class: 'st-htxt' }, h('h2', { text: sec.name }), sec.hint ? h('p', { text: sec.hint }) : null));
+      clear(content).appendChild(sec.body());
+    }
+    sections.forEach(function (sec) {
+      var b = h('button', { class: 'cat f st-sec c-' + sec.c, 'data-sec': sec.id, onclick: function () { clearTimeout(swTimer); show(sec); var f = $('.f', content); if (f) Nav.focus(f); } },
+        h('span', { class: 'st-sic' }, icon(sec.ic)), h('span', { class: 'cat-name', text: sec.name }));
+      b._sec = sec;
+      // Fernbedienung/Tastatur: kurz verzögert, damit schnelles Durchblättern nicht flackert
+      b.addEventListener('focus', function () { clearTimeout(swTimer); swTimer = setTimeout(function () { show(sec); }, 120); });
+      side.appendChild(b);
+    });
+    var start = sections.filter(function (x) { return x.id === sideMemo[memo]; })[0] || sections[0];
+    show(start);
+    $all('.st-sec', side).forEach(function (b) { if (b._sec === start) b.setAttribute('data-autofocus', ''); });
+    var el = h('div', { class: 'page st2 ' + cls },
+      h('div', { class: 'st-body' }, h('aside', { class: 'st-side' }, h('h1', { class: 'st-title' }, icon(titleIc), h('span', { text: title })), side), main));
+    el._stop = function () { clearTimeout(swTimer); };
+    el._show = function (id) { var s = sections.filter(function (x) { return x.id === id; })[0]; if (s) { cur = null; show(s); } };
+    return el;
+  }
+
   /* Die Kachel-Seite. paintSettings() frischt die kleinen Werte unter den Kacheln auf. */
-  var stLastSec = null;   // zuletzt geöffneter Bereich der Einstellungen
   var settingsPaint = null;
   function paintSettings() { if (settingsPaint) settingsPaint(); }
 
@@ -6047,47 +6100,17 @@
 
     function paint() { tiles.forEach(function (t) { t._val(); }); }
     paint();
-    /* Aufbau wie Filme, Serien und Live TV: links die Bereiche (je eine Farbe), rechts die Kacheln des Bereichs.
-       Auf einem Bereich stehen bleiben genügt – die Kacheln wechseln sofort mit. */
-    var SECTIONS = [
-      { id: 'playlist', ic: 'playlist', c: 'violet', name: T('Playlist'), hint: T('Playlists hinzufügen, wechseln und aktuell halten.'), tiles: [tAdd, tPl, tUpd, tAuto, tShift] },
-      { id: 'family', ic: 'lock', c: 'pink', name: T('Personen & Kindersicherung'), hint: T('Wer schaut, was gesperrt ist und welche Kategorien und Sender du siehst.'), tiles: [tPersons, tPar, tHideL, tHideM, tHideS, tHideCh, tHisL, tHisM, tHisS] },
-      { id: 'play', ic: 'play', c: 'blue', name: T('Wiedergabe'), hint: T('Player, Stream-Format, Untertitel und Zeitschaltungen.'), tiles: [tSort, tFmt, tQual, tEng, tExt, tSub, tLast, tSleep, tIdle] },
-      { id: 'look', ic: 'sun', c: 'amber', name: T('Darstellung'), hint: T('Sprache, Farben, Uhrzeit und Bildschirmschoner.'), tiles: [tLang, tTheme, tClock, tSaver, tDev] },
-      { id: 'help', ic: 'help', c: 'green', name: T('Gerät & Hilfe'), hint: T('Sichern, Updates, Verbindungstest und Kontakt zum Support.'), tiles: [tBackup, tAbout, tSpeed, tFeedback, tReport] }
-    ];
-    SECTIONS.forEach(function (sec) { sec.tiles = sec.tiles.filter(Boolean); });
-    var side = h('div', { class: 'st-secs' }), main = h('div', { class: 'st-main' }), cur = null, swTimer = null;
-    var head = h('div', { class: 'st-head' }), grid = h('div', { class: 'st-grid' });
-    main.appendChild(head); main.appendChild(grid);
-    function show(sec) {
-      if (cur === sec) return;
-      cur = sec; stLastSec = sec.id;
-      $all('.st-sec', side).forEach(function (b) { b.classList.toggle('is-on', b._sec === sec); });
-      main.className = 'st-main c-' + sec.c;
-      clear(head).appendChild(h('span', { class: 'st-hic' }, icon(sec.ic)));
-      head.appendChild(h('div', { class: 'st-htxt' }, h('h2', { text: sec.name }), h('p', { text: sec.hint })));
-      clear(grid);
-      sec.tiles.forEach(function (t) { grid.appendChild(t); });
-    }
-    SECTIONS.forEach(function (sec) {
-      var b = h('button', { class: 'cat f st-sec c-' + sec.c, onclick: function () { clearTimeout(swTimer); show(sec); var f = $('.st-tile', grid); if (f) Nav.focus(f); } },
-        h('span', { class: 'st-sic' }, icon(sec.ic)), h('span', { class: 'cat-name', text: sec.name }));
-      b._sec = sec;
-      // Fernbedienung/Tastatur: auf dem Bereich stehen = Kacheln zeigen (kurz verzögert, damit schnelles Durchblättern nicht flackert)
-      b.addEventListener('focus', function () { clearTimeout(swTimer); swTimer = setTimeout(function () { show(sec); }, 120); });
-      side.appendChild(b);
-    });
-    var start = SECTIONS.filter(function (x) { return x.id === stLastSec; })[0] || SECTIONS[0];
-    show(start);
-    $all('.st-sec', side).forEach(function (b) { if (b._sec === start) b.setAttribute('data-autofocus', ''); });
-    var el = h('div', { class: 'page settings st-page st2' },
-      h('div', { class: 'st-body' },
-        h('aside', { class: 'st-side' }, h('h1', { class: 'st-title' }, icon('settings'), h('span', { text: T('Einstellungen') })), side),
-        main));
+    function grid(list) { return function () { var g = h('div', { class: 'st-grid' }); list.filter(Boolean).forEach(function (t) { g.appendChild(t); }); return g; }; }
+    var el = sidePage('settings st-page', T('Einstellungen'), 'settings', [
+      { id: 'playlist', ic: 'playlist', c: 'violet', name: T('Playlist'), hint: T('Playlists hinzufügen, wechseln und aktuell halten.'), body: grid([tAdd, tPl, tUpd, tAuto, tShift]) },
+      { id: 'family', ic: 'lock', c: 'pink', name: T('Personen & Kindersicherung'), hint: T('Wer schaut, was gesperrt ist und welche Kategorien und Sender du siehst.'), body: grid([tPersons, tPar, tHideL, tHideM, tHideS, tHideCh, tHisL, tHisM, tHisS]) },
+      { id: 'play', ic: 'play', c: 'blue', name: T('Wiedergabe'), hint: T('Player, Stream-Format, Untertitel und Zeitschaltungen.'), body: grid([tSort, tFmt, tQual, tEng, tExt, tSub, tLast, tSleep, tIdle]) },
+      { id: 'look', ic: 'sun', c: 'amber', name: T('Darstellung'), hint: T('Sprache, Farben, Uhrzeit und Bildschirmschoner.'), body: grid([tLang, tTheme, tClock, tSaver, tDev]) },
+      { id: 'help', ic: 'help', c: 'green', name: T('Gerät & Hilfe'), hint: T('Sichern, Updates, Verbindungstest und Kontakt zum Support.'), body: grid([tBackup, tAbout, tSpeed, tFeedback, tReport]) }
+    ], 'settings');
     settingsPaint = paint;
     el._refresh = paint;
-    el._dispose = function () { clearTimeout(swTimer); if (settingsPaint === paint) settingsPaint = null; };
+    el._dispose = function () { el._stop(); if (settingsPaint === paint) settingsPaint = null; };
     return el;
   }
 

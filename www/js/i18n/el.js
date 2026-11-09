@@ -870,5 +870,12 @@ window.LUMIO_I18N["el"] = {
   "Player, Stream-Format, Untertitel und Zeitschaltungen.": "Player, μορφή ροής, υπότιτλοι και χρονοδιακόπτες.",
   "Sprache, Farben, Uhrzeit und Bildschirmschoner.": "Γλώσσα, χρώματα, ρολόι και προφύλαξη οθόνης.",
   "Gerät & Hilfe": "Συσκευή και βοήθεια",
-  "Sichern, Updates, Verbindungstest und Kontakt zum Support.": "Αντίγραφα, ενημερώσεις, έλεγχος σύνδεσης και επικοινωνία με την υποστήριξη."
+  "Sichern, Updates, Verbindungstest und Kontakt zum Support.": "Αντίγραφα, ενημερώσεις, έλεγχος σύνδεσης και επικοινωνία με την υποστήριξη.",
+  "Wechseln": "Αλλαγή",
+  "Mein Zugang": "Η πρόσβασή μου",
+  "Deine aktive Playlist und wie lange sie noch läuft.": "Η ενεργή λίστα σου και πόσο ισχύει ακόμη.",
+  "Wer auf diesem Gerät schaut – jede Person hat eigene Favoriten und Listen.": "Ποιος βλέπει σε αυτή τη συσκευή – ο καθένας έχει δικά του αγαπημένα και λίστες.",
+  "Mit dem Handy scannen": "Σάρωσε με το κινητό",
+  "Programmführer": "Οδηγός προγράμματος",
+  "Woher die Programmdaten kommen und wann sie geladen wurden.": "Από πού προέρχονται τα δεδομένα προγράμματος και πότε φορτώθηκαν."
 };

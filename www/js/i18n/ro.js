@@ -870,5 +870,12 @@ window.LUMIO_I18N["ro"] = {
   "Player, Stream-Format, Untertitel und Zeitschaltungen.": "Player, format stream, subtitrări și temporizatoare.",
   "Sprache, Farben, Uhrzeit und Bildschirmschoner.": "Limbă, culori, ceas și economizor de ecran.",
   "Gerät & Hilfe": "Dispozitiv și ajutor",
-  "Sichern, Updates, Verbindungstest und Kontakt zum Support.": "Copie de rezervă, actualizări, test de conexiune și contact cu suportul."
+  "Sichern, Updates, Verbindungstest und Kontakt zum Support.": "Copie de rezervă, actualizări, test de conexiune și contact cu suportul.",
+  "Wechseln": "Schimbă",
+  "Mein Zugang": "Accesul meu",
+  "Deine aktive Playlist und wie lange sie noch läuft.": "Playlistul tău activ și cât mai este valabil.",
+  "Wer auf diesem Gerät schaut – jede Person hat eigene Favoriten und Listen.": "Cine se uită pe acest dispozitiv – fiecare are propriile favorite și liste.",
+  "Mit dem Handy scannen": "Scanează cu telefonul",
+  "Programmführer": "Ghid TV",
+  "Woher die Programmdaten kommen und wann sie geladen wurden.": "De unde provin datele de program și când au fost încărcate."
 };

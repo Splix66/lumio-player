@@ -870,5 +870,12 @@ window.LUMIO_I18N["it"] = {
   "Player, Stream-Format, Untertitel und Zeitschaltungen.": "Player, formato stream, sottotitoli e timer.",
   "Sprache, Farben, Uhrzeit und Bildschirmschoner.": "Lingua, colori, orologio e salvaschermo.",
   "Gerät & Hilfe": "Dispositivo e aiuto",
-  "Sichern, Updates, Verbindungstest und Kontakt zum Support.": "Backup, aggiornamenti, test di connessione e contatto con il supporto."
+  "Sichern, Updates, Verbindungstest und Kontakt zum Support.": "Backup, aggiornamenti, test di connessione e contatto con il supporto.",
+  "Wechseln": "Cambia",
+  "Mein Zugang": "Il mio accesso",
+  "Deine aktive Playlist und wie lange sie noch läuft.": "La tua playlist attiva e quanto è ancora valida.",
+  "Wer auf diesem Gerät schaut – jede Person hat eigene Favoriten und Listen.": "Chi guarda su questo dispositivo: ognuno ha preferiti e liste propri.",
+  "Mit dem Handy scannen": "Scansiona col telefono",
+  "Programmführer": "Guida TV",
+  "Woher die Programmdaten kommen und wann sie geladen wurden.": "Da dove arrivano i dati della guida e quando sono stati caricati."
 };
