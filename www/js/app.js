@@ -408,19 +408,74 @@
 
   /* ---------------- Netzwerk ---------------- */
   function fetchWithTimeout(url, ms) {
+    var limit = ms || CONFIG.requestTimeout;
     var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, ms || CONFIG.requestTimeout);
-    return fetch(url, ctrl ? { signal: ctrl.signal } : {}).then(function (res) {
+    var timer, timedOut = false;
+    // Ohne AbortController (Fernseher bis ca. 2019) bricht das Zeitlimit die Anfrage nicht ab –
+    // deshalb zusätzlich ein Wettlauf gegen den Zeitgeber, damit die App nie endlos wartet.
+    var deadline = new Promise(function (resolve, reject) {
+      timer = setTimeout(function () { timedOut = true; if (ctrl) ctrl.abort(); reject(new Error(T('Zeitüberschreitung – der Server antwortet nicht.'))); }, limit);
+    });
+    var req = fetch(url, ctrl ? { signal: ctrl.signal } : {}).then(function (res) {
       clearTimeout(timer);
       if (!res.ok) throw new Error(T('Server-Fehler (HTTP {0})', res.status));
       return res;
     }, function (err) {
       clearTimeout(timer);
-      if (err && err.name === 'AbortError') throw new Error(T('Zeitüberschreitung – der Server antwortet nicht.'));
+      if (timedOut || (err && err.name === 'AbortError')) throw new Error(T('Zeitüberschreitung – der Server antwortet nicht.'));
       throw new Error(T('Keine Verbindung zum Server. Prüfe Adresse und Internet.'));
     });
+    return Promise.race([req, deadline]);
   }
-  function fetchText(url) { return fetchWithTimeout(url).then(function (r) { return r.text(); }); }
+  /* Antwort als Text lesen – mit Überwachung: Kommen {idle} ms lang keine Daten mehr, wird abgebrochen
+     (vorher hing die App endlos, wenn ein Server nach dem Kopf der Antwort stehen blieb).
+     Große Playlists, die langsam aber stetig laden, werden nicht abgebrochen.
+     Zeichensatz: UTF-8; ist die Datei kein gültiges UTF-8 (alte Playlists in Latin-1/Windows-1252), wird
+     windows-1252 benutzt – sonst erscheinen Umlaute als „�“. */
+  function readText(res, idle) {
+    idle = idle || CONFIG.requestTimeout;
+    var reader = res.body && res.body.getReader ? res.body.getReader() : null;
+    var canDecode = typeof TextDecoder !== 'undefined';
+    if (!reader || !canDecode) {
+      var t;
+      var stall = new Promise(function (resolve, reject) {
+        // ohne Datenstrom kein Fortschritt messbar: großzügiges Gesamtlimit
+        t = setTimeout(function () { reject(new Error(T('Zeitüberschreitung – der Server antwortet nicht.'))); }, Math.max(idle * 6, 180000));
+      });
+      return Promise.race([res.text(), stall]).then(function (x) { clearTimeout(t); return x; }, function (e) { clearTimeout(t); throw e; });
+    }
+    return new Promise(function (resolve, reject) {
+      var parts = [], size = 0, timer = null;
+      function arm() {
+        clearTimeout(timer);
+        timer = setTimeout(function () {
+          try { reader.cancel(); } catch (e) {}
+          reject(new Error(T('Zeitüberschreitung – der Server antwortet nicht.')));
+        }, idle);
+      }
+      function pump() {
+        reader.read().then(function (r) {
+          if (r.done) {
+            clearTimeout(timer);
+            var all = new Uint8Array(size), off = 0;
+            for (var i = 0; i < parts.length; i++) { all.set(parts[i], off); off += parts[i].length; }
+            resolve(decodeBytes(all));
+            return;
+          }
+          parts.push(r.value); size += r.value.length; arm(); pump();
+        }, function (e) { clearTimeout(timer); reject(e); });
+      }
+      arm(); pump();
+    });
+  }
+  function decodeBytes(bytes) {
+    try { return new TextDecoder('utf-8', { fatal: true }).decode(bytes); }
+    catch (e) {
+      try { return new TextDecoder('windows-1252').decode(bytes); }
+      catch (e2) { return new TextDecoder('utf-8').decode(bytes); }
+    }
+  }
+  function fetchText(url) { return fetchWithTimeout(url).then(function (r) { return readText(r); }); }
   function fetchJson(url) {
     return fetchText(url).then(function (t) {
       t = t.replace(/^\uFEFF/, '').trim();
@@ -467,6 +522,24 @@
       if (!noCache) { cache[url] = pr; pr.catch(function () { delete cache[url]; }); }
       return pr;
     }
+    /* Antwort einer Listen-Abfrage prüfen. Bei abgelaufenem oder falschem Zugang schicken viele Server statt der
+       Liste die Kontoauskunft (user_info) – das darf nicht als „leere Playlist“ durchgehen (sonst „Alles aktuell!“ und
+       gespeicherte Zahlen = 0). Manche Server liefern Listen als Objekt {"0": {...}} statt als Array. */
+    function asList(x) {
+      if (Array.isArray(x)) return x;
+      if (!x) return [];
+      if (x.user_info) {
+        var u = x.user_info;
+        if (String(u.auth) !== '1') throw new Error(T('Benutzername oder Passwort falsch.'));
+        if (u.status && u.status !== 'Active') throw new Error(T('Konto-Status: {0}', u.status));
+        throw new Error(T('Unerwartete Antwort vom Server.'));
+      }
+      if (typeof x === 'object') {
+        var v = Object.keys(x).map(function (k) { return x[k]; });
+        if (!v.length || v.every(function (o) { return o && typeof o === 'object'; })) return v;
+      }
+      throw new Error(T('Unerwartete Antwort vom Server.'));
+    }
     function mapItem(kind, s) {
       if (kind === 'live') return { kind: 'live', id: String(s.stream_id), name: s.name || T('Kanal'), logo: s.stream_icon, num: s.num, catId: String(s.category_id) };
       if (kind === 'movie') return { kind: 'movie', id: String(s.stream_id), name: s.name || T('Film'), logo: s.stream_icon, ext: s.container_extension || 'mp4', rating: s.rating, catId: String(s.category_id), added: s.added };
@@ -493,7 +566,7 @@
       },
       categories: function (kind) {
         return api(ACTIONS[kind][0]).then(function (list) {
-          return (Array.isArray(list) ? list : []).map(function (c) { return { id: String(c.category_id), name: c.category_name || T('Ohne Name') }; });
+          return asList(list).map(function (c) { return { id: String(c.category_id), name: c.category_name || T('Ohne Name') }; });
         });
       },
       /* Listen werden nur einmal geladen und umgewandelt. Liegt die Gesamtliste schon vor,
@@ -505,7 +578,7 @@
         var pr = whole && whole.done
           ? whole.then(function (l) { return l.filter(function (x) { return x.catId === String(catId); }); })
           : api(ACTIONS[kind][1], all ? '' : '&category_id=' + encodeURIComponent(catId), true).then(function (list) {
-            return (Array.isArray(list) ? list : []).map(function (s) { return mapItem(kind, s); });
+            return asList(list).map(function (s) { return mapItem(kind, s); });
           });
         lists[key] = pr;
         pr.then(function () { pr.done = true; }, function () { delete lists[key]; });
@@ -1053,7 +1126,9 @@
     add: function (p) { var l = this.list(); p.id = p.id || uid(); l.push(p); this.save(l); return p; },
     remove: function (id) {
       var gone = this.get(id);
-      if (gone && gone.remoteId) Cloud.rpc('delete_playlist', { p_mac: Device.mac(), p_key: Device.key(), p_id: gone.remoteId }).catch(function () {});
+      // Online-Kopie löschen. Klappt das gerade nicht (offline, Server weg), wird es gemerkt und beim nächsten
+      // Abgleich wiederholt – sonst käme die gelöschte Playlist mit dem nächsten Abgleich zurück.
+      if (gone && gone.remoteId) { Cloud.markDeleted(gone.remoteId); Cloud.flushDeletes(); }
       this.save(this.list().filter(function (p) { return p.id !== id; }));
       this.dropData(id);
     },
@@ -1070,6 +1145,11 @@
   /* ==========================================================
      Playlist per Handy: Abgleich mit dem Online-Dienst (MAC + Key)
      ========================================================== */
+  function sameConnection(a, b) {
+    if (!a || !b || a.type !== b.type) return false;
+    if (a.type === 'm3u') return String(a.url || '').trim() === String(b.url || '').trim();
+    return normalizeServer(a.server || '') === normalizeServer(b.server || '') && (a.username || '') === (b.username || '') && (a.password || '') === (b.password || '');
+  }
   var Cloud = {
     registered: false, timer: null, busy: false, uploading: {},
     /* Mit Zeitlimit: Hängt eine Anfrage (schlechtes WLAN, Captive Portal), blieb der Abgleich
@@ -1088,6 +1168,23 @@
       }).then(function (r) { return r.json(); });
       return Promise.race([req, limit]).then(function (j) { clearTimeout(timer); return j; }, function (e) { clearTimeout(timer); throw e; });
     },
+    /* Gelöschte Playlists, deren Online-Kopie noch nicht entfernt werden konnte */
+    pendingDeletes: function () { return Store.get('cloudDel', []); },
+    markDeleted: function (remoteId) {
+      var l = this.pendingDeletes();
+      if (l.indexOf(remoteId) < 0) { l.push(remoteId); Store.set('cloudDel', l); }
+    },
+    flushDeletes: function () {
+      var self = this, l = self.pendingDeletes();
+      if (!l.length || !CONFIG.cloudUrl) return Promise.resolve();
+      return Promise.all(l.map(function (rid) {
+        return self.rpc('delete_playlist', { p_mac: Device.mac(), p_key: Device.key(), p_id: rid }).then(function (r) {
+          if (r && r.ok) {
+            Store.set('cloudDel', self.pendingDeletes().filter(function (x) { return x !== rid; }));
+          }
+        }, function () {});
+      }));
+    },
     sync: function () {
       var self = this;
       if (self.busy || !CONFIG.cloudUrl) return Promise.resolve(null);
@@ -1097,7 +1194,8 @@
       return first.then(function (r) {
         if (!r || !r.ok) return null;
         self.registered = true;
-        return self.rpc('list_playlists', { p_mac: mac, p_key: key });
+        // erst ausstehende Löschungen nachholen, dann die Liste holen
+        return self.flushDeletes().then(function () { return self.rpc('list_playlists', { p_mac: mac, p_key: key }); });
       }).then(function (r) {
         self.busy = false;
         if (!r || !r.ok) return null;
@@ -1107,6 +1205,9 @@
       }, function () { self.busy = false; return null; });
     },
     apply: function (items) {
+      // Playlists, die auf diesem Gerät gelöscht wurden, deren Online-Löschung aber noch aussteht: ignorieren
+      var pend = this.pendingDeletes();
+      if (pend.length) items = items.filter(function (it) { return pend.indexOf(it.id) < 0; });
       var byId = {};
       items.forEach(function (it) { byId[it.id] = it; });
       var list = Profiles.list(), added = [], removed = [], edited = [], changed = false;
@@ -1120,7 +1221,13 @@
           : { type: 'm3u', url: it.url };
         data.name = it.name; data.remoteId = it.id;
         var ex = list.filter(function (p) { return p.remoteId === it.id; })[0];
-        if (!ex) { data.id = uid(); list.push(data); added.push(data); changed = true; return; }
+        if (!ex) {
+          // Gleiche Playlist, die dieses Gerät selbst hochgeladen hat, deren Antwort aber zu spät kam (Zeitlimit):
+          // verknüpfen statt doppelt anlegen – sonst entstünde bei jedem Abgleich eine weitere Kopie.
+          var twin = list.filter(function (p) { return !p.remoteId && sameConnection(p, data); })[0];
+          if (twin) { twin.remoteId = it.id; changed = true; if (App.profile && App.profile.id === twin.id) App.profile.remoteId = it.id; return; }
+          data.id = uid(); list.push(data); added.push(data); changed = true; return;
+        }
         var conn = false;
         ['type', 'name', 'url', 'server', 'username', 'password'].forEach(function (k) {
           if ((ex[k] || '') !== (data[k] || '')) { ex[k] = data[k]; changed = true; if (k !== 'name') conn = true; }
@@ -1195,7 +1302,9 @@
     if (Platform.capacitor) { window.location.href = url; return; }   // Handy-App: öffnet den System-Browser
     var w = null;
     try { w = window.open(url, '_blank'); } catch (e) {}
-    if (!w) window.location.href = url;
+    // Windows/Mac-App (Electron): Das Fenster leitet den Link selbst an den Browser weiter und meldet „kein Fenster“ –
+    // ein zusätzliches location.href würde die Seite ein zweites Mal öffnen.
+    if (!w && !/Electron\//.test(navigator.userAgent || '')) window.location.href = url;
   }
   function qrBox(text, cls) {
     var box = h('button', { class: 'qr f' + (cls ? ' ' + cls : ''), title: T('Webseite öffnen'), 'aria-label': T('Webseite öffnen'), onclick: function () { openExternal(text); } });
@@ -2863,8 +2972,9 @@
   var countCache = {};
   /* Anzahl Sender/Filme/Serien und wann zuletzt geladen – pro Playlist gespeichert, für den Startbildschirm */
   var Stats = {
-    get: function () { return Store.get('stats.' + pid(), {}); },
-    set: function (kind, n, newest) { var s = this.get(); s[kind] = { n: n, at: Date.now(), newest: newest || 0 }; Store.set('stats.' + pid(), s); },
+    get: function (id) { return Store.get('stats.' + (id || pid()), {}); },
+    // id: Playlist, für die gezählt wurde – nicht die, die beim Ende des Ladens gerade aktiv ist
+    set: function (kind, n, newest, id) { id = id || pid(); var s = this.get(id); s[kind] = { n: n, at: Date.now(), newest: newest || 0 }; Store.set('stats.' + id, s); },
     // Listen zu alt (älter als 12 Stunden) oder noch nie geladen?
     stale: function () {
       var s = this.get(), oldest = Infinity;
@@ -2905,7 +3015,7 @@
     return Stats.stale();
   }
   /* Playlist mit einem Klick neu laden: alles frisch vom Anbieter holen und neu zählen */
-  var refreshing = null;
+  var refreshing = null, refreshingFor = null;
 
   /* Aktualisieren mit Ladebildschirm: Der goldene Punkt fällt herunter und hüpft, das Play-Zeichen verliert
      die Anziehung, schwebt kurz und klatscht auf den Boden – dann setzt sich das Logo wieder zusammen.
@@ -2961,6 +3071,8 @@
     });
   }
   function refreshPlaylist(onStep) {
+    // Läuft gerade eine Aktualisierung für eine ANDERE Playlist, nicht auf deren Ergebnis warten
+    if (refreshing && refreshingFor !== pid()) refreshing = null;
     if (refreshing) {
       // läuft schon (z. B. automatisch im Hintergrund): auf das Ergebnis warten und es melden
       return refreshing.then(function (r) {
@@ -2976,11 +3088,12 @@
       return catCounts(k).then(function (c) { if (onStep) onStep(k, true, c.total); return true; }, function () { if (onStep) onStep(k, false, 0); return false; });
     });
     var acc = prov.login ? prov.login().then(function () { return null; }, function (e) { return e; }) : Promise.resolve(null);
-    refreshing = Promise.all([acc].concat(jobs)).then(function (r) {
-      refreshing = null;
-      return { error: r[0], ok: r.slice(1).some(function (x) { return x; }) };
+    var mine = refreshingFor = pid();
+    var job = refreshing = Promise.all([acc].concat(jobs)).then(function (r) {
+      if (refreshing === job) refreshing = null;
+      return { error: r[0], ok: r.slice(1).some(function (x) { return x; }), owner: mine };
     });
-    return refreshing;
+    return job;
   }
   function ago(ts) {
     var m = Math.round((Date.now() - ts) / 60000);
@@ -2992,13 +3105,14 @@
     return d === 1 ? T('vor 1 Tag') : T('vor {0} Tagen', d);
   }
   function catCounts(kind) {
-    var k = pid() + kind;
+    var owner = pid(), k = owner + kind;
     if (!countCache[k]) {
       countCache[k] = App.provider.items(kind, '__all').then(function (list) {
         var by = {};
         var newest = 0;
         list.forEach(function (x) { var c = String(x.catId); by[c] = (by[c] || 0) + 1; var a = Number(x.added) || 0; if (a > newest) newest = a; });
-        Stats.set(kind, list.length, newest);
+        // Ergebnis gehört zur Playlist, die beim Start aktiv war (Wechsel während des Ladens → keine falschen Zahlen)
+        Stats.set(kind, list.length, newest, owner);
         return { by: by, total: list.length };
       });
       countCache[k].catch(function () { delete countCache[k]; });
@@ -4113,10 +4227,50 @@
      Detailseite: Film oder Serie
      ========================================================== */
   function openItem(item) {
-    if (item.kind === 'movie') return showMovie(item);
-    if (item.kind === 'series') return showSeries(item);
-    if (item.kind === 'episode') return playItem(item, { list: [item], index: 0 });
+    if (item.kind === 'movie' || item.kind === 'series') {
+      return parentalGate(item, null, function () { if (item.kind === 'movie') showMovie(item); else showSeries(item); });
+    }
     return playItem(item, { list: [item], index: 0 });
+  }
+
+  /* Kindersicherung an der zentralen Stelle prüfen – egal ob man über eine Kategorie, Favoriten, „Zuletzt gesehen“,
+     „Weiterschauen“, die Suche oder „Letzten Sender beim Start“ kommt (vorher wurde nur beim Öffnen einer
+     Kategorie gefragt). Ausgeblendete Kategorien sperren nicht – nur gesperrte. Ohne PIN: sofort weiter. */
+  function lockedCats(kind) {
+    return App.provider.categories(kind).then(function (cats) {
+      var m = null;
+      (cats || []).forEach(function (c) { if (Parental.isLocked(kind, c)) { m = m || {}; m[String(c.id)] = 1; } });
+      return m;
+    }, function () { return null; });
+  }
+  function itemCatId(item) {
+    if (item.catId !== undefined && item.catId !== null && item.catId !== '') return Promise.resolve(item.catId);
+    if (item.kind === 'episode' && item.seriesId !== undefined) {
+      return App.provider.items('series', '__all').then(function (list) {
+        var s = (list || []).filter(function (x) { return String(x.id) === String(item.seriesId); })[0];
+        return s ? s.catId : null;
+      }, function () { return null; });
+    }
+    return Promise.resolve(null);
+  }
+  function parentalGate(item, ctx, go) {
+    if (!Parental.on() || Parental.unlocked || !App.provider) { go(ctx); return; }
+    var kind = item.kind === 'episode' ? 'series' : item.kind;
+    Promise.all([lockedCats(kind), itemCatId(item)]).then(function (r) {
+      var m = r[0], cid = r[1];
+      if (!m) { go(ctx); return; }
+      // Liste zum Umschalten (auch im TV-Player) ohne gesperrte Einträge weitergeben
+      if (ctx && ctx.list && ctx.list.length > 1) {
+        var cur = ctx.list[ctx.index];
+        var list = ctx.list.filter(function (x) { return x === cur || x.catId === undefined || x.catId === null || !m[String(x.catId)]; });
+        var c2 = {};
+        for (var k in ctx) if (ctx.hasOwnProperty(k)) c2[k] = ctx[k];
+        c2.list = list; c2.index = Math.max(0, list.indexOf(cur));
+        ctx = c2;
+      }
+      if (cid !== null && cid !== undefined && m[String(cid)]) Parental.ask(function () { go(ctx); });
+      else go(ctx);
+    }, function () { go(ctx); });
   }
 
   function detailFrame(item) {
@@ -4430,6 +4584,9 @@
   };
 
   function playItem(item, ctx) {
+    parentalGate(item, ctx || { list: [item], index: 0 }, function (c) { playItemNow(item, c); });
+  }
+  function playItemNow(item, ctx) {
     ctx = ctx || { list: [item], index: 0 };
     if (extPlayerOn() && item.kind !== 'series') {
       if (Player.el) Player.close();
@@ -4789,7 +4946,8 @@
       var preferNative = Platform.safari || Platform.tizen || Platform.webos || (Platform.android && !self.forceHlsJs && Settings.get('engine') !== 'hlsjs');
       if (isHlsUrl(url) && !(nativeHls && preferNative)) {
         ensureHls().then(function (Hls) {
-          if (self.video !== video) return;
+          // inzwischen umgeschaltet? Dann nicht noch einen zweiten hls.js-Player an dasselbe Video hängen
+          if (self.video !== video || self.curUrl !== url) return;
           if (Hls && Hls.isSupported()) {
             // PC (Windows/Mac): gleich in hoher Qualität starten und nicht an die Fenstergröße koppeln –
             // sonst bleibt das Bild nach der kleinen Vorschau lange unscharf. „Beste Qualität“ hält die höchste Stufe fest.
@@ -5458,6 +5616,7 @@
   window.LumioDebug = {
     parseM3U: parseM3U, parseXtreamLink: parseXtreamLink, normalizeServer: normalizeServer, Nav: Nav, Screens: Screens, StillWatching: StillWatching,
     Xmltv: Xmltv, chanKey: chanKey, EpgStore: EpgStore, makeProvider: makeProvider, Profiles: Profiles, PinGuard: PinGuard, Store: Store, Cloud: Cloud,
+    decodeBytes: decodeBytes, readText: readText, fetchText: fetchText, sameConnection: sameConnection,
     config: CONFIG
   };
 
