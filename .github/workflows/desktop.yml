@@ -62,8 +62,10 @@ jobs:
 
   release:
     needs: build
-    # Nur von main aus veröffentlichen – Test-Zweige behalten die Dateien nur als Download am Lauf
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    # Nur von main aus veröffentlichen – Test-Zweige behalten die Dateien nur als Download am Lauf.
+    # always(): Auch veröffentlichen, wenn einer der Bauten ausfällt (z. B. GitHub hat lange keinen Mac-Rechner frei
+    # und bricht ab) – dann wird nur das ersetzt, was fertig gebaut wurde; der Rest folgt beim nächsten Lauf.
+    if: always() && !cancelled() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     runs-on: ubuntu-latest
     steps:
       - name: Projekt holen
@@ -81,14 +83,23 @@ jobs:
           path: out
           merge-multiple: true
 
+      - name: Gibt es etwas zu veröffentlichen?
+        id: files
+        run: |
+          ls -la out || true
+          if ls out/* >/dev/null 2>&1; then echo "any=true" >> "$GITHUB_OUTPUT"; else echo "any=false" >> "$GITHUB_OUTPUT"; fi
+          echo "win=$([ -f out/lumio-player-setup.exe ] && echo ja || echo 'nicht neu gebaut')" >> "$GITHUB_OUTPUT"
+          echo "mac=$([ -f out/lumio-player-mac.dmg ] && echo ja || echo 'nicht neu gebaut')" >> "$GITHUB_OUTPUT"
+
       - name: Unter "Releases" bereitstellen
+        if: steps.files.outputs.any == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: pc
           name: Telvo Player ${{ steps.ver.outputs.v }} – PC-Version
           body: |
             Version ${{ steps.ver.outputs.v }}
-            Windows: lumio-player-setup.exe
-            Mac: lumio-player-mac.dmg
+            Windows: lumio-player-setup.exe (in diesem Lauf neu gebaut: ${{ steps.files.outputs.win }})
+            Mac: lumio-player-mac.dmg (in diesem Lauf neu gebaut: ${{ steps.files.outputs.mac }})
           files: out/*
           make_latest: false
