@@ -1229,11 +1229,12 @@
       h('p', { class: 'hint', text: s ? T('Gerade läuft das {0}-Design. Danach gilt wieder das Telvo-Violett.', T(SEASONS[s].name)) : T('Automatisch richtet sich nach deinem Gerät. Fernseher bleiben dunkel.') }));
   }
 
-  /* Hintergrund für Startseite und Playlists: dezenter Lichtschein und ein großes, kaum sichtbares Logo */
+  /* Hintergrund für Startseite und Playlists: dezenter Lichtschein und ein großes, kaum sichtbares Play-Zeichen.
+     Nur das Dreieck aus dem Logo – der Querbalken des „T“ sah hinter der Menüleiste wie ein grauer Fehlerbalken aus. */
   function heroArt() {
     var box = h('div', { class: 'hero-art', 'aria-hidden': 'true' });
-    box.innerHTML = '<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><path d="M14 22h56M34 22v62" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>' +
-      '<path d="M50 38.5c0-3.3 3.6-5.3 6.4-3.6l25.4 15.6c2.7 1.7 2.7 5.6 0 7.2L56.4 73.4C53.6 75.1 50 73.1 50 69.8z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>' +
+    box.innerHTML = '<svg viewBox="44 30 44 50" aria-hidden="true" focusable="false">' +
+      '<path d="M50 38.5c0-3.3 3.6-5.3 6.4-3.6l25.4 15.6c2.7 1.7 2.7 5.6 0 7.2L56.4 73.4C53.6 75.1 50 73.1 50 69.8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>' +
       '</svg>';
     return box;
   }
