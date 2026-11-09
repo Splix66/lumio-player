@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Lumio Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.9.1',
+    version: '1.10.0',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     hlsCdn: 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js',
     tsCdn: 'https://cdn.jsdelivr.net/npm/mpegts.js@1.7.3/dist/mpegts.js',   // für rohe TV-Signale (.ts / „RAW“)
@@ -21,8 +21,11 @@
     cloudKey: 'sb_publishable_cx6n8buREFat_yE7kKW6FA_SnMsOQX7',
     portalUrl: 'https://splix66.github.io/lumio-player/',
     qrCdn: 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js',
-    syncInterval: 30000
+    syncInterval: 30000,
+    cloudTimeout: 15000              // Zeitlimit für Anfragen an den Online-Dienst
   };
+  // Zum Testen ohne Online-Dienst: …/index.html?nocloud (es wird dann kein Gerät angemeldet)
+  if (/[?&]nocloud\b/.test(location.search || '')) CONFIG.cloudUrl = '';
 
   /* ---------------- Geräte-Erkennung ---------------- */
   var UA = navigator.userAgent || '';
@@ -581,9 +584,16 @@
   function parseM3U(text) {
     var lines = String(text || '').split(/\r?\n/);
     var out = [], cur = null;
+    out.epgUrls = [];
     for (var i = 0; i < lines.length; i++) {
       var line = lines[i].trim();
       if (!line) continue;
+      if (line.indexOf('#EXTM3U') === 0) {
+        // Programmführer-Adresse(n) aus der Kopfzeile: url-tvg="…", x-tvg-url="…" (auch mehrere, mit Komma getrennt)
+        var hm, hre = /(url-tvg|x-tvg-url|tvg-url)="([^"]*)"/gi;
+        while ((hm = hre.exec(line))) hm[2].split(/[,\s]+/).forEach(function (u) { if (/^https?:\/\//i.test(u) && out.epgUrls.indexOf(u) < 0) out.epgUrls.push(u); });
+        continue;
+      }
       if (line.indexOf('#EXTINF') === 0) {
         cur = { attrs: {}, name: '' };
         var re = /([\w-]+)="([^"]*)"/g, m;
@@ -603,7 +613,9 @@
           name: cur.name || cur.attrs['tvg-name'] || T('Ohne Name'),
           logo: cur.attrs['tvg-logo'] || '',
           group: cur.attrs['group-title'] || T('Ohne Kategorie'),
-          url: line
+          url: line,
+          tvgId: cur.attrs['tvg-id'] || '',
+          tvgName: cur.attrs['tvg-name'] || ''
         });
         cur = null;
       }
@@ -611,10 +623,263 @@
     return out;
   }
 
+  /* ----- Programmführer (EPG) für M3U-Playlists: XMLTV-Dateien -----
+     EPG-Dateien sind oft 50–200 MB groß (teils gepackt als .gz). Darum wird die Datei Stück für Stück
+     gelesen und nur behalten, was gebraucht wird: Sendungen der Sender aus der Playlist,
+     von 3 Stunden zurück bis 36 Stunden voraus. So reicht der Speicher auch auf schwachen TV-Boxen. */
+
+  // Sendernamen vergleichbar machen: „DE: Das Erste HD“ ≈ „Das Erste“
+  function chanKey(s) {
+    s = String(s || '').replace(/^\s*(\|[^|]{1,8}\|\s*|[A-Za-z]{2,3}\s*[:|]\s*|[A-Za-z]{2,3}\s+-\s+)/, '');
+    var k = titleKey(s);
+    return k || norm(s).replace(/[\s.,:;|_\-()[\]]+/g, '');   // z. B. arabische oder kyrillische Namen
+  }
+
+  var Xmltv = {
+    // „20261109153000 +0100“ → Sekunden seit 1970 (UTC)
+    time: function (s) {
+      var m = /^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})?\s*(?:([+-])(\d{2}):?(\d{2}))?/.exec(String(s || '').trim());
+      if (!m) return 0;
+      var t = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] || 0)) / 1000;
+      if (m[7]) t -= (m[7] === '-' ? -1 : 1) * (+m[8] * 3600 + +m[9] * 60);
+      return t;
+    },
+    // XML-Text in normalen Text umwandeln (Sonderzeichen, CDATA)
+    text: function (s) {
+      // nur echte HTML-Formatierungen entfernen (manche Anbieter schicken <br> oder <b>), Text wie „<Test>“ bleibt
+      return String(s || '').replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1').replace(/<\/?(b|i|u|em|strong|br|p|span|div|font|a|small|big)\b[^>]*>/gi, ' ')
+        .replace(/&(#x[0-9a-f]+|#\d+|amp|lt|gt|quot|apos);/gi, function (all, e) {
+          var l = e.toLowerCase();
+          if (l === 'amp') return '&'; if (l === 'lt') return '<'; if (l === 'gt') return '>';
+          if (l === 'quot') return '"'; if (l === 'apos') return '\'';
+          var n = l.charAt(1) === 'x' ? parseInt(l.slice(2), 16) : parseInt(l.slice(1), 10);
+          try { return String.fromCodePoint ? String.fromCodePoint(n) : String.fromCharCode(n); } catch (er) { return ''; }
+        }).replace(/\s+/g, ' ').trim();
+    },
+    attrs: function (s) {
+      var o = {}, m, re = /([\w:-]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g;
+      while ((m = re.exec(s))) o[m[1].toLowerCase()] = m[2] !== undefined ? m[2] : m[3];
+      return o;
+    },
+    // Titel/Beschreibung – bevorzugt in der App-Sprache, sonst der erste Eintrag
+    pick: function (inner, tag) {
+      var re = new RegExp('<' + tag + '\\b([^>]*)>([\\s\\S]*?)</' + tag + '>', 'g'), m, first = null;
+      while ((m = re.exec(inner))) {
+        var lang = (/lang\s*=\s*["']([\w-]+)/i.exec(m[1]) || [])[1];
+        if (first === null) first = m[2];
+        if (lang && lang.slice(0, 2).toLowerCase() === Lang.cur) return Xmltv.text(m[2]);
+      }
+      return first === null ? '' : Xmltv.text(first);
+    },
+    // Sammelt Sender und Sendungen aus beliebig zerteilten Textstücken
+    parser: function (want, win) {
+      var st = { lc: {}, names: {}, progs: {}, channels: 0, count: 0 };
+      var keep = {}, buf = '';
+      var re = /<(channel|programme)\b([^>]*)>([\s\S]*?)<\/\1\s*>/g;
+      function handle(tag, attrStr, inner) {
+        var a = Xmltv.attrs(attrStr);
+        if (tag === 'channel') {
+          var id = a.id;
+          if (!id || keep[id]) return;
+          var hit = !!want.ids[id.toLowerCase()], keys = [], dn, dre = /<display-name\b[^>]*>([\s\S]*?)<\/display-name>/g;
+          while ((dn = dre.exec(inner))) {
+            var k = chanKey(Xmltv.text(dn[1]));
+            if (k) { keys.push(k); if (want.names[k]) hit = true; }
+          }
+          if (!hit) return;
+          keep[id] = true; st.lc[id.toLowerCase()] = id; st.channels++;
+          keys.forEach(function (k) { if (!st.names[k]) st.names[k] = id; });
+          return;
+        }
+        var ch = a.channel;
+        if (!ch) return;
+        if (!keep[ch]) {
+          // Sendung ohne vorherigen <channel>-Eintrag: nur über die tvg-id zuordnen
+          if (!want.ids[ch.toLowerCase()]) return;
+          keep[ch] = true; st.lc[ch.toLowerCase()] = ch; st.channels++;
+        }
+        var s = Xmltv.time(a.start), e = Xmltv.time(a.stop);
+        if (!s || s >= win.to || (e && e <= win.from)) return;
+        var title = Xmltv.pick(inner, 'title');
+        if (!title) return;
+        var desc = Xmltv.pick(inner, 'desc');
+        if (desc.length > 400) desc = desc.slice(0, 397) + '…';
+        (st.progs[ch] = st.progs[ch] || []).push([s, e, title, desc]);
+        st.count++;
+      }
+      function push(chunk) {
+        buf += chunk;
+        var m, end = 0;
+        re.lastIndex = 0;
+        while ((m = re.exec(buf))) { handle(m[1], m[2], m[3]); end = re.lastIndex; }
+        if (end) buf = buf.slice(end);
+        else if (buf.length > 8e6) buf = buf.slice(-1e6);   // Schutz vor endlos wachsendem Puffer bei kaputten Dateien
+      }
+      return {
+        push: push,
+        done: function () {
+          push('');
+          buf = '';
+          Object.keys(st.progs).forEach(function (ch) {
+            var seen = {}, l = st.progs[ch].sort(function (a, b) { return a[0] - b[0]; }).filter(function (x) {
+              if (seen[x[0]]) return false;   // doppelte Sendungen aus mehreren EPG-Quellen
+              seen[x[0]] = 1; return true;
+            });
+            // fehlende Endzeit = Beginn der nächsten Sendung
+            for (var i = 0; i < l.length; i++) if (!l[i][1]) l[i][1] = l[i + 1] ? l[i + 1][0] : l[i][0] + 3600;
+            st.progs[ch] = l.filter(function (x) { return x[1] > win.from; });
+          });
+          return st;
+        }
+      };
+    },
+    // Zeichensatz aus der XML-Kopfzeile (<?xml … encoding="ISO-8859-1"?>)
+    decoder: function (bytes) {
+      var s = '';
+      for (var i = 0; i < Math.min(200, bytes.length); i++) s += String.fromCharCode(bytes[i]);
+      var enc = ((/encoding\s*=\s*["']([\w-]+)["']/i.exec(s) || [])[1] || 'utf-8').toLowerCase();
+      if (/^(iso-8859-1|latin-?1|windows-1252|cp1252)$/.test(enc)) enc = 'windows-1252';
+      try { return new TextDecoder(enc); } catch (e) { return new TextDecoder('utf-8'); }
+    },
+    // Datei laden und Stück für Stück an onText geben (entpackt .gz automatisch, wenn das Gerät es kann)
+    read: function (url, onText) {
+      return fetchWithTimeout(url, 60000).then(function (res) {
+        var canStream = res.body && res.body.getReader && typeof TextDecoder !== 'undefined' && typeof ReadableStream !== 'undefined';
+        if (!canStream) return res.text().then(function (t) { onText(t); });   // ältere Fernseher: alles auf einmal
+        var reader = res.body.getReader();
+        return reader.read().then(function (first) {
+          var head = first.value || new Uint8Array(0), rd = reader, pending = first;
+          if (head.length > 1 && head[0] === 0x1f && head[1] === 0x8b) {
+            if (typeof DecompressionStream === 'undefined') {
+              try { reader.cancel(); } catch (e) {}
+              throw new Error(T('Dieses Gerät kann gepackte EPG-Dateien (.gz) nicht lesen. Bitte eine Adresse mit .xml verwenden.'));
+            }
+            var packed = new ReadableStream({
+              start: function (c) { if (head.length) c.enqueue(head); if (first.done) c.close(); },
+              pull: function (c) { return reader.read().then(function (r) { if (r.done) c.close(); else c.enqueue(r.value); }); },
+              cancel: function (why) { return reader.cancel(why); }
+            });
+            rd = packed.pipeThrough(new DecompressionStream('gzip')).getReader();
+            pending = null;
+          }
+          var dec = null, total = 0;
+          function step(r) {
+            if (r.done) { if (dec) onText(dec.decode()); return; }
+            if (!dec) dec = Xmltv.decoder(r.value);
+            total += r.value.length;
+            if (total > 500 * 1048576) { try { rd.cancel(); } catch (e) {} throw new Error(T('Die EPG-Datei ist zu groß.')); }
+            onText(dec.decode(r.value, { stream: true }));
+            return rd.read().then(step);
+          }
+          return pending ? step(pending) : rd.read().then(step);
+        });
+      });
+    },
+    // Alle Quellen nacheinander laden; eine kaputte Quelle stoppt die anderen nicht
+    load: function (urls, want) {
+      var now = Date.now() / 1000, win = { from: now - 3 * 3600, to: now + 36 * 3600 };
+      var ps = Xmltv.parser(want, win), ok = 0, errors = [];
+      return urls.reduce(function (chain, url) {
+        return chain.then(function () {
+          return Xmltv.read(url, ps.push).then(function () { ok++; }, function (e) { errors.push(e); });
+        });
+      }, Promise.resolve()).then(function () {
+        if (!ok) throw errors[0] || new Error(T('Der Programmführer konnte nicht geladen werden.'));
+        return ps.done();
+      });
+    },
+    // Sendungen zu einem Sender finden: erst über tvg-id, dann über den Namen
+    find: function (E, item) {
+      if (!E || !E.progs) return null;
+      var k = item.epgId ? E.lc[String(item.epgId).toLowerCase()] : null;
+      if (!k) k = E.names[chanKey(item.name)];
+      if (!k && item.epgName) k = E.names[chanKey(item.epgName)];
+      return k ? E.progs[k] || null : null;
+    }
+  };
+
+  /* Zwischenspeicher für den Programmführer im Gerät (IndexedDB – localStorage ist dafür zu klein).
+     Funktioniert er nicht (privater Modus, alte Geräte), wird einfach neu geladen. */
+  var EpgStore = {
+    pr: null,
+    open: function () {
+      if (this.pr) return this.pr;
+      this.pr = new Promise(function (resolve) {
+        try {
+          if (!window.indexedDB) { resolve(null); return; }
+          var req = indexedDB.open('lumio-epg', 1);
+          req.onupgradeneeded = function () { try { req.result.createObjectStore('epg'); } catch (e) {} };
+          req.onsuccess = function () { resolve(req.result); };
+          req.onerror = req.onblocked = function () { resolve(null); };
+        } catch (e) { resolve(null); }
+      });
+      return this.pr;
+    },
+    run: function (mode, fn) {
+      return this.open().then(function (db) {
+        if (!db) return null;
+        return new Promise(function (resolve) {
+          try {
+            var r = fn(db.transaction('epg', mode).objectStore('epg'));
+            r.onsuccess = function () { resolve(r.result === undefined ? null : r.result); };
+            r.onerror = function () { resolve(null); };
+          } catch (e) { resolve(null); }
+        });
+      });
+    },
+    get: function (key) { return this.run('readonly', function (s) { return s.get(key); }); },
+    set: function (key, val) { return this.run('readwrite', function (s) { return s.put(val, key); }); },
+    del: function (key) { return this.run('readwrite', function (s) { return s.delete(key); }); }
+  };
+  var EPG_TTL = 12 * 3600000;   // Programmführer höchstens alle 12 Stunden neu laden
+
   function M3UProvider(p) {
     var data = null, loading = null;
+    var epgData = null, epgLoading = null, epgFail = null, epgFresh = false;
+    // Eigene EPG-Adresse (Profil) hat Vorrang vor der Adresse aus der Playlist
+    function epgSources(d) {
+      var own = String(p.epgUrl || '').split(/[\s,]+/).filter(function (u) { return /^https?:\/\//i.test(u); });
+      return (own.length ? own : (d && d.epgUrls) || []).slice(0, 3);
+    }
+    function loadEpg() {
+      if (epgData && Date.now() - epgData.at < EPG_TTL) return Promise.resolve(epgData);
+      // Nach einem Fehler 10 Minuten warten – sonst würde die große Datei bei jedem Senderwechsel neu geladen
+      if (epgFail && Date.now() - epgFail.at < 600000) return Promise.reject(epgFail.err);
+      if (epgLoading) return epgLoading;
+      epgLoading = load().then(function (d) {
+        var urls = epgSources(d);
+        if (!urls.length) return null;
+        var src = urls.join(' '), key = 'epg.' + (p.id || 'neu'), fresh = epgFresh;
+        epgFresh = false;
+        return (fresh ? Promise.resolve(null) : EpgStore.get(key)).then(function (c) {
+          if (c && c.src === src && Date.now() - c.at < EPG_TTL) return c;
+          var want = { ids: {}, names: {} };
+          d.live.forEach(function (x) {
+            if (x.epgId) want.ids[String(x.epgId).toLowerCase()] = true;
+            var k = chanKey(x.name); if (k) want.names[k] = true;
+            if (x.epgName) { k = chanKey(x.epgName); if (k) want.names[k] = true; }
+          });
+          return Xmltv.load(urls, want).then(function (r) {
+            r.src = src; r.at = Date.now();
+            if (p.id) EpgStore.set(key, r);
+            return r;
+          });
+        });
+      }).then(function (r) {
+        epgLoading = null; epgFail = null;
+        epgData = r || { none: true, at: Date.now(), progs: {}, lc: {}, names: {} };
+        if (r) setTimeout(epgReady, 0);
+        return epgData;
+      }, function (e) { epgLoading = null; epgFail = { at: Date.now(), err: e }; throw e; });
+      return epgLoading;
+    }
+    function epgItem(item) {
+      // Favoriten/Verlauf speichern nur eine Kurzform – den vollständigen Eintrag (mit tvg-id) nachschlagen
+      var full = data && data.liveById[item.id];
+      return full && full.name === item.name ? full : item;
+    }
     function build(entries) {
-      var d = { live: [], movie: [], series: [], cats: { live: [], movie: [], series: [] }, seriesMap: {} };
+      var d = { live: [], movie: [], series: [], cats: { live: [], movie: [], series: [] }, seriesMap: {}, liveById: {} };
       var seenCat = { live: {}, movie: {}, series: {} };
       var n = 0;
       function cat(kind, g) { if (!seenCat[kind][g]) { seenCat[kind][g] = 1; d.cats[kind].push({ id: g, name: g }); } }
@@ -635,10 +900,15 @@
           cat('movie', e.group);
         } else {
           n++;
-          d.live.push({ kind: 'live', id: 'l' + idx, name: e.name, logo: e.logo, url: e.url, catId: e.group, num: n });
+          var li = { kind: 'live', id: 'l' + idx, name: e.name, logo: e.logo, url: e.url, catId: e.group, num: n };
+          if (e.tvgId) li.epgId = e.tvgId;
+          if (e.tvgName && e.tvgName !== e.name) li.epgName = e.tvgName;
+          d.live.push(li);
+          d.liveById[li.id] = li;
           cat('live', e.group);
         }
       });
+      d.epgUrls = entries.epgUrls || [];
       return d;
     }
     function load() {
@@ -679,9 +949,40 @@
           };
         });
       },
-      epg: function () { return Promise.resolve([]); },
+      // Programmführer: wird erst geladen, wenn er zum ersten Mal gebraucht wird (Live TV, Player)
+      epg: function (item, limit) {
+        return loadEpg().then(function (E) {
+          var list = Xmltv.find(E, epgItem(item));
+          if (!list) return [];
+          var t = Date.now() / 1000;
+          return list.filter(function (x) { return x[1] > t; }).slice(0, limit || 8)
+            .map(function (x) { return { title: x[2], desc: x[3], start: x[0], end: x[1] }; });
+        }).catch(function () { return []; });
+      },
+      // Sofort (ohne Laden): was läuft gerade? Für die Titel in der Senderliste.
+      epgNow: function (item) {
+        if (!epgData || epgData.none) return null;
+        var list = Xmltv.find(epgData, epgItem(item)), t = Date.now() / 1000;
+        if (!list) return null;
+        for (var i = 0; i < list.length; i++) if (list[i][0] <= t && list[i][1] > t) return { title: list[i][2], start: list[i][0], end: list[i][1] };
+        return null;
+      },
+      epgStatus: function () {
+        var s = { sources: data ? epgSources(data) : [], own: !!p.epgUrl };
+        if (epgLoading) s.state = 'loading';
+        else if (epgFail) { s.state = 'error'; s.error = epgFail.err && epgFail.err.message; }
+        else if (epgData) { s.state = epgData.none ? 'none' : 'ok'; s.channels = epgData.channels; s.count = epgData.count; s.at = epgData.at; }
+        else s.state = data && !s.sources.length ? 'none' : 'idle';
+        return s;
+      },
+      // Neu laden (z. B. nach Ändern der EPG-Adresse) – ohne den Zwischenspeicher
+      epgReload: function () {
+        epgData = null; epgFail = null; epgFresh = true;
+        return loadEpg();
+      },
       streamUrl: function (item) { return { url: item.url }; },
-      reset: function () { data = null; loading = null; }
+      // „Playlist aktualisieren“: auch den Programmführer frisch holen
+      reset: function () { data = null; loading = null; epgData = null; epgFail = null; epgFresh = true; }
     };
   }
 
@@ -754,7 +1055,13 @@
       var gone = this.get(id);
       if (gone && gone.remoteId) Cloud.rpc('delete_playlist', { p_mac: Device.mac(), p_key: Device.key(), p_id: gone.remoteId }).catch(function () {});
       this.save(this.list().filter(function (p) { return p.id !== id; }));
-      Store.del('fav.' + id); Store.del('resume.' + id); Store.del('recent.' + id); Store.del('seen.' + id); Store.del('last.' + id);
+      this.dropData(id);
+    },
+    /* Alles löschen, was zu einer Playlist auf dem Gerät gespeichert ist (Datenschutz: keine Reste) */
+    DATA_KEYS: ['fav', 'resume', 'recent', 'seen', 'last', 'stats', 'seenNew', 'cats', 'expiry'],
+    dropData: function (id) {
+      this.DATA_KEYS.forEach(function (k) { Store.del(k + '.' + id); });
+      EpgStore.del('epg.' + id);   // zwischengespeicherter Programmführer
       if (Store.get('active') === id) Store.del('active');
     },
     get: function (id) { return this.list().filter(function (p) { return p.id === id; })[0]; }
@@ -765,12 +1072,21 @@
      ========================================================== */
   var Cloud = {
     registered: false, timer: null, busy: false, uploading: {},
+    /* Mit Zeitlimit: Hängt eine Anfrage (schlechtes WLAN, Captive Portal), blieb der Abgleich
+       früher für immer auf „busy“ stehen – neue Playlists kamen dann bis zum Neustart nicht mehr an. */
     rpc: function (fn, body) {
-      return fetch(CONFIG.cloudUrl + fn, {
+      if (!CONFIG.cloudUrl) return Promise.reject(new Error('offline'));
+      var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null, timer = null;
+      var limit = new Promise(function (resolve, reject) {
+        timer = setTimeout(function () { if (ctrl) ctrl.abort(); reject(new Error('timeout')); }, CONFIG.cloudTimeout);
+      });
+      var req = fetch(CONFIG.cloudUrl + fn, {
         method: 'POST',
         headers: { apikey: CONFIG.cloudKey, 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
+        signal: ctrl ? ctrl.signal : undefined
       }).then(function (r) { return r.json(); });
+      return Promise.race([req, limit]).then(function (j) { clearTimeout(timer); return j; }, function (e) { clearTimeout(timer); throw e; });
     },
     sync: function () {
       var self = this;
@@ -813,10 +1129,7 @@
       });
       if (!changed) return { changed: false };
       Profiles.save(list);
-      removed.forEach(function (p) {
-        Store.del('fav.' + p.id); Store.del('resume.' + p.id); Store.del('recent.' + p.id);
-        if (Store.get('active') === p.id) Store.del('active');
-      });
+      removed.forEach(function (p) { Profiles.dropData(p.id); });
       if (added.length) toast(T('Neue Playlist empfangen: {0}', added.map(function (p) { return p.name; }).join(', ')), 4000);
       var top = Screens.top();
       var cur = App.profile && list.filter(function (p) { return p.id === App.profile.id; })[0];
@@ -943,6 +1256,26 @@
     for (var i = 0; i < s.length; i++) { x ^= s.charCodeAt(i); x = Math.imul(x, 16777619) >>> 0; }
     return x.toString(16);
   }
+  /* Schutz gegen Durchprobieren von PINs (Kindersicherung hat nur 10.000 Möglichkeiten):
+     ab dem 5. Fehlversuch Wartezeit 30 s, danach jeweils doppelt so lang (höchstens 30 Minuten).
+     Der Zähler bleibt auch nach einem Neustart der App erhalten. */
+  var PinGuard = {
+    FREE: 5,
+    get: function (scope) { return Store.get('pinguard.' + scope, null) || { fails: 0, until: 0 }; },
+    wait: function (scope) { return Math.max(0, Math.ceil((this.get(scope).until - Date.now()) / 1000)); },
+    fail: function (scope) {
+      var g = this.get(scope);
+      g.fails = (g.fails || 0) + 1;
+      if (g.fails >= this.FREE) g.until = Date.now() + Math.min(1800, 30 * Math.pow(2, g.fails - this.FREE)) * 1000;
+      Store.set('pinguard.' + scope, g);
+      return this.wait(scope);
+    },
+    ok: function (scope) { Store.del('pinguard.' + scope); },
+    msg: function (sec) {
+      return sec > 90 ? T('Zu viele Fehlversuche. Bitte in {0} Minuten erneut versuchen.', Math.ceil(sec / 60))
+        : T('Zu viele Fehlversuche. Bitte in {0} Sekunden erneut versuchen.', sec);
+    }
+  };
   function platformName() {
     if (Platform.tizen) return 'Samsung (Tizen)';
     if (Platform.webos) return 'LG (webOS)';
@@ -963,7 +1296,13 @@
       for (var i = 0; i < localStorage.length; i++) keys.push(localStorage.key(i));
       keys.forEach(function (k) { if (k.indexOf('lumio.') === 0 && k !== 'lumio.mac' && k !== 'lumio.devkey') localStorage.removeItem(k); });
     } catch (e) {}
-    location.reload();
+    // auch den zwischengespeicherten Programmführer löschen, dann neu starten
+    var done = false;
+    function go() { if (done) return; done = true; location.reload(); }
+    setTimeout(go, 1500);
+    EpgStore.open().then(function (db) {
+      try { if (db) db.close(); var r = indexedDB.deleteDatabase('lumio-epg'); r.onsuccess = r.onerror = go; } catch (e) { go(); }
+    });
   }
   var Admin = {
     taps: 0, tapTimer: null,
@@ -976,6 +1315,14 @@
     },
     unlock: function () {
       var self = this, has = !!Settings.get('adminPin');
+      // Ohne Admin-PIN könnte sonst jeder (z. B. ein Kind) eine neue PIN festlegen und über
+      // „Alles zurücksetzen“ die Kindersicherung abschalten. Darum vorher die Kindersicherungs-PIN abfragen.
+      if (!has && Parental.on() && !self.parentOk) {
+        Parental.ask(function () { self.parentOk = true; self.unlock(); },
+          { keep: true, text: T('Die Kindersicherung ist aktiv. Bitte zuerst die Kindersicherungs-PIN eingeben.') });
+        return;
+      }
+      self.parentOk = false;
       var f = inputField(has ? T('Admin-PIN') : T('Neue Admin-PIN (4 bis 8 Ziffern)'), '', 'password');
       f.input.setAttribute('inputmode', 'numeric');
       f.input.setAttribute('data-autofocus', '');
@@ -984,13 +1331,17 @@
       var err = h('div', { class: 'error' });
       function go() {
         var a = f.input.value.trim();
+        var w = has ? PinGuard.wait('admin') : 0;
+        if (w) { err.textContent = PinGuard.msg(w); f.input.value = ''; return; }
         if (!/^\d{4,8}$/.test(a)) { err.textContent = T('Bitte 4 bis 8 Ziffern eingeben.'); return; }
         if (!has) {
           if (f2.input.value.trim() !== a) { err.textContent = T('Die PINs stimmen nicht überein.'); return; }
           Settings.set('adminPin', pinHash(a));
         } else if (pinHash(a) !== Settings.get('adminPin')) {
-          err.textContent = T('Falsche PIN.'); f.input.value = ''; return;
+          var left = PinGuard.fail('admin');
+          err.textContent = left ? PinGuard.msg(left) : T('Falsche PIN.'); f.input.value = ''; return;
         }
+        PinGuard.ok('admin');
         Screens.pop();
         setTimeout(function () { self.show(); }, 40);
       }
@@ -1468,7 +1819,7 @@
 
   /* Sender als Zeile (Senderliste) */
   function channelRow(item, onClick, onFocus) {
-    var cur = EpgCache.now(item);
+    var cur = EpgCache.now(item) || (App.provider && App.provider.epgNow ? App.provider.epgNow(item) : null);
     var playing = Player.item && Player.item.kind === 'live' && String(Player.item.id) === String(item.id);
     var row = h('button', { class: 'chan f' + (playing ? ' is-playing' : ''), 'data-cid': item.id, onclick: onClick },
       h('span', { class: 'num', text: item.num ? String(item.num) : '' }),
@@ -1479,7 +1830,18 @@
       row.addEventListener('focus', function () { onFocus(item); });
       row.addEventListener('mouseenter', function () { onFocus(item); });
     }
+    row._item = item;
     return row;
+  }
+  /* Programmführer (M3U) ist fertig geladen: bereits sichtbare Senderzeilen mit „läuft gerade“ füllen */
+  function epgReady() {
+    if (!App.provider || !App.provider.epgNow) return;
+    $all('.chan[data-cid]').forEach(function (r) {
+      var n = $('.now', r);
+      if (!n || n.textContent || !r._item) return;
+      var c = App.provider.epgNow(r._item);
+      if (c) n.textContent = c.title;
+    });
   }
 
   /* Laufenden Sender in allen sichtbaren Senderlisten markieren */
@@ -1861,7 +2223,8 @@
               h('p', { class: 'hint', text: T('Oder öffne diese Seite und gib MAC und KEY ein:') }),
               portalLinkBtn(),
               h('div', { class: 'row small-actions' },
-                h('button', { class: 'btn small ghost f', onclick: showAddProfile, 'data-autofocus': true }, icon('plus'), h('span', { text: T('M3U oder Xtream hier eingeben') })))))));
+                h('button', { class: 'btn small ghost f', onclick: showAddProfile, 'data-autofocus': true }, icon('plus'), h('span', { text: T('M3U oder Xtream hier eingeben') })),
+                h('button', { class: 'btn small ghost f', onclick: startDemo, title: T('Mit freien Test-Videos – ohne Zugang.') }, icon('play'), h('span', { text: T('Demo ausprobieren') })))))));
       Screens.reset('profiles', welcome);
       return;
     }
@@ -1892,6 +2255,13 @@
     Screens.reset('profiles', el);
   }
 
+  /* Demo-Modus: freie Test-Videos ohne eigenen Zugang – zum Ausprobieren und für die App-Store-Prüfung.
+     Die Demo bleibt nur auf dem Gerät (wird nicht online gespeichert). */
+  function startDemo() {
+    var p = Profiles.list().filter(function (x) { return x.type === 'demo'; })[0] || Profiles.add({ type: 'demo', name: T('Demo') });
+    activateProfile(p, true);
+  }
+
   function showAddProfile() {
     var mode = 'xtream';
     var err = h('div', { class: 'error' });
@@ -1900,10 +2270,30 @@
     var fUser = inputField(T('Benutzername'), '', 'text');
     var fPass = inputField(T('Passwort'), '', 'password');
     var fUrl = inputField(T('M3U-Link'), 'http://…/playlist.m3u', 'url');
+    var fEpg = inputField(T('EPG-Adresse (optional)'), 'http://…/epg.xml', 'url');
+    // Passwort anzeigen/verbergen – Tippfehler sind bei langen Zugangsdaten die häufigste Ursache für „Login falsch“
+    var passWrap = h('div', { class: 'pass-wrap' });
+    fPass.input.parentNode.replaceChild(passWrap, fPass.input);
+    passWrap.appendChild(fPass.input);
+    var eye = h('button', { class: 'pass-toggle f', type: 'button', title: T('Passwort anzeigen'), 'aria-label': T('Passwort anzeigen'), onclick: function (e) {
+      if (e && e.preventDefault) e.preventDefault();
+      var show = fPass.input.type === 'password';
+      fPass.input.type = show ? 'text' : 'password';
+      clear(eye).appendChild(icon(show ? 'eyeOff' : 'eye'));
+      var l = show ? T('Passwort verbergen') : T('Passwort anzeigen');
+      eye.title = l; eye.setAttribute('aria-label', l);
+    } }, icon('eye'));
+    passWrap.appendChild(eye);
+    // Enter im letzten Feld = Speichern
+    [fPass.input, fUrl.input, fEpg.input].forEach(function (inp) {
+      inp.addEventListener('keydown', function (e) { if (e.keyCode === 13 && !saveBtn.disabled) save(); });
+    });
     var xBox = h('div', { class: 'form-sub' }, fServer.wrap, fUser.wrap, fPass.wrap,
       h('p', { class: 'hint', text: T('Tipp: Du kannst auch einen kompletten Link (…/get.php?username=…&password=…) in das Feld „Server-Adresse“ einfügen.') }));
     var mBox = h('div', { class: 'form-sub', style: 'display:none' }, fUrl.wrap,
-      h('p', { class: 'hint', text: T('Funktioniert mit jeder .m3u oder .m3u8 Playlist-Adresse.') }));
+      h('p', { class: 'hint', text: T('Funktioniert mit jeder .m3u oder .m3u8 Playlist-Adresse.') }),
+      fEpg.wrap,
+      h('p', { class: 'hint', text: T('Für den Programmführer (XMLTV, auch .xml.gz). Nur nötig, wenn deine Playlist keinen mitbringt.') }));
     var tX = h('button', { class: 'btn f is-on', onclick: function () { setMode('xtream'); } }, T('Xtream Codes'));
     var tM = h('button', { class: 'btn f', onclick: function () { setMode('m3u'); } }, T('M3U-Link'));
     function setMode(m) {
@@ -1927,8 +2317,10 @@
         var u = fUrl.input.value.trim();
         if (!/^https?:\/\//i.test(u)) { err.textContent = T('Bitte einen gültigen Link (http:// oder https://) eingeben.'); return; }
         var xl = parseXtreamLink(u);
+        var eu = fEpg.input.value.trim();
+        if (eu && !/^https?:\/\//i.test(eu)) { err.textContent = T('Bitte eine gültige EPG-Adresse (http:// oder https://) eingeben oder das Feld leer lassen.'); return; }
         if (xl) { p = { type: 'xtream', server: xl.server, username: xl.username, password: xl.password }; toast(T('Als Xtream-Zugang erkannt – mit Kategorien, Serien und EPG')); }
-        else p = { type: 'm3u', url: u };
+        else { p = { type: 'm3u', url: u }; if (eu) p.epgUrl = eu; }
       }
       p.name = name || (p.type === 'xtream' ? p.username : T('Meine Playlist'));
       saveBtn.disabled = true; saveBtn.textContent = T('Verbinde …');
@@ -2020,6 +2412,13 @@
       self.el = h('div', { class: 'shell' }, head, h('main', { class: 'content' }, self.view), h('footer', { class: 'statusbar' }, macTag(profileUser(App.profile), true), runTime, h('span', { class: 'sb-clock' })));
       QuickSearch.build(self.el, searchBtn);
       Screens.reset('shell', self.el, {
+        // Beim Verlassen (Playlist-Wechsel, Zurücksetzen) die offene Ansicht aufräumen –
+        // sonst laufen z. B. die Timer des Startbildschirms für die alte Playlist weiter.
+        onLeave: function () {
+          var v = self.view && self.view.firstChild;
+          if (v && v._dispose) { try { v._dispose(); } catch (e) {} }
+          if (QuickSearch.isOpen) { try { QuickSearch.close(true); } catch (e) {} }
+        },
         onBack: function () {
           if (QuickSearch.isOpen) { QuickSearch.close(); return true; }
           if (self.viewBack && self.viewBack() === true) return true;
@@ -2571,7 +2970,7 @@
     }
     var prov = App.provider;
     if (prov.reset) prov.reset();
-    searchCache = {}; countCache = {};
+    searchCache = {}; countCache = {}; EpgCache.data = {};
     var jobs = ['live', 'movie', 'series'].map(function (k) {
       return catCounts(k).then(function (c) { if (onStep) onStep(k, true, c.total); return true; }, function () { if (onStep) onStep(k, false, 0); return false; });
     });
@@ -2954,7 +3353,8 @@
         clear(pop);
         var total = 0;
         lists.forEach(function (list, i) {
-          var all = list.filter(function (x) { return norm(x.name).indexOf(q) >= 0; });
+          // Normalisierten Namen am Eintrag merken: bei großen Playlists sonst bei jedem Tastendruck zigtausend Mal neu berechnet
+          var all = list.filter(function (x) { if (x._n === undefined) x._n = norm(x.name); return x._n.indexOf(q) >= 0; });
           if (!all.length) return;
           total += all.length;
           var hits = all.slice(0, 12), kind = kinds[i];
@@ -3055,6 +3455,7 @@
     copyRow(T('MAC-Adresse'), Device.mac(), 'MAC');
     copyRow('KEY', Device.key(), 'KEY');
     var initial = String(p.name || user || 'L').replace(/^\s+/, '').charAt(0).toUpperCase() || 'L';
+    var epgPanel = p.type === 'm3u' && App.provider.epgStatus ? epgSettingsPanel(p) : null;
     return h('div', { class: 'page profile-page' },
       h('div', { class: 'page-head' }, h('h1', { text: T('Profil') })),
       h('div', { class: 'profile-card' },
@@ -3065,7 +3466,64 @@
           h('button', { class: 'btn f', onclick: reloadApp }, icon('restart'), h('span', { text: T('Daten neu laden') })))),
       h('div', { class: 'settings-grid' },
         panel('live', T('Zugang'), [acc]),
-        panel('phone', T('Dieses Gerät'), [dev, h('p', { class: 'hint', text: T('Mit MAC-Adresse und KEY kannst du Playlists per Handy oder über die Webseite auf dieses Gerät schicken.') })])));
+        panel('phone', T('Dieses Gerät'), [dev, h('p', { class: 'hint', text: T('Mit MAC-Adresse und KEY kannst du Playlists per Handy oder über die Webseite auf dieses Gerät schicken.') })]),
+        epgPanel));
+  }
+
+  /* Profil (nur M3U): Programmführer – Stand anzeigen, Adresse ändern, neu laden */
+  function epgSettingsPanel(p) {
+    var kv = h('div', { class: 'kv' }), state = h('p', { class: 'hint' });
+    var prov = App.provider;
+    function paint() {
+      var s = prov.epgStatus();
+      clear(kv);
+      kv.appendChild(h('span', { text: T('Quelle') }));
+      kv.appendChild(h('b', { class: 'kv-url', text: s.sources.length ? s.sources.join(', ') : T('keine') }));
+      kv.appendChild(h('span', { text: T('Herkunft') }));
+      kv.appendChild(h('b', { text: s.own ? T('selbst eingetragen') : s.sources.length ? T('aus der Playlist') : '–' }));
+      state.classList.toggle('error', s.state === 'error');
+      state.textContent = s.state === 'ok' ? T('{0} Sender mit Programmdaten · geladen {1}', fmtCount(s.channels || 0), fmtDate(s.at / 1000) + ' ' + fmtClock(s.at / 1000))
+        : s.state === 'loading' ? T('Programmführer wird geladen …')
+        : s.state === 'error' ? T('Programmführer konnte nicht geladen werden: {0}', s.error || '')
+        : s.state === 'none' ? T('Deine Playlist bringt keinen Programmführer mit. Trage eine EPG-Adresse ein, wenn dein Anbieter eine hat.')
+        : T('Wird automatisch geladen, sobald du Live TV öffnest.');
+    }
+    function reload() {
+      EpgCache.data = {};
+      var pr = prov.epgReload();
+      paint();
+      pr.then(function (E) {
+        paint();
+        if (E && !E.none) toast(T('Programmführer geladen: {0} Sender', fmtCount(E.channels || 0)), 3000);
+      }, function (e) { paint(); toast(T('Programmführer konnte nicht geladen werden: {0}', e.message), 5000); });
+    }
+    function edit() {
+      var f = inputField(T('EPG-Adresse (XMLTV)'), 'http://…/epg.xml', 'url');
+      f.input.value = p.epgUrl || '';
+      f.input.setAttribute('data-autofocus', '');
+      var err = h('div', { class: 'error' });
+      function save(val) {
+        val = String(val || '').trim();
+        if (val && !/^https?:\/\//i.test(val)) { err.textContent = T('Bitte eine gültige EPG-Adresse (http:// oder https://) eingeben oder das Feld leer lassen.'); return; }
+        var list = Profiles.list(), x = list.filter(function (q) { return q.id === p.id; })[0];
+        if (val) p.epgUrl = val; else delete p.epgUrl;
+        if (x) { if (val) x.epgUrl = val; else delete x.epgUrl; Profiles.save(list); }
+        goBack();
+        reload();
+      }
+      f.input.addEventListener('keydown', function (e) { if (e.keyCode === 13) save(f.input.value); });
+      openSheet(T('EPG-Adresse'), 'clock', [
+        h('p', { class: 'hint', text: T('Adresse einer XMLTV-Datei (.xml oder .xml.gz) von deinem Anbieter. Leer lassen, um die Adresse aus der Playlist zu verwenden.') }),
+        f.wrap, err,
+        h('div', { class: 'row' },
+          sheetBtn('check', T('Speichern'), function () { save(f.input.value); }, 'primary'),
+          p.epgUrl ? sheetBtn('restart', T('Adresse aus der Playlist verwenden'), function () { save(''); }) : null)]);
+    }
+    paint();
+    return panel('clock', T('Programmführer (EPG)'), [kv, state,
+      h('div', { class: 'row' },
+        h('button', { class: 'btn f', onclick: edit }, icon('settings'), h('span', { text: T('EPG-Adresse ändern') })),
+        h('button', { class: 'btn f', onclick: reload }, icon('refresh'), h('span', { text: T('Jetzt neu laden') })))]);
   }
 
   /* ==========================================================
@@ -3181,7 +3639,14 @@
       opts = opts || {};
       var err = h('div', { class: 'error' });
       var pad = pinPad(function (v) {
-        if (self.hash(v) !== Settings.get('parentPin')) { err.textContent = T('Falsche PIN.'); return; }
+        var w = PinGuard.wait('parent');
+        if (w) { err.textContent = PinGuard.msg(w); return; }
+        if (self.hash(v) !== Settings.get('parentPin')) {
+          var left = PinGuard.fail('parent');
+          err.textContent = left ? PinGuard.msg(left) : T('Falsche PIN.');
+          return;
+        }
+        PinGuard.ok('parent');
         if (!opts.keep) self.unlocked = true;
         Screens.pop();
         setTimeout(onOk, 40);
@@ -4989,7 +5454,11 @@
   }
 
   // Für automatische Tests von außen erreichbar
-  window.LumioDebug = { parseM3U: parseM3U, parseXtreamLink: parseXtreamLink, normalizeServer: normalizeServer, Nav: Nav, Screens: Screens, StillWatching: StillWatching };
+  window.LumioDebug = {
+    parseM3U: parseM3U, parseXtreamLink: parseXtreamLink, normalizeServer: normalizeServer, Nav: Nav, Screens: Screens, StillWatching: StillWatching,
+    Xmltv: Xmltv, chanKey: chanKey, EpgStore: EpgStore, makeProvider: makeProvider, Profiles: Profiles, PinGuard: PinGuard, Store: Store, Cloud: Cloud,
+    config: CONFIG
+  };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();

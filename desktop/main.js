@@ -22,8 +22,29 @@ function createWindow() {
       // IPTV-Server erlauben meist keinen Browser-Zugriff (CORS) und nutzen oft http.
       // In der Desktop-App ist das abgeschaltet, damit Anmeldung und Streams funktionieren.
       webSecurity: false,
-      contextIsolation: true
+      contextIsolation: true,
+      // Sicherheit: kein Node.js in der Oberfläche, Renderer in der Sandbox
+      nodeIntegration: false,
+      sandbox: true
     }
+  });
+
+  // Nur Links mit http/https dürfen nach außen (andere Schemata wie file:, smb: oder
+  // ms-…: könnten sonst Programme auf dem PC starten).
+  function isWebUrl(url) {
+    try { return /^https?:$/.test(new URL(url).protocol); } catch (e) { return false; }
+  }
+
+  // Das App-Fenster selbst bleibt immer in der App. Fremde Seiten öffnen im normalen Browser.
+  win.webContents.on('will-navigate', (event, url) => {
+    if (url.startsWith('file://')) return;
+    event.preventDefault();
+    if (isWebUrl(url)) shell.openExternal(url);
+  });
+
+  // Keine Kamera-, Mikrofon- oder Standortabfragen – nur Vollbild ist erlaubt
+  win.webContents.session.setPermissionRequestHandler((wc, permission, callback) => {
+    callback(permission === 'fullscreen');
   });
 
   Menu.setApplicationMenu(null);
@@ -39,7 +60,7 @@ function createWindow() {
 
   // Links nach außen im normalen Browser öffnen
   win.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url);
+    if (isWebUrl(url)) shell.openExternal(url);
     return { action: 'deny' };
   });
 }

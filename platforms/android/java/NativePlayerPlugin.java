@@ -66,8 +66,16 @@ public class NativePlayerPlugin extends Plugin {
         String type = call.getString("type", null);
         String pkg = call.getString("pkg", null);
         String title = call.getString("title", null);
-        Intent i = new Intent(Intent.ACTION_VIEW);
         Uri u = Uri.parse(url);
+        // Sicherheit: nur Web- und Streaming-Adressen öffnen – keine intent:, file: oder content: Links,
+        // mit denen sich sonst beliebige App-Bildschirme oder Dateien ansteuern ließen.
+        String scheme = u.getScheme() == null ? "" : u.getScheme().toLowerCase(java.util.Locale.ROOT);
+        if (!(scheme.equals("http") || scheme.equals("https") || scheme.equals("rtmp") || scheme.equals("rtsp")
+                || scheme.equals("rtp") || scheme.equals("udp") || scheme.equals("mms"))) {
+            call.reject("scheme");
+            return;
+        }
+        Intent i = new Intent(Intent.ACTION_VIEW);
         if (type != null && !type.isEmpty()) i.setDataAndType(u, type); else i.setData(u);
         if (title != null) {
             i.putExtra("title", title);

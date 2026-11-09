@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lumio Tests</title>
+  <style>
+    body { font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; margin: 2rem auto; max-width: 60rem; padding: 0 1rem; background: #0b0b0f; color: #f4f4f6; }
+    h1 { font-size: 1.5rem; margin: 0 0 1rem; }
+    #summary { padding: .8rem 1rem; border-radius: .6rem; font-weight: 700; background: #262630; }
+    #summary[data-status="pass"] { background: rgba(52, 211, 153, .15); color: #34d399; }
+    #summary[data-status="fail"] { background: rgba(255, 122, 144, .15); color: #ff7a90; }
+    ol { list-style: none; padding: 0; margin: 1rem 0; font-family: ui-monospace, Consolas, monospace; font-size: .85rem; }
+    li { padding: .25rem 0; border-bottom: 1px solid rgba(255, 255, 255, .06); }
+    li.pass { color: #a7f3d0; } li.fail { color: #ff7a90; font-weight: 700; } li.note { color: #a4a4b4; }
+    pre#report { display: none; }
+    p { color: #a4a4b4; }
+  </style>
+</head>
+<body>
+  <h1>Lumio Player – automatische Tests</h1>
+  <p>Prüft Kernfunktionen der App mit erfundenen Testdaten. Es werden keine Kundendaten und kein Online-Dienst verwendet.</p>
+  <div id="summary" data-status="running">Tests laufen …</div>
+  <ol id="results"></ol>
+  <pre id="report"></pre>
+
+  <!-- Die App läuft unsichtbar mit, damit die Tests an ihre Bausteine kommen (window.LumioDebug) -->
+  <div id="app" hidden><div id="screens"></div><div id="dialog-layer"></div><div id="toast-layer"></div></div>
+  <script>
+    // Ohne Online-Dienst testen (keine Geräteanmeldung in der Produktionsdatenbank)
+    if (!/[?&]nocloud\b/.test(location.search)) history.replaceState(null, '', location.pathname + (location.search ? location.search + '&' : '?') + 'nocloud' + location.hash);
+  </script>
+  <script src="../www/js/i18n.js"></script>
+  <script src="../www/js/app.js"></script>
+  <script src="runner.js"></script>
+  <script src="m3u.test.js"></script>
+  <script src="epg.test.js"></script>
+  <script src="app.test.js"></script>
+  <script src="i18n.test.js"></script>
+  <script>Test.run();</script>
+</body>
+</html>

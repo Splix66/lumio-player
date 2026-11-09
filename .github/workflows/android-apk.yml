@@ -84,7 +84,17 @@ jobs:
           V=$(grep -oE "version: '[^']+'" www/js/app.js | head -n 1 | cut -d"'" -f2)
           echo "v=${V:-neu}" >> "$GITHUB_OUTPUT"
 
+      # Nur von main aus veröffentlichen. Von einem Test-Zweig (z. B. per „Run workflow“) gestartet,
+      # wird die APK nur als Download am Lauf abgelegt – die öffentliche Version für Kunden bleibt unberührt.
+      - name: Test-APK als Download ablegen (nur Test-Zweige)
+        if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master'
+        uses: actions/upload-artifact@v4
+        with:
+          name: lumio-player-test-apk
+          path: lumio-player.apk
+
       - name: APK unter "Releases" bereitstellen
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: neueste
@@ -95,7 +105,14 @@ jobs:
           files: lumio-player.apk
           make_latest: true
 
+      - name: Hinweis für Test-Zweige
+        if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master'
+        run: |
+          echo "## 🧪 Test-APK fertig (nicht veröffentlicht)" >> $GITHUB_STEP_SUMMARY
+          echo "Download unten unter „Artifacts“ → lumio-player-test-apk. Die Version für Kunden wurde nicht verändert." >> $GITHUB_STEP_SUMMARY
+
       - name: Download-Link anzeigen
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         run: |
           echo "## ✅ APK fertig" >> $GITHUB_STEP_SUMMARY
           echo "Direkter Download-Link (auch für die Downloader-App auf dem Fire TV):" >> $GITHUB_STEP_SUMMARY

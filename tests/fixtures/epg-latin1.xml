@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<tv generator-info-name="lumio-tests">
+  <channel id="test.eins"><display-name>Test Eins</display-name></channel>
+  <channel id="test.zwei"><display-name lang="de">Test Zwei</display-name><display-name>Test Zwei HD</display-name></channel>
+  <channel id="nicht.gebraucht"><display-name>Fremder Sender</display-name></channel>
+  <programme start="20300101060000 +0000" stop="20300101070000 +0000" channel="test.eins"><title>Grün Eins 6 Uhr</title><desc>Beschreibung 6</desc></programme>
+  <programme start="20300101070000 +0100" stop="20300101080000 +0100" channel="test.zwei"><title lang="en">Two 6</title><title lang="de">Zwei 6 &amp; mehr</title></programme>
+  <programme start="20300101060000 +0000" stop="20300101070000 +0000" channel="nicht.gebraucht"><title>Fremd 6</title></programme>
+  <programme start="20300101070000 +0000" stop="20300101080000 +0000" channel="test.eins"><title>Grün Eins 7 Uhr</title><desc>Beschreibung 7</desc></programme>
+  <programme start="20300101080000 +0100" stop="20300101090000 +0100" channel="test.zwei"><title lang="en">Two 7</title><title lang="de">Zwei 7 &amp; mehr</title></programme>
+  <programme start="20300101070000 +0000" stop="20300101080000 +0000" channel="nicht.gebraucht"><title>Fremd 7</title></programme>
+  <programme start="20300101080000 +0000" stop="20300101090000 +0000" channel="test.eins"><title>Grün Eins 8 Uhr</title><desc>Beschreibung 8</desc></programme>
+  <programme start="20300101090000 +0100" stop="20300101100000 +0100" channel="test.zwei"><title lang="en">Two 8</title><title lang="de">Zwei 8 &amp; mehr</title></programme>
+  <programme start="20300101080000 +0000" stop="20300101090000 +0000" channel="nicht.gebraucht"><title>Fremd 8</title></programme>
+  <programme start="20300101090000 +0000" stop="20300101100000 +0000" channel="test.eins"><title>Grün Eins 9 Uhr</title><desc>Beschreibung 9</desc></programme>
+  <programme start="20300101100000 +0100" stop="20300101110000 +0100" channel="test.zwei"><title lang="en">Two 9</title><title lang="de">Zwei 9 &amp; mehr</title></programme>
+  <programme start="20300101090000 +0000" stop="20300101100000 +0000" channel="nicht.gebraucht"><title>Fremd 9</title></programme>
+  <programme start="20300101100000 +0000" stop="20300101110000 +0000" channel="test.eins"><title>Grün Eins 10 Uhr</title><desc>Beschreibung 10</desc></programme>
+  <programme start="20300101110000 +0100" stop="20300101120000 +0100" channel="test.zwei"><title lang="en">Two 10</title><title lang="de">Zwei 10 &amp; mehr</title></programme>
+  <programme start="20300101100000 +0000" stop="20300101110000 +0000" channel="nicht.gebraucht"><title>Fremd 10</title></programme>
+  <programme start="20300101110000 +0000" stop="20300101120000 +0000" channel="test.eins"><title>Grün Eins 11 Uhr</title><desc>Beschreibung 11</desc></programme>
+  <programme start="20300101120000 +0100" stop="20300101130000 +0100" channel="test.zwei"><title lang="en">Two 11</title><title lang="de">Zwei 11 &amp; mehr</title></programme>
+  <programme start="20300101110000 +0000" stop="20300101120000 +0000" channel="nicht.gebraucht"><title>Fremd 11</title></programme>
+  <programme start="20300101120000 +0000" stop="20300101130000 +0000" channel="test.eins"><title>Grün Eins 12 Uhr</title><desc>Beschreibung 12</desc></programme>
+  <programme start="20300101130000 +0100" stop="20300101140000 +0100" channel="test.zwei"><title lang="en">Two 12</title><title lang="de">Zwei 12 &amp; mehr</title></programme>
+  <programme start="20300101120000 +0000" stop="20300101130000 +0000" channel="nicht.gebraucht"><title>Fremd 12</title></programme>
+  <programme start="20300101130000 +0000" stop="20300101140000 +0000" channel="test.eins"><title>Grün Eins 13 Uhr</title><desc>Beschreibung 13</desc></programme>
+  <programme start="20300101140000 +0100" stop="20300101150000 +0100" channel="test.zwei"><title lang="en">Two 13</title><title lang="de">Zwei 13 &amp; mehr</title></programme>
+  <programme start="20300101130000 +0000" stop="20300101140000 +0000" channel="nicht.gebraucht"><title>Fremd 13</title></programme>
+  <programme start="20300101140000 +0000" stop="20300101150000 +0000" channel="test.eins"><title>Grün Eins 14 Uhr</title><desc>Beschreibung 14</desc></programme>
+  <programme start="20300101150000 +0100" stop="20300101160000 +0100" channel="test.zwei"><title lang="en">Two 14</title><title lang="de">Zwei 14 &amp; mehr</title></programme>
+  <programme start="20300101140000 +0000" stop="20300101150000 +0000" channel="nicht.gebraucht"><title>Fremd 14</title></programme>
+  <programme start="20300101150000 +0000" stop="20300101160000 +0000" channel="test.eins"><title>Grün Eins 15 Uhr</title><desc>Beschreibung 15</desc></programme>
+  <programme start="20300101160000 +0100" stop="20300101170000 +0100" channel="test.zwei"><title lang="en">Two 15</title><title lang="de">Zwei 15 &amp; mehr</title></programme>
+  <programme start="20300101150000 +0000" stop="20300101160000 +0000" channel="nicht.gebraucht"><title>Fremd 15</title></programme>
+  <programme start="20300101160000 +0000" stop="20300101170000 +0000" channel="test.eins"><title>Grün Eins 16 Uhr</title><desc>Beschreibung 16</desc></programme>
+  <programme start="20300101170000 +0100" stop="20300101180000 +0100" channel="test.zwei"><title lang="en">Two 16</title><title lang="de">Zwei 16 &amp; mehr</title></programme>
+  <programme start="20300101160000 +0000" stop="20300101170000 +0000" channel="nicht.gebraucht"><title>Fremd 16</title></programme>
+  <programme start="20300101170000 +0000" stop="20300101180000 +0000" channel="test.eins"><title>Grün Eins 17 Uhr</title><desc>Beschreibung 17</desc></programme>
+  <programme start="20300101180000 +0100" stop="20300101190000 +0100" channel="test.zwei"><title lang="en">Two 17</title><title lang="de">Zwei 17 &amp; mehr</title></programme>
+  <programme start="20300101170000 +0000" stop="20300101180000 +0000" channel="nicht.gebraucht"><title>Fremd 17</title></programme>
+  <programme start="20300101180000 +0000" stop="20300101190000 +0000" channel="test.eins"><title>Grün Eins 18 Uhr</title><desc>Beschreibung 18</desc></programme>
+  <programme start="20300101190000 +0100" stop="20300101200000 +0100" channel="test.zwei"><title lang="en">Two 18</title><title lang="de">Zwei 18 &amp; mehr</title></programme>
+  <programme start="20300101180000 +0000" stop="20300101190000 +0000" channel="nicht.gebraucht"><title>Fremd 18</title></programme>
+  <programme start="20300101190000 +0000" stop="20300101200000 +0000" channel="test.eins"><title>Grün Eins 19 Uhr</title><desc>Beschreibung 19</desc></programme>
+  <programme start="20300101200000 +0100" stop="20300101210000 +0100" channel="test.zwei"><title lang="en">Two 19</title><title lang="de">Zwei 19 &amp; mehr</title></programme>
+  <programme start="20300101190000 +0000" stop="20300101200000 +0000" channel="nicht.gebraucht"><title>Fremd 19</title></programme>
+  <programme start="20300101200000 +0000" stop="20300101210000 +0000" channel="test.eins"><title>Grün Eins 20 Uhr</title><desc>Beschreibung 20</desc></programme>
+  <programme start="20300101210000 +0100" stop="20300101220000 +0100" channel="test.zwei"><title lang="en">Two 20</title><title lang="de">Zwei 20 &amp; mehr</title></programme>
+  <programme start="20300101200000 +0000" stop="20300101210000 +0000" channel="nicht.gebraucht"><title>Fremd 20</title></programme>
+  <programme start="20300101210000 +0000" stop="20300101220000 +0000" channel="test.eins"><title>Grün Eins 21 Uhr</title><desc>Beschreibung 21</desc></programme>
+  <programme start="20300101220000 +0100" stop="20300101230000 +0100" channel="test.zwei"><title lang="en">Two 21</title><title lang="de">Zwei 21 &amp; mehr</title></programme>
+  <programme start="20300101210000 +0000" stop="20300101220000 +0000" channel="nicht.gebraucht"><title>Fremd 21</title></programme>
+  <programme start="20300101220000 +0000" stop="20300101230000 +0000" channel="test.eins"><title>Grün Eins 22 Uhr</title><desc>Beschreibung 22</desc></programme>
+  <programme start="20300101230000 +0100" stop="20300102000000 +0100" channel="test.zwei"><title lang="en">Two 22</title><title lang="de">Zwei 22 &amp; mehr</title></programme>
+  <programme start="20300101220000 +0000" stop="20300101230000 +0000" channel="nicht.gebraucht"><title>Fremd 22</title></programme>
+  <programme start="20300101230000 +0000" stop="20300102000000 +0000" channel="test.eins"><title>Grün Eins 23 Uhr</title><desc>Beschreibung 23</desc></programme>
+  <programme start="20300102000000 +0100" stop="20300102010000 +0100" channel="test.zwei"><title lang="en">Two 23</title><title lang="de">Zwei 23 &amp; mehr</title></programme>
+  <programme start="20300101230000 +0000" stop="20300102000000 +0000" channel="nicht.gebraucht"><title>Fremd 23</title></programme>
+</tv>

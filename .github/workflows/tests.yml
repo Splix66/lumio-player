@@ -1,0 +1,48 @@
+# Prüft die App bei jedem Upload automatisch: M3U-Playlists, Xtream-Links, Programmführer (EPG),
+# PIN-Sperre, Datenlöschung und alle Übersetzungen.
+# Läuft in einem unsichtbaren Chrome mit erfundenen Testdaten – ohne Kundendaten und ohne Online-Dienst.
+# Dieselben Tests im Browser ansehen: Projektordner über einen Webserver ausliefern und tests/run.html öffnen.
+name: Tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Projekt holen
+        uses: actions/checkout@v4
+
+      - name: Testserver starten
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 > /tmp/server.log 2>&1 &
+          for i in $(seq 1 20); do curl -sf http://127.0.0.1:8000/tests/run.html > /dev/null && break; sleep 0.5; done
+
+      - name: Tests im unsichtbaren Chrome ausführen
+        run: |
+          # „virtuelle Zeit“: Wartezeiten laufen im Zeitraffer, das Ergebnis wird danach ausgegeben
+          timeout 300 google-chrome --headless=new --no-sandbox --disable-gpu --no-first-run --no-default-browser-check \
+            --user-data-dir=/tmp/chrome-test --virtual-time-budget=86400000 \
+            --dump-dom "http://127.0.0.1:8000/tests/run.html?ci&nocloud" > ergebnis.html
+          python3 - <<'EOF'
+          import html, re, sys
+          t = open('ergebnis.html', encoding='utf-8').read()
+          status = re.search(r'id="summary" data-status="(\w+)"', t)
+          report = re.search(r'<pre id="report">(.*?)</pre>', t, re.S)
+          print(html.unescape(report.group(1)) if report else 'Kein Testbericht gefunden – die Testseite ist nicht fertig geworden.')
+          sys.exit(0 if status and status.group(1) == 'pass' else 1)
+          EOF
+
+      - name: Testbericht aufheben (nur bei Fehlern)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: testbericht
+          path: ergebnis.html
