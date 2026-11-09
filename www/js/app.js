@@ -4622,13 +4622,23 @@
       var list = ctx && ctx.list && ctx.list.length ? ctx.list : [item];
       var idx = ctx && ctx.index >= 0 && list[ctx.index] === item ? ctx.index : list.indexOf(item);
       if (idx < 0 || (!live && item.kind !== 'episode')) { list = [item]; idx = 0; }
-      if (list.length > 1500) { var st = Math.max(0, Math.min(idx - 750, list.length - 1500)); list = list.slice(st, st + 1500); idx -= st; }
-      var items = list.map(function (it) {
+      function toItem(it) {
         var s = App.provider.streamUrl(it);
         var title = it.kind === 'episode' ? (it.seriesName ? it.seriesName + ' · ' : '') + 'S' + it.season + ' E' + it.num + ' – ' + it.name
           : (live && it.num ? it.num + '   ' : '') + it.name;
         return { url: s.url, alt: s.alt || '', title: title };
-      });
+      }
+      /* Android übergibt Daten an den TV-Player in einem Paket von höchstens 1 MB – größer = Absturz
+         (TransactionTooLargeException). Darum nur die Nachbarn zum Umschalten (± 150) und zusätzlich nach Größe
+         begrenzen: lange Adressen mit Zugangs-Token → automatisch weniger Einträge. */
+      var radius = 150, items, full = list, fullIdx = idx;
+      for (;;) {
+        var st = Math.max(0, fullIdx - radius), en = Math.min(full.length, fullIdx + radius + 1);
+        list = full.slice(st, en); idx = fullIdx - st;
+        items = list.map(toItem);
+        if (radius <= 5 || JSON.stringify(items).length <= 200000) break;
+        radius = Math.floor(radius / 2);
+      }
       var r = !live ? Resume.get(item) : null;
       var startMs = r && !(ctx && ctx.fromStart) ? Math.round(r.t * 1000) : 0;
       if (ctx) ctx.fromStart = false;
@@ -5693,7 +5703,7 @@
   window.LumioDebug = {
     parseM3U: parseM3U, parseXtreamLink: parseXtreamLink, normalizeServer: normalizeServer, Nav: Nav, Screens: Screens, StillWatching: StillWatching,
     Xmltv: Xmltv, chanKey: chanKey, EpgStore: EpgStore, makeProvider: makeProvider, Profiles: Profiles, PinGuard: PinGuard, Store: Store, Cloud: Cloud,
-    decodeBytes: decodeBytes, readText: readText, fetchText: fetchText, sameConnection: sameConnection,
+    decodeBytes: decodeBytes, readText: readText, fetchText: fetchText, sameConnection: sameConnection, NativePlayer: NativePlayer, App: App,
     config: CONFIG
   };
 

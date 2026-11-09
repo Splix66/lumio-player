@@ -120,6 +120,23 @@
     }).then(function () { D.Cloud.rpc = realRpc; D.Cloud.mode = mode; }, function (e) { D.Cloud.rpc = realRpc; D.Cloud.mode = mode; throw e; });
   });
 
+  t(G, 'TV-Player (Android): Übergabe bleibt klein – auch bei 30.000 Sendern mit langen Adressen', function () {
+    var realPlugin = D.NativePlayer.plugin, realProv = D.App.provider, sent = null;
+    var long = new Array(1200).join('x');   // Adresse mit sehr langem Zugangs-Token
+    D.NativePlayer.plugin = function () { return { play: function (o) { sent = o; return Promise.resolve({}); } }; };
+    D.App.provider = { streamUrl: function (it) { return { url: 'http://srv.example/live/' + long + '/' + it.id + '.ts' }; } };
+    var list = [];
+    for (var i = 0; i < 30000; i++) list.push({ kind: 'live', id: 'c' + i, name: 'Sender ' + i, num: i + 1 });
+    var item = list[15000];
+    return D.NativePlayer.play(item, { list: list, index: 15000 }).then(function () {
+      var size = JSON.stringify(sent.items).length;
+      ok(size <= 200000, 'Größe ' + size + ' Zeichen');
+      eq(sent.items[sent.index].title, '15001   Sender 15000', 'aktueller Sender an der richtigen Stelle');
+      ok(sent.items.length > 10, 'genug Nachbarn zum Umschalten: ' + sent.items.length);
+    }).then(cleanup, function (e) { cleanup(); throw e; });
+    function cleanup() { D.NativePlayer.plugin = realPlugin; D.App.provider = realProv; D.Store.del('recent.none'); D.Store.del('last.none'); }
+  });
+
   t(G, 'Xtream: abgelaufener Zugang wird als Fehler gemeldet, nicht als leere Liste', function () {
     var realFetch = window.fetch;
     window.fetch = function (url) {
