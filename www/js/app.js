@@ -970,10 +970,26 @@
       var full = data && data.liveById[item.id];
       return full && full.name === item.name ? full : item;
     }
+    /* Kennung eines Eintrags aus Adresse und Name – NICHT aus der Position in der Datei. Früher 'l' + Position:
+       kam beim Anbieter oben ein Sender dazu, rutschten Favoriten, „Weiterschauen“ und Häkchen auf den Nachbarn.
+       Zwei 32-Bit-Prüfwerte (≈ 64 Bit) machen Verwechslungen auch bei 100.000 Einträgen praktisch unmöglich;
+       exakt doppelte Einträge bekommen ~2, ~3 … */
+    function stableId(prefix, e, used) {
+      var base = prefix + '-' + hashCode(e.url).toString(36) + '-' + hashCode(e.name + '|' + e.group).toString(36);
+      var id = base, k = 1;
+      while (used.has(id)) id = base + '~' + (++k);
+      used.add(id);
+      return id;
+    }
+    // Schneller Merker für schon vergebene Kennungen (Set, wo vorhanden – sonst Objekt für sehr alte Fernseher)
+    function idSet() {
+      if (typeof Set === 'function') { var st = new Set(); return { has: function (x) { return st.has(x); }, add: function (x) { st.add(x); } }; }
+      var o = {}; return { has: function (x) { return o.hasOwnProperty(x); }, add: function (x) { o[x] = 1; } };
+    }
     function build(entries) {
-      var d = { live: [], movie: [], series: [], cats: { live: [], movie: [], series: [] }, seriesMap: {}, liveById: {} };
+      var d = { live: [], movie: [], series: [], cats: { live: [], movie: [], series: [] }, seriesMap: {}, liveById: {}, idAt: [] };
       var seenCat = { live: {}, movie: {}, series: {} };
-      var n = 0;
+      var n = 0, used = idSet();
       function cat(kind, g) { if (!seenCat[kind][g]) { seenCat[kind][g] = 1; d.cats[kind].push({ id: g, name: g }); } }
       entries.forEach(function (e, idx) {
         var u = e.url.toLowerCase();
@@ -986,13 +1002,16 @@
             s = d.seriesMap[key] = { kind: 'series', id: 's' + hashCode(key), name: sName, logo: e.logo, catId: e.group, _eps: [] };
             d.series.push(s); cat('series', e.group);
           }
-          s._eps.push({ kind: 'episode', id: 'e' + idx, url: e.url, name: e.name, season: se ? Number(se[2]) : 1, num: se ? Number(se[3]) : s._eps.length + 1, seriesId: s.id, seriesName: sName, logo: e.logo });
+          var eid = stableId('e', e, used); d.idAt[idx] = eid;
+          s._eps.push({ kind: 'episode', id: eid, url: e.url, name: e.name, season: se ? Number(se[2]) : 1, num: se ? Number(se[3]) : s._eps.length + 1, seriesId: s.id, seriesName: sName, logo: e.logo });
         } else if (u.indexOf('/movie/') >= 0 || /\.(mp4|mkv|avi|mov|m4v)(\?|$)/.test(u)) {
-          d.movie.push({ kind: 'movie', id: 'm' + idx, name: e.name, logo: e.logo, url: e.url, catId: e.group });
+          var mid = stableId('m', e, used); d.idAt[idx] = mid;
+          d.movie.push({ kind: 'movie', id: mid, name: e.name, logo: e.logo, url: e.url, catId: e.group });
           cat('movie', e.group);
         } else {
           n++;
-          var li = { kind: 'live', id: 'l' + idx, name: e.name, logo: e.logo, url: e.url, catId: e.group, num: n };
+          var lid = stableId('l', e, used); d.idAt[idx] = lid;
+          var li = { kind: 'live', id: lid, name: e.name, logo: e.logo, url: e.url, catId: e.group, num: n };
           if (e.tvgId) li.epgId = e.tvgId;
           if (e.tvgName && e.tvgName !== e.name) li.epgName = e.tvgName;
           d.live.push(li);
@@ -1009,6 +1028,7 @@
         loading = fetchText(p.url).then(function (t) {
           if (t.indexOf('#EXT') < 0) throw new Error(T('Das ist keine gültige M3U-Playlist.'));
           data = build(parseM3U(t));
+          migrateM3uIds(p.id, data);
           return data;
         });
         loading.catch(function () { loading = null; });
@@ -1152,7 +1172,7 @@
       this.dropData(id);
     },
     /* Alles löschen, was zu einer Playlist auf dem Gerät gespeichert ist (Datenschutz: keine Reste) */
-    DATA_KEYS: ['fav', 'resume', 'recent', 'seen', 'last', 'stats', 'seenNew', 'cats', 'expiry'],
+    DATA_KEYS: ['fav', 'resume', 'recent', 'seen', 'last', 'stats', 'seenNew', 'cats', 'expiry', 'idv'],
     dropData: function (id) {
       this.DATA_KEYS.forEach(function (k) { Store.del(k + '.' + id); });
       EpgStore.del('epg.' + id);   // zwischengespeicherter Programmführer
@@ -1604,6 +1624,55 @@
     }
   };
 
+  /* Einmalige Umstellung gespeicherter M3U-Einträge von der alten Kennung ('l12', 'm3', 'e40' = Position in der Datei)
+     auf die neue, stabile Kennung. Bevorzugt über die gespeicherte Adresse (stimmt auch, wenn sich die Reihenfolge
+     inzwischen geändert hat), sonst über die Position. Danach Merker 'idv.<Playlist>' = 2, läuft nie wieder. */
+  function migrateM3uIds(profileId, d) {
+    if (!profileId || Store.get('idv.' + profileId) === 2) return;
+    // Nichts gespeichert (z. B. neue Playlist)? Dann nur merken – keine großen Nachschlagelisten bauen.
+    var OLD = /^[lme]\d+$/, any = false;
+    function hasOld(x) { return x && OLD.test(String(x.id)); }
+    var f0 = Store.get('fav.' + profileId, null), r0 = Store.get('recent.' + profileId, null), l0 = Store.get('last.' + profileId, null);
+    var s0 = Store.get('seen.' + profileId, null), z0 = Store.get('resume.' + profileId, null);
+    if (f0) Object.keys(f0).forEach(function (k) { if ((f0[k] || []).some(hasOld)) any = true; });
+    if ((r0 || []).some(hasOld) || (l0 && hasOld(l0.item))) any = true;
+    if (s0 && Object.keys(s0).some(function (k) { return OLD.test(k.slice(k.indexOf(':') + 1)); })) any = true;
+    if (z0 && Object.keys(z0).some(function (k) { return OLD.test(k.slice(k.indexOf(':') + 1)); })) any = true;
+    if (!any) { Store.set('idv.' + profileId, 2); return; }
+    var byUrl = {};
+    d.live.forEach(function (x) { byUrl['live|' + x.url] = x.id; });
+    d.movie.forEach(function (x) { byUrl['movie|' + x.url] = x.id; });
+    d.series.forEach(function (sr) { sr._eps.forEach(function (x) { byUrl['episode|' + x.url] = x.id; }); });
+    function conv(kind, id, url) {
+      if (!OLD.test(String(id))) return id;
+      return (url && byUrl[kind + '|' + url]) || d.idAt[Number(String(id).slice(1))] || id;
+    }
+    function fixItem(x) { if (x && x.id !== undefined) x.id = conv(x.kind, x.id, x.url); return x; }
+    var fav = Store.get('fav.' + profileId, null);
+    if (fav) { Object.keys(fav).forEach(function (k) { (fav[k] || []).forEach(fixItem); }); Store.set('fav.' + profileId, fav); }
+    var rec = Store.get('recent.' + profileId, null);
+    if (rec) Store.set('recent.' + profileId, rec.map(fixItem));
+    var last = Store.get('last.' + profileId, null);
+    if (last && last.item) { fixItem(last.item); Store.set('last.' + profileId, last); }
+    var res = Store.get('resume.' + profileId, null);
+    if (res) {
+      var nr = {};
+      Object.keys(res).forEach(function (k) {
+        var v = res[k], i = k.indexOf(':'), kind = k.slice(0, i), id = k.slice(i + 1);
+        var nid = conv(kind, id, v && v.item && v.item.url);
+        if (v && v.item) v.item.id = nid;
+        nr[kind + ':' + nid] = v;
+      });
+      Store.set('resume.' + profileId, nr);
+    }
+    var seen = Store.get('seen.' + profileId, null);
+    if (seen) {
+      var ns = {};
+      Object.keys(seen).forEach(function (k) { var i = k.indexOf(':'), kind = k.slice(0, i); ns[kind + ':' + conv(kind, k.slice(i + 1), null)] = seen[k]; });
+      Store.set('seen.' + profileId, ns);
+    }
+    Store.set('idv.' + profileId, 2);
+  }
   function makeProvider(p) {
     if (p.type === 'xtream') return XtreamProvider(p);
     if (p.type === 'm3u') return M3UProvider(p);
@@ -5700,7 +5769,7 @@
   window.LumioDebug = {
     parseM3U: parseM3U, parseXtreamLink: parseXtreamLink, normalizeServer: normalizeServer, Nav: Nav, Screens: Screens, StillWatching: StillWatching,
     Xmltv: Xmltv, chanKey: chanKey, EpgStore: EpgStore, makeProvider: makeProvider, Profiles: Profiles, PinGuard: PinGuard, Store: Store, Cloud: Cloud,
-    decodeBytes: decodeBytes, readText: readText, fetchText: fetchText, sameConnection: sameConnection, NativePlayer: NativePlayer, App: App, ensureTs: ensureTs,
+    decodeBytes: decodeBytes, readText: readText, fetchText: fetchText, sameConnection: sameConnection, NativePlayer: NativePlayer, App: App, ensureTs: ensureTs, migrateM3uIds: migrateM3uIds,
     config: CONFIG
   };
 

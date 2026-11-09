@@ -137,6 +137,43 @@
     function cleanup() { D.NativePlayer.plugin = realPlugin; D.App.provider = realProv; D.Store.del('recent.none'); D.Store.del('last.none'); }
   });
 
+  function m3uProvider(text, id) {
+    var realFetch = window.fetch;
+    window.fetch = function () { return Promise.resolve({ ok: true, status: 200, body: null, text: function () { return Promise.resolve(text); } }); };
+    var prov = D.makeProvider({ id: id, type: 'm3u', name: 'Test', url: 'http://test.invalid/' + id + '.m3u' });
+    return prov.items('live', '__all').then(function (l) { window.fetch = realFetch; return { prov: prov, live: l }; }, function (e) { window.fetch = realFetch; throw e; });
+  }
+  var PL1 = '#EXTM3U\n#EXTINF:-1 group-title="News",Sender A\nhttp://x.invalid/a.ts\n#EXTINF:-1 group-title="News",Sender B\nhttp://x.invalid/b.ts\n';
+  var PL2 = '#EXTM3U\n#EXTINF:-1 group-title="News",Neuer Sender\nhttp://x.invalid/neu.ts\n#EXTINF:-1 group-title="News",Sender A\nhttp://x.invalid/a.ts\n#EXTINF:-1 group-title="News",Sender B\nhttp://x.invalid/b.ts\n';
+
+  t(G, 'M3U: Kennung bleibt gleich, wenn der Anbieter oben einen Sender einfügt (Favoriten rutschen nicht mehr)', function () {
+    var a, b;
+    return m3uProvider(PL1, 'idtest1').then(function (r) { a = r.live; return m3uProvider(PL2, 'idtest2'); }).then(function (r) {
+      b = r.live;
+      var idB1 = a.filter(function (x) { return x.name === 'Sender B'; })[0].id;
+      var idB2 = b.filter(function (x) { return x.name === 'Sender B'; })[0].id;
+      eq(idB1, idB2, 'Sender B behält seine Kennung');
+      ok(!/^l\d+$/.test(idB1), 'keine Positions-Kennung mehr: ' + idB1);
+    }).then(function () { ['idtest1', 'idtest2'].forEach(function (p) { D.Store.del('idv.' + p); }); });
+  });
+
+  t(G, 'M3U: gespeicherte Favoriten, Weiterschauen und Häkchen werden einmalig auf die neue Kennung umgestellt', function () {
+    var P = 'idtest3';
+    D.Store.set('fav.' + P, { live: [{ kind: 'live', id: 'l1', name: 'Sender B', url: 'http://x.invalid/b.ts' }], movie: [], series: [] });
+    D.Store.set('recent.' + P, [{ kind: 'live', id: 'l0', name: 'Sender A', url: 'http://x.invalid/a.ts' }]);
+    D.Store.set('seen.' + P, { 'live:l1': 123 });
+    D.Store.set('resume.' + P, { 'live:l0': { t: 50, d: 100, at: 1, item: { kind: 'live', id: 'l0', url: 'http://x.invalid/a.ts' } } });
+    D.Store.del('idv.' + P);
+    // Der Anbieter hat inzwischen oben einen Sender eingefügt: Zuordnung muss über die Adresse laufen, nicht über die Position
+    return m3uProvider(PL2, P).then(function (r) {
+      var A = r.live.filter(function (x) { return x.name === 'Sender A'; })[0].id, B = r.live.filter(function (x) { return x.name === 'Sender B'; })[0].id;
+      eq(D.Store.get('fav.' + P).live[0].id, B, 'Favorit zeigt weiter auf Sender B');
+      eq(D.Store.get('recent.' + P)[0].id, A, 'Zuletzt gesehen: Sender A');
+      ok(D.Store.get('resume.' + P)['live:' + A], 'Weiterschauen umgestellt');
+      eq(D.Store.get('idv.' + P), 2, 'Umstellung gemerkt (läuft nur einmal)');
+    }).then(function () { ['fav', 'recent', 'seen', 'resume', 'idv'].forEach(function (k) { D.Store.del(k + '.' + P); }); });
+  });
+
   t(G, 'Xtream: abgelaufener Zugang wird als Fehler gemeldet, nicht als leere Liste', function () {
     var realFetch = window.fetch;
     window.fetch = function (url) {

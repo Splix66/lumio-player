@@ -47,7 +47,7 @@ Technisch solide und deutlich über dem Durchschnitt vergleichbarer IPTV-Player:
 
 ## Offen – nur App, ohne Entscheidung machbar
 
-- A1. M3U-Einträge sind über ihre Position nummeriert: kommt ein Sender oben dazu, rutschen Favoriten/„Weiterschauen“
+- ✅ A1 (erledigt: stabile Kennung aus Adresse + Name, einmalige Umstellung gespeicherter Favoriten/Verlauf/Häkchen über die Adresse; Einlesen von 60.000 Einträgen auf langsamer Box +0,2 s). M3U-Einträge waren über ihre Position nummeriert: kommt ein Sender oben dazu, rutschen Favoriten/„Weiterschauen“
   auf falsche Titel. Lösung: Kennung aus Adresse/Name (mit Übernahme bestehender Favoriten).
 - ✅ A2 (erledigt). TV-Player auf Android-Boxen bekam bis zu 1.500 Einträge auf einmal übergeben – nahe an der Android-Grenze
   von 1 MB (Absturz möglich). Lösung: nur die Nachbarn (± 100) übergeben.
