@@ -404,4 +404,39 @@
       D.Settings.data = JSON.parse(sBefore); D.App.profile = profBefore;
     }
   });
+  t('Live TV', 'Erinnerungen (merken, fällig, verfallen) und Sendernummer → Sender', function () {
+    var saved = {}, k, n;
+    for (k = 0; k < localStorage.length; k++) { n = localStorage.key(k); if (n.indexOf('lumio.') === 0) saved[n] = localStorage.getItem(n); }
+    var profBefore = D.App.profile, dlg = document.querySelector('#dialog-layer');
+    try {
+      D.App.profile = { id: 'livetest', type: 'xtream' };
+      localStorage.removeItem('lumio.remind.livetest');
+      var ch = { kind: 'live', id: '7', name: 'Sender Sieben', num: 7 }, t = Math.floor(Date.now() / 1000);
+      var soon = { title: 'Gleich', start: t + 30, end: t + 1800 }, later = { title: 'Später', start: t + 7200, end: t + 9000 };
+      ok(D.Reminders.toggle(ch, soon) && D.Reminders.toggle(ch, later), 'zwei Erinnerungen gemerkt');
+      ok(D.Reminders.has(ch, soon) && D.Reminders.has(ch, later), 'beide vorhanden');
+      // alte Erinnerung (Gerät war aus) verfällt still
+      var a = D.Reminders.all();
+      a['7@1'] = { ch: ch, title: 'Alt', start: t - 3600, end: t - 600 };
+      D.Store.set(D.Reminders.key(), a);
+      if (D.Dialog.open) D.Dialog.close();
+      D.Reminders.check();
+      ok(!D.Reminders.all()['7@1'], 'verpasste Erinnerung gelöscht');
+      ok(!D.Reminders.has(ch, soon), 'fällige Erinnerung wurde gezeigt und entfernt');
+      ok(D.Reminders.has(ch, later), 'spätere bleibt');
+      ok(dlg && /Gleich/.test(dlg.textContent), 'Hinweis „Gleich beginnt“ sichtbar');
+      D.Dialog.close();
+      eq(D.Reminders.toggle(ch, later), false, 'zweites Drücken löscht');
+      // Sendernummer: führende Nullen egal, ungültige Nummern ohne Treffer
+      D.NumEntry.map = { 7: ch, 12: { id: '12', name: 'Zwölf' } };
+      D.NumEntry.buf = '007'; eq(D.NumEntry.match() && D.NumEntry.match().name, 'Sender Sieben', '007 → Sender 7');
+      D.NumEntry.buf = '12'; eq(D.NumEntry.match() && D.NumEntry.match().name, 'Zwölf', '12 → Sender 12');
+      D.NumEntry.buf = '99'; eq(D.NumEntry.match(), null, '99 → kein Sender');
+    } finally {
+      D.NumEntry.buf = ''; D.NumEntry.map = null; D.NumEntry.src = null;
+      for (k = localStorage.length - 1; k >= 0; k--) { n = localStorage.key(k); if (n.indexOf('lumio.') === 0) localStorage.removeItem(n); }
+      Object.keys(saved).forEach(function (x) { localStorage.setItem(x, saved[x]); });
+      D.App.profile = profBefore;
+    }
+  });
 })();

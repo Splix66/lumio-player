@@ -41,6 +41,7 @@ import java.util.List;
 /**
  * Vollbild-Player auf Basis von ExoPlayer (wie bei bekannten IPTV-Apps).
  * - Live: Hoch/Runter (oder Programm +/-) schaltet um, Hänger werden automatisch neu verbunden.
+ *   Ziffern 0–9 springen zur Sendernummer, „Vorheriger Sender“ zurück zum zuletzt geschauten Sender.
  * - Filme/Folgen: Links/Rechts spult, Folgen laufen automatisch weiter.
  * - Zurück schließt den Player und meldet die Position an die App.
  */
@@ -54,6 +55,7 @@ public class PlayerActivity extends Activity {
     private final List<String> urls = new ArrayList<>();
     private final List<String> alts = new ArrayList<>();
     private final List<String> titles = new ArrayList<>();
+    private final List<String> nums = new ArrayList<>();
     private boolean live;
     private boolean ended;
     private boolean closing;
@@ -63,6 +65,23 @@ public class PlayerActivity extends Activity {
     private String lastError;
     private String txtReconnect = "Verbindung wird wiederhergestellt …";
     private String txtFailed = "Wiedergabe nicht möglich.";
+    private String txtNoChannel = "Sender {0} nicht gefunden";
+    private String digits = "";      // eingetippte Sendernummer
+    private int lastIdx = -1;        // vorher geschauter Sender
+
+    private final Runnable commitDigits = new Runnable() {
+        @Override
+        public void run() {
+            jumpToNumber();
+        }
+    };
+
+    private final Runnable hideStatus = new Runnable() {
+        @Override
+        public void run() {
+            if (status != null) status.setVisibility(View.GONE);
+        }
+    };
 
     private final Runnable hideInfo = new Runnable() {
         @Override
@@ -129,6 +148,8 @@ public class PlayerActivity extends Activity {
         String t2 = in.getStringExtra("txtFailed");
         if (t1 != null) txtReconnect = t1;
         if (t2 != null) txtFailed = t2;
+        String t3 = in.getStringExtra("txtNoChannel");
+        if (t3 != null) txtNoChannel = t3;
         try {
             JSONArray arr = new JSONArray(in.getStringExtra("items"));
             for (int i = 0; i < arr.length(); i++) {
@@ -136,6 +157,7 @@ public class PlayerActivity extends Activity {
                 urls.add(o.optString("url", ""));
                 alts.add(o.optString("alt", ""));
                 titles.add(o.optString("title", ""));
+                nums.add(o.optString("num", ""));
             }
         } catch (Exception e) {
             lastError = "items";
@@ -320,12 +342,48 @@ public class PlayerActivity extends Activity {
         if (player == null) return;
         int n = player.getMediaItemCount();
         if (n < 2) return;
-        int i = (player.getCurrentMediaItemIndex() + d + n) % n;
+        jumpTo((player.getCurrentMediaItemIndex() + d + n) % n);
+    }
+
+    private void jumpTo(int i) {
+        if (player == null || i < 0 || i >= player.getMediaItemCount()) return;
+        int cur = player.getCurrentMediaItemIndex();
+        if (i == cur) {
+            showInfo();
+            return;
+        }
+        lastIdx = cur;
         status.setVisibility(View.GONE);
         player.seekTo(i, C.TIME_UNSET);
         player.prepare();
         player.play();
         showInfo();
+    }
+
+    /* Sendernummer eintippen: Treffer gleich anzeigen, nach kurzer Pause (oder OK) umschalten */
+    private void typeDigit(int d) {
+        if (digits.length() >= 4) digits = "";
+        digits += d;
+        int i = nums.indexOf(String.valueOf(Integer.parseInt(digits)));
+        handler.removeCallbacks(hideStatus);
+        showStatus(i >= 0 && i < titles.size() ? titles.get(i) : digits);
+        handler.removeCallbacks(commitDigits);
+        handler.postDelayed(commitDigits, 1800);
+    }
+
+    private void jumpToNumber() {
+        handler.removeCallbacks(commitDigits);
+        if (digits.isEmpty()) return;
+        String n = String.valueOf(Integer.parseInt(digits));
+        digits = "";
+        int i = nums.indexOf(n);
+        if (i < 0) {
+            showStatus(txtNoChannel.replace("{0}", n));
+            handler.postDelayed(hideStatus, 1600);
+            return;
+        }
+        status.setVisibility(View.GONE);
+        jumpTo(i);
     }
 
     private void seekBy(long ms) {
@@ -343,6 +401,10 @@ public class PlayerActivity extends Activity {
             int k = ev.getKeyCode();
             boolean controls = view.isControllerFullyVisible();
             if (live) {
+                if (k >= KeyEvent.KEYCODE_0 && k <= KeyEvent.KEYCODE_9) { typeDigit(k - KeyEvent.KEYCODE_0); return true; }
+                if (k >= KeyEvent.KEYCODE_NUMPAD_0 && k <= KeyEvent.KEYCODE_NUMPAD_9) { typeDigit(k - KeyEvent.KEYCODE_NUMPAD_0); return true; }
+                if (!digits.isEmpty() && (k == KeyEvent.KEYCODE_DPAD_CENTER || k == KeyEvent.KEYCODE_ENTER)) { jumpToNumber(); return true; }
+                if (k == KeyEvent.KEYCODE_LAST_CHANNEL) { if (lastIdx >= 0) jumpTo(lastIdx); return true; }
                 if (k == KeyEvent.KEYCODE_CHANNEL_UP || (!controls && k == KeyEvent.KEYCODE_DPAD_UP)) { zap(-1); return true; }
                 if (k == KeyEvent.KEYCODE_CHANNEL_DOWN || (!controls && k == KeyEvent.KEYCODE_DPAD_DOWN)) { zap(1); return true; }
             } else if (!controls) {

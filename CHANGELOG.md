@@ -62,6 +62,17 @@ und in `scripts/make-icons.py` (Android, Fire TV, Samsung, LG, Windows/Mac, TV-B
 
 Die neuen Daten gehören zum Profil, werden mitgesichert und von „Verlauf löschen“ entfernt.
 
+**Live TV:**
+- **Lila statt Rot** wie auf dem Startbildschirm, Vorschau und Programm im Glas-Look (die LIVE-Abzeichen bleiben rot).
+- **Laufende Sendung bei jedem Sender** mit kleinem Fortschrittsbalken. Bei Xtream wird sie nur für die Sender geholt, die gerade
+  zu sehen sind (höchstens 3 Anfragen gleichzeitig).
+- **Sendernummer eintippen:** Ziffern auf der Fernbedienung (oder Tastatur) – der passende Sender erscheint sofort oben rechts,
+  nach kurzer Pause oder mit OK wird umgeschaltet. Auch im Android-TV-Player.
+- **Letzter Sender:** Knopf im Player, Taste „Vorheriger Sender“ (Samsung, Android TV) oder L auf der Tastatur.
+- **TV-Programm:** neues Raster (Sender untereinander, Uhrzeit nebeneinander, 12 Stunden, lila Linie = jetzt) für die gerade
+  gewählte Liste – oben in der Kategorienliste. OK auf laufender Sendung schaut den Sender, auf kommender Sendung „Erinnern“.
+- **Erinnerungen:** auch rechts bei den kommenden Sendungen (Glocke). Eine Minute vor Beginn kommt ein Hinweis mit „Umschalten“.
+
 **Neuer Startbildschirm** (nach Vorlage): oben Logo, Status (Internet, Player, „Playlist aktiv“) und Knöpfe für Suche,
 Aktualisieren, Einstellungen, Hilfe und Sprache. Live TV (lila), Filme (orange) und Serien (blau) als große Glas-Kacheln mit
 Leuchtwelle, rechts **Radio** (neu) und Favoriten. Unten „Zuletzt angesehen“ als breite Bildkarten mit Restzeit bzw. Staffel/Folge

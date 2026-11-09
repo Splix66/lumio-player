@@ -130,6 +130,8 @@
     eye: '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>',
     sort: '<path d="M7 4v16M3.5 16.5L7 20l3.5-3.5"/><path d="M14 6h7M14 11h5M14 16h3"/>',
     clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/>',
+    bell: '<path d="M6 16.5V11a6 6 0 1 1 12 0v5.5l1.6 2.2H4.4z"/><path d="M10 20.6a2.1 2.1 0 0 0 4 0"/>',
+    guide: '<rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="M3 9.5h18M8.5 9.5v10M3 14.5h18M14 9.5v5"/>',
     archive: '<path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3.5 4.5v4h4"/><path d="M12 7.5V12l3 2"/>',
     cc: '<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M10.6 10.2a2.3 2.3 0 1 0 0 3.6M17 10.2a2.3 2.3 0 1 0 0 3.6"/>',
     device: '<rect x="2.5" y="4" width="13.5" height="10" rx="1.6"/><path d="M6 18.5h6.5M9.2 14v4.5"/><rect x="17.5" y="8" width="4" height="12" rx="1.1"/>',
@@ -1375,7 +1377,7 @@
       this.dropData(id);
     },
     /* Alles löschen, was zu einer Playlist auf dem Gerät gespeichert ist (Datenschutz: keine Reste) */
-    DATA_KEYS: ['fav', 'resume', 'recent', 'seen', 'last', 'stats', 'seenNew', 'cats', 'expiry', 'idv', 'hidech', 'upnext', 'swatch'],
+    DATA_KEYS: ['fav', 'resume', 'recent', 'seen', 'last', 'stats', 'seenNew', 'cats', 'expiry', 'idv', 'hidech', 'upnext', 'swatch', 'remind'],
     dropData: function (id) {
       this.DATA_KEYS.forEach(function (k) { Store.del(k + '.' + id); });
       EpgStore.del('epg.' + id);   // zwischengespeicherter Programmführer
@@ -2355,7 +2357,8 @@
       var top = pad + sticky;
       if (r.top < pr.top + top) p.scrollTop -= (pr.top + top - r.top);
       else if (r.bottom > pr.bottom - pad) p.scrollTop += (r.bottom - pr.bottom + pad);
-      if (r.left < pr.left + pad) p.scrollLeft -= (pr.left + pad - r.left);
+      var stickyL = p._stickyLeft && !(el.closest && el.closest('.gd-ch')) ? p._stickyLeft() : 0;
+      if (r.left < pr.left + pad + stickyL) p.scrollLeft -= (pr.left + pad + stickyL - r.left);
       else if (r.right > pr.right - pad) p.scrollLeft += (r.right - pr.right + pad);
       p = scrollParent(p);
     }
@@ -2493,14 +2496,18 @@
     }
   };
 
-  /* Sender als Zeile (Senderliste) */
+  /* Laufende Sendung eines Senders: aus dem Programmführer der Playlist (M3U) oder aus dem Zwischenspeicher (Xtream) */
+  function epgNowOf(item) {
+    return EpgCache.now(item) || (App.provider && App.provider.epgNow ? App.provider.epgNow(item) : null);
+  }
+  /* Sender als Zeile (Senderliste): Nummer, Logo, Name, laufende Sendung mit kleinem Fortschrittsbalken */
   function channelRow(item, onClick, onFocus) {
-    var cur = EpgCache.now(item) || (App.provider && App.provider.epgNow ? App.provider.epgNow(item) : null);
     var playing = Player.item && Player.item.kind === 'live' && String(Player.item.id) === String(item.id);
     var row = h('button', { class: 'chan f' + (playing ? ' is-playing' : ''), 'data-cid': item.id, onclick: onClick },
       h('span', { class: 'num', text: item.num ? String(item.num) : '' }),
       logoBox(item),
-      h('span', { class: 'ch-txt' }, h('span', { class: 'name', text: item.name }), h('span', { class: 'now', text: cur ? cur.title : '' })),
+      h('span', { class: 'ch-txt' }, h('span', { class: 'name', text: item.name }),
+        h('span', { class: 'now' }, h('span', { class: 'now-t' }), h('span', { class: 'now-bar' }, h('i')))),
       item.archive ? h('span', { class: 'arch', title: T('Verpasste Sendungen verfügbar') }, icon('archive')) : null,
       Favs.has(item) ? h('span', { class: 'fav', title: T('Favorit') }, icon('heartFill')) : null);
     if (onFocus) {
@@ -2508,17 +2515,63 @@
       row.addEventListener('mouseenter', function () { onFocus(item); });
     }
     row._item = item;
+    paintNow(row);
     return row;
+  }
+  function paintNow(row) {
+    var n = row._item && $('.now', row);
+    if (!n) return;
+    var cur = epgNowOf(row._item), t = Date.now() / 1000;
+    n.classList.toggle('is-on', !!cur);
+    if (!cur) return;
+    $('.now-t', n).textContent = cur.title;
+    $('.now-bar i', n).style.width = Math.max(2, Math.min(100, (t - cur.start) / (cur.end - cur.start) * 100)) + '%';
   }
   /* Programmführer (M3U) ist fertig geladen: bereits sichtbare Senderzeilen mit „läuft gerade“ füllen */
   function epgReady() {
     if (!App.provider || !App.provider.epgNow) return;
-    $all('.chan[data-cid]').forEach(function (r) {
-      var n = $('.now', r);
-      if (!n || n.textContent || !r._item) return;
-      var c = App.provider.epgNow(r._item);
-      if (c) n.textContent = c.title;
-    });
+    $all('.chan[data-cid]').forEach(paintNow);
+  }
+  /* Xtream und Demo haben keinen ganzen Programmführer: die laufende Sendung wird nur für Sender geholt,
+     die gerade zu sehen sind – höchstens 3 Anfragen gleichzeitig, beim schnellen Scrollen verfallen alte Wünsche */
+  function NowLoader(scroller) {
+    var queue = [], busy = 0, obs = null, timer = null;
+    var needFetch = !(App.provider && App.provider.epgNow);
+    function pump() {
+      while (busy < 3 && queue.length) {
+        var r = queue.shift();
+        if (!r._vis || r._nowDone || !document.body.contains(r)) continue;
+        r._nowDone = true; busy++;
+        (function (row) {
+          EpgCache.get(row._item).then(function () { busy--; paintNow(row); pump(); });
+        })(r);
+      }
+    }
+    if (needFetch && window.IntersectionObserver) {
+      obs = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          e.target._vis = e.isIntersecting;
+          if (e.isIntersecting && !e.target._nowDone) queue.push(e.target);
+        });
+        pump();
+      }, { root: scroller, rootMargin: '200px 0px' });
+    }
+    // Fortschrittsbalken jede Minute weiterrücken (und abgelaufene Sendungen neu holen)
+    timer = setInterval(function () {
+      $all('.chan[data-cid]', scroller).forEach(function (r) {
+        if (needFetch && r._vis && r._nowDone && !epgNowOf(r._item)) { r._nowDone = false; queue.push(r); }
+        paintNow(r);
+      });
+      pump();
+    }, 60000);
+    return {
+      watch: function (row, idx) {
+        if (!needFetch) return;
+        if (obs) obs.observe(row);
+        else if (idx < 14) { row._vis = true; queue.push(row); pump(); }   // ältere Geräte ohne IntersectionObserver: nur die ersten Zeilen
+      },
+      dispose: function () { clearInterval(timer); if (obs) obs.disconnect(); queue = []; }
+    };
   }
 
   /* Laufenden Sender in allen sichtbaren Senderlisten markieren */
@@ -3988,17 +4041,19 @@
     var key = pid() + kind;
     var allCat = { id: '__all', name: allNames[kind] };
     // Live TV: eigene Listen „Favoriten“ und „Zuletzt gesehen“ ganz oben
+    var shown = null;   // gerade angezeigte Senderliste (für das TV-Programm)
     var extraCats = kind !== 'live' ? [] : [
+      { id: '__guide', name: T('TV-Programm'), ic: 'guide', action: function () { showGuide(shown ? shown.name : allNames.live, shown ? shown.list : null); } },
       { id: '__fav', name: T('Favoriten'), ic: 'heart', local: function () { return Favs.list('live'); } },
       { id: '__recent', name: T('Zuletzt gesehen'), ic: 'history', local: function () { return Recent.list(); } }
     ];
-    var groups = null, curGroup = null, activeId = null, req = 0, counts = null, chunker = null;
+    var groups = null, curGroup = null, activeId = null, req = 0, counts = null, chunker = null, nowLoader = null;
     // Zahlen hinter Sprachen und Kategorien: bei einer Sprache alle Einträge dieser Sprache, sonst je Kategorie
     function paintCounts() {
       if (!counts) return;
       for (var i = 0; i < cats.children.length; i++) {
         var b = cats.children[i], n = null, slot = b.querySelector('.lc-n');
-        if (!slot) continue;
+        if (!slot || (b._cat && b._cat.action)) continue;
         if (b._group) { n = 0; b._group.cats.forEach(function (c) { n += counts.by[c.id] || 0; }); }
         else if (b._cat && b._cat.local) n = b._cat.local().length;
         else if (b._cat && b._cat.id === '__radio') n = counts.radio != null ? counts.radio : null;
@@ -4021,11 +4076,11 @@
     }
     function catBtn(c) {
       var locked = !c.ic && c.id !== '__all' && Parental.isLocked(kind, c);
-      var b = h('button', { class: 'cat f has-n' + (c.ic ? ' cat-special' : ''), title: c.full || c.name },
+      var b = h('button', { class: 'cat f has-n' + (c.ic ? ' cat-special' : '') + (c.action ? ' cat-action' : ''), title: c.full || c.name },
         c.ic ? icon(c.ic) : locked ? h('span', { class: 'cat-ic cat-ic-lock' }, icon('lock')) : catIcon(c.full || c.name),
         h('span', { class: 'cat-name', text: c.name }), h('span', { class: 'lc-n', text: c.local ? String(c.local().length) : '' }));
       b._cat = c;
-      b.addEventListener('click', function () { selectCat(c, true); });
+      b.addEventListener('click', function () { if (c.action) c.action(); else selectCat(c, true); });
       return b;
     }
     function langBtn(g) {
@@ -4063,7 +4118,7 @@
         Nav.focus(activeButton() || cats.children[1] || back);
       }
     }
-    el._dispose = function () { req++; if (chunker) { chunker.dispose(); chunker = null; } clear(items); };
+    el._dispose = function () { req++; if (chunker) { chunker.dispose(); chunker = null; } if (nowLoader) { nowLoader.dispose(); nowLoader = null; } clear(items); };
     Shell.viewBack = function () {
       if (curGroup && document.body.contains(el)) { showLanguages(curGroup); return true; }
       return false;
@@ -4086,6 +4141,7 @@
         if (my !== req) return;
         if (kind === 'live' && !cat.local) list = ChanHide.filter(list);
         if (kind === 'live' && cat.id !== '__recent') list = sortChannels(list);
+        if (kind === 'live') shown = { list: list, name: cat.name };
         // „Alle Filme/Serien“: die neuesten zuerst
         if (cat.id === '__all' && kind !== 'live' && some(list, function (x) { return Number(x.added) > 0; })) list = list.slice().sort(byAdded);
         clear(items);
@@ -4100,9 +4156,13 @@
         }
         var box = h('div', { class: kind === 'live' ? 'chan-list' : 'poster-grid' });
         items.appendChild(box);
+        if (nowLoader) nowLoader.dispose();
+        nowLoader = kind === 'live' ? NowLoader(items) : null;
         var rc = chunker = renderChunked(box, items, list, function (it, i) {
-          return kind === 'live' ? channelRow(it, function () { playItem(it, { list: list, index: i }); }, panel ? panel.show : null)
-            : posterCard(it, function () { openItem(it); });
+          if (kind !== 'live') return posterCard(it, function () { openItem(it); });
+          var row = channelRow(it, function () { playItem(it, { list: list, index: i }); }, panel ? panel.show : null);
+          nowLoader.watch(row, i);
+          return row;
         });
         // Nach dem App-Start: zuletzt geschauten Sender markieren
         var pf = Shell.pendingFocus;
@@ -4221,17 +4281,175 @@
           h('div', { class: 'bar' }, h('i', { style: 'width:' + pct + '%' })),
           now.desc ? h('p', { class: 'lp-desc', text: now.desc }) : null));
         // Laufende Sendung auch in der Senderliste anzeigen
-        $all('.chan[data-cid]').forEach(function (r) {
-          if (r.getAttribute('data-cid') === String(item.id)) { var n = $('.now', r); if (n) n.textContent = now.title; }
-        });
+        $all('.chan[data-cid]').forEach(function (r) { if (r.getAttribute('data-cid') === String(item.id)) paintNow(r); });
       }
       if (next.length) {
         var ul = h('ul', { class: 'lp-next' });
-        next.forEach(function (e) { ul.appendChild(h('li', null, h('span', { class: 't', text: fmtClock(e.start) }), h('span', { class: 'n', text: e.title }))); });
+        next.forEach(function (e) {
+          var on = Reminders.has(item, e);
+          var b = h('button', { class: 'lp-rem f' + (on ? ' is-on' : ''), title: on ? T('Erinnerung löschen') : T('Erinnern'), 'aria-label': (on ? T('Erinnerung löschen') : T('Erinnern')) + ': ' + e.title },
+            h('span', { class: 't', text: fmtClock(e.start) }), h('span', { class: 'n', text: e.title }), icon('bell'));
+          b.onclick = function () { var now = Reminders.toggle(item, e); b.classList.toggle('is-on', now); b.title = now ? T('Erinnerung löschen') : T('Erinnern'); };
+          ul.appendChild(h('li', null, b));
+        });
         epg.appendChild(ul);
       }
     }
     return { el: el, show: show, current: function () { return cur; } };
+  }
+
+  /* Sender abspielen und zum Umschalten alle Sender mitgeben (Erinnerung, TV-Programm) */
+  function playChannel(ch, list) {
+    function go(l) {
+      var i = -1;
+      for (var k = 0; l && k < l.length; k++) if (String(l[k].id) === String(ch.id)) { i = k; break; }
+      if (i < 0) { l = [ch]; i = 0; }
+      var ctx = { list: l, index: i };
+      if (Player.el && Player.item && Player.item.kind === 'live') {
+        parentalGate(l[i], ctx, function (c) { Player.switchTo(c.list[c.index], c); if (Player.mini) Player.maximize(); });
+      } else playItem(l[i], ctx);
+    }
+    if (list) go(list); else liveChannels().then(go, function () { go(null); });
+  }
+
+  /* ---------- Erinnerungen an kommende Sendungen ----------
+     Je Playlist gespeichert. Eine Minute vor Beginn erscheint ein Hinweis, „Umschalten“ startet den Sender. */
+  var Reminders = {
+    key: function () { return 'remind.' + pid(); },
+    all: function () { return Store.get(this.key(), {}); },
+    id: function (ch, e) { return String(ch.id) + '@' + e.start; },
+    has: function (ch, e) { return !!this.all()[this.id(ch, e)]; },
+    toggle: function (ch, e) {
+      var a = this.all(), k = this.id(ch, e), on = !a[k];
+      if (on) a[k] = { ch: slim(ch), title: e.title, start: e.start, end: e.end };
+      else delete a[k];
+      Store.set(this.key(), a);
+      toast(on ? T('Erinnerung: „{0}“ um {1}', e.title, fmtClock(e.start)) : T('Erinnerung gelöscht'));
+      return on;
+    },
+    check: function () {
+      if (!App.profile || Dialog.open) return;
+      var a = this.all(), t = Date.now() / 1000, changed = false, due = null;
+      Object.keys(a).forEach(function (k) {
+        var r = a[k];
+        // vorbei oder schon über 10 Minuten verpasst (z. B. Gerät war aus)
+        if (!r || r.end < t || r.start < t - 600) { delete a[k]; changed = true; return; }
+        if (!due && r.start - t <= 60) { due = r; delete a[k]; changed = true; }
+      });
+      if (changed) Store.set(this.key(), a);
+      if (due) this.show(due);
+    },
+    show: function (r) {
+      if (Player.item && Player.item.kind === 'live' && String(Player.item.id) === String(r.ch.id)) { toast(T('Jetzt: {0}', r.title), 4000); return; }
+      Dialog.show(T('Gleich beginnt: {0}', r.title), T('{0} um {1}', r.ch.name, fmtClock(r.start)), [
+        { label: T('Später') },
+        { label: T('Umschalten'), primary: true, action: function () { playChannel(r.ch); } }
+      ]);
+    },
+    start: function () { var self = this; setInterval(function () { try { self.check(); } catch (e) {} }, 20000); }
+  };
+
+  /* ---------- TV-Programm (Raster) ----------
+     Sender untereinander, Uhrzeit nebeneinander (ab der laufenden halben Stunde, 12 Stunden).
+     Programmdaten werden nur für sichtbare Zeilen geholt. OK auf laufender Sendung oder Sender = abspielen,
+     auf kommender Sendung = Erinnern. */
+  var GUIDE_HOURS = 12;
+  function showGuide(catName, list) {
+    var t0 = Math.floor(Date.now() / 1000 / 1800) * 1800, t1 = t0 + GUIDE_HOURS * 3600;
+    var rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    var PPM = 0.32 * rem;   // Pixel pro Minute: eine halbe Stunde ≈ 9.6rem
+    function xOf(ts) { return Math.max(0, (ts - t0) / 60 * PPM); }
+    var width = GUIDE_HOURS * 60 * PPM;
+    var ruler = h('div', { class: 'gd-ruler' }, h('div', { class: 'gd-corner' }, h('span', { text: new Date(t0 * 1000).toLocaleDateString(locale(), { weekday: 'long', day: '2-digit', month: 'short' }) })));
+    var marks = h('div', { class: 'gd-marks', style: 'width:' + width + 'px' });
+    for (var m = 0; m < GUIDE_HOURS * 2; m++) marks.appendChild(h('span', { class: 'gd-mark', style: 'left:' + (m * 30 * PPM) + 'px', text: fmtClock(t0 + m * 1800) }));
+    ruler.appendChild(marks);
+    var nowLine = h('div', { class: 'gd-now' });
+    var rows = h('div', { class: 'gd-rows' }, nowLine);
+    var body = h('div', { class: 'gd-body' }, ruler, rows);
+    body._stickyTop = function () { return ruler.offsetHeight; };
+    body._stickyLeft = function () { var c = $('.gd-ch', rows); return c ? c.offsetWidth : 0; };
+    var el = h('div', { class: 'guide' },
+      h('header', { class: 'gd-head' },
+        h('button', { class: 'btn f gd-back', onclick: goBack }, icon('back'), h('span', { text: T('Zurück') })),
+        h('h1', null, icon('guide'), h('span', { text: T('TV-Programm') })),
+        h('span', { class: 'gd-cat', text: catName || '' }),
+        h('span', { class: 'gd-hint', text: T('OK auf einer kommenden Sendung: Erinnern') })),
+      body);
+    var channels = null, chunker = null, queue = [], busy = 0, obs = null, timer = null;
+
+    function paintNow() {
+      var t = Date.now() / 1000;
+      nowLine.style.left = (body._stickyLeft() + (t - t0) / 60 * PPM) + 'px';
+      nowLine.style.display = t < t1 ? '' : 'none';
+      $all('.gd-prog', rows).forEach(function (b) {
+        var e = b._e, on = e.start <= t && e.end > t;
+        b.classList.toggle('is-now', on);
+        b.classList.toggle('is-past', e.end <= t);
+        if (on) { var bar = $('.gd-bar i', b); if (bar) bar.style.width = Math.min(100, (t - e.start) / (e.end - e.start) * 100) + '%'; }
+      });
+    }
+    function progBtn(ch, i, e) {
+      var x = xOf(e.start), w = Math.max(xOf(e.end) - x - 4, 2 * PPM);
+      var on = Reminders.has(ch, e);
+      var b = h('button', { class: 'gd-prog f' + (on ? ' is-rem' : ''), 'data-idx': i, style: 'left:' + x + 'px;width:' + w + 'px', title: e.title + ' · ' + fmtClock(e.start) + ' – ' + fmtClock(e.end) },
+        h('b', { text: e.title }), h('small', { text: fmtClock(e.start) + ' – ' + fmtClock(e.end) }), h('span', { class: 'gd-bar' }, h('i')), icon('bell'));
+      b._e = e;
+      b.onclick = function () {
+        var t = Date.now() / 1000;
+        if (e.start <= t) { playChannel(ch, channels); return; }
+        var has = Reminders.has(ch, e);
+        Dialog.show(e.title, fmtClock(e.start) + ' – ' + fmtClock(e.end) + ' · ' + ch.name + (e.desc ? '\n\n' + e.desc : ''), [
+          { label: has ? T('Erinnerung löschen') : T('Erinnern'), primary: true, action: function () { var now = Reminders.toggle(ch, e); b.classList.toggle('is-rem', now); } },
+          { label: T('Sender jetzt schauen'), action: function () { playChannel(ch, channels); } }
+        ], 'dlg-prog');
+      };
+      return b;
+    }
+    function row(ch, i) {
+      var cell = h('button', { class: 'gd-ch f', 'data-idx': i, title: ch.name, onclick: function () { playChannel(ch, channels); } },
+        h('span', { class: 'gd-num', text: ch.num ? String(ch.num) : '' }), logoBox(ch), h('span', { class: 'gd-name', text: ch.name }));
+      var progs = h('div', { class: 'gd-progs', style: 'width:' + width + 'px' }, h('span', { class: 'gd-wait', text: '…' }));
+      var r = h('div', { class: 'gd-row' }, cell, progs);
+      r._ch = ch; r._i = i; r._progs = progs;
+      if (obs) obs.observe(r); else if (i < 12) { r._vis = true; queue.push(r); pump(); }
+      return r;
+    }
+    function fill(r, list) {
+      clear(r._progs);
+      var shown = (list || []).filter(function (e) { return e.end > t0 && e.start < t1; });
+      if (!shown.length) { r._progs.appendChild(h('span', { class: 'gd-empty', text: T('Keine Programmdaten') })); return; }
+      shown.forEach(function (e) { r._progs.appendChild(progBtn(r._ch, r._i, e)); });
+      paintNow();
+    }
+    function pump() {
+      while (busy < 3 && queue.length) {
+        var r = queue.shift();
+        if (!r._vis || r._loaded || !document.body.contains(r)) continue;
+        r._loaded = true; busy++;
+        (function (rr) {
+          App.provider.epg(rr._ch, 40).then(function (l) { busy--; fill(rr, l); pump(); }, function () { busy--; fill(rr, []); pump(); });
+        })(r);
+      }
+    }
+    if (window.IntersectionObserver) {
+      obs = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) { e.target._vis = e.isIntersecting; if (e.isIntersecting && !e.target._loaded) queue.push(e.target); });
+        pump();
+      }, { root: body, rootMargin: '300px 0px' });
+    }
+    Screens.push('guide', el, {
+      onLeave: function () { clearInterval(timer); if (obs) obs.disconnect(); if (chunker) chunker.dispose(); queue = []; }
+    });
+    function start(l) {
+      channels = l || [];
+      if (!channels.length) { body.appendChild(stateBox(T('Keine Sender'), T('In dieser Liste sind keine Sender.'))); return; }
+      chunker = renderChunked(rows, body, channels, row);
+      paintNow();
+      timer = setInterval(paintNow, 60000);
+      setTimeout(function () { Nav.focus($('.gd-ch', rows)); }, 40);
+    }
+    if (list) start(list); else liveChannels().then(start, function () { start([]); });
   }
 
   /* ---------- Catch-up: vergangene Sendungen eines Senders, nach Tagen ---------- */
@@ -5818,7 +6036,7 @@
         var s = App.provider.streamUrl(it);
         var title = it.kind === 'episode' ? (it.seriesName ? it.seriesName + ' · ' : '') + 'S' + it.season + ' E' + it.num + ' – ' + it.name
           : (live && it.num ? it.num + '   ' : '') + it.name;
-        return { url: s.url, alt: s.alt || '', title: title };
+        return { url: s.url, alt: s.alt || '', title: title, num: live && it.num != null && it.num !== '' ? String(Number(it.num)) : '' };
       }
       /* Android übergibt Daten an den TV-Player in einem Paket von höchstens 1 MB – größer = Absturz
          (TransactionTooLargeException). Darum nur die Nachbarn zum Umschalten (± 150) und zusätzlich nach Größe
@@ -5842,7 +6060,8 @@
         items: items, index: idx, startMs: startMs, live: live,
         subScale: sub.subScale, subColor: sub.subColor, subBg: sub.subBg,
         txtReconnect: T('Verbindung wird wiederhergestellt …'),
-        txtFailed: T('Wiedergabe nicht möglich. Mit „Zurück“ schließen.')
+        txtFailed: T('Wiedergabe nicht möglich. Mit „Zurück“ schließen.'),
+        txtNoChannel: T('Sender {0} nicht gefunden')
       }).then(function (res) {
         res = res || {};
         var i = typeof res.index === 'number' ? res.index : idx, cur = list[i] || item;
@@ -6155,7 +6374,8 @@
     },
 
     load: function (item) {
-      var self = this;
+      var self = this, before = self.item;
+      if (item.kind === 'live' && before && before.kind === 'live' && String(before.id) !== String(item.id)) self.prevLive = before;
       self.item = item;
       markPlaying(item);
       self.triedAlt = false; self.retried = false; self.forceHlsJs = false; self.rawFail = false;
@@ -6592,6 +6812,10 @@
         self.ctrls.appendChild(playBtn);
         self.ctrls.appendChild(cbtn('next', 'down', T('Nächster Sender'), function () { self.zapBy(1); }));
       }
+      if (self.item && self.item.kind === 'live' && (self.prevLive || prevRecent(self.item))) {
+        self.ctrlLeft.appendChild(h('button', { class: 'btn f', 'data-c': 'last', title: T('Zurück zum letzten Sender'), onclick: function () { self.lastChannel(); } },
+          icon('history'), h('span', { text: T('Letzter Sender') })));
+      }
       if (self.item && self.item.kind === 'live' && self.item.archive && App.provider && App.provider.archive) {
         self.ctrlLeft.appendChild(h('button', { class: 'btn f', 'data-c': 'arch', onclick: function () { self.openArchive(); } },
           icon('archive'), h('span', { text: T('Verpasste Sendungen') })));
@@ -6663,14 +6887,39 @@
       if (!c || !c.list || c.list.length < 2) return;
       c.index = (c.index + d + c.list.length) % c.list.length;
       var it = c.list[c.index];
+      this.showZap(it, c.index);
+      this.load(it);
+    },
+    // Kurz einblenden, welcher Sender gerade kommt (Nummer und Name)
+    showZap: function (it, index) {
       clear(this.zap);
-      this.zap.appendChild(h('span', { class: 'num', text: String(it.num || c.index + 1) }));
+      this.zap.appendChild(h('span', { class: 'num', text: String(it.num || index + 1) }));
       this.zap.appendChild(h('span', { text: it.name }));
       this.zap.classList.remove('is-hidden');
       var z = this.zap;
       clearTimeout(this.zapTimer);
       this.zapTimer = setTimeout(function () { z.classList.add('is-hidden'); }, 2500);
-      this.load(it);
+    },
+    /* Direkt zu einem Sender (Nummer eingetippt, letzter Sender): in der aktuellen Liste, sonst in allen Sendern */
+    zapTo: function (it) {
+      var self = this, c = self.ctx;
+      function go(list) {
+        var idx = -1;
+        for (var i = 0; list && i < list.length; i++) if (String(list[i].id) === String(it.id)) { idx = i; break; }
+        if (idx < 0) { list = [it]; idx = 0; }
+        parentalGate(list[idx], { list: list, index: idx }, function (cc) {
+          if (!self.el) return;
+          self.showZap(cc.list[cc.index], cc.index);
+          self.switchTo(cc.list[cc.index], cc);
+        });
+      }
+      if (c && c.list && some(c.list, function (x) { return String(x.id) === String(it.id); })) go(c.list);
+      else liveChannels().then(go, function () { go(null); });
+    },
+    lastChannel: function () {
+      var prev = this.prevLive || prevRecent(this.item);
+      if (!prev) { toast(T('Noch kein vorheriger Sender')); return; }
+      this.zapTo(prev);
     },
 
     showOsd: function (stay) {
@@ -6835,11 +7084,103 @@
   /* ==========================================================
      Tasten der Fernbedienungen
      ========================================================== */
+  /* Alle sichtbaren Sender, sortiert wie in der Liste (für Nummern-Eingabe und „Letzter Sender“) */
+  function liveChannels() {
+    return allItems('live').then(function (list) { return sortChannels(ChanHide.filter(list)); });
+  }
+  // Zuletzt gesehener Sender, der nicht der aktuelle ist
+  function prevRecent(cur) {
+    var r = Recent.list();
+    for (var i = 0; i < r.length; i++) if (!cur || String(r[i].id) !== String(cur.id)) return r[i];
+    return null;
+  }
+  /* ---------- Sendernummer eintippen ----------
+     In Live TV und im Player (Fernbedienung 0–9): Ziffern sammeln, passenden Sender gleich anzeigen,
+     nach kurzer Pause oder mit OK umschalten. Taste „Vorheriger Sender“ (bzw. L) springt zum letzten Sender. */
+  var NumEntry = {
+    buf: '', timer: null, el: null, map: null, src: null,
+    active: function () {
+      var top = Screens.top();
+      if (!top || Dialog.open) return false;
+      if (Player.el && top.el === Player.el) return !!(Player.item && Player.item.kind === 'live' && !Player.mini);
+      return top.name === 'shell' && Shell.current === 'live' && !QuickSearch.isOpen;
+    },
+    key: function (e, k) {
+      var t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return false;
+      if (this.buf && k === KEY.ENTER) { this.commit(); return true; }
+      if (this.buf && isBackKey(e)) { this.reset(); return true; }
+      if ((k === KEY.PREV_CH || k === KEY.K_L) && this.active()) { lastChannel(); return true; }
+      var d = k >= 48 && k <= 57 ? k - 48 : k >= 96 && k <= 105 ? k - 96 : -1;
+      if (d < 0 || !this.active()) return false;
+      if (this.buf.length >= 4) this.buf = '';
+      this.buf += d;
+      this.load();
+      this.paint();
+      var self = this;
+      clearTimeout(self.timer);
+      self.timer = setTimeout(function () { self.commit(); }, 1800);
+      return true;
+    },
+    // Nummer → Sender (einmal je Playlist-Stand aufbauen)
+    load: function () {
+      var self = this, pr = liveChannels();
+      if (pr === self.src) return;
+      self.src = pr; self.map = null;
+      pr.then(function (list) {
+        if (self.src !== pr) return;
+        var m = {};
+        list.forEach(function (x) { var n = Number(x.num); if (x.num !== undefined && x.num !== '' && !isNaN(n) && !m[n]) m[n] = x; });
+        self.map = m; self.list = list;
+        if (self.buf) self.paint();
+      }, function () { self.map = {}; });
+    },
+    match: function () { return this.map ? this.map[Number(this.buf)] || null : undefined; },
+    paint: function (msg) {
+      var host = Player.el && Screens.top() && Screens.top().el === Player.el ? Player.el : document.body;
+      if (!this.el) this.el = h('div', { class: 'num-entry', role: 'status', 'aria-live': 'polite' });
+      if (this.el.parentNode !== host) host.appendChild(this.el);
+      clear(this.el);
+      var m = this.match();
+      this.el.appendChild(h('b', { text: this.buf || '' }));
+      this.el.appendChild(h('span', { text: msg || (m ? m.name : m === null ? T('Kein Sender mit dieser Nummer') : '…') }));
+      this.el.classList.toggle('is-miss', !!msg || m === null);
+      this.el.classList.remove('is-hidden');
+    },
+    hide: function () { if (this.el) this.el.classList.add('is-hidden'); },
+    reset: function () { clearTimeout(this.timer); this.buf = ''; this.hide(); },
+    commit: function () {
+      var self = this, num = self.buf;
+      clearTimeout(self.timer);
+      if (!num) return;
+      if (!self.map) { self.timer = setTimeout(function () { self.commit(); }, 400); return; }   // Liste lädt noch
+      var it = self.match();
+      self.buf = '';
+      if (!it) {
+        self.buf = num; self.paint(T('Sender {0} nicht gefunden', num)); self.buf = '';
+        self.timer = setTimeout(function () { self.hide(); }, 1600);
+        return;
+      }
+      self.hide();
+      if (Player.el && !Player.mini && Screens.top() && Screens.top().el === Player.el) { Player.zapTo(it); return; }
+      var list = self.list || [it], idx = list.indexOf(it);
+      playItem(it, { list: list, index: Math.max(0, idx) });
+      // in der Senderliste markieren, wenn der Sender dort steht
+      var row = $('.chan[data-cid="' + String(it.id).replace(/"/g, '') + '"]');
+      if (row) Nav.focus(row);
+    }
+  };
+  function lastChannel() {
+    if (Player.el && Player.item && Player.item.kind === 'live') { Player.lastChannel(); return; }
+    var r = Recent.list()[0];
+    if (r) playItem(r, { list: [r], index: 0 }); else toast(T('Noch kein vorheriger Sender'));
+  }
+
   var KEY = {
     LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40, ENTER: 13,
     BACK_TIZEN: 10009, BACK_WEBOS: 461, ESC: 27, BACKSPACE: 8,
     PLAYPAUSE: 10252, PLAY: 415, PAUSE: 19, STOP: 413, FF: 417, RW: 412, SPACE: 32, K_F: 70, K_K: 75, K_M: 77,
-    CH_UP: 427, CH_DOWN: 428
+    CH_UP: 427, CH_DOWN: 428, PREV_CH: 10190, K_L: 76
   };
   // LG nutzt Bild-auf/ab-Codes für die Programmtasten
   if (Platform.webos) { KEY.CH_UP = 33; KEY.CH_DOWN = 34; }
@@ -6861,6 +7202,8 @@
 
     if (isBackKey(e)) { e.preventDefault(); goBack(); return; }
     if (!Dialog.open && Player.el && Screens.top() && Screens.top().el === Player.el && Player.handleKey(k)) { e.preventDefault(); return; }
+    // Live TV: Sendernummer eintippen, letzter Sender
+    if (NumEntry.key(e, k)) { e.preventDefault(); return; }
 
     var t = e.target;
     var inInput = t && t.tagName === 'INPUT';
@@ -6886,7 +7229,8 @@
 
   function registerTvKeys() {
     if (Platform.tizen && window.tizen && tizen.tvinputdevice) {
-      ['MediaPlayPause', 'MediaPlay', 'MediaPause', 'MediaStop', 'MediaFastForward', 'MediaRewind', 'ChannelUp', 'ChannelDown'].forEach(function (k) {
+      ['MediaPlayPause', 'MediaPlay', 'MediaPause', 'MediaStop', 'MediaFastForward', 'MediaRewind', 'ChannelUp', 'ChannelDown', 'PreviousChannel',
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].forEach(function (k) {
         try { tizen.tvinputdevice.registerKey(k); } catch (e) {}
       });
     }
@@ -6942,6 +7286,7 @@
     setTimeout(function () { Backup.daily(); }, 15000);
     Cloud.start();
     StillWatching.start();
+    Reminders.start();
     // Internet wieder da: hängengebliebene Wiedergabe automatisch neu starten
     window.addEventListener('online', function () { if (Player.el && Player.err && Player.err.style.display !== 'none' && Player.item) Player.load(Player.item); });
     var reloaded = false;
@@ -6963,6 +7308,7 @@
     CatPrefs: CatPrefs, visibleCats: visibleCats, Parental: Parental, ChanHide: ChanHide,
     Backup: Backup, profileFp: profileFp, Settings: Settings,
     Seen: Seen, Resume: Resume, UpNext: UpNext, SeriesWatch: SeriesWatch, sortVod: sortVod,
+    Reminders: Reminders, NumEntry: NumEntry, showGuide: showGuide, Player: Player, Dialog: Dialog,
     config: CONFIG
   };
 

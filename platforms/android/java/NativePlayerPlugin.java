@@ -44,6 +44,7 @@ public class NativePlayerPlugin extends Plugin {
         intent.putExtra("live", live != null && live.booleanValue());
         intent.putExtra("txtReconnect", call.getString("txtReconnect", "Verbindung wird wiederhergestellt …"));
         intent.putExtra("txtFailed", call.getString("txtFailed", "Wiedergabe nicht möglich."));
+        intent.putExtra("txtNoChannel", call.getString("txtNoChannel", "Sender {0} nicht gefunden"));
         // Untertitel: Größe (Faktor), Schriftfarbe und Hintergrund aus den App-Einstellungen
         Float subScale = call.getFloat("subScale", 1f);
         intent.putExtra("subScale", subScale == null ? 1f : subScale.floatValue());
