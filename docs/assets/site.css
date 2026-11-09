@@ -314,7 +314,7 @@ a.btn.small { padding: .45rem .95rem; font-size: .85rem; }
   #dlList .pl .act a.btn { flex: 1; }
   #dlList .pl .act button { flex: none; }
 }
-@media (max-width: 400px) { .nav a .i { display: none; } }
+@media (max-width: 400px) { .nav a .i { display: none; } .nav a { padding: .85rem .4rem; font-size: .85rem; letter-spacing: -.01em; } }
 @media (prefers-reduced-motion: reduce) { .tv-bar .hl { animation: none; } #toast, button { transition: none; } }
 
 /* =====================================================================
@@ -461,3 +461,5 @@ button.ghost:hover { box-shadow: inset 0 0 0 1px rgba(167, 139, 250, .45); }
   [dir="rtl"] .screen { transform: rotateY(7deg) rotateX(3deg); animation-name: floatRtl; }
 }
 @keyframes floatRtl { 50% { transform: rotateY(7deg) rotateX(3deg) translateY(-8px); } }
+/* Markenname bleibt auch auf Arabisch „Lumio Player“ (nicht gespiegelt) */
+[dir="rtl"] .brand { direction: ltr; }

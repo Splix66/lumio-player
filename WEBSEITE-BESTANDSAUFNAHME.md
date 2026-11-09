@@ -70,15 +70,15 @@ App (TV/Handy/PC) ──register_device / list_playlists──▶ Supabase ◀�
    → Aufteilen in `site.css`, `site.js`, Sprachdateien (ohne Build-Schritt, ohne neue Abhängigkeiten).
 10. ✅ **Design solide, aber austauschbar.** Sauber und einheitlich, aber Systemschrift, wenig Bewegung, Startseite
     endet abrupt. Die App selbst nutzt bereits die Schrift *Inter* – die Webseite nicht.
-11. **Webseite nur in 3 Sprachen**, die App in 11 (u. a. AR, RU, UK, PL) – Kunden aus der App landen auf Deutsch.
+11. ✅ **Webseite nur in 3 Sprachen**, die App in 11 (u. a. AR, RU, UK, PL) – Kunden aus der App landen auf Deutsch.
 12. **Startseite und Kundenportal sind dieselbe Seite.** Für eine Produktseite ist das ungewöhnlich; Menüpunkt
     „Playlist hochladen“ ist für Neukunden unklar.
 13. ✅ Rote „Wichtig“-Box auf der Startseite wirkt wie eine Fehlermeldung (Inhalt ist rechtlich sinnvoll und bleibt).
-14. Verwaltungsbereich hat eigenes CSS mit leicht abweichenden Farben.
+14. ✅ Verwaltungsbereich hat eigenes CSS mit leicht abweichenden Farben.
 
 ### Niedrig
 
-15. Datenschutzerklärung erwähnt nicht, dass der Download-Bereich Versionsinfos von `api.github.com` lädt.
+15. ✅ Datenschutzerklärung erwähnt nicht, dass der Download-Bereich Versionsinfos von `api.github.com` lädt.
 16. QR-Code-Adresse enthält den KEY (`?key=…`); er wird sofort aus der Adresszeile entfernt, kann aber im
     Browser-Verlauf landen. Akzeptabel, weil der KEY nur Playlists dieses Geräts freigibt.
 
@@ -122,9 +122,25 @@ keine JavaScript-Fehler.
   Geräte einem Konto zuordnen, Testzeitraum pro Gerät/Konto serverseitig prüfen (nicht nur in der App),
   Zahlungsanbieter (z. B. Stripe), Preisseite, AGB/Widerrufsbelehrung.
 
-## 9. Nächste sinnvolle Schritte
+## 9. Erledigt im dritten Schritt
+
+- **14 Sprachen wie in der App** (DE, EN, TR, PL, RU, AR, UK, RO, IT, EL, KU, BS/HR/SR, ES, FR) mit Sprachauswahl
+  wie in der App: Knopf mit aktueller Sprache → Liste. Bedienbar mit Maus, Touch und Tastatur.
+- Sprachdateien liegen einzeln in `docs/assets/i18n/<code>.js` und werden nur bei Bedarf geladen.
+  Reihenfolge der Spracherkennung: `?lang=` aus der App → zuletzt gewählt → Browsersprache → Deutsch.
+- **Arabisch** von rechts nach links; MAC, KEY, Code und Links bleiben links-nach-rechts.
+- Fire-TV-Downloadseite (`docs/app/`) nutzt dieselben Sprachdateien und den neuen Stil.
+- Admin-Bereich, Impressum und Datenschutz in Schrift, Farben und Knöpfen an die Webseite angeglichen.
+- Geprüft: alle Sprachdateien vollständig (216 Texte, Platzhalter und Formatierung erhalten), alle 14 Sprachen in allen
+  Bereichen auf Desktop und Handy ohne deutsche Reste und ohne seitliches Verrutschen.
+- Bekannte Kleinigkeit: Auf sehr kleinen Handys (320 px) ist das ukrainische Menü leicht wischbar statt fest.
+
+**Hinweis zu den Übersetzungen:** maschinell erstellt nach den Begriffen der App. Bezeichnungen aus Systemdialogen
+(Windows, macOS, Fire TV) sind nach bestem Wissen übernommen – vor einer großen Werbeaktion in einer Sprache lohnt sich
+ein kurzer Blick durch Muttersprachler.
+
+## 10. Nächste sinnvolle Schritte
 
 1. Kontaktmöglichkeit ohne Gerät (braucht eine Kontakt-E-Mail oder eine neue, abgesicherte Datenbankfunktion)
-2. Verwaltungsbereich optisch an die Webseite angleichen (Schrift, Farben, Knöpfe)
-3. Webseite in weitere App-Sprachen übersetzen (AR, RU, UK, PL …)
-4. Download-Kurzseite `docs/app/` und Rechtsseiten im neuen Stil
+2. Sicherheits-Kopfzeile (Content-Security-Policy) auch für die öffentliche Webseite – der Admin-Bereich hat sie schon
+3. Impressum ausfüllen → danach Google-Sperre aufheben und veröffentlichen (Merge nach `main`)
