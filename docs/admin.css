@@ -76,7 +76,6 @@ input:focus, textarea:focus { border-color: var(--accent); }
 .mark { width: 1.9rem; height: 1.9rem; display: grid; place-items: center; }
 .mark svg { width: 100%; height: 100%; overflow: visible; }
 .mark .play { fill: url(#lumioPlay); }
-.mark .dot { fill: var(--warn); }
 
 /* Anmeldung */
 .login { min-height: 100vh; display: grid; place-items: center; padding: 2rem 1.2rem;

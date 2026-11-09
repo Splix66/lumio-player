@@ -47,6 +47,11 @@ Optional täglich automatisch. Datenbank: `server/sicherung-2026-11.sql` (mit Te
 E-Mail. Kommt im Verwaltungsbereich unter „Support“ mit dem Thema „Feedback“ an; mitgeschickt werden nur App-Version,
 Gerätetyp und Sprache. Auf der Webseite im Kontaktformular neues Thema „Feedback oder Idee“.
 
+**Neues Logo:** Der Balken des „T“ biegt rechts in einem Bogen nach unten, darunter das lila Play-Zeichen (#b06cff → #7c3aed);
+der gelbe Lichtpunkt entfällt. App-Symbol dunkel mit leichtem Verlauf und feinem hellem Rand. Geändert in der App, auf der
+Webseite (Kopf- und Fußzeile, Verwaltungsbereich, Download-Seite), Favicon, iPhone-Symbol, Vorschaubild für geteilte Links
+und in `scripts/make-icons.py` (Android, Fire TV, Samsung, LG, Windows/Mac, TV-Banner, Startbildschirm).
+
 **Android-TV-Player:** Media3 (ExoPlayer) von 1.4.1 auf 1.9.4 – gut ein Jahr Fehlerbehebungen, u. a. für HLS-Livestreams.
 
 ## 1.11.1 – 2026-11-09 · Neue Willkommensseite

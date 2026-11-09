@@ -146,7 +146,7 @@
     return span.firstChild;
   }
   /* Logo: "L" und Play-Zeichen in Textfarbe, der Lichtpunkt in der gewählten Akzentfarbe */
-  var LOGO_SVG = '<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M14 22h56M34 22v62" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round"/><path class="play" d="M50 38.5c0-3.3 3.6-5.3 6.4-3.6l25.4 15.6c2.7 1.7 2.7 5.6 0 7.2L56.4 73.4C53.6 75.1 50 73.1 50 69.8z"/><circle class="dot" cx="84" cy="22" r="6"/><path class="star" d="M84 12L86.5 19.5L94 22L86.5 24.5L84 32L81.5 24.5L74 22L81.5 19.5Z"/></svg>';
+  var LOGO_SVG = '<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M17 25H70a12 12 0 0 1 12 12M42 25v50" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/><path class="play" transform="translate(16.5 11.5) scale(.78)" d="M50 38.5c0-3.3 3.6-5.3 6.4-3.6l25.4 15.6c2.7 1.7 2.7 5.6 0 7.2L56.4 73.4C53.6 75.1 50 73.1 50 69.8z"/><path class="star" d="M92 0L94 7L101 9L94 11L92 18L90 11L83 9L90 7Z"/></svg>';
   function brandMark() { var m = h('span', { class: 'brand-mark' }); m.innerHTML = LOGO_SVG; return m; }
   /* Schriftzug: "Telvo" kräftig, "Player" leicht */
   function wordmark() { return h('span', { class: 'wordmark' }, h('b', { text: 'Telvo' }), h('span', { text: 'Player' })); }
@@ -3666,7 +3666,7 @@
      die Anziehung, schwebt kurz und klatscht auf den Boden – dann setzt sich das Logo wieder zusammen.
      Darunter sieht man, was gerade geladen wird. Danach landet man immer auf dem Startbildschirm. */
   var RL_LOGO = '<svg viewBox="0 0 100 100" aria-hidden="true">' +
-    '<g class="rl-l"><path d="M14 22h56M34 22v62" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round"/></g>' +
+    '<g class="rl-l"><path d="M17 25H70a12 12 0 0 1 12 12M42 25v50" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/></g>' +
     '<g class="rl-dust"><circle cx="41" cy="77.5" r="1.7"/><circle cx="58" cy="76.5" r="1.3"/><circle cx="77" cy="77.5" r="1.7"/></g>' +
     '<g class="rl-play"><path d="M50 38.5c0-3.3 3.6-5.3 6.4-3.6l25.4 15.6c2.7 1.7 2.7 5.6 0 7.2L56.4 73.4C53.6 75.1 50 73.1 50 69.8z"/></g>' +
     '<g class="rl-dot"><circle cx="84" cy="22" r="6"/></g></svg>';
@@ -6636,7 +6636,7 @@
      ========================================================== */
   function addLogoDefs() {
     var d = document.createElement('div');
-    d.innerHTML = '<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><linearGradient id="lumio-play-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--accent-2)"/><stop offset="1" style="stop-color:var(--accent)"/></linearGradient></defs></svg>';
+    d.innerHTML = '<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><linearGradient id="lumio-play-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--accent-2)"/><stop offset="1" style="stop-color:var(--accent)"/></linearGradient><linearGradient id="telvo-logo-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b06cff"/><stop offset="1" stop-color="#7c3aed"/></linearGradient></defs></svg>';
     document.body.appendChild(d.firstChild);
   }
 
