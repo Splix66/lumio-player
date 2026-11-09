@@ -3537,6 +3537,8 @@
       clear(recent);
       var res = recentEntries();
       recent.hidden = !res.length;
+      // Nichts zum Weiterschauen: Bereich ausblenden, die Kacheln nutzen dann die ganze Höhe
+      el.classList.toggle('no-recent', !res.length);
       if (!res.length) return;
       var track = h('div', { class: 'lr-track' });
       res.slice(0, 10).forEach(function (r) { track.appendChild(recentCard(r)); });

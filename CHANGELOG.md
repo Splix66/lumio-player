@@ -65,7 +65,7 @@ Die neuen Daten gehören zum Profil, werden mitgesichert und von „Verlauf lös
 **Neuer Startbildschirm** (nach Vorlage): oben Logo, Status (Internet, Player, „Playlist aktiv“) und Knöpfe für Suche,
 Aktualisieren, Einstellungen, Hilfe und Sprache. Live TV (lila), Filme (orange) und Serien (blau) als große Glas-Kacheln mit
 Leuchtwelle, rechts **Radio** (neu) und Favoriten. Unten „Zuletzt angesehen“ als breite Bildkarten mit Restzeit bzw. Staffel/Folge
-und Fortschritt, dazu „Alle anzeigen“. Laufzeit der Playlist steht unten in der Fußleiste.
+und Fortschritt, dazu „Alle anzeigen“ – ist nichts angefangen, fehlt der Bereich und die Kacheln nutzen die ganze Höhe. Laufzeit der Playlist steht unten in der Fußleiste.
 **Neu: Radio** – sammelt alle Sender aus Radio-Kategorien (Radio, Radyo …) in einer eigenen Liste unter Live TV.
 Folgen bekommen das Hintergrundbild ihrer Serie (für die breiten Karten).
 
