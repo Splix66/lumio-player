@@ -1,4 +1,4 @@
-:root { color-scheme: dark; --bg: #0b0b0f; --text: #f5f3ff; --muted: #b9b4d8; --dim: #736d9a; --accent: #a78bfa; }
+:root { color-scheme: dark; --bg: #0b0b0f; --text: #f5f3ff; --muted: #b9b4d8; --dim: #8f89b5; --accent: #a78bfa; }
 * { box-sizing: border-box; }
 html, body { margin: 0; background: var(--bg); color: var(--text); }
 body {

@@ -6,14 +6,28 @@
   <meta name="theme-color" content="#0b0b0f">
   <meta name="robots" content="noindex">
   <title>Lumio Player – Kundenbereich</title>
+  <meta name="description" content="Lumio Player spielt deine eigene IPTV-Playlist auf Fire TV, Android-Boxen, Handy, Tablet, Windows und Mac. Playlist bequem im Browser hochladen, App kostenlos herunterladen.">
+  <link rel="canonical" href="https://splix66.github.io/lumio-player/">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Lumio Player">
+  <meta property="og:title" content="Lumio Player – Live TV, Filme und Serien auf jedem Bildschirm">
+  <meta property="og:description" content="Der IPTV-Player für deine eigene Playlist. Für Fire TV, Android, Windows und Mac.">
+  <meta property="og:url" content="https://splix66.github.io/lumio-player/">
+  <meta property="og:image" content="https://splix66.github.io/lumio-player/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="de_DE">
+  <meta name="twitter:card" content="summary_large_image">
   <style>
     /* Lumio Player – Kundenbereich (Playlists verwalten, Hilfe & Support)
        Gleiche Farben wie die App, damit es sich wie ein Produkt anfühlt. */
     :root {
       --bg: #0b0b0f; --surface: #14141a; --surface-2: #1c1c24; --surface-3: #262630;
       --line: rgba(255, 255, 255, .08); --line-2: rgba(255, 255, 255, .14);
-      --text: #f4f4f6; --muted: #a4a4b4; --dim: #6f6f80;
-      --accent: #8b5cf6; --accent-2: #a78bfa; --accent-soft: rgba(139, 92, 246, .16);
+      --text: #f4f4f6; --muted: #a4a4b4; --dim: #8a8a9b;
+      --accent: #8b5cf6; --accent-2: #a78bfa; --accent-btn: #7442e6; --accent-btn-hover: #6a35dc; --accent-soft: rgba(139, 92, 246, .16);
       --ok: #34d399; --bad: #ff7a90; --gold: #ffc53d;
       --mono: ui-monospace, "SF Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace;
       --r: .9rem;
@@ -35,10 +49,11 @@
     .site-head { position: sticky; top: 0; z-index: 20; background: rgba(11, 11, 15, .88); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 1px 0 var(--line); padding-top: env(safe-area-inset-top); }
     .head-in { display: flex; align-items: center; gap: 2rem; min-height: 4.4rem; }
     .nav { display: flex; align-items: stretch; align-self: stretch; gap: .2rem; flex: 1; min-width: 0; }
-    .nav button { display: inline-flex; align-items: center; gap: .5rem; border-radius: 0; padding: 0 .95rem; background: transparent; color: var(--muted); font-weight: 600; font-size: .95rem; box-shadow: inset 0 -2px 0 transparent; white-space: nowrap; }
-    .nav button:hover { color: var(--text); background: transparent; }
-    .nav button[aria-selected="true"] { color: var(--text); box-shadow: inset 0 -2px 0 var(--accent-2); }
-    .nav button[aria-selected="true"] .i { color: var(--accent-2); }
+    .nav a { display: inline-flex; align-items: center; gap: .5rem; padding: 0 .95rem; color: var(--muted); font-weight: 600; font-size: .95rem; text-decoration: none; box-shadow: inset 0 -2px 0 transparent; white-space: nowrap; transition: color .15s ease, box-shadow .15s ease; }
+    .nav a:hover { color: var(--text); }
+    .nav a[aria-current="page"] { color: var(--text); box-shadow: inset 0 -2px 0 var(--accent-2); }
+    .nav a[aria-current="page"] .i { color: var(--accent-2); }
+    .nav .short { display: none; }
     .nav .count { font-size: .75rem; color: var(--dim); font-variant-numeric: tabular-nums; font-weight: 600; }
     .nav .count:empty { display: none; }
     .brand { flex: none; display: flex; align-items: center; gap: .65rem; font-weight: 800; font-size: 1.25rem; letter-spacing: -.02em; color: var(--text); text-decoration: none; }
@@ -63,8 +78,8 @@
       transition: background-color .15s ease, color .15s ease, box-shadow .15s ease;
     }
     button:hover { background: #30303c; }
-    button.primary { background: var(--accent); color: #fff; }
-    button.primary:hover { background: #7c4ff0; }
+    button.primary { background: var(--accent-btn); color: #fff; }
+    button.primary:hover { background: var(--accent-btn-hover); }
     button.ghost { background: transparent; box-shadow: inset 0 0 0 1px var(--line-2); }
     button.ghost:hover { background: var(--surface-2); }
     button.danger { color: var(--bad); }
@@ -128,7 +143,7 @@
     .block > h2 { font-size: 1.6rem; letter-spacing: -.03em; margin-bottom: 1.4rem; }
     .steps { list-style: none; counter-reset: st; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
     .steps li { counter-increment: st; position: relative; padding: 1.4rem 1.4rem 1.5rem; border-radius: var(--r); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); }
-    .steps li::before { content: counter(st); display: grid; place-items: center; width: 2.1rem; height: 2.1rem; margin-bottom: 1rem; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 800; }
+    .steps li::before { content: counter(st); display: grid; place-items: center; width: 2.1rem; height: 2.1rem; margin-bottom: 1rem; border-radius: 50%; background: var(--accent-btn); color: #fff; font-weight: 800; }
     .steps b { display: block; font-size: 1.08rem; margin-bottom: .35rem; }
     .steps p { color: var(--muted); font-size: .95rem; }
     .features { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
@@ -206,9 +221,9 @@
     /* Download */
     a.btn {
       font-weight: 650; border-radius: 999px; padding: .75rem 1.2rem; display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
-      background: var(--accent); color: #fff; text-decoration: none; transition: background-color .15s ease;
+      background: var(--accent-btn); color: #fff; text-decoration: none; transition: background-color .15s ease;
     }
-    a.btn:hover { background: #7c4ff0; }
+    a.btn:hover { background: var(--accent-btn-hover); }
     a.btn.small { padding: .45rem .95rem; font-size: .85rem; }
     .dl { display: flex; flex-direction: column; gap: 2.6rem; }
     .dl-top { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 2rem; align-items: start; }
@@ -261,7 +276,7 @@
       .head-in .lang { order: 2; margin-left: auto; }
       .nav { order: 3; flex-basis: 100%; overflow-x: auto; scrollbar-width: none; margin: .4rem -24px 0; padding: 0 14px; }
       .nav::-webkit-scrollbar { display: none; }
-      .nav button { padding: .85rem .7rem; }
+      .nav a { padding: .85rem .7rem; }
       .hero { grid-template-columns: 1fr; gap: 2.5rem; padding-top: .5rem; }
       .hero-art { max-width: 34rem; width: 100%; margin: 0 auto; }
       .features { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -289,11 +304,13 @@
       .cta button { flex: 1 1 auto; }
       .wrap { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
       .nav { margin-left: -16px; margin-right: -16px; padding: 0 6px; }
-      .nav button { font-size: .9rem; padding: .85rem .6rem; }
+      .nav a { font-size: .9rem; padding: .85rem .6rem; flex: 1 1 auto; justify-content: center; }
+      .nav .long { display: none; }
+      .nav .short { display: inline; }
       #dlList .pl .act a.btn { flex: 1; }
       #dlList .pl .act button { flex: none; }
     }
-    @media (max-width: 400px) { .nav button .i { display: none; } }
+    @media (max-width: 400px) { .nav a .i { display: none; } }
     @media (prefers-reduced-motion: reduce) { .tv-bar .hl { animation: none; } #toast, button { transition: none; } }
   </style>
 </head>
@@ -331,11 +348,11 @@
         <span class="mark"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M14 20v44a20 20 0 0 0 20 20h44" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round"/><path class="play" d="M38 23.6c0-3.6 3.9-5.8 7-4l35.4 22.2c3 1.8 3 6.2 0 8L45 72c-3.1 1.8-7-.4-7-4z"/><circle class="dot" cx="84" cy="22" r="6"/></svg></span>
         <span>Lumio</span><span>Player</span>
       </a>
-      <nav class="nav" role="tablist" aria-label="Bereiche">
-        <button type="button" role="tab" id="tabHome" aria-selected="true" aria-controls="viewHome"><svg class="i"><use href="#i-home"/></svg><span data-t>Start</span></button>
-        <button type="button" role="tab" id="tabMain" aria-selected="false" aria-controls="viewMain"><svg class="i"><use href="#i-up"/></svg><span id="tabMainLabel" data-t>Playlist hochladen</span><span class="count" id="plCount"></span></button>
-        <button type="button" role="tab" id="tabDl" aria-selected="false" aria-controls="viewDl"><svg class="i"><use href="#i-down"/></svg><span data-t>Download</span></button>
-        <button type="button" role="tab" id="tabHelp" aria-selected="false" aria-controls="viewHelp"><svg class="i"><use href="#i-help"/></svg><span data-t>Hilfe &amp; Support</span></button>
+      <nav class="nav" aria-label="Hauptmenü">
+        <a href="#start" id="tabHome" aria-current="page"><svg class="i" aria-hidden="true"><use href="#i-home"/></svg><span data-t>Start</span></a>
+        <a href="#playlist" id="tabMain"><svg class="i" aria-hidden="true"><use href="#i-up"/></svg><span class="long" id="tabMainLabel" data-t>Playlist hochladen</span><span class="short" data-t>Playlists</span><span class="count" id="plCount"></span></a>
+        <a href="#download" id="tabDl"><svg class="i" aria-hidden="true"><use href="#i-down"/></svg><span data-t>Download</span></a>
+        <a href="#hilfe" id="tabHelp"><svg class="i" aria-hidden="true"><use href="#i-help"/></svg><span class="long" data-t>Hilfe &amp; Support</span><span class="short" data-t>Hilfe</span></a>
       </nav>
       <div class="lang" role="group" aria-label="Sprache / Language">
         <button type="button" data-lang="de" aria-pressed="true">DE</button>
@@ -347,7 +364,7 @@
 
   <main class="wrap">
     <!-- Start -->
-    <section id="viewHome" role="tabpanel">
+    <section id="viewHome">
       <div class="hero">
         <div class="hero-txt">
           <p class="pill" data-t>Media-Player – ohne Sender</p>
@@ -418,7 +435,7 @@
     </section>
 
     <!-- Playlist hochladen -->
-    <section id="viewMain" role="tabpanel" hidden>
+    <section id="viewMain" hidden>
       <div class="page-head">
         <h1 data-t>Playlist hochladen</h1>
         <p class="lead" data-t>Gib MAC-Adresse und KEY aus der App ein. Danach kannst du Playlists hinzufügen, ändern oder löschen – ohne mühsames Tippen mit der Fernbedienung.</p>
@@ -491,7 +508,7 @@
     </section>
 
     <!-- Download: die Links zeigen immer auf die neueste Version (Releases „neueste“ und „pc“) -->
-    <section id="viewDl" role="tabpanel" hidden>
+    <section id="viewDl" hidden>
       <div class="page-head">
         <h1 data-t>Lumio Player herunterladen</h1>
         <p class="lead" data-t>Für Fire TV, Android-Boxen, Handys, Tablets, Windows und Mac. Die Links laden immer die neueste Version.</p>
@@ -562,7 +579,7 @@
     </section>
 
     <!-- Hilfe & Support -->
-    <section id="viewHelp" role="tabpanel" hidden>
+    <section id="viewHelp" hidden>
       <div class="page-head">
         <h1 data-t>Hilfe &amp; Support</h1>
         <p class="lead" data-t>Antworten auf häufige Fragen – und wenn etwas nicht klappt, schreib uns direkt.</p>
@@ -776,7 +793,7 @@
           "Fire TV fragt beim ersten Mal nach einer Erlaubnis: unter Einstellungen → Mein Fire TV → Entwickleroptionen → „Apps unbekannter Herkunft installieren“ für Downloader einschalten. Fehlen die Entwickleroptionen, unter Mein Fire TV → Info 7-mal auf den Gerätenamen drücken.": "The first time, Fire TV asks for permission: under Settings → My Fire TV → Developer options → “Install unknown apps”, allow Downloader. If Developer options are missing, press the device name 7 times under My Fire TV → About.",
           'Playlists auf deinem Gerät verwalten': 'Manage the playlists on your device',
           'Füge Playlists hinzu, ändere Zugangsdaten oder lösche alte Listen – ohne mühsames Tippen mit der Fernbedienung.': 'Add playlists, change login details or delete old lists – no tedious typing with the remote.',
-          'Gerät verbinden': 'Connect device', 'Hilfe & Support': 'Help & support', 'Playlists': 'Playlists',
+          'Gerät verbinden': 'Connect device', 'Hilfe & Support': 'Help & support', 'Hilfe': 'Help', 'Playlists': 'Playlists',
           'MAC-Adresse': 'MAC address', 'Verbinden': 'Connect', 'Verbinde …': 'Connecting …',
           'MAC-Adresse und KEY stehen in der App ganz unten am Bildschirmrand und unter „Profil“.': 'The MAC address and KEY are shown at the very bottom of the app and under “Profile”.',
           'Hast du den QR-Code in der App gescannt, ist beides schon eingetragen.': 'If you scanned the QR code in the app, both are already filled in.',
@@ -947,7 +964,7 @@
           "Fire TV fragt beim ersten Mal nach einer Erlaubnis: unter Einstellungen → Mein Fire TV → Entwickleroptionen → „Apps unbekannter Herkunft installieren“ für Downloader einschalten. Fehlen die Entwickleroptionen, unter Mein Fire TV → Info 7-mal auf den Gerätenamen drücken.": "Fire TV ilk seferde izin ister: Ayarlar → Fire TV’m → Geliştirici seçenekleri → “Bilinmeyen uygulamaları yükle” bölümünde Downloader’a izin ver. Geliştirici seçenekleri yoksa Fire TV’m → Hakkında altında cihaz adına 7 kez bas.",
           'Playlists auf deinem Gerät verwalten': 'Cihazındaki listeleri yönet',
           'Füge Playlists hinzu, ändere Zugangsdaten oder lösche alte Listen – ohne mühsames Tippen mit der Fernbedienung.': 'Liste ekle, giriş bilgilerini değiştir veya eski listeleri sil – kumandayla zahmetli yazmadan.',
-          'Gerät verbinden': 'Cihazı bağla', 'Hilfe & Support': 'Yardım ve destek', 'Playlists': 'Listeler',
+          'Gerät verbinden': 'Cihazı bağla', 'Hilfe & Support': 'Yardım ve destek', 'Hilfe': 'Yardım', 'Playlists': 'Listeler',
           'MAC-Adresse': 'MAC adresi', 'Verbinden': 'Bağlan', 'Verbinde …': 'Bağlanıyor …',
           'MAC-Adresse und KEY stehen in der App ganz unten am Bildschirmrand und unter „Profil“.': 'MAC adresi ve KEY uygulamanın en altında ve “Profil” bölümünde yazar.',
           'Hast du den QR-Code in der App gescannt, ist beides schon eingetragen.': 'Uygulamadaki QR kodunu taradıysan ikisi de zaten girilmiştir.',
@@ -1106,12 +1123,12 @@
 
       /* ---------- Bereiche umschalten ---------- */
       var TABS = { home: ['tabHome', 'viewHome', ''], main: ['tabMain', 'viewMain', '#playlist'], dl: ['tabDl', 'viewDl', '#download'], help: ['tabHelp', 'viewHelp', '#hilfe'] };
-      var HASH = { '#playlist': 'main', '#download': 'dl', '#hilfe': 'help' };
+      var HASH = { '#start': 'home', '#playlist': 'main', '#download': 'dl', '#hilfe': 'help' };
       var curTab = 'home';
       function showTab(which, keepScroll) {
         curTab = TABS[which] ? which : 'home';
         Object.keys(TABS).forEach(function (k) {
-          $(TABS[k][0]).setAttribute('aria-selected', String(k === curTab));
+          if (k === curTab) $(TABS[k][0]).setAttribute('aria-current', 'page'); else $(TABS[k][0]).removeAttribute('aria-current');
           $(TABS[k][1]).hidden = k !== curTab;
         });
         if (curTab === 'dl') { renderDownloads(); loadReleases(); }
@@ -1120,10 +1137,20 @@
         var h = TABS[curTab][2];
         if (location.hash !== h) try { history.replaceState(null, '', location.pathname + location.search + h); } catch (e) {}
       }
-      Object.keys(TABS).forEach(function (k) { $(TABS[k][0]).addEventListener('click', function () { showTab(k); }); });
+      // Bereich wechseln und dabei einen Eintrag im Verlauf anlegen – so führt der Zurück-Knopf
+      // des Handys/Browsers zum vorherigen Bereich statt aus der Seite heraus.
+      function goTab(which) {
+        var h = TABS[which][2] || '#start';
+        if (location.hash.toLowerCase() === h || (!location.hash && which === 'home')) showTab(which);
+        else location.hash = h; // löst „hashchange“ aus -> showTab
+      }
+      // Menüpunkte sind echte Links (#playlist …); erneutes Antippen des aktiven Bereichs springt nach oben
+      Object.keys(TABS).forEach(function (k) {
+        $(TABS[k][0]).addEventListener('click', function (e) { if (curTab === k) { e.preventDefault(); showTab(k); } });
+      });
       // Knöpfe auf der Startseite („Playlist hochladen“, „App herunterladen“, Geräte)
       Array.prototype.forEach.call(document.querySelectorAll('[data-go]'), function (b) {
-        b.addEventListener('click', function () { showTab(b.getAttribute('data-go')); });
+        b.addEventListener('click', function () { goTab(b.getAttribute('data-go')); });
       });
       window.addEventListener('hashchange', function () { showTab(HASH[location.hash.toLowerCase()] || 'home'); });
 
@@ -1210,7 +1237,7 @@
           }, function () {})
           .then(function () { relLoading = false; });
       }
-      $('goConnect').addEventListener('click', function () { showTab('main'); $('mac').focus(); });
+      $('goConnect').addEventListener('click', function () { goTab('main'); $('mac').focus(); });
 
       /* ---------- Gerät verbinden ---------- */
       $('mac').addEventListener('input', function () {
