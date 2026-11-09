@@ -13,14 +13,21 @@
     appName: 'Telvo Player',          // Name der App (auch in config-Dateien ändern)
     version: '1.10.0',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
-    hlsCdn: 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js',
+    /* Bibliotheken: werden beim Bauen nach www/lib kopiert (scripts/copy-libs.js) und von dort geladen.
+       Nur wenn sie fehlen, aus dem Internet – mit fester Version und Prüfsumme (SRI): eine veränderte Datei
+       führt der Browser nicht aus. Bei einem Versionswechsel Prüfsumme neu berechnen:
+       openssl dgst -sha384 -binary DATEI | openssl base64 -A */
+    hlsCdn: 'https://cdn.jsdelivr.net/npm/hls.js@1.7.3/dist/hls.min.js',
+    hlsSri: 'sha384-cciJ0zi8d1uMKC2zJd7jvPY4HQt7W4ByUI/FlMkltvBi31aW61rcpVBhpmW8/NwX',
     tsCdn: 'https://cdn.jsdelivr.net/npm/mpegts.js@1.7.3/dist/mpegts.js',   // für rohe TV-Signale (.ts / „RAW“)
+    tsSri: 'sha384-gWBszQzp4KdKY3PNUrFbTuvAcChcUSMKpSrt/OjDS3qe16Ef4OZSfP5E/+KcPueP',
     requestTimeout: 30000,
     // Online-Dienst für "Playlist per Handy hinzufügen" (Supabase + Webseite auf GitHub Pages)
     cloudUrl: 'https://oofzhklrbrpxjoicwbsf.supabase.co/rest/v1/rpc/',
     cloudKey: 'sb_publishable_cx6n8buREFat_yE7kKW6FA_SnMsOQX7',
     portalUrl: 'https://splix66.github.io/lumio-player/',
     qrCdn: 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js',
+    qrSri: 'sha384-8FWZA6BGMXhsfO+BLtrJK0We6gg5o1JyO8xQm6peWDEUs17ACA5ziE/NIAkl9z2k',
     syncInterval: 30000,
     cloudTimeout: 15000              // Zeitlimit für Anfragen an den Online-Dienst
   };
@@ -1314,18 +1321,24 @@
     }
   };
 
-  var qrLoading = null;
-  function loadQrLib() {
-    if (window.qrcode) return Promise.resolve(window.qrcode);
-    if (!qrLoading) {
-      qrLoading = new Promise(function (resolve) {
+  /* Skript laden: zuerst die mitgelieferte Datei (lib/…), sonst aus dem Internet mit Prüfsumme. get() liefert das Ergebnis. */
+  function loadLib(localSrc, cdnSrc, sri, get) {
+    function add(src, integrity) {
+      return new Promise(function (resolve) {
         var s = document.createElement('script');
-        s.src = CONFIG.qrCdn;
-        s.onload = function () { resolve(window.qrcode || null); };
-        s.onerror = function () { resolve(null); };
+        if (integrity) { s.integrity = integrity; s.crossOrigin = 'anonymous'; }
+        s.src = src;
+        s.onload = function () { resolve(get() || null); };
+        s.onerror = function () { if (s.parentNode) s.parentNode.removeChild(s); resolve(null); };
         document.head.appendChild(s);
       });
     }
+    return add(localSrc).then(function (x) { return x || add(cdnSrc, sri); });
+  }
+  var qrLoading = null;
+  function loadQrLib() {
+    if (window.qrcode) return Promise.resolve(window.qrcode);
+    if (!qrLoading) qrLoading = loadLib('lib/qrcode.js', CONFIG.qrCdn, CONFIG.qrSri, function () { return window.qrcode; });
     return qrLoading;
   }
   /* Webseite im normalen Browser öffnen (Handy/PC). Auf dem Fernseher gibt es keinen Browser – dort scannt man. */
@@ -4569,15 +4582,7 @@
 
   function ensureHls() {
     if (window.Hls) return Promise.resolve(window.Hls);
-    if (!hlsLoading) {
-      hlsLoading = new Promise(function (resolve) {
-        var s = document.createElement('script');
-        s.src = CONFIG.hlsCdn;
-        s.onload = function () { resolve(window.Hls || null); };
-        s.onerror = function () { resolve(null); };
-        document.head.appendChild(s);
-      });
-    }
+    if (!hlsLoading) hlsLoading = loadLib('lib/hls.min.js', CONFIG.hlsCdn, CONFIG.hlsSri, function () { return window.Hls; });
     return hlsLoading;
   }
   function isHlsUrl(u) { return /\.m3u8(\?|$)/i.test(u) || /\/hls\//i.test(u) || /\.ism\/\.m3u8/i.test(u); }
@@ -4587,15 +4592,7 @@
   var tsLoading = null;
   function ensureTs() {
     if (window.mpegts) return Promise.resolve(window.mpegts);
-    if (!tsLoading) {
-      tsLoading = new Promise(function (resolve) {
-        var s = document.createElement('script');
-        s.src = CONFIG.tsCdn;
-        s.onload = function () { resolve(window.mpegts || null); };
-        s.onerror = function () { resolve(null); };
-        document.head.appendChild(s);
-      });
-    }
+    if (!tsLoading) tsLoading = loadLib('lib/mpegts.js', CONFIG.tsCdn, CONFIG.tsSri, function () { return window.mpegts; });
     return tsLoading;
   }
 
@@ -5703,7 +5700,7 @@
   window.LumioDebug = {
     parseM3U: parseM3U, parseXtreamLink: parseXtreamLink, normalizeServer: normalizeServer, Nav: Nav, Screens: Screens, StillWatching: StillWatching,
     Xmltv: Xmltv, chanKey: chanKey, EpgStore: EpgStore, makeProvider: makeProvider, Profiles: Profiles, PinGuard: PinGuard, Store: Store, Cloud: Cloud,
-    decodeBytes: decodeBytes, readText: readText, fetchText: fetchText, sameConnection: sameConnection, NativePlayer: NativePlayer, App: App,
+    decodeBytes: decodeBytes, readText: readText, fetchText: fetchText, sameConnection: sameConnection, NativePlayer: NativePlayer, App: App, ensureTs: ensureTs,
     config: CONFIG
   };
 

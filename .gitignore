@@ -1,6 +1,6 @@
 node_modules/
 dist/
-www/lib/hls.min.js
+www/lib/
 www/fonts/
 android/app/build/
 ios/App/Pods/

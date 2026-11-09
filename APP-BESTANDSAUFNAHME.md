@@ -49,9 +49,9 @@ Technisch solide und deutlich über dem Durchschnitt vergleichbarer IPTV-Player:
 
 - A1. M3U-Einträge sind über ihre Position nummeriert: kommt ein Sender oben dazu, rutschen Favoriten/„Weiterschauen“
   auf falsche Titel. Lösung: Kennung aus Adresse/Name (mit Übernahme bestehender Favoriten).
-- A2. TV-Player auf Android-Boxen bekommt bis zu 1.500 Einträge auf einmal übergeben – nahe an der Android-Grenze
+- ✅ A2 (erledigt). TV-Player auf Android-Boxen bekam bis zu 1.500 Einträge auf einmal übergeben – nahe an der Android-Grenze
   von 1 MB (Absturz möglich). Lösung: nur die Nachbarn (± 100) übergeben.
-- A3. Video-Bibliotheken werden notfalls aus dem Internet (jsDelivr) nachgeladen, ohne Versionsbindung und Prüfsumme;
+- ✅ A3 (erledigt: fest eingebaut, Versionen festgelegt, Prüfsumme gegen Manipulation – getestet). Video-Bibliotheken wurden notfalls aus dem Internet (jsDelivr) nachgeladen, ohne Versionsbindung und Prüfsumme;
   mpegts.js immer. Lösung: alle Bibliotheken fest einbauen, Versionen festlegen.
 - A4. QR-Code: KEY steht im Adressteil, den Server protokollieren. Lösung: hinter „#“ (Webseite anpassen).
 - A5. Datenschutz: tägliche Update-Prüfung über api.github.com und YouTube-Trailer nicht erwähnt.
