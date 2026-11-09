@@ -739,5 +739,20 @@ window.LUMIO_I18N["ar"] = {
   "{0} Playlists fehlen noch auf diesem Gerät": "لا تزال {0} قوائم تشغيل مفقودة على هذا الجهاز",
   "Favoriten und Verlauf aus der Sicherung übernommen": "تمت استعادة المفضلة والسجل من النسخة",
   "Der Online-Dienst kennt diese Funktion noch nicht.": "الخدمة عبر الإنترنت لا تدعم هذه الوظيفة بعد.",
-  "Die Sicherung ist zu groß.": "النسخة كبيرة جدًا."
+  "Die Sicherung ist zu groß.": "النسخة كبيرة جدًا.",
+  "Feedback geben": "أرسل ملاحظاتك",
+  "Lob, Kritik oder Ideen": "إشادة أو نقد أو أفكار",
+  "Wie gefällt dir Telvo?": "ما رأيك في Telvo؟",
+  "Gefällt mir nicht": "لا يعجبني",
+  "Geht so": "مقبول",
+  "Ganz okay": "لا بأس",
+  "Gefällt mir": "يعجبني",
+  "Gefällt mir sehr": "يعجبني كثيرًا",
+  "Tippe auf die Sterne": "اضغط على النجوم",
+  "{0} von 5 Sternen": "{0} من 5 نجوم",
+  "Was gefällt dir – und was können wir besser machen?": "ما الذي يعجبك – وما الذي يمكننا تحسينه؟",
+  "Lob, Kritik oder Ideen (freiwillig)": "إشادة أو نقد أو أفكار (اختياري)",
+  "Bitte wähle Sterne oder schreib ein paar Worte.": "يرجى اختيار النجوم أو كتابة بضع كلمات.",
+  "Danke für dein Feedback!": "شكرًا على ملاحظاتك!",
+  "Mitgeschickt werden nur App-Version, Gerätetyp und Sprache.": "يُرسل فقط إصدار التطبيق ونوع الجهاز واللغة."
 };

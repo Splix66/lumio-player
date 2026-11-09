@@ -739,5 +739,20 @@ window.LUMIO_I18N["ro"] = {
   "{0} Playlists fehlen noch auf diesem Gerät": "Mai lipsesc {0} playlisturi pe acest dispozitiv",
   "Favoriten und Verlauf aus der Sicherung übernommen": "Favoritele și istoricul au fost preluate din copie",
   "Der Online-Dienst kennt diese Funktion noch nicht.": "Serviciul online nu acceptă încă această funcție.",
-  "Die Sicherung ist zu groß.": "Copia este prea mare."
+  "Die Sicherung ist zu groß.": "Copia este prea mare.",
+  "Feedback geben": "Trimite feedback",
+  "Lob, Kritik oder Ideen": "Laude, critici sau idei",
+  "Wie gefällt dir Telvo?": "Cum ți se pare Telvo?",
+  "Gefällt mir nicht": "Nu-mi place",
+  "Geht so": "Așa și așa",
+  "Ganz okay": "E în regulă",
+  "Gefällt mir": "Îmi place",
+  "Gefällt mir sehr": "Îmi place mult",
+  "Tippe auf die Sterne": "Atinge stelele",
+  "{0} von 5 Sternen": "{0} din 5 stele",
+  "Was gefällt dir – und was können wir besser machen?": "Ce îți place – și ce putem face mai bine?",
+  "Lob, Kritik oder Ideen (freiwillig)": "Laude, critici sau idei (opțional)",
+  "Bitte wähle Sterne oder schreib ein paar Worte.": "Alege stele sau scrie câteva cuvinte.",
+  "Danke für dein Feedback!": "Mulțumim pentru feedback!",
+  "Mitgeschickt werden nur App-Version, Gerätetyp und Sprache.": "Se trimit doar versiunea aplicației, tipul dispozitivului și limba."
 };

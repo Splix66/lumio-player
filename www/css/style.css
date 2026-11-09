@@ -729,6 +729,16 @@ body.kbd .field input.f:focus, body.is-tv .field input.f:focus { box-shadow: 0 0
 }
 .field textarea:focus, body.kbd .field textarea.f:focus, body.is-tv .field textarea.f:focus { border-color: var(--accent); box-shadow: 0 0 0 .2rem var(--accent-soft); }
 .rep-msg, .rep-mail { margin-top: 1rem; }
+/* Feedback: Sterne */
+.fb-q { font-size: 1.05rem; font-weight: 700; }
+.fb-stars { display: flex; margin: .7rem -.25rem 0; }
+.fb-star { display: grid; place-items: center; width: 3.2rem; height: 3.2rem; margin: 0 .25rem; border-radius: 50%; color: var(--dim); background: var(--surface); transition: transform .15s ease, color .15s ease; }
+.fb-star .i { width: 1.8rem; height: 1.8rem; }
+.fb-star.is-on { color: #FBBF24; }
+.fb-star:hover { transform: scale(1.08); }
+body.kbd .fb-star.f:focus, body.is-tv .fb-star.f:focus { box-shadow: 0 0 0 .2rem var(--bg), 0 0 0 .4rem var(--text); transform: scale(1.08); }
+.fb-label { margin-top: .5rem; min-height: 1.4em; color: var(--muted); font-weight: 600; }
+.fb-note { margin-top: .8rem; }
 /* Open-Source-Lizenzen */
 .lic-list { display: flex; flex-direction: column; }
 .lic-list > * + * { margin-top: .6rem; }

@@ -164,6 +164,7 @@ window.LUMIO_I18N["fr"] = {
   "Sender oder Filme starten nicht": "Les chaînes ou les films ne démarrent pas",
   "Bild ruckelt oder bleibt hängen": "L’image saccade ou se fige",
   "Frage zur App": "Question sur l’application",
+  "Feedback oder Idee": "Avis ou idée",
   "Sonstiges": "Autre",
   "Deine Nachricht": "Votre message",
   "Was ist passiert? Auf welchem Gerät (z. B. Samsung-TV, Fire TV, Handy)?": "Que s’est-il passé ? Sur quel appareil (p. ex. TV Samsung, Fire TV, téléphone) ?",

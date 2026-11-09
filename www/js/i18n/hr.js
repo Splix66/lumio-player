@@ -739,5 +739,20 @@ window.LUMIO_I18N["hr"] = {
   "{0} Playlists fehlen noch auf diesem Gerät": "Na ovom uređaju još nedostaje {0} playlista",
   "Favoriten und Verlauf aus der Sicherung übernommen": "Favoriti i povijest vraćeni iz kopije",
   "Der Online-Dienst kennt diese Funktion noch nicht.": "Online usluga još ne podržava ovu funkciju.",
-  "Die Sicherung ist zu groß.": "Kopija je prevelika."
+  "Die Sicherung ist zu groß.": "Kopija je prevelika.",
+  "Feedback geben": "Pošalji povratnu informaciju",
+  "Lob, Kritik oder Ideen": "Pohvale, kritike ili ideje",
+  "Wie gefällt dir Telvo?": "Kako ti se sviđa Telvo?",
+  "Gefällt mir nicht": "Ne sviđa mi se",
+  "Geht so": "Onako",
+  "Ganz okay": "U redu",
+  "Gefällt mir": "Sviđa mi se",
+  "Gefällt mir sehr": "Jako mi se sviđa",
+  "Tippe auf die Sterne": "Dodirni zvjezdice",
+  "{0} von 5 Sternen": "{0} od 5 zvjezdica",
+  "Was gefällt dir – und was können wir besser machen?": "Što ti se sviđa – i što možemo poboljšati?",
+  "Lob, Kritik oder Ideen (freiwillig)": "Pohvale, kritike ili ideje (neobavezno)",
+  "Bitte wähle Sterne oder schreib ein paar Worte.": "Odaberi zvjezdice ili napiši nekoliko riječi.",
+  "Danke für dein Feedback!": "Hvala na povratnoj informaciji!",
+  "Mitgeschickt werden nur App-Version, Gerätetyp und Sprache.": "Šalju se samo verzija aplikacije, vrsta uređaja i jezik."
 };

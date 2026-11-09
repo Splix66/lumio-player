@@ -164,6 +164,7 @@ window.LUMIO_I18N["el"] = {
   "Sender oder Filme starten nicht": "Κανάλια ή ταινίες δεν ξεκινούν",
   "Bild ruckelt oder bleibt hängen": "Η εικόνα κολλάει ή παγώνει",
   "Frage zur App": "Ερώτηση για την εφαρμογή",
+  "Feedback oder Idee": "Σχόλιο ή ιδέα",
   "Sonstiges": "Κάτι άλλο",
   "Deine Nachricht": "Το μήνυμά σου",
   "Was ist passiert? Auf welchem Gerät (z. B. Samsung-TV, Fire TV, Handy)?": "Τι συνέβη; Σε ποια συσκευή (π.χ. τηλεόραση Samsung, Fire TV, κινητό);",

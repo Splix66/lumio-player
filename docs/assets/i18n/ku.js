@@ -164,6 +164,7 @@ window.LUMIO_I18N["ku"] = {
   "Sender oder Filme starten nicht": "Kanal an film dest pê nakin",
   "Bild ruckelt oder bleibt hängen": "Wêne diqete an asê dimîne",
   "Frage zur App": "Pirsek li ser sepanê",
+  "Feedback oder Idee": "Nêrîn an raman",
   "Sonstiges": "Tiştekî din",
   "Deine Nachricht": "Peyama te",
   "Was ist passiert? Auf welchem Gerät (z. B. Samsung-TV, Fire TV, Handy)?": "Çi qewimî? Li ser kîjan cîhazê (mînak TV-ya Samsung, Fire TV, têlefon)?",

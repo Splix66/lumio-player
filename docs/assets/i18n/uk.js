@@ -164,6 +164,7 @@ window.LUMIO_I18N["uk"] = {
   "Sender oder Filme starten nicht": "Канали або фільми не запускаються",
   "Bild ruckelt oder bleibt hängen": "Зображення гальмує або зависає",
   "Frage zur App": "Запитання про застосунок",
+  "Feedback oder Idee": "Відгук або ідея",
   "Sonstiges": "Інше",
   "Deine Nachricht": "Ваше повідомлення",
   "Was ist passiert? Auf welchem Gerät (z. B. Samsung-TV, Fire TV, Handy)?": "Що сталося? На якому пристрої (напр. телевізор Samsung, Fire TV, телефон)?",

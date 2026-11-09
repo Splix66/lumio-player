@@ -164,6 +164,7 @@ window.LUMIO_I18N["hr"] = {
   "Sender oder Filme starten nicht": "Kanali ili filmovi se ne pokreću",
   "Bild ruckelt oder bleibt hängen": "Slika zastajkuje ili se zamrzava",
   "Frage zur App": "Pitanje o aplikaciji",
+  "Feedback oder Idee": "Povratna informacija ili ideja",
   "Sonstiges": "Ostalo",
   "Deine Nachricht": "Tvoja poruka",
   "Was ist passiert? Auf welchem Gerät (z. B. Samsung-TV, Fire TV, Handy)?": "Što se dogodilo? Na kojem uređaju (npr. Samsung TV, Fire TV, mobitel)?",

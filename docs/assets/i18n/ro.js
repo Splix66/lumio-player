@@ -164,6 +164,7 @@ window.LUMIO_I18N["ro"] = {
   "Sender oder Filme starten nicht": "Canalele sau filmele nu pornesc",
   "Bild ruckelt oder bleibt hängen": "Imaginea sacadează sau se blochează",
   "Frage zur App": "Întrebare despre aplicație",
+  "Feedback oder Idee": "Feedback sau idee",
   "Sonstiges": "Altceva",
   "Deine Nachricht": "Mesajul tău",
   "Was ist passiert? Auf welchem Gerät (z. B. Samsung-TV, Fire TV, Handy)?": "Ce s-a întâmplat? Pe ce dispozitiv (ex. TV Samsung, Fire TV, telefon)?",

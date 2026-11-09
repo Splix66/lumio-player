@@ -4933,6 +4933,59 @@
       h('div', { class: 'row' }, send)], { wide: true });
   }
 
+  /* ---------- Feedback geben ----------
+     Sterne (1–5) und/oder Text. Geht wie „Problem melden“ über send_support (Thema „Feedback“) und erscheint im
+     Verwaltungsbereich. Mitgeschickt werden nur App-Version, Gerätetyp und Sprache – steht so im Fenster. */
+  function showFeedback() {
+    var stars = 0, starBtns = [], label = h('p', { class: 'fb-label' });
+    var LABELS = ['', T('Gefällt mir nicht'), T('Geht so'), T('Ganz okay'), T('Gefällt mir'), T('Gefällt mir sehr')];
+    var row = h('div', { class: 'fb-stars', role: 'radiogroup', 'aria-label': T('Wie gefällt dir Telvo?') });
+    function paint() {
+      starBtns.forEach(function (b, i) { var on = i < stars; b.classList.toggle('is-on', on); clear(b).appendChild(icon(on ? 'starFill' : 'star')); b.setAttribute('aria-checked', i + 1 === stars ? 'true' : 'false'); });
+      label.textContent = stars ? LABELS[stars] : T('Tippe auf die Sterne');
+    }
+    for (var i = 1; i <= 5; i++) (function (n) {
+      var b = h('button', { class: 'fb-star f', role: 'radio', title: T('{0} von 5 Sternen', n), 'aria-label': T('{0} von 5 Sternen', n), onclick: function () { stars = n; paint(); } });
+      starBtns.push(b); row.appendChild(b);
+    })(i);
+    starBtns[0].setAttribute('data-autofocus', '');
+    var msg = h('textarea', { class: 'f', rows: 3, maxlength: 1500, placeholder: T('Was gefällt dir – und was können wir besser machen?') });
+    var mail = inputField(T('E-Mail für eine Antwort (freiwillig)'), '', 'email');
+    mail.wrap.className += ' rep-mail';
+    var err = h('div', { class: 'error' });
+    var send = sheetBtn('send', T('Senden'), go, 'primary');
+    function go() {
+      var text = msg.value.trim();
+      if (!stars && text.length < 5) { err.textContent = T('Bitte wähle Sterne oder schreib ein paar Worte.'); return; }
+      if (!CONFIG.cloudUrl) { err.textContent = T('Online-Dienst nicht erreichbar'); return; }
+      var kind = Platform.tizen ? 'Samsung' : Platform.webos ? 'LG' : /Electron/.test(UA) ? 'PC-App' : Platform.capacitor ? (Platform.androidTV ? 'Android-TV' : 'Android') : 'Browser';
+      var body = (stars ? 'Bewertung: ' + stars + ' von 5 ' + new Array(stars + 1).join('★') + new Array(6 - stars).join('☆') + '\n' : '') + (text || '') +
+        '\n\n— Telvo ' + CONFIG.version + ' · ' + kind + ' · ' + Lang.cur;
+      err.textContent = ''; send.disabled = true; send.lastChild.textContent = T('Wird gesendet …');
+      (Cloud.registered ? Promise.resolve({ ok: true }) : Cloud.register()).then(function (r) {
+        if (!r || !r.ok) throw new Error(rpcErr(r));
+        Cloud.registered = true;
+        return Cloud.rpc('send_support', { p_mac: Device.mac(), p_key: Device.key(), p_topic: 'Feedback', p_message: body.slice(0, 2000), p_contact: mail.input.value.trim() || null });
+      }).then(function (r) {
+        if (!r || !r.ok) throw new Error(rpcErr(r));
+        Store.set('feedbackAt', Date.now());
+        goBack();
+        toast(T('Danke für dein Feedback!'), 3500);
+      }).catch(function (e) {
+        send.disabled = false; send.lastChild.textContent = T('Senden');
+        err.textContent = (e && e.message && e.message !== 'timeout' && e.message !== 'offline') ? T(e.message)
+          : (navigator.onLine === false ? T('Kein Internet') : T('Online-Dienst nicht erreichbar'));
+      });
+    }
+    paint();
+    openSheet(T('Feedback geben'), 'star', [
+      h('p', { class: 'fb-q', text: T('Wie gefällt dir Telvo?') }), row, label,
+      h('label', { class: 'field rep-msg' }, h('span', { text: T('Lob, Kritik oder Ideen (freiwillig)') }), msg),
+      mail.wrap,
+      h('p', { class: 'hint fb-note', text: T('Mitgeschickt werden nur App-Version, Gerätetyp und Sprache.') }),
+      err, h('div', { class: 'row' }, send)], { wide: true });
+  }
+
   function SettingsView() {
     var p = App.profile, tiles = [];
     function opt(list, v) { for (var i = 0; i < list.length; i++) if (list[i][0] === v) return list[i][1]; return ''; }
@@ -5140,6 +5193,7 @@
         })]);
     });
     var tReport = tile('help', T('Problem melden'), T('Nachricht an den Support'), showReport);
+    var tFeedback = !CONFIG.cloudUrl ? null : tile('star', T('Feedback geben'), T('Lob, Kritik oder Ideen'), showFeedback);
     var tBackup = !CONFIG.cloudUrl ? null : tile('upload', T('Sichern & Wiederherstellen'), function () {
       var at = Store.get('backupAt', 0); return at ? T('Gesichert: {0}', fmtWhen(at)) : T('Noch nicht gesichert');
     }, showBackup);
@@ -5181,7 +5235,7 @@
       group(T('Playlist'), [tAdd, tPl, tUpd, tAuto, tShift]),
       group(T('Kindersicherung & Kategorien'), [tPar, tHideL, tHideM, tHideS, tHideCh, tHisL, tHisM, tHisS]),
       group(T('Wiedergabe'), [tSort, tFmt, tQual, tEng, tExt, tSub, tLast, tIdle]),
-      group(T('Darstellung & Gerät'), [tLang, tTheme, tClock, tDev, tBackup, tAbout, tReport]),
+      group(T('Darstellung & Gerät'), [tLang, tTheme, tClock, tDev, tBackup, tAbout, tFeedback, tReport]),
       h('div', { class: 'st-foot' }, macTag(profileUser(p), true)));
     tAdd.setAttribute('data-autofocus', '');
     settingsPaint = paint;

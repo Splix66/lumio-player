@@ -739,5 +739,20 @@ window.LUMIO_I18N["uk"] = {
   "{0} Playlists fehlen noch auf diesem Gerät": "На цьому пристрої ще бракує {0} плейлистів",
   "Favoriten und Verlauf aus der Sicherung übernommen": "Обране та історію відновлено з копії",
   "Der Online-Dienst kennt diese Funktion noch nicht.": "Онлайн-сервіс поки не підтримує цю функцію.",
-  "Die Sicherung ist zu groß.": "Копія завелика."
+  "Die Sicherung ist zu groß.": "Копія завелика.",
+  "Feedback geben": "Залишити відгук",
+  "Lob, Kritik oder Ideen": "Похвала, критика чи ідеї",
+  "Wie gefällt dir Telvo?": "Як вам Telvo?",
+  "Gefällt mir nicht": "Не подобається",
+  "Geht so": "Так собі",
+  "Ganz okay": "Нормально",
+  "Gefällt mir": "Подобається",
+  "Gefällt mir sehr": "Дуже подобається",
+  "Tippe auf die Sterne": "Торкніться зірок",
+  "{0} von 5 Sternen": "{0} з 5 зірок",
+  "Was gefällt dir – und was können wir besser machen?": "Що вам подобається – і що можна покращити?",
+  "Lob, Kritik oder Ideen (freiwillig)": "Похвала, критика чи ідеї (необов’язково)",
+  "Bitte wähle Sterne oder schreib ein paar Worte.": "Оберіть зірки або напишіть кілька слів.",
+  "Danke für dein Feedback!": "Дякуємо за відгук!",
+  "Mitgeschickt werden nur App-Version, Gerätetyp und Sprache.": "Надсилаються лише версія застосунку, тип пристрою та мова."
 };

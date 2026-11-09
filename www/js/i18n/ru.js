@@ -739,5 +739,20 @@ window.LUMIO_I18N["ru"] = {
   "{0} Playlists fehlen noch auf diesem Gerät": "На этом устройстве ещё нет {0} плейлистов",
   "Favoriten und Verlauf aus der Sicherung übernommen": "Избранное и история восстановлены из копии",
   "Der Online-Dienst kennt diese Funktion noch nicht.": "Онлайн-сервис пока не поддерживает эту функцию.",
-  "Die Sicherung ist zu groß.": "Копия слишком большая."
+  "Die Sicherung ist zu groß.": "Копия слишком большая.",
+  "Feedback geben": "Оставить отзыв",
+  "Lob, Kritik oder Ideen": "Похвала, критика или идеи",
+  "Wie gefällt dir Telvo?": "Как вам Telvo?",
+  "Gefällt mir nicht": "Не нравится",
+  "Geht so": "Так себе",
+  "Ganz okay": "Нормально",
+  "Gefällt mir": "Нравится",
+  "Gefällt mir sehr": "Очень нравится",
+  "Tippe auf die Sterne": "Нажмите на звёзды",
+  "{0} von 5 Sternen": "{0} из 5 звёзд",
+  "Was gefällt dir – und was können wir besser machen?": "Что вам нравится – и что можно улучшить?",
+  "Lob, Kritik oder Ideen (freiwillig)": "Похвала, критика или идеи (необязательно)",
+  "Bitte wähle Sterne oder schreib ein paar Worte.": "Выберите звёзды или напишите пару слов.",
+  "Danke für dein Feedback!": "Спасибо за отзыв!",
+  "Mitgeschickt werden nur App-Version, Gerätetyp und Sprache.": "Передаются только версия приложения, тип устройства и язык."
 };

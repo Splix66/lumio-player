@@ -739,5 +739,20 @@ window.LUMIO_I18N["el"] = {
   "{0} Playlists fehlen noch auf diesem Gerät": "Λείπουν ακόμη {0} λίστες σε αυτή τη συσκευή",
   "Favoriten und Verlauf aus der Sicherung übernommen": "Τα αγαπημένα και το ιστορικό επανήλθαν από το αντίγραφο",
   "Der Online-Dienst kennt diese Funktion noch nicht.": "Η διαδικτυακή υπηρεσία δεν υποστηρίζει ακόμη αυτή τη λειτουργία.",
-  "Die Sicherung ist zu groß.": "Το αντίγραφο είναι πολύ μεγάλο."
+  "Die Sicherung ist zu groß.": "Το αντίγραφο είναι πολύ μεγάλο.",
+  "Feedback geben": "Στείλε σχόλια",
+  "Lob, Kritik oder Ideen": "Έπαινος, κριτική ή ιδέες",
+  "Wie gefällt dir Telvo?": "Πώς σου φαίνεται το Telvo;",
+  "Gefällt mir nicht": "Δεν μου αρέσει",
+  "Geht so": "Μέτρια",
+  "Ganz okay": "Εντάξει",
+  "Gefällt mir": "Μου αρέσει",
+  "Gefällt mir sehr": "Μου αρέσει πολύ",
+  "Tippe auf die Sterne": "Πάτα τα αστέρια",
+  "{0} von 5 Sternen": "{0} από 5 αστέρια",
+  "Was gefällt dir – und was können wir besser machen?": "Τι σου αρέσει – και τι μπορούμε να βελτιώσουμε;",
+  "Lob, Kritik oder Ideen (freiwillig)": "Έπαινος, κριτική ή ιδέες (προαιρετικά)",
+  "Bitte wähle Sterne oder schreib ein paar Worte.": "Διάλεξε αστέρια ή γράψε λίγα λόγια.",
+  "Danke für dein Feedback!": "Ευχαριστούμε για τα σχόλιά σου!",
+  "Mitgeschickt werden nur App-Version, Gerätetyp und Sprache.": "Στέλνονται μόνο η έκδοση της εφαρμογής, ο τύπος συσκευής και η γλώσσα."
 };

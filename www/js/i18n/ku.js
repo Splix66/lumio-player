@@ -739,5 +739,20 @@ window.LUMIO_I18N["ku"] = {
   "{0} Playlists fehlen noch auf diesem Gerät": "Hîn {0} lîste li ser vê cîhazê kêm in",
   "Favoriten und Verlauf aus der Sicherung übernommen": "Bijare û dîrok ji paşkeftiyê hatin vegerandin",
   "Der Online-Dienst kennt diese Funktion noch nicht.": "Karûbarê serhêl hîn vê fonksiyonê nas nake.",
-  "Die Sicherung ist zu groß.": "Paşkeftî pir mezin e."
+  "Die Sicherung ist zu groß.": "Paşkeftî pir mezin e.",
+  "Feedback geben": "Nêrîna xwe bide",
+  "Lob, Kritik oder Ideen": "Pesn, rexne an raman",
+  "Wie gefällt dir Telvo?": "Telvo çawa ye?",
+  "Gefällt mir nicht": "Hez nakim",
+  "Geht so": "Wisa wisa",
+  "Ganz okay": "Baş e",
+  "Gefällt mir": "Hez dikim",
+  "Gefällt mir sehr": "Gelek hez dikim",
+  "Tippe auf die Sterne": "Li stêrkan bitikîne",
+  "{0} von 5 Sternen": "{0} ji 5 stêrkan",
+  "Was gefällt dir – und was können wir besser machen?": "Çi xweş tê te – û em dikarin çi baştir bikin?",
+  "Lob, Kritik oder Ideen (freiwillig)": "Pesn, rexne an raman (bijarte)",
+  "Bitte wähle Sterne oder schreib ein paar Worte.": "Ji kerema xwe stêrkan hilbijêre an çend peyvan binivîse.",
+  "Danke für dein Feedback!": "Spas ji bo nêrîna te!",
+  "Mitgeschickt werden nur App-Version, Gerätetyp und Sprache.": "Tenê guhertoya sepanê, cureyê cîhazê û ziman têne şandin."
 };

@@ -739,5 +739,20 @@ window.LUMIO_I18N["es"] = {
   "{0} Playlists fehlen noch auf diesem Gerät": "Aún faltan {0} listas en este dispositivo",
   "Favoriten und Verlauf aus der Sicherung übernommen": "Favoritos e historial restaurados desde la copia",
   "Der Online-Dienst kennt diese Funktion noch nicht.": "El servicio en línea aún no admite esta función.",
-  "Die Sicherung ist zu groß.": "La copia es demasiado grande."
+  "Die Sicherung ist zu groß.": "La copia es demasiado grande.",
+  "Feedback geben": "Enviar opinión",
+  "Lob, Kritik oder Ideen": "Elogios, críticas o ideas",
+  "Wie gefällt dir Telvo?": "¿Qué te parece Telvo?",
+  "Gefällt mir nicht": "No me gusta",
+  "Geht so": "Regular",
+  "Ganz okay": "Está bien",
+  "Gefällt mir": "Me gusta",
+  "Gefällt mir sehr": "Me encanta",
+  "Tippe auf die Sterne": "Toca las estrellas",
+  "{0} von 5 Sternen": "{0} de 5 estrellas",
+  "Was gefällt dir – und was können wir besser machen?": "¿Qué te gusta y qué podemos mejorar?",
+  "Lob, Kritik oder Ideen (freiwillig)": "Elogios, críticas o ideas (opcional)",
+  "Bitte wähle Sterne oder schreib ein paar Worte.": "Elige estrellas o escribe unas palabras.",
+  "Danke für dein Feedback!": "¡Gracias por tu opinión!",
+  "Mitgeschickt werden nur App-Version, Gerätetyp und Sprache.": "Solo se envían la versión de la app, el tipo de dispositivo y el idioma."
 };
