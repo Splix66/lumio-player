@@ -1,5 +1,15 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## 1.11.1 – 2026-11-09 · Neue Willkommensseite
+
+**App – Willkommensseite (noch keine Playlist) neu:** dunkles Premium-Design (#0B0B0F, Karten #17171E, Akzent #9B83D5) ·
+Einrichtungshilfe in 3 Schritten (QR-Code scannen → Playlist eintragen → Loslegen) · großer QR-Code · MAC und KEY gut
+lesbar mit Kopier-Knopf (nie abgekürzt, Werte immer vom Gerät) · Statusanzeige mit echten Werten (Internet / Online-Dienst,
+Player, Playlist; prüft alle 3 Sekunden) · Hilfe-Knopf mit kurzen Antworten · weniger Text · Handy: Seite startet oben.
+
+**App – Startseite:** Kacheln leuchten nicht mehr, Pfeil und Kreis entfernt. **PC:** vorsichtigere Videoqualität beim Start
+(weniger Hänger bei schwacher Verbindung).
+
 ## 1.11.0 – 2026-11-09 · Telvo: neuer Name, neue Webseite, mehr Sicherheit
 
 **App – behobene Fehler:** endloses Hängen beim Aktualisieren, wenn der Server mitten in der Übertragung stehen blieb ·

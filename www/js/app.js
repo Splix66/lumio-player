@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Telvo Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.11.0',
+    version: '1.11.1',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     /* Bibliotheken: werden beim Bauen nach www/lib kopiert (scripts/copy-libs.js) und von dort geladen.
        Nur wenn sie fehlen, aus dem Internet – mit fester Version und Prüfsumme (SRI): eine veränderte Datei
@@ -88,6 +88,8 @@
     arrowR: '<path d="M5 12h14M13 6l6 6-6 6"/>',
     sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6L6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/>',
     info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.1"/>',
+    help: '<circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.1-2.4 3.7M12 17.2v.1"/>',
+    wifi: '<path d="M2.5 9a14 14 0 0 1 19 0M5.6 12.4a9.5 9.5 0 0 1 12.8 0M8.7 15.7a5 5 0 0 1 6.6 0"/><path d="M12 19.2v.1"/>',
     phone: '<rect x="6.5" y="2.5" width="11" height="19" rx="2.2"/><path d="M11 18h2"/>',
     history: '<path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1L3.5 8.5"/><path d="M3.5 3.5v5h5"/><path d="M12 7.5V12l3 2"/>',
     search: '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>',
@@ -1205,7 +1207,10 @@
         body: JSON.stringify(body),
         signal: ctrl ? ctrl.signal : undefined
       }).then(function (r) { return r.json(); });
-      return Promise.race([req, limit]).then(function (j) { clearTimeout(timer); return j; }, function (e) { clearTimeout(timer); throw e; });
+      var cloud = this;
+      // Ergebnis merken und die Statusanzeige der Willkommensseite sofort auffrischen
+      function seen() { if (WelcomeStatus.box && document.body.contains(WelcomeStatus.box)) WelcomeStatus.paint(); }
+      return Promise.race([req, limit]).then(function (j) { clearTimeout(timer); cloud.lastOk = Date.now(); seen(); return j; }, function (e) { clearTimeout(timer); cloud.lastFail = Date.now(); seen(); throw e; });
     },
     /* Gelöschte Playlists, deren Online-Kopie noch nicht entfernt werden konnte */
     pendingDeletes: function () { return Store.get('cloudDel', []); },
@@ -2430,6 +2435,68 @@
   /* ==========================================================
      Startbildschirm: Profile / Playlists
      ========================================================== */
+  /* Statusanzeige der Willkommensseite – nur echte, geprüfte Werte:
+     Internet: letzte Antwort des Online-Dienstes (bzw. Gerät meldet offline); Player: Gerät kann Streams abspielen
+     (TV-Player, eingebautes HLS oder hls.js mit MediaSource); Playlist: tatsächlich gespeicherte Playlists. */
+  var WelcomeStatus = {
+    player: null, timer: null,
+    el: function () {
+      this.box = h('div', { class: 'wl-status', role: 'status', 'aria-live': 'polite' });
+      this.paint();
+      return this.box;
+    },
+    net: function () {
+      if (typeof navigator.onLine === 'boolean' && !navigator.onLine) return ['off', T('Kein Internet')];
+      if (!CONFIG.cloudUrl) return ['ok', T('Internet')];
+      if (Cloud.lastOk && (!Cloud.lastFail || Cloud.lastOk > Cloud.lastFail)) return ['ok', T('Internet verbunden')];
+      if (Cloud.lastFail) return ['warn', T('Online-Dienst nicht erreichbar')];
+      return ['wait', T('Verbindung wird geprüft …')];
+    },
+    checkPlayer: function () {
+      var self = this;
+      if (self.player) return;
+      var v = document.createElement('video'), hlsNative = false, mse = false;
+      try { hlsNative = !!v.canPlayType('application/vnd.apple.mpegurl'); } catch (e) {}
+      try { mse = !!(window.MediaSource && MediaSource.isTypeSupported('video/mp4; codecs="avc1.42E01E,mp4a.40.2"')); } catch (e) {}
+      if (NativePlayer.available() || hlsNative) { self.player = 'ok'; return; }
+      if (!mse) { self.player = 'off'; return; }
+      self.player = 'wait';
+      ensureHls().then(function (Hls) { self.player = Hls && Hls.isSupported() ? 'ok' : 'off'; self.paint(); }, function () { self.player = 'off'; self.paint(); });
+    },
+    paint: function () {
+      if (!this.box) return;
+      this.checkPlayer();
+      var n = this.net(), pl = Profiles.list().length;
+      var items = [
+        [n[0], 'wifi', n[1]],
+        [this.player, 'player', this.player === 'ok' ? T('Player bereit') : this.player === 'wait' ? T('Player wird geprüft …') : T('Player eingeschränkt')],
+        [pl ? 'ok' : 'none', 'playlist', pl ? T('Playlist hinterlegt') : T('Keine Playlist')]
+      ];
+      clear(this.box);
+      var box = this.box;
+      items.forEach(function (it) { box.appendChild(h('span', { class: 'wl-chip is-' + it[0] }, h('i', { 'aria-hidden': 'true' }), icon(it[1]), h('span', { text: it[2] }))); });
+    },
+    start: function (screenEl) {
+      var self = this;
+      clearInterval(self.timer);
+      function tick() { if (!document.body.contains(screenEl)) { clearInterval(self.timer); window.removeEventListener('online', tick); window.removeEventListener('offline', tick); return; } self.paint(); }
+      self.timer = setInterval(tick, 3000);
+      window.addEventListener('online', tick); window.addEventListener('offline', tick);
+    }
+  };
+  /* Kurze Hilfe auf der Willkommensseite */
+  function showWelcomeHelp() {
+    var qa = [
+      [T('Wo finde ich MAC und KEY?'), T('Hier auf dieser Seite. Später auch unter „Profil“ und unten am Bildschirmrand.')],
+      [T('Woher bekomme ich eine Playlist?'), T('Von deinem IPTV-Anbieter: ein M3U-Link oder ein Xtream-Zugang. Telvo enthält selbst keine Sender.')],
+      [T('Die Playlist erscheint nicht?'), T('Die App prüft alle 30 Sekunden. Stimmen MAC und KEY auf der Webseite genau? Ist das Gerät online?')],
+      [T('Kein Handy zur Hand?'), T('„Playlist hinzufügen“ wählen und die Daten direkt hier eingeben.')]
+    ];
+    var body = h('div', { class: 'wl-faq' });
+    qa.forEach(function (x) { body.appendChild(h('div', { class: 'wl-faq-item' }, h('b', { text: x[0] }), h('p', { text: x[1] }))); });
+    body.appendChild(h('p', { class: 'hint wl-faq-more' }, h('span', { text: T('Mehr Hilfe:') + ' ' }), portalLinkBtn()));
+    openSheet(T('Hilfe'), 'help', body);
+  }
   /* „Auch auf der Webseite verwalten“: an = Playlist liegt online (von der Webseite gesendet oder freigegeben) */
   function onWeb(p) { return !!p.remoteId || p.cloud === true; }
   function toggleWeb(p) {
@@ -2454,22 +2521,47 @@
   function showProfiles() {
     var list = Profiles.list();
     if (!list.length) {
-      var welcome = h('div', { class: 'profiles is-empty' }, heroArt(),
-        h('div', { class: 'profiles-top' }, h('div', { class: 'brand' }, brandMark(), wordmark()), langButton()),
-        h('div', { class: 'welcome' },
-          h('div', { class: 'qr-hero' },
-            qrBox(Device.portalLink(), 'big'),
-            h('div', { class: 'qr-info' },
-              h('h1', { text: T('Playlist hinzufügen') }),
-              h('p', { class: 'lead', text: T('Scanne den QR-Code mit deinem Handy. Dort gibst du nur noch deinen M3U-Link oder Xtream-Zugang ein – die Playlist erscheint dann automatisch hier.') }),
-              h('div', { class: 'id-box' },
-                h('div', { class: 'id-row' }, h('span', { text: 'MAC' }), h('b', { text: Device.mac() }), copyBtn(Device.mac(), 'MAC')),
-                h('div', { class: 'id-row' }, h('span', { text: 'KEY' }), h('b', { text: Device.key() }), copyBtn(Device.key(), 'KEY'))),
-              h('p', { class: 'hint', text: T('Oder öffne diese Seite und gib MAC und KEY ein:') }),
-              portalLinkBtn(),
-              h('div', { class: 'row small-actions' },
-                h('button', { class: 'btn small ghost f', onclick: showAddProfile, 'data-autofocus': true }, icon('plus'), h('span', { text: T('M3U oder Xtream hier eingeben') })),
-                h('button', { class: 'btn small ghost f', onclick: startDemo, title: T('Mit freien Test-Videos – ohne Zugang.') }, icon('play'), h('span', { text: T('Demo ausprobieren') })))))));
+      // Willkommensseite (noch keine Playlist): eigenes Premium-Design, Klassen „wl-…“ in css/style.css.
+      // MAC, KEY und QR-Code kommen wie bisher aus Device / qrBox – nichts Festes eingebaut.
+      function idTile(label, value, copyLabel) {
+        return h('div', { class: 'wl-id' },
+          h('span', { class: 'wl-id-label', text: label }),
+          h('span', { class: 'wl-id-row' }, h('b', { class: 'wl-id-value', text: value }), copyBtn(value, copyLabel)));
+      }
+      function step(n, title, sub) {
+        return h('li', { class: 'wl-step' }, h('span', { class: 'wl-step-n', text: String(n) }),
+          h('span', { class: 'wl-step-t' }, h('b', { text: title }), h('small', { text: sub })));
+      }
+      var status = WelcomeStatus.el();
+      // Handy/Tablet: nicht vorwählen – sonst springt die Seite beim Öffnen nach unten zum Knopf
+      var touchOnly = !Platform.tv && !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+      var welcome = h('div', { class: 'profiles is-empty wl' },
+        h('div', { class: 'wl-top' },
+          h('div', { class: 'brand' }, brandMark(), wordmark()),
+          h('div', { class: 'wl-tools' }, status,
+            h('button', { class: 'wl-help f', title: T('Hilfe'), 'aria-label': T('Hilfe'), onclick: showWelcomeHelp }, icon('help')),
+            langButton())),
+        h('div', { class: 'wl-main' },
+          h('div', { class: 'wl-card' },
+            h('ol', { class: 'wl-steps', 'aria-label': T('Einrichtung') },
+              step(1, T('QR-Code scannen'), T('Mit dem Handy – MAC und KEY sind schon eingetragen.')),
+              step(2, T('Playlist eintragen'), T('M3U-Link oder Xtream-Zugang')),
+              step(3, T('Loslegen'), T('Erscheint hier automatisch'))),
+            h('div', { class: 'wl-text' },
+              h('h1', { class: 'wl-title', text: T('Willkommen bei Telvo.') }),
+              h('p', { class: 'wl-sub', text: T('Dein Entertainment. Alles an einem Ort.') }),
+              h('div', { class: 'wl-ids' },
+                idTile(T('MAC-Adresse'), Device.mac(), 'MAC'),
+                idTile('KEY', Device.key(), 'KEY')),
+              h('div', { class: 'wl-actions' },
+                h('button', { class: 'wl-btn wl-primary f', onclick: showAddProfile, 'data-autofocus': touchOnly ? null : true }, icon('plus'), h('span', { text: T('Playlist hinzufügen') })),
+                h('button', { class: 'wl-btn wl-ghost f', onclick: startDemo, title: T('Mit freien Test-Videos – ohne Zugang.') }, icon('play'), h('span', { text: T('Demo ausprobieren') })))),
+            h('div', { class: 'wl-qr' },
+              h('div', { class: 'wl-qr-frame' }, qrBox(Device.portalLink(), 'wl-qrcode')),
+              h('p', { class: 'wl-qr-title', text: T('Mit dem Handy einrichten') }),
+              portalLinkBtn())),
+          h('p', { class: 'wl-legal', text: T('Diese App enthält keine Sender oder Inhalte. Du benötigst einen eigenen Zugang von deinem Anbieter.') })));
+      WelcomeStatus.start(welcome);
       Screens.reset('profiles', welcome);
       return;
     }
@@ -5108,10 +5200,13 @@
             var best = Settings.get('quality') === 'best';
             var hls = new Hls({
               enableWorker: true, lowLatencyMode: false, backBufferLength: Platform.lite ? 10 : 30,
-              maxBufferLength: 30, maxMaxBufferLength: Platform.lite ? 40 : 60,          // genug Puffer, ohne alten TVs den Speicher zu füllen
+              // PC: größerer Puffer (genug Speicher) – überbrückt kurze Einbrüche beim Anbieter, statt zu hängen
+              maxBufferLength: desktop ? 60 : 30, maxMaxBufferLength: Platform.lite ? 40 : desktop ? 120 : 60,
               capLevelToPlayerSize: !desktop && !best,              // im kleinen Player auf schwachen Geräten keine volle Auflösung laden
-              abrEwmaDefaultEstimate: desktop ? 8000000 : 1500000,  // Startschätzung der Internetgeschwindigkeit
-              abrBandWidthUpFactor: desktop ? 0.85 : 0.7,
+              // Startschätzung der Internetgeschwindigkeit. Vorher 8 Mbit/s am PC: startete bei langsameren Servern zu hoch
+              // und lief leer („hängt“, auch bei den Demo-Videos). 4 Mbit/s ≈ gutes HD, steigt danach von selbst.
+              abrEwmaDefaultEstimate: desktop ? 4000000 : 1500000,
+              abrBandWidthUpFactor: 0.7,                            // erst hochschalten, wenn deutlich Luft ist
               fragLoadingMaxRetry: 4, levelLoadingMaxRetry: 3, manifestLoadingMaxRetry: 2,
               // Gegen Hänger bei Live-Sendern: kleine Lücken im Stream überspringen und nach einem Hänger
               // wieder an die aktuelle Stelle springen statt immer weiter hinterherzulaufen
