@@ -45,7 +45,8 @@ Bis zum offiziellen Start bleiben alle Versionen unter 2.0 (1.11.x, 1.12 …).
 - ✅ **Catch-up – „Verpasste Sendungen“** für Xtream-Zugänge (Sender mit „tv_archive“): Liste nach Tagen, laufende
   Sendung von Anfang an, Abspielen über /timeshift/ in Serverzeit. Auf Fernseher und PC rechts neben der Senderliste,
   überall auch im Player. Im Demo-Modus zum Ausprobieren. Noch offen: Catch-up für M3U-Playlists (catchup-source).
-- **Programmführer:** Zeitverschiebung einstellbar, eigene EPG-Adresse
+- ✅ **Programmführer:** Zeitverschiebung je Playlist (−5 bis +5 Std., Einstellungen → Programmführer-Zeit);
+  eigene EPG-Adresse gab es schon (M3U, Profil → Programmführer)
 - **Sichern und Wiederherstellen** von Einstellungen und Favoriten (Export/Import)
 - **Kategorien umbenennen und sortieren**, einzelne Sender ausblenden
 

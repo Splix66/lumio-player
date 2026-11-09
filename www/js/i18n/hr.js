@@ -677,5 +677,8 @@ window.LUMIO_I18N["hr"] = {
   "Läuft gerade – von Anfang an": "Upravo – od početka",
   "Für diesen Sender gibt es gerade keine Aufzeichnungen.": "Za ovaj program trenutačno nema snimaka.",
   "Aufzeichnungen konnten nicht geladen werden.": "Snimke se nisu mogle učitati.",
-  "Freier Film der Blender Foundation (CC BY).": "Slobodni film Blender Foundationa (CC BY)."
+  "Freier Film der Blender Foundation (CC BY).": "Slobodni film Blender Foundationa (CC BY).",
+  "Programmführer-Zeit": "Vrijeme TV vodiča",
+  "Keine Verschiebung": "Bez pomaka",
+  "Zeigt der Programmführer die Sendungen zu früh oder zu spät an? Dann hier die Zeit verschieben. Gilt nur für diese Playlist.": "Vodič prikazuje emisije prerano ili prekasno? Ovdje pomakni vrijeme. Vrijedi samo za ovu playlistu."
 };

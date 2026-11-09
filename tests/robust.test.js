@@ -243,4 +243,25 @@
       });
     }).catch(function (e) { window.fetch = realFetch; throw e; });
   });
+
+  t('Catch-up', 'Programmführer-Zeit: Verschiebung um +1 Std. bei Xtream und M3U', function () {
+    var realFetch = window.fetch, now = Math.floor(Date.now() / 1000), h0 = now - (now % 3600), listings = [], k;
+    for (k = -3; k <= 3; k++) listings.push({ title: btoa('S' + k), description: '', start_timestamp: String(h0 + k * 3600), stop_timestamp: String(h0 + (k + 1) * 3600) });
+    window.fetch = function (url) {
+      var body = /get_simple_data_table/.test(url) ? { epg_listings: listings } : /get_short_epg/.test(url) ? { epg_listings: listings.slice(3) } : {};
+      return Promise.resolve({ ok: true, status: 200, body: null, text: function () { return Promise.resolve(JSON.stringify(body)); } });
+    };
+    var prof = { type: 'xtream', server: 'http://srv.invalid', username: 'u', password: 'p', epgShift: 60 };
+    var p = D.makeProvider(prof);
+    return p.epg({ id: '1' }, 3).then(function (l) {
+      eq(l[0].title, 'S-1', 'läuft gerade: die Sendung, die laut Programm eine Stunde früher war');
+      eq(l[0].start, h0, 'um eine Stunde verschoben');
+      prof.epgShift = 0;
+      return p.epg({ id: '1' }, 3);
+    }).then(function (l) {
+      window.fetch = realFetch;
+      eq(l[0].title, 'S0', 'ohne Verschiebung wie vom Server');
+      eq(l[0].start, h0, 'Originalzeit');
+    }, function (e) { window.fetch = realFetch; throw e; });
+  });
 })();

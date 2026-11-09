@@ -677,5 +677,8 @@ window.LUMIO_I18N["ar"] = {
   "Läuft gerade – von Anfang an": "يُعرض الآن – من البداية",
   "Für diesen Sender gibt es gerade keine Aufzeichnungen.": "لا توجد تسجيلات لهذه القناة حاليًا.",
   "Aufzeichnungen konnten nicht geladen werden.": "تعذّر تحميل التسجيلات.",
-  "Freier Film der Blender Foundation (CC BY).": "فيلم حر من Blender Foundation (CC BY)."
+  "Freier Film der Blender Foundation (CC BY).": "فيلم حر من Blender Foundation (CC BY).",
+  "Programmführer-Zeit": "توقيت دليل البرامج",
+  "Keine Verschiebung": "بدون إزاحة",
+  "Zeigt der Programmführer die Sendungen zu früh oder zu spät an? Dann hier die Zeit verschieben. Gilt nur für diese Playlist.": "هل يعرض دليل البرامج البرامج مبكرًا أو متأخرًا؟ عدّل الوقت هنا. ينطبق على قائمة التشغيل هذه فقط."
 };

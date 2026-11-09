@@ -677,5 +677,8 @@ window.LUMIO_I18N["it"] = {
   "Läuft gerade – von Anfang an": "In onda ora – dall’inizio",
   "Für diesen Sender gibt es gerade keine Aufzeichnungen.": "Al momento non ci sono registrazioni per questo canale.",
   "Aufzeichnungen konnten nicht geladen werden.": "Impossibile caricare le registrazioni.",
-  "Freier Film der Blender Foundation (CC BY).": "Film libero della Blender Foundation (CC BY)."
+  "Freier Film der Blender Foundation (CC BY).": "Film libero della Blender Foundation (CC BY).",
+  "Programmführer-Zeit": "Orario della guida TV",
+  "Keine Verschiebung": "Nessuno scostamento",
+  "Zeigt der Programmführer die Sendungen zu früh oder zu spät an? Dann hier die Zeit verschieben. Gilt nur für diese Playlist.": "La guida mostra i programmi troppo presto o troppo tardi? Sposta qui l’orario. Vale solo per questa playlist."
 };

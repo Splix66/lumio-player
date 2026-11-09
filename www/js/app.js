@@ -174,6 +174,8 @@
     try { var bin = atob(s); try { return decodeURIComponent(escape(bin)); } catch (e) { return bin; } } catch (e) { return s; }
   }
   function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  // Programmführer-Zeitverschiebung der Playlist in Sekunden (Einstellungen → „Programmführer-Zeit“)
+  function epgShiftOf(p) { return p ? (Number(p.epgShift) || 0) * 60 : 0; }
   function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
 
   /* ---------------- Speicher (auf dem Gerät) ---------------- */
@@ -705,11 +707,17 @@
         });
       },
       epg: function (item, limit) {
-        return api('get_short_epg', '&stream_id=' + item.id + '&limit=' + (limit || 3), true).then(function (d) {
-          var list = (d && d.epg_listings) || [];
-          return list.map(function (e) {
-            return { title: b64(e.title), desc: b64(e.description), start: Number(e.start_timestamp), end: Number(e.stop_timestamp) };
+        // Verschiebung nach später: Der Server liefert „ab jetzt“ – darum dann das ganze Programm holen und selbst filtern
+        var sh = epgShiftOf(p), n = limit || 3;
+        var pr = sh > 0 ? api('get_simple_data_table', '&stream_id=' + item.id, true)
+          : api('get_short_epg', '&stream_id=' + item.id + '&limit=' + (sh < 0 ? n + 1 : n), true);
+        return pr.then(function (d) {
+          var now = Date.now() / 1000;
+          var list = ((d && d.epg_listings) || []).map(function (e) {
+            return { title: b64(e.title), desc: b64(e.description), start: Number(e.start_timestamp) + sh, end: Number(e.stop_timestamp) + sh };
           });
+          if (sh > 0) list = list.filter(function (e) { return e.end > now; }).sort(function (a, b) { return a.start - b.start; }).slice(0, n);
+          return list;
         }).catch(function () { return []; });
       },
       /* Catch-up: vergangene Sendungen eines Senders mit Aufzeichnung (neueste zuerst).
@@ -717,12 +725,15 @@
       archive: function (item) {
         var days = item.archive || 0;
         return Promise.all([api('get_simple_data_table', '&stream_id=' + item.id, true), serverOffset()]).then(function (r) {
-          var now = Date.now() / 1000, from = now - days * 86400 - 3600, off = r[1];
+          var now = Date.now() / 1000, from = now - days * 86400 - 3600, off = r[1], sh = epgShiftOf(p);
           return ((r[0] && r[0].epg_listings) || []).map(function (e) {
-            return { title: b64(e.title), desc: b64(e.description), start: Number(e.start_timestamp), end: Number(e.stop_timestamp), startText: e.start, rec: e.has_archive };
+            var x = { title: b64(e.title), desc: b64(e.description), start: Number(e.start_timestamp), end: Number(e.stop_timestamp), startText: e.start, rec: e.has_archive };
+            x.at = tsStart(x, off);                 // Adresse immer mit der echten Startzeit des Servers
+            x.start += sh; x.end += sh;             // Anzeige mit Programmführer-Verschiebung
+            return x;
           }).filter(function (e) {
             return e.start > 0 && e.end > e.start && e.start <= now && e.start >= from && (String(e.rec) !== '0' || e.end > now);
-          }).map(function (e) { e.at = tsStart(e, off); return e; }).sort(function (a, b) { return b.start - a.start; });
+          }).sort(function (a, b) { return b.start - a.start; });
         });
       },
       // Abspielbarer Eintrag für eine vergangene Sendung: /timeshift/BENUTZER/PASSWORT/DAUER(MIN)/JJJJ-MM-TT:HH-MM/ID.ts
@@ -1141,17 +1152,17 @@
         return loadEpg().then(function (E) {
           var list = Xmltv.find(E, epgItem(item));
           if (!list) return [];
-          var t = Date.now() / 1000;
+          var sh = epgShiftOf(p), t = Date.now() / 1000 - sh;
           return list.filter(function (x) { return x[1] > t; }).slice(0, limit || 8)
-            .map(function (x) { return { title: x[2], desc: x[3], start: x[0], end: x[1] }; });
+            .map(function (x) { return { title: x[2], desc: x[3], start: x[0] + sh, end: x[1] + sh }; });
         }).catch(function () { return []; });
       },
       // Sofort (ohne Laden): was läuft gerade? Für die Titel in der Senderliste.
       epgNow: function (item) {
         if (!epgData || epgData.none) return null;
-        var list = Xmltv.find(epgData, epgItem(item)), t = Date.now() / 1000;
+        var sh = epgShiftOf(p), list = Xmltv.find(epgData, epgItem(item)), t = Date.now() / 1000 - sh;
         if (!list) return null;
-        for (var i = 0; i < list.length; i++) if (list[i][0] <= t && list[i][1] > t) return { title: list[i][2], start: list[i][0], end: list[i][1] };
+        for (var i = 0; i < list.length; i++) if (list[i][0] <= t && list[i][1] > t) return { title: list[i][2], start: list[i][0] + sh, end: list[i][1] + sh };
         return null;
       },
       epgStatus: function () {
@@ -4613,6 +4624,23 @@
       var st = Stats.get(), x = st.live || st.movie || st.series;
       return x ? T('Aktualisiert {0}', ago(x.at)) : T('Listen neu laden');
     }, reloadWithSplash);
+    var SHIFTS = [-300, -240, -180, -120, -90, -60, -30, 0, 30, 60, 90, 120, 180, 240, 300];
+    function fmtShift(m) {
+      if (!m) return T('Keine Verschiebung');
+      var a = Math.abs(m), hh = Math.floor(a / 60), mm = a % 60;
+      return (m > 0 ? '+' : '−') + (hh && mm ? T('{0} Std. {1} Min.', hh, mm) : hh ? T('{0} Std.', hh) : T('{0} Min.', mm));
+    }
+    var tShift = !p || p.type === 'demo' ? null : tile('clock', T('Programmführer-Zeit'), function () { return fmtShift(Number(p.epgShift) || 0); }, function () {
+      openSheet(T('Programmführer-Zeit'), 'clock', [
+        h('p', { class: 'hint', text: T('Zeigt der Programmführer die Sendungen zu früh oder zu spät an? Dann hier die Zeit verschieben. Gilt nur für diese Playlist.') }),
+        choiceList(SHIFTS.map(function (m) { return [m, fmtShift(m)]; }), function () { return Number(p.epgShift) || 0; }, function (m) {
+          var list = Profiles.list(), x = list.filter(function (q) { return q.id === p.id; })[0];
+          if (m) p.epgShift = m; else delete p.epgShift;
+          if (x) { if (m) x.epgShift = m; else delete x.epgShift; Profiles.save(list); }
+          EpgCache.data = {};
+          paint();
+        })], { onClose: function () { var v = Shell.view && Shell.view.firstChild; if (v && v._refresh) v._refresh(); } });
+    });
     var tAuto = tile('bolt', T('Automatisch aktualisieren'), function () { return opt(AUTOS, autoH()); }, function () {
       openSheet(T('Automatisch aktualisieren'), 'bolt', [
         h('p', { class: 'hint', text: T('Dein Anbieter fügt regelmäßig neue Filme und Serien hinzu. Die App lädt die Listen dann von selbst neu – im Hintergrund, nie während etwas läuft.') }),
@@ -4771,7 +4799,7 @@
     paint();
     var el = h('div', { class: 'page settings st-page' },
       h('div', { class: 'page-head' }, h('h1', { text: T('Einstellungen') })),
-      group(T('Playlist'), [tAdd, tPl, tUpd, tAuto]),
+      group(T('Playlist'), [tAdd, tPl, tUpd, tAuto, tShift]),
       group(T('Kindersicherung & Kategorien'), [tPar, tHideL, tHideM, tHideS, tHisL, tHisM, tHisS]),
       group(T('Wiedergabe'), [tSort, tFmt, tQual, tEng, tExt, tSub, tLast, tIdle]),
       group(T('Darstellung & Gerät'), [tLang, tTheme, tClock, tDev, tAbout, tReport]),

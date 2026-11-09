@@ -677,5 +677,8 @@ window.LUMIO_I18N["fr"] = {
   "Läuft gerade – von Anfang an": "En cours – depuis le début",
   "Für diesen Sender gibt es gerade keine Aufzeichnungen.": "Aucun enregistrement pour cette chaîne pour le moment.",
   "Aufzeichnungen konnten nicht geladen werden.": "Impossible de charger les enregistrements.",
-  "Freier Film der Blender Foundation (CC BY).": "Film libre de la Blender Foundation (CC BY)."
+  "Freier Film der Blender Foundation (CC BY).": "Film libre de la Blender Foundation (CC BY).",
+  "Programmführer-Zeit": "Heure du guide des programmes",
+  "Keine Verschiebung": "Aucun décalage",
+  "Zeigt der Programmführer die Sendungen zu früh oder zu spät an? Dann hier die Zeit verschieben. Gilt nur für diese Playlist.": "Le guide affiche les programmes trop tôt ou trop tard ? Décale l’heure ici. Uniquement pour cette playlist."
 };

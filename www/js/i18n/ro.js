@@ -677,5 +677,8 @@ window.LUMIO_I18N["ro"] = {
   "Läuft gerade – von Anfang an": "Acum – de la început",
   "Für diesen Sender gibt es gerade keine Aufzeichnungen.": "Pentru acest canal nu există înregistrări acum.",
   "Aufzeichnungen konnten nicht geladen werden.": "Înregistrările nu au putut fi încărcate.",
-  "Freier Film der Blender Foundation (CC BY).": "Film liber al Blender Foundation (CC BY)."
+  "Freier Film der Blender Foundation (CC BY).": "Film liber al Blender Foundation (CC BY).",
+  "Programmführer-Zeit": "Ora ghidului de programe",
+  "Keine Verschiebung": "Fără decalaj",
+  "Zeigt der Programmführer die Sendungen zu früh oder zu spät an? Dann hier die Zeit verschieben. Gilt nur für diese Playlist.": "Ghidul afișează emisiunile prea devreme sau prea târziu? Decalează ora aici. Doar pentru acest playlist."
 };

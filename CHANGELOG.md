@@ -25,6 +25,9 @@ in der Senderliste markiert. Rechts neben der Liste und im Player öffnet „Ver
 nach Tagen (Heute, Gestern …), die laufende Sendung lässt sich von Anfang an schauen. Startzeit in Serverzeit, Ersatz-
 Adresse als HLS. Vergangene Sendungen landen nicht unter „Weiterschauen“. Im Demo-Modus zum Ausprobieren. Neuer Test.
 
+**Neu: Programmführer-Zeit** (Einstellungen → Playlist): Zeigt der Anbieter das Programm zu früh oder zu spät, lässt es
+sich je Playlist um bis zu ±5 Stunden verschieben – gilt für Senderliste, Vorschau, Player und „Verpasste Sendungen“.
+
 **Android-TV-Player:** Media3 (ExoPlayer) von 1.4.1 auf 1.9.4 – gut ein Jahr Fehlerbehebungen, u. a. für HLS-Livestreams.
 
 ## 1.11.1 – 2026-11-09 · Neue Willkommensseite

@@ -677,5 +677,8 @@ window.LUMIO_I18N["ru"] = {
   "Läuft gerade – von Anfang an": "Идёт сейчас – с начала",
   "Für diesen Sender gibt es gerade keine Aufzeichnungen.": "Для этого канала сейчас нет записей.",
   "Aufzeichnungen konnten nicht geladen werden.": "Не удалось загрузить записи.",
-  "Freier Film der Blender Foundation (CC BY).": "Свободный фильм Blender Foundation (CC BY)."
+  "Freier Film der Blender Foundation (CC BY).": "Свободный фильм Blender Foundation (CC BY).",
+  "Programmführer-Zeit": "Время телегида",
+  "Keine Verschiebung": "Без сдвига",
+  "Zeigt der Programmführer die Sendungen zu früh oder zu spät an? Dann hier die Zeit verschieben. Gilt nur für diese Playlist.": "Телегид показывает передачи слишком рано или поздно? Сдвиньте время здесь. Только для этого плейлиста."
 };

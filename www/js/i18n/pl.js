@@ -677,5 +677,8 @@ window.LUMIO_I18N["pl"] = {
   "Läuft gerade – von Anfang an": "Teraz – od początku",
   "Für diesen Sender gibt es gerade keine Aufzeichnungen.": "Dla tego kanału nie ma obecnie nagrań.",
   "Aufzeichnungen konnten nicht geladen werden.": "Nie udało się wczytać nagrań.",
-  "Freier Film der Blender Foundation (CC BY).": "Wolny film Blender Foundation (CC BY)."
+  "Freier Film der Blender Foundation (CC BY).": "Wolny film Blender Foundation (CC BY).",
+  "Programmführer-Zeit": "Czas przewodnika programowego",
+  "Keine Verschiebung": "Bez przesunięcia",
+  "Zeigt der Programmführer die Sendungen zu früh oder zu spät an? Dann hier die Zeit verschieben. Gilt nur für diese Playlist.": "Przewodnik pokazuje audycje za wcześnie lub za późno? Przesuń tu czas. Dotyczy tylko tej playlisty."
 };

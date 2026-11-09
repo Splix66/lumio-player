@@ -677,5 +677,8 @@ window.LUMIO_I18N["uk"] = {
   "Läuft gerade – von Anfang an": "Зараз в ефірі – з початку",
   "Für diesen Sender gibt es gerade keine Aufzeichnungen.": "Для цього каналу зараз немає записів.",
   "Aufzeichnungen konnten nicht geladen werden.": "Не вдалося завантажити записи.",
-  "Freier Film der Blender Foundation (CC BY).": "Вільний фільм Blender Foundation (CC BY)."
+  "Freier Film der Blender Foundation (CC BY).": "Вільний фільм Blender Foundation (CC BY).",
+  "Programmführer-Zeit": "Час телепрограми",
+  "Keine Verschiebung": "Без зсуву",
+  "Zeigt der Programmführer die Sendungen zu früh oder zu spät an? Dann hier die Zeit verschieben. Gilt nur für diese Playlist.": "Телепрограма показує передачі зарано чи запізно? Змістіть час тут. Лише для цього плейлиста."
 };

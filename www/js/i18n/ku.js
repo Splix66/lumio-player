@@ -677,5 +677,8 @@ window.LUMIO_I18N["ku"] = {
   "Läuft gerade – von Anfang an": "Niha – ji destpêkê",
   "Für diesen Sender gibt es gerade keine Aufzeichnungen.": "Ji bo vê kanalê niha tu tomar tune ne.",
   "Aufzeichnungen konnten nicht geladen werden.": "Tomar nehatin barkirin.",
-  "Freier Film der Blender Foundation (CC BY).": "Fîlmeke azad a Blender Foundation (CC BY)."
+  "Freier Film der Blender Foundation (CC BY).": "Fîlmeke azad a Blender Foundation (CC BY).",
+  "Programmführer-Zeit": "Dema rêbera bernameyê",
+  "Keine Verschiebung": "Bê guherandin",
+  "Zeigt der Programmführer die Sendungen zu früh oder zu spät an? Dann hier die Zeit verschieben. Gilt nur für diese Playlist.": "Rêber weşanan zû an dereng nîşan dide? Demê li vir biguherîne. Tenê ji bo vê lîsteyê."
 };

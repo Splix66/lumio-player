@@ -677,5 +677,8 @@ window.LUMIO_I18N["el"] = {
   "Läuft gerade – von Anfang an": "Τώρα – από την αρχή",
   "Für diesen Sender gibt es gerade keine Aufzeichnungen.": "Δεν υπάρχουν εγγραφές για αυτό το κανάλι αυτή τη στιγμή.",
   "Aufzeichnungen konnten nicht geladen werden.": "Δεν ήταν δυνατή η φόρτωση των εγγραφών.",
-  "Freier Film der Blender Foundation (CC BY).": "Ελεύθερη ταινία του Blender Foundation (CC BY)."
+  "Freier Film der Blender Foundation (CC BY).": "Ελεύθερη ταινία του Blender Foundation (CC BY).",
+  "Programmführer-Zeit": "Ώρα οδηγού προγράμματος",
+  "Keine Verschiebung": "Χωρίς μετατόπιση",
+  "Zeigt der Programmführer die Sendungen zu früh oder zu spät an? Dann hier die Zeit verschieben. Gilt nur für diese Playlist.": "Ο οδηγός δείχνει τις εκπομπές πολύ νωρίς ή πολύ αργά; Μετατόπισε την ώρα εδώ. Ισχύει μόνο για αυτή τη λίστα."
 };
