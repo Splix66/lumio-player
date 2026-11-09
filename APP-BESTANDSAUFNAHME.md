@@ -33,7 +33,7 @@ Technisch solide und deutlich über dem Durchschnitt vergleichbarer IPTV-Player:
 - **E1 → (a) umgesetzt:** Playlists aus der App gehen nur noch online, wenn „Auch auf der Webseite verwalten“
   eingeschaltet ist (beim Anlegen, Voreinstellung aus; je Playlist „Webseite: an/aus“ in der Übersicht).
   Datenschutzerklärung entsprechend korrigiert.
-- **Datenbank – `server/sicherheit-2026-11.sql`** (vom Inhaber in Supabase auszuführen), getestet gegen PostgreSQL 16:
+- **Datenbank – `server/sicherheit-2026-11.sql`** – **am 09.11.2026 in Supabase eingespielt** (pg_cron aktiviert, täglicher Job „telvo-aufraeumen“ 03:17 UTC; live mit Testgerät geprüft, Kundendaten unverändert: 10 Geräte, 6 Playlists). Vorher getestet gegen PostgreSQL 16:
   - D1: Fehlversuche lückenlos gezählt (40 gleichzeitige Angriffe: vorher 1 gezählt, jetzt Sperre),
     richtiger KEY setzt nicht mehr zurück – höchstens 20 Versuche pro Stunde.
   - D2: App gleicht über eigenen 128-Bit-Token ab → kein Aussperren der App durch Fremde mehr.
@@ -64,3 +64,9 @@ Technisch solide und deutlich über dem Durchschnitt vergleichbarer IPTV-Player:
 
 - Der aktive Reiter (Live TV / Filme / Serien) sitzt absichtlich tiefer und größer (Gestaltungsentscheidung im Code).
 - Unverschlüsselte Verbindungen (http) zu Anbietern sind bei IPTV üblich und nötig.
+
+## Hinweis: Verwaltungsbereich nicht eingerichtet
+
+Bei der Prüfung der Live-Datenbank (09.11.2026) fehlten alle Funktionen aus `server/admin.sql` (`admin_*`, Tabelle `admins`).
+Der Verwaltungsbereich `docs/admin.html` funktioniert deshalb noch nicht. Einrichtung siehe README → „Verwaltungsbereich einrichten“
+(SQL einspielen, Admin-Konto in Supabase → Authentication anlegen und eintragen).
