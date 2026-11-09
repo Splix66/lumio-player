@@ -187,4 +187,24 @@
       window.fetch = realFetch; ok(/Expired/.test(e.message), 'Meldung: ' + e.message);
     });
   });
+
+  t(G, 'Fehlerprotokoll: keine Links, Benutzernamen oder Passwörter – und nur die letzten 15', function () {
+    var L = D.ErrLog, before = L.list();
+    try {
+      Store_clear();
+      L.add('Wiedergabe', 'Fehler bei http://anbieter.example:8080/live/maxmuster/geheim123/42.ts und get.php?username=maxmuster&password=geheim123');
+      var e = L.list()[0];
+      ok(e && e.m.indexOf('[Link]') >= 0, 'Link ersetzt: ' + (e && e.m));
+      ok(!/maxmuster|geheim123|anbieter/.test(JSON.stringify(L.list())), 'keine Zugangsdaten gespeichert');
+      L.add('Wiedergabe', 'gleich'); L.add('Wiedergabe', 'gleich');
+      eq(L.list()[L.list().length - 1].n, 2, 'gleicher Fehler wird gezählt statt doppelt gespeichert');
+      for (var i = 0; i < 30; i++) L.add('Test', 'Fehler ' + i);
+      eq(L.list().length, 15, 'höchstens 15 Einträge');
+      eq(L.list()[14].m, 'Fehler 29', 'der neueste bleibt erhalten');
+      ok(!/maxmuster|geheim123/.test(D.techInfo()), 'technische Angaben ohne Zugangsdaten');
+    } finally {
+      try { localStorage.setItem('lumio.errlog', JSON.stringify(before)); } catch (x) {}
+    }
+    function Store_clear() { try { localStorage.removeItem('lumio.errlog'); } catch (x) {} }
+  });
 })();

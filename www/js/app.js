@@ -89,6 +89,7 @@
     sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6L6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/>',
     info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.1"/>',
     help: '<circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.1-2.4 3.7M12 17.2v.1"/>',
+    send: '<path d="M21 3L10.5 13.5"/><path d="M21 3l-6.5 18-4-7.5-7.5-4z"/>',
     wifi: '<path d="M2.5 9a14 14 0 0 1 19 0M5.6 12.4a9.5 9.5 0 0 1 12.8 0M8.7 15.7a5 5 0 0 1 6.6 0"/><path d="M12 19.2v.1"/>',
     phone: '<rect x="6.5" y="2.5" width="11" height="19" rx="2.2"/><path d="M11 18h2"/>',
     history: '<path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1L3.5 8.5"/><path d="M3.5 3.5v5h5"/><path d="M12 7.5V12l3 2"/>',
@@ -184,6 +185,35 @@
     },
     del: function (key) { try { localStorage.removeItem('lumio.' + key); } catch (e) {} }
   };
+
+  /* ---------- Fehlerprotokoll (bleibt auf dem Gerät) ----------
+     Die letzten 15 Fehler – Links, Benutzernamen und Passwörter werden vorher entfernt. Verschickt wird es nur,
+     wenn man selbst „Problem melden“ wählt und „Technische Angaben anhängen“ eingeschaltet lässt. */
+  var ErrLog = {
+    max: 15,
+    clean: function (s) {
+      return String(s == null ? '' : s)
+        .replace(/[a-z][a-z0-9+.\-]*:\/\/[^\s"'<>]+/gi, '[Link]')
+        .replace(/\b(user(name)?|pass(word)?|pwd|token|key|mac)=[^&\s]*/gi, '$1=…')
+        .replace(/\s+/g, ' ').slice(0, 220);
+    },
+    list: function () { var l = Store.get('errlog', []); return Object.prototype.toString.call(l) === '[object Array]' ? l : []; },
+    add: function (where, msg) {
+      try {
+        var l = this.list(), e = { t: Date.now(), w: String(where).slice(0, 20), m: this.clean(msg) }, last = l[l.length - 1];
+        if (last && last.w === e.w && last.m === e.m) { last.n = (last.n || 1) + 1; last.t = e.t; }   // gleicher Fehler: nur zählen
+        else l.push(e);
+        if (l.length > this.max) l = l.slice(l.length - this.max);
+        Store.set('errlog', l);
+      } catch (x) {}
+    }
+  };
+  window.addEventListener('error', function (e) {
+    ErrLog.add('Programm', ((e && e.message) || 'Fehler') + (e && e.filename ? ' @' + String(e.filename).split('/').pop() + ':' + e.lineno : ''));
+  });
+  window.addEventListener('unhandledrejection', function (e) {
+    var r = e && e.reason; ErrLog.add('Programm', 'Promise: ' + ((r && r.message) || r));
+  });
 
   var Settings = {
     data: Store.get('settings', { liveFormat: 'm3u8' }),
@@ -4286,6 +4316,76 @@
   /* Die Kachel-Seite. paintSettings() frischt die kleinen Werte unter den Kacheln auf. */
   var settingsPaint = null;
   function paintSettings() { if (settingsPaint) settingsPaint(); }
+
+  /* ---------- Problem melden ----------
+     Geht über denselben Weg wie das Support-Formular der Webseite (send_support) und erscheint im Verwaltungsbereich.
+     Technische Angaben nur, wenn eingeschaltet – nie Links, Benutzernamen oder Passwörter. */
+  // Themen wie im Support-Formular der Webseite (der deutsche Wert geht an den Verwaltungsbereich)
+  function reportTopics() {
+    return [['Wiedergabe', T('Sender oder Filme starten nicht')], ['Ruckeln', T('Bild ruckelt oder bleibt hängen')],
+      ['Playlist erscheint nicht', T('Playlist erscheint nicht in der App')], ['Frage', T('Frage zur App')], ['Sonstiges', T('Sonstiges')]];
+  }
+  function techInfo() {
+    var p = App.profile, sys = /\(([^)]*)\)/.exec(UA), chrome = /Chrom(e|ium)\/(\d+)/.exec(UA);
+    var kind = Platform.tizen ? 'Samsung (Tizen)' : Platform.webos ? 'LG (webOS)' : /Electron/.test(UA) ? 'PC-App'
+      : Platform.capacitor ? (Platform.androidTV ? 'Android-TV-App' : 'Android-App') : 'Browser';
+    function two(n) { return n < 10 ? '0' + n : '' + n; }
+    var lines = [
+      'Telvo ' + CONFIG.version + ' · ' + kind + (Platform.tv ? ' · Fernseher' : '') + ' · ' + screen.width + 'x' + screen.height + ' · ' + Lang.cur,
+      'System: ' + (sys ? sys[1].slice(0, 90) : '?') + (chrome ? ' · Chrome ' + chrome[2] : ''),
+      'Player: ' + NativePlayer.engine() + (extPlayerOn() ? ' · extern' : '') + ' · Playlist: ' + (p ? p.type : 'keine') + ' (' + Profiles.list().length + ')',
+      'Internet: ' + (navigator.onLine === false ? 'aus' : 'an') + ' · Online-Dienst: ' + (Cloud.mode || '–')
+    ];
+    var errs = ErrLog.list().slice(-8);
+    if (!errs.length) lines.push('Keine Fehler gespeichert.');
+    errs.forEach(function (e) {
+      var d = new Date(e.t);
+      lines.push('- ' + two(d.getDate()) + '.' + two(d.getMonth() + 1) + '. ' + two(d.getHours()) + ':' + two(d.getMinutes()) + ' ' + e.w + ': ' + e.m + (e.n > 1 ? ' (' + e.n + 'x)' : ''));
+    });
+    return lines.join('\n');
+  }
+  // Fehlermeldung aus einer Antwort des Online-Dienstes ({ ok:false, error:'…' } oder PostgREST { message })
+  function rpcErr(r) { return (r && (typeof r.error === 'string' ? r.error : (r.error && r.error.message) || r.message)) || ''; }
+  function showReport() {
+    var topic = 'Wiedergabe', withTech = true;
+    var msg = h('textarea', { class: 'f', rows: 3, maxlength: 1200, placeholder: T('Was ist passiert? Bei welchem Sender oder Film?') });
+    var mail = inputField(T('E-Mail für eine Antwort (freiwillig)'), '', 'email');
+    mail.wrap.className += ' rep-mail';
+    var preview = h('pre', { class: 'rep-tech', hidden: true });
+    var err = h('div', { class: 'error' });
+    var send = sheetBtn('send', T('Senden'), go, 'primary');
+    function go() {
+      var text = msg.value.trim();
+      if (text.length < 5) { err.textContent = T('Bitte beschreibe dein Anliegen etwas genauer.'); msg.focus(); return; }
+      if (!CONFIG.cloudUrl) { err.textContent = T('Online-Dienst nicht erreichbar'); return; }
+      err.textContent = ''; send.disabled = true; send.lastChild.textContent = T('Wird gesendet …');
+      var body = text;
+      if (withTech) body = (text + '\n\n— Technik —\n' + techInfo()).slice(0, 2000);
+      (Cloud.registered ? Promise.resolve({ ok: true }) : Cloud.register()).then(function (r) {
+        if (!r || !r.ok) throw new Error(rpcErr(r));
+        Cloud.registered = true;
+        return Cloud.rpc('send_support', { p_mac: Device.mac(), p_key: Device.key(), p_topic: topic, p_message: body, p_contact: mail.input.value.trim() || null });
+      }).then(function (r) {
+        if (!r || !r.ok) throw new Error(rpcErr(r));
+        goBack();
+        toast(T('Danke! Deine Nachricht ist angekommen.'), 3500);
+      }).catch(function (e) {
+        send.disabled = false; send.lastChild.textContent = T('Senden');
+        err.textContent = (e && e.message && e.message !== 'timeout' && e.message !== 'offline') ? T(e.message)
+          : (navigator.onLine === false ? T('Kein Internet') : T('Online-Dienst nicht erreichbar'));
+      });
+    }
+    var techRow = toggleRow(T('Technische Angaben anhängen'), T('App-Version, Gerät und die letzten Fehler – ohne Links und Passwörter.'),
+      function () { return withTech; }, function (v) { withTech = v; if (!v) preview.hidden = true; });
+    var showTech = h('button', { class: 'link f rep-show', onclick: function () { preview.textContent = techInfo(); preview.hidden = !preview.hidden; } }, T('Angaben anzeigen'));
+    openSheet(T('Problem melden'), 'help', [
+      h('p', { class: 'hint', text: T('Worum geht es?') }),
+      choiceList(reportTopics(), function () { return topic; }, function (v) { topic = v; }),
+      h('label', { class: 'field rep-msg' }, h('span', { text: T('Deine Nachricht') }), msg),
+      mail.wrap, techRow, showTech, preview, err,
+      h('div', { class: 'row' }, send)], { wide: true });
+  }
+
   function SettingsView() {
     var p = App.profile, tiles = [];
     function opt(list, v) { for (var i = 0; i < list.length; i++) if (list[i][0] === v) return list[i][1]; return ''; }
@@ -4454,6 +4554,7 @@
           setTimeout(function () { try { location.reload(); } catch (e) {} }, 700);
         })]);
     });
+    var tReport = tile('help', T('Problem melden'), T('Nachricht an den Support'), showReport);
     var tAbout = tile('info', T('Über & Updates'), function () { var v = Updates.cached(); return v ? T('Neue Version {0} verfügbar', v) : T('Version {0}', CONFIG.version); }, function () {
       var status = h('p', { class: 'up-status' });
       var actions = h('div', { class: 'row' });
@@ -4491,7 +4592,7 @@
       group(T('Playlist'), [tAdd, tPl, tUpd, tAuto]),
       group(T('Kindersicherung & Kategorien'), [tPar, tHideL, tHideM, tHideS, tHisL, tHisM, tHisS]),
       group(T('Wiedergabe'), [tSort, tFmt, tQual, tEng, tExt, tSub, tLast, tIdle]),
-      group(T('Darstellung & Gerät'), [tLang, tTheme, tClock, tDev, tAbout]),
+      group(T('Darstellung & Gerät'), [tLang, tTheme, tClock, tDev, tAbout, tReport]),
       h('div', { class: 'st-foot' }, macTag(profileUser(p), true)));
     tAdd.setAttribute('data-autofocus', '');
     settingsPaint = paint;
@@ -4866,8 +4967,9 @@
     }
     if (NativePlayer.use(item)) {
       if (Player.el) Player.close();
-      NativePlayer.play(item, ctx).catch(function () {
+      NativePlayer.play(item, ctx).catch(function (e) {
         // TV-Player fehlt oder startet nicht: für diese Sitzung den eingebauten Player nehmen
+        ErrLog.add('TV-Player', 'Start fehlgeschlagen: ' + ((e && e.message) || e) + ' – eingebauter Player übernimmt');
         NativePlayer.failed = true;
         Player.open(item, ctx);
       });
@@ -5023,6 +5125,7 @@
       video.addEventListener('ended', function () { self.onEnded(); });
       video.addEventListener('error', function () {
         if (self.hls) return;   // hls.js meldet seine Fehler selbst (und versucht es erst noch einmal)
+        self.errInfo = 'Video-Fehler ' + (video.error ? video.error.code : '?') + (self.ts ? ' (mpegts.js)' : '');
         self.onError(T('Das Video konnte nicht abgespielt werden (Format oder Verbindung).'));
       });
 
@@ -5194,7 +5297,7 @@
       this.wdLastT = v.currentTime;
       if (this.wdStill < (this.item && this.item.kind === 'live' ? 10 : 18)) return;   // Live: nach 10 s Stillstand neu verbinden
       this.wdStill = 0;
-      if (this.stallRetries >= 3) { this.onError(T('Der Stream hängt und lässt sich gerade nicht wiederherstellen.')); return; }
+      if (this.stallRetries >= 3) { this.errInfo = 'Stillstand (3 Versuche)'; this.onError(T('Der Stream hängt und lässt sich gerade nicht wiederherstellen.')); return; }
       this.stallRetries++;
       if (this.isVod() && v.currentTime > 1) this.resumeAt = v.currentTime;
       this.reconnecting();
@@ -5254,6 +5357,7 @@
                 setTimeout(function () { if (self.hls !== hls) return; if (manifest) self.attach(self.curUrl); else hls.startLoad(); }, delay);
                 return;
               }
+              self.errInfo = 'hls.js ' + data.type + ' ' + data.details + (data.response && data.response.code ? ' HTTP ' + data.response.code : '');
               self.onError(data.type === Hls.ErrorTypes.NETWORK_ERROR ? T('Der Stream ist nicht erreichbar.') : T('Der Stream konnte nicht abgespielt werden.'));
             });
             hls.on(Hls.Events.MANIFEST_PARSED, function () {
@@ -5316,6 +5420,9 @@
       self.spinner.style.display = 'none';
       self.reconnect = false;
       clearInterval(self.wdTimer);
+      var it = self.item || {};
+      ErrLog.add('Wiedergabe', msg + ' | ' + (it.kind || '?') + (it.ext ? ' .' + it.ext : '') + (self.errInfo ? ' | ' + self.errInfo : ''));
+      self.errInfo = '';
       clear(self.err);
       self.err.appendChild(h('h3', { text: T('Wiedergabe nicht möglich') }));
       self.err.appendChild(h('p', { text: msg }));
@@ -5804,9 +5911,10 @@
 
     var t = e.target;
     var inInput = t && t.tagName === 'INPUT';
+    var isText = inInput || (t && t.tagName === 'TEXTAREA');
     if (dirs[k]) {
       if (inInput && t.type === 'range' && (k === 37 || k === 39)) return;
-      if (inInput && (k === 37 || k === 39)) {
+      if (isText && (k === 37 || k === 39)) {
         var len = t.value.length, pos = t.selectionStart;
         var atEdge = pos === null || (k === 37 && pos === 0) || (k === 39 && pos === len);
         if (!atEdge) return;
@@ -5891,6 +5999,7 @@
     parseM3U: parseM3U, parseXtreamLink: parseXtreamLink, normalizeServer: normalizeServer, Nav: Nav, Screens: Screens, StillWatching: StillWatching,
     Xmltv: Xmltv, chanKey: chanKey, EpgStore: EpgStore, makeProvider: makeProvider, Profiles: Profiles, PinGuard: PinGuard, Store: Store, Cloud: Cloud,
     decodeBytes: decodeBytes, readText: readText, fetchText: fetchText, sameConnection: sameConnection, NativePlayer: NativePlayer, App: App, ensureTs: ensureTs, migrateM3uIds: migrateM3uIds,
+    ErrLog: ErrLog, techInfo: techInfo,
     config: CONFIG
   };
 

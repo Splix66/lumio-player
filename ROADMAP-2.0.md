@@ -28,7 +28,9 @@ Bis zum offiziellen Start bleiben alle Versionen unter 2.0 (1.11.x, 1.12 …).
    (Später möglich: kurzlebiger Einmal-Code statt KEY.)
 2. ✅ **Media3 (ExoPlayer) aktualisiert:** von 1.4.1 auf 1.9.4 (neueste Version für unser Android-Bausystem;
    ab 1.10 erst mit Capacitor 8). Noch offen: Test auf echten Boxen.
-3. **Fehlerberichte:** freiwillig (Zustimmung), ohne Playlist-Adressen und Passwörter, z. B. in die eigene Datenbank.
+3. ✅ **Fehlerberichte:** „Problem melden“ in den Einstellungen – Thema, Nachricht, freiwillige E-Mail und (abschaltbar)
+   technische Angaben: App-Version, Gerät, letzte Fehler – ohne Links, Benutzernamen und Passwörter. Geht über den
+   vorhandenen Support-Weg und erscheint im Verwaltungsbereich (keine Änderung an der Datenbank nötig).
 4. **Rechtliches und Store-Paket:** Impressum vollständig, Nutzungsbedingungen beim ersten Start, Seite mit
    Open-Source-Lizenzen, Store-Texte und Bilder ohne fremde Senderlogos und ohne Begriffe, die nach Piraterie klingen.
 5. **Tests auf echten Geräten:** schwacher Fire TV Stick (Lite), Android-TV-Box, Samsung, LG, Handy, Windows, Mac –

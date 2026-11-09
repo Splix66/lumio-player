@@ -707,6 +707,16 @@ body.kbd .card.f:focus, body.is-tv .card.f:focus { transform: scale(1.05); }
 }
 .field input:focus { border-color: var(--accent); box-shadow: 0 0 0 .2rem var(--accent-soft); }
 body.kbd .field input.f:focus, body.is-tv .field input.f:focus { box-shadow: 0 0 0 .2rem var(--accent-soft); }
+/* mehrzeiliges Feld (z. B. „Problem melden“) – wie die einfachen Felder */
+.field textarea {
+  width: 100%; min-height: 5.5rem; padding: .9rem 1.05rem; border-radius: var(--radius-sm); border: 1px solid var(--line-2);
+  background: var(--bg-2); color: inherit; font: inherit; line-height: 1.45; resize: vertical; outline: none;
+}
+.field textarea:focus, body.kbd .field textarea.f:focus, body.is-tv .field textarea.f:focus { border-color: var(--accent); box-shadow: 0 0 0 .2rem var(--accent-soft); }
+.rep-msg, .rep-mail { margin-top: 1rem; }
+.rep-show { display: inline-block; margin-top: .6rem; font-size: .88rem; }
+.rep-tech { margin: .6rem 0 0; padding: .8rem 1rem; max-height: 12rem; overflow: auto; border-radius: var(--radius-sm); background: var(--bg-2);
+  color: var(--muted); font: .78rem/1.5 ui-monospace, Menlo, Consolas, monospace; white-space: pre-wrap; word-break: break-word; }
 /* Passwortfeld mit Auge-Knopf zum Anzeigen/Verbergen */
 .pass-wrap { position: relative; }
 .pass-wrap input { padding-right: 3.4rem; }
