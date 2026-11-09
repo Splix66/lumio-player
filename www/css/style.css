@@ -1842,6 +1842,7 @@ body.kbd .ln-tile.f:focus, body.is-tv .ln-tile.f:focus { filter: none; box-shado
 .wl {
   --wl-bg: #0B0B0F; --wl-card: #17171E; --wl-tile: #101016; --wl-line: rgba(255, 255, 255, .07); --wl-line-2: rgba(255, 255, 255, .13);
   --wl-text: #F4F4F6; --wl-muted: #A3A3B2; --wl-dim: #8A8A9B; --wl-accent: #9B83D5; --wl-accent-2: #B3A0E3;
+  --wl-hh: 2.25rem;   /* Höhe von Status, Hilfe und Sprache in der Kopfzeile */
   overflow-x: hidden; overflow-y: auto; align-items: stretch; padding: 0;   /* Position/Größe kommt von .screen (ganzer Bildschirm) */
   color: var(--wl-text); background: var(--wl-bg);
   background-image:
@@ -1930,11 +1931,13 @@ body.kbd .wl-btn.f:focus, body.is-tv .wl-btn.f:focus { outline: none; transform:
 
 .wl-legal { margin: 1.3rem auto 0; max-width: 46rem; text-align: center; font-size: .78rem; line-height: 1.5; color: var(--wl-dim); }
 
-/* Kopfzeile rechts: Status, Hilfe, Sprache */
-.wl-tools { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
-.wl-tools > * + * { margin-left: .7rem; }
-.wl-status { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
-.wl-chip { display: inline-flex; align-items: center; margin: .2rem 0 .2rem .5rem; padding: .36rem .75rem .36rem .6rem; border-radius: 999px; background: rgba(255, 255, 255, .04); box-shadow: inset 0 0 0 1px var(--wl-line); color: var(--wl-muted); font-size: .76rem; font-weight: 650; white-space: nowrap; }
+/* Kopfzeile: Logo links | Status in der Mitte | Hilfe und Sprache rechts. Alles gleich hoch (--wl-hh). */
+.wl-top > .brand { flex: 1 1 0; }
+.wl-tools { flex: 1 1 0; display: flex; align-items: center; justify-content: flex-end; flex-wrap: nowrap; }
+.wl-tools > * + * { margin-left: .6rem; }
+.wl-status { flex: none; display: flex; align-items: center; flex-wrap: nowrap; justify-content: center; margin: 0 1rem; }
+.wl .lang-btn { height: var(--wl-hh); padding-top: 0; padding-bottom: 0; white-space: nowrap; }
+.wl-chip { display: inline-flex; align-items: center; height: var(--wl-hh); margin: .2rem .25rem; padding: 0 .85rem 0 .7rem; border-radius: 999px; background: rgba(255, 255, 255, .04); box-shadow: inset 0 0 0 1px var(--wl-line); color: var(--wl-muted); font-size: .76rem; font-weight: 650; white-space: nowrap; }
 .wl-chip .i { width: .95rem; height: .95rem; margin: 0 .4rem 0 .45rem; opacity: .85; }
 .wl-chip i { width: .45rem; height: .45rem; border-radius: 50%; background: var(--wl-dim); flex: none; }
 .wl-chip.is-ok i { background: #4ADE80; box-shadow: 0 0 .45rem rgba(74, 222, 128, .55); }
@@ -1943,8 +1946,8 @@ body.kbd .wl-btn.f:focus, body.is-tv .wl-btn.f:focus { outline: none; transform:
 .wl-chip.is-wait i { background: var(--wl-accent); animation: wlPulse 1.6s ease-out infinite; }
 .wl-chip.is-off { color: #FCA5A5; }
 @keyframes wlPulse { 0% { box-shadow: 0 0 0 0 rgba(155, 131, 213, .6); } 70%, 100% { box-shadow: 0 0 0 .4rem rgba(155, 131, 213, 0); } }
-.wl-help { display: grid; place-items: center; width: 2.6rem; height: 2.6rem; border-radius: 50%; background: rgba(255, 255, 255, .05); box-shadow: inset 0 0 0 1px var(--wl-line-2); color: var(--wl-text); cursor: pointer; transition: background-color .2s ease; }
-.wl-help .i { width: 1.25rem; height: 1.25rem; }
+.wl-help { flex: none; display: grid; place-items: center; width: var(--wl-hh); height: var(--wl-hh); border-radius: 50%; background: rgba(255, 255, 255, .05); box-shadow: inset 0 0 0 1px var(--wl-line-2); color: var(--wl-text); cursor: pointer; transition: background-color .2s ease; }
+.wl-help .i { width: 1.15rem; height: 1.15rem; }
 .wl-help:hover { background: rgba(255, 255, 255, .1); }
 body.kbd .wl-help.f:focus, body.is-tv .wl-help.f:focus { outline: none; box-shadow: 0 0 0 .2rem #0B0B0F, 0 0 0 .4rem #fff; }
 
@@ -1974,14 +1977,13 @@ html.tv .wl-main { padding-top: 1.2rem; }
   html:not(.tv) .wl-step { flex: 1 1 0; padding: 0 1rem 0 0; }
   html:not(.tv) .wl-step::before { display: none; }
 }
+/* Schmal (Tablet hoch, Handy hoch): Status als eigene Zeile mittig unter Logo und Knöpfen */
+@media (max-width: 900px) {
+  html:not(.tv) .wl-top { flex-wrap: wrap; }
+  html:not(.tv) .wl-status { -webkit-box-ordinal-group: 4; order: 3; width: 100%; flex-wrap: wrap; margin: .8rem 0 0; }
+}
 /* Tablet hoch und Handy: alles untereinander */
 @media (max-width: 760px) {
-  html:not(.tv) .wl-top { flex-wrap: wrap; }
-  html:not(.tv) .wl-status { order: 3; width: 100%; justify-content: flex-start; margin-top: .9rem; }
-  html:not(.tv) .wl-status .wl-chip { margin: .2rem .5rem .2rem 0; }
-  html:not(.tv) .wl-tools { display: contents; }
-  html:not(.tv) .wl-help { margin-left: auto; }
-  html:not(.tv) .wl-top .lang-btn { margin-left: .6rem; }
   html:not(.tv) .wl-head { text-align: left; }
   html:not(.tv) .wl-card { grid-template-columns: minmax(0, 1fr); padding: 1.8rem 1.5rem; }
   html:not(.tv) .wl-qr { -webkit-box-ordinal-group: 2; order: 1; }
@@ -2009,15 +2011,14 @@ html.tv .wl-main { padding-top: 1.2rem; }
 }
 /* Handy quer (die Android-App läuft nur quer): alles Wichtige ohne Scrollen – Schritte | QR-Code | MAC, KEY, Knöpfe, kompakt */
 @media (max-height: 540px) and (min-width: 600px) {
+  html:not(.tv) .wl { --wl-hh: 2.2rem; }
   html:not(.tv) .wl-top { flex-wrap: nowrap; padding-top: calc(.7rem + env(safe-area-inset-top)); }
-  html:not(.tv) .wl-tools { display: flex; }
-  html:not(.tv) .wl-status { order: 0; width: auto; margin-top: 0; justify-content: flex-end; }
-  html:not(.tv) .wl-status .wl-chip { margin: .15rem 0 .15rem .4rem; }
-  html:not(.tv) .wl-help { margin-left: .5rem; width: 2.2rem; height: 2.2rem; }
-  html:not(.tv) .wl-top .lang-btn { margin-left: .5rem; }
+  html:not(.tv) .wl-status { -webkit-box-ordinal-group: 1; order: 0; width: auto; flex-wrap: nowrap; margin: 0 .6rem; }
   html:not(.tv) .wl .brand { font-size: 1.1rem; }
   html:not(.tv) .wl .brand-mark { width: 1.8rem; height: 1.8rem; }
-  html:not(.tv) .wl-chip { font-size: .68rem; padding: .28rem .6rem .28rem .5rem; }
+  html:not(.tv) .wl-chip { font-size: .76rem; margin: 0 .2rem; padding: 0 .65rem 0 .55rem; }
+  html:not(.tv) .wl-chip .i { display: none; }   /* Platz sparen: Punkt und Text reichen */
+  html:not(.tv) .wl-chip i { margin-right: .45rem; }
   html:not(.tv) .wl-main { padding: .5rem var(--pad) .8rem; justify-content: flex-start; }
   html:not(.tv) .wl-head { text-align: center; margin-bottom: .7rem; }
   html:not(.tv) .wl-title { font-size: 1.5rem; }

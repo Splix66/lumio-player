@@ -2558,7 +2558,8 @@
       var welcome = h('div', { class: 'profiles is-empty wl' },
         h('div', { class: 'wl-top' },
           h('div', { class: 'brand' }, brandMark(), wordmark()),
-          h('div', { class: 'wl-tools' }, status,
+          status,   // mittig zwischen Logo und Knöpfen
+          h('div', { class: 'wl-tools' },
             h('button', { class: 'wl-help f', title: T('Hilfe'), 'aria-label': T('Hilfe'), onclick: showWelcomeHelp }, icon('help')),
             langButton())),
         h('div', { class: 'wl-main' },
