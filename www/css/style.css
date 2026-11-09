@@ -2022,7 +2022,7 @@ html.tv .wl-main { padding-top: 1.2rem; }
   html:not(.tv) .wl-head { text-align: center; margin-bottom: .7rem; }
   html:not(.tv) .wl-title { font-size: 1.5rem; }
   html:not(.tv) .wl-sub { margin-top: .2rem; font-size: .9rem; }
-  html:not(.tv) .wl-card { grid-template-columns: minmax(0, .8fr) auto minmax(0, 1.2fr); grid-gap: 1.4rem; gap: 1.4rem; padding: 1rem 1.2rem; border-radius: 1.2rem; }
+  html:not(.tv) .wl-card { grid-template-columns: auto auto minmax(0, 1fr); grid-gap: 1.6rem; gap: 1.6rem; padding: 1rem 1.4rem; border-radius: 1.2rem; }   /* Schritte nur so breit wie nötig */
   html:not(.tv) .wl-steps { -webkit-box-ordinal-group: 1; order: 0; grid-column: auto; flex-direction: column; padding: 0 1.2rem 0 0; border: 0; border-right: 1px solid var(--wl-line); }
   html:not(.tv) .wl-step { flex: none; padding: 0 0 1rem; }
   html:not(.tv) .wl-step:last-child { padding-bottom: 0; }
@@ -2030,10 +2030,10 @@ html.tv .wl-main { padding-top: 1.2rem; }
   html:not(.tv) .wl-step:last-child::before { display: none; }
   html:not(.tv) .wl-step-n { width: 1.7rem; height: 1.7rem; font-size: .8rem; }
   html:not(.tv) .wl-step-t { margin-left: .65rem; padding-top: .2rem; }
-  html:not(.tv) .wl-step-t b { font-size: .85rem; }
+  html:not(.tv) .wl-step-t b { font-size: .85rem; white-space: nowrap; }
   html:not(.tv) .wl-step-t small { display: none; }
   html:not(.tv) .wl-qr { -webkit-box-ordinal-group: 1; order: 0; padding: 0; border: 0; }
-  html:not(.tv) .wl .qr.wl-qrcode { width: 8.5rem; padding: .45rem; }
+  html:not(.tv) .wl .qr.wl-qrcode { width: 9.5rem; padding: .45rem; }
   html:not(.tv) .wl-qr-frame { padding: .4rem; border-radius: 1rem; }
   html:not(.tv) .wl-qr-title { margin: .6rem 0 .4rem; font-size: .62rem; }
   html:not(.tv) .wl-link { font-size: .72rem; padding: .35rem .7rem .35rem .6rem; }
