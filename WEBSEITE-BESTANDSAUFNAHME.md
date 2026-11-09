@@ -160,7 +160,25 @@ ein kurzer Blick durch Muttersprachler.
 Neues Logo: „T“ mit Play-Zeichen und goldenem Lichtpunkt. Technische Namen (Adressen, Dateinamen, App-Kennung,
 Datenbank) bleiben „lumio“ – siehe CHANGELOG.
 
-## 12. Nächste sinnvolle Schritte
+## 12. Prüfung Barrierefreiheit und Ladezeit (09.11.2026)
+
+**Barrierefreiheit (axe-core 4.14, Regeln WCAG 2.0/2.1/2.2 A+AA und Best Practices)** – alle Seiten, Desktop und Handy,
+auch Arabisch und aufgeklappte FAQ: **0 Verstöße** auf Webseite, Kundenportal, Rechtsseiten und 404-Seite.
+Fire-TV-Seite `docs/app/`: fehlende Hauptüberschrift behoben. Bewusst belassen: automatische Weiterleitung nach
+2 Sekunden (`meta refresh`) – sie startet nur den APK-Download (die Seite bleibt stehen) und ist auf alten
+Fire-TV-Geräten die zuverlässigste Methode.
+
+**Ladezeit** (gemessen mit gedrosseltem Handy: 1,6 Mbit/s, 150 ms Verzögerung, 4-fach langsamerer Prozessor):
+
+| Sprache | Übertragen | Erster Inhalt sichtbar |
+|---|---|---|
+| Deutsch | 75 KB (4 Dateien) | 0,74 s |
+| Arabisch | 85 KB | 0,70 s |
+| Türkisch | 167 KB (lädt zusätzlich die Schrift mit türkischen Sonderzeichen) | 0,72 s |
+
+Zum Vergleich: eine durchschnittliche Webseite überträgt heute rund 2 MB.
+
+## 13. Nächste sinnvolle Schritte
 
 1. **Domain + E-Mail-Adresse** (Empfehlung: eigene Domain + Zoho Mail Free, später mailbox.org) → Impressum,
    Datenschutz und `CONTACT_EMAIL` ausfüllen.
