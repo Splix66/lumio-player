@@ -890,5 +890,8 @@ window.LUMIO_I18N["ku"] = {
   "Zoom (Bild füllen)": "Zoom (wêneyê tije bike)",
   "Qualität": "Kalîte",
   "Ton verzögern (wenn der Ton zu früh kommt)": "Deng dereng bike (heke deng zû tê)",
-  "{0} ms später": "{0} ms paşê"
+  "{0} ms später": "{0} ms paşê",
+  "Auto": "Bixweber",
+  "Zoom": "Zoom",
+  "Ton-Verzögerung": "Derengiya deng"
 };

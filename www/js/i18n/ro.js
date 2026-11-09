@@ -890,5 +890,8 @@ window.LUMIO_I18N["ro"] = {
   "Zoom (Bild füllen)": "Zoom (umple imaginea)",
   "Qualität": "Calitate",
   "Ton verzögern (wenn der Ton zu früh kommt)": "Întârzie sunetul (dacă sunetul vine prea devreme)",
-  "{0} ms später": "cu {0} ms mai târziu"
+  "{0} ms später": "cu {0} ms mai târziu",
+  "Auto": "Auto",
+  "Zoom": "Zoom",
+  "Ton-Verzögerung": "Întârziere sunet"
 };

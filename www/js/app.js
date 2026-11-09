@@ -137,6 +137,9 @@
     users: '<circle cx="9" cy="8.5" r="3.5"/><path d="M2.8 19.5a6.2 6.2 0 0 1 12.4 0"/><circle cx="17" cy="9.5" r="2.8"/><path d="M15.6 14.2a5 5 0 0 1 5.6 5.3"/>',
     pip: '<rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><rect x="12" y="11.5" width="7" height="5.5" rx="1.2" fill="currentColor" stroke="none"/>',
     skipNext: '<path d="M6 5.5v13l9.5-6.5z" fill="currentColor" stroke="none"/><path d="M18 5.5v13"/>',
+    speed: '<path d="M4.2 16.5a8.2 8.2 0 1 1 15.6 0"/><path d="M12 13l3.6-3.8"/><circle cx="12" cy="13.2" r="1.3" fill="currentColor" stroke="none"/>',
+    hq: '<rect x="2.8" y="5.5" width="18.4" height="13" rx="2.6"/><path d="M7 9.5v5M10.4 9.5v5M7 12h3.4"/><path d="M13.6 9.5v5h1.5a2.5 2.5 0 0 0 0-5z"/>',
+    sync: '<path d="M3.5 10v4M6.8 7.5v9M10.1 10.5v3"/><circle cx="16.8" cy="12" r="4.3"/><path d="M16.8 9.9v2.3l1.5 1"/>',
     swap: '<path d="M7.5 4 4 7.5 7.5 11"/><path d="M4 7.5h14"/><path d="M16.5 13l3.5 3.5-3.5 3.5"/><path d="M20 16.5H6"/>',
     bell: '<path d="M6 16.5V11a6 6 0 1 1 12 0v5.5l1.6 2.2H4.4z"/><path d="M10 20.6a2.1 2.1 0 0 0 4 0"/>',
     guide: '<rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="M3 9.5h18M8.5 9.5v10M3 14.5h18M14 9.5v5"/>',
@@ -6468,10 +6471,19 @@
     ku: 'ku', kur: 'ku', sq: 'al', alb: 'al', sqi: 'al', bg: 'bg', bul: 'bg', ro: 'ro', rum: 'ro', ron: 'ro', el: 'gr', gre: 'gr', ell: 'gr',
     sv: 'se', swe: 'se', no: 'no', nor: 'no', da: 'dk', dan: 'dk', fi: 'fi', fin: 'fi', hu: 'hu', hun: 'hu', cs: 'cz', cze: 'cz', ces: 'cz',
     uk: 'ua', ukr: 'ua', fa: 'fa', per: 'fa', fas: 'fa', az: 'az', aze: 'az', hi: 'in', hin: 'in' };
+  // Sprachnamen, wie Anbieter sie oft als Spurnamen schreiben (in der Sprache selbst oder auf Englisch)
+  var LANG_SELF = { de: 'deutsch german ger deu', en: 'english englisch eng', tr: 'türkçe turkce turkish tur', fr: 'français francais french fra fre',
+    it: 'italiano italian ita', es: 'español espanol spanish castellano spa', nl: 'nederlands dutch nld', pl: 'polski polish pol',
+    pt: 'português portugues portuguese por', ar: 'العربية عربي arabic ara', ru: 'русский russian rus', ua: 'українська ukrainian ukr',
+    ku: 'kurdî kurdi kurdish kur', al: 'shqip albanian alb', bg: 'български bulgarian bul', ro: 'română romana romanian ron rum',
+    gr: 'ελληνικά greek ell gre', se: 'svenska swedish swe', no: 'norsk norwegian nor', dk: 'dansk danish dan', fi: 'suomi finnish fin',
+    hu: 'magyar hungarian hun', cz: 'čeština cestina czech ces', fa: 'فارسی persian farsi fas', az: 'azərbaycan azerbaijani aze', in: 'हिन्दी hindi hin' };
   function trackLabel(name, lang, i) {
     var code = String(lang || '').toLowerCase().split(/[-_]/)[0], key = LANG_ISO[code];
     var langName = key && LANG_NAMES[key] ? T(LANG_NAMES[key]) : (lang ? String(lang).toUpperCase() : '');
     name = String(name || '').trim();
+    // Steht im Namen nur die Sprache (z. B. „English“), reicht „Englisch“ – Zusätze wie „Kommentar“ oder „5.1“ bleiben
+    if (name && key && LANG_SELF[key] && (' ' + LANG_SELF[key] + ' ').indexOf(' ' + name.toLowerCase() + ' ') >= 0) name = '';
     if (name && langName && name.toLowerCase().indexOf(langName.toLowerCase()) < 0 && !/^(audio|track|und|default|subtitles?)\s*\d*$/i.test(name)) return langName + ' – ' + name;
     if (name && !/^(audio|track|und|default|subtitles?)\s*\d*$/i.test(name)) return name;
     return langName || T('Spur {0}', i + 1);
@@ -6614,7 +6626,10 @@
       var video = h('video', { playsinline: true, 'webkit-playsinline': true, autoplay: true, preload: 'auto', poster: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7' });
       self.video = video;
       self.title = h('h2');
-      self.liveTag = h('span', { class: 'live-tag', text: 'LIVE' });
+      self.sub = h('div', { class: 'pt-sub' });
+      self.logoBox = h('span', { class: 'pt-logo' });
+      self.clock = h('span', { class: 'p-clock' });
+      self.liveTag = h('span', { class: 'live-tag' }, h('i'), h('b', { text: 'LIVE' }));
       // Bildqualität des Streams (z. B. 1080p) – zeigt, was der Anbieter wirklich liefert
       self.qTag = h('span', { class: 'q-tag' });
       self.info = h('div', { class: 'epg' });
@@ -6642,7 +6657,11 @@
       var fsOk = !Platform.tv && (document.fullscreenEnabled || document.webkitFullscreenEnabled);
       self.fsBtn = fsOk ? h('button', { class: 'cbtn f', 'data-c': 'fs', title: T('Vollbild (F)'), 'aria-label': T('Vollbild'), onclick: function () { self.toggleFullscreen(); } }, icon('fullscreen')) : null;
       self.osd = h('div', { class: 'osd' },
-        h('div', { class: 'osd-top' }, h('button', { class: 'btn f', onclick: goBack }, icon('back'), h('span', { text: T('Zurück') })), self.liveTag, self.title, self.qTag),
+        h('div', { class: 'osd-top' },
+          h('button', { class: 'cbtn f p-back', title: T('Zurück'), 'aria-label': T('Zurück'), onclick: goBack }, icon('back')),
+          self.logoBox,
+          h('div', { class: 'pt-txt' }, h('div', { class: 'pt-row' }, self.title, self.liveTag, self.qTag), self.sub),
+          self.clock),
         h('div', { class: 'osd-bottom' }, self.info, self.barWrap, self.times,
           h('div', { class: 'ctrl-row' }, self.ctrlLeft, self.ctrls, h('div', { class: 'ctrl-side right' }, self.hideBtn, self.pipBtn, self.sleepBtn, self.fmtBtn, self.tracksBtn, self.fsBtn, self.volumeUi()))));
       self.miniTitle = h('span', { class: 'mini-title' });
@@ -6704,7 +6723,8 @@
       // Doppelt tippen/klicken (Handy, Tablet, PC): Player klein machen – im kleinen Player öffnet ein Klick wieder groß.
       var lastTap = 0;
       self.el.addEventListener('click', function (e) {
-        if (self.mini || (e.target !== video && e.target !== self.osd)) return;
+        if (self.mini || (e.target !== self.video && e.target !== self.osd && !(e.target.parentNode === self.osd))) return;
+        if (self.closeTracks()) { self.showOsd(); return; }
         var now = Date.now();
         if (!Platform.tv && now - lastTap < 400 && now - (self.maxAt || 0) > 800) {
           lastTap = 0;
@@ -6759,7 +6779,7 @@
       video.addEventListener('progress', function () { self.paintBuffer(); });
       function paintQuality() {
         var hh = video.videoHeight || 0;
-        self.qTag.textContent = !hh ? '' : hh >= 2000 ? '4K' : hh >= 1400 ? '1440p' : hh >= 1000 ? 'Full HD 1080p' : hh >= 700 ? 'HD 720p' : 'SD ' + hh + 'p';
+        self.qTag.textContent = !hh ? '' : hh >= 2000 ? '4K' : hh >= 1400 ? '1440p' : hh >= 1000 ? '1080p' : hh >= 700 ? '720p' : hh + 'p';
         self.qTag.className = 'q-tag' + (hh >= 1000 ? ' is-hd' : hh && hh < 700 ? ' is-sd' : '');
       }
       video.addEventListener('loadedmetadata', paintQuality);
@@ -6770,7 +6790,7 @@
       video.addEventListener('loadedmetadata', function () {
         if (self.isVod() && self.resumeAt) { try { video.currentTime = self.resumeAt; } catch (e) {} toast(T('Fortgesetzt bei {0}', fmtTime(self.resumeAt))); self.resumeAt = 0; }
       });
-      video.addEventListener('timeupdate', function () { self.paintProgress(); });
+      video.addEventListener('timeupdate', function () { self.paintProgress(); self.paintClock(); });
       video.addEventListener('ended', function () { self.onEnded(); });
       video.addEventListener('error', function () {
         if (self.hls) return;   // hls.js meldet seine Fehler selbst (und versucht es erst noch einmal)
@@ -6888,12 +6908,19 @@
       if (self.tracksBtn) self.tracksBtn.classList.add('is-gone');
       self.err.style.display = 'none';
       self.spinner.style.display = '';
-      self.loadTxt.textContent = item.kind === 'live' ? T('{0} wird geladen …', item.name) : T('Wird geladen …');
+      self.loadTxt.textContent = item.kind === 'live' ? item.name : '';
       self.epgNow = ''; self.epgNext = '';
       clearInterval(self.epgTimer);
       if (self.miniTitle) self.miniTitle.textContent = item.name;
       self.lastPlace = '';
-      self.title.textContent = item.kind === 'episode' ? (item.seriesName ? item.seriesName + ' · ' : '') + 'S' + item.season + ' E' + item.num + ' – ' + item.name : item.name;
+      var isEp = item.kind === 'episode';
+      self.title.textContent = isEp ? (item.seriesName || item.name) : item.name;
+      self.sub.textContent = isEp ? 'S' + item.season + ' E' + item.num + (item.seriesName && item.name ? ' · ' + item.name : '') : '';
+      clear(self.logoBox);
+      var lg = item.kind === 'live' && item.logo ? img(item.logo, '', function () { self.logoBox.style.display = 'none'; }) : null;
+      if (lg) self.logoBox.appendChild(lg);
+      self.logoBox.style.display = lg ? '' : 'none';
+      self.paintClock();
       self.liveTag.style.display = item.kind === 'live' ? '' : 'none';
       if (self.hideBtn) self.hideBtn.classList.toggle('is-gone', item.kind !== 'live');
       self.bar.classList.toggle('seek', self.isVod());
@@ -7085,6 +7112,7 @@
     showNext: function (next, auto) {
       var self = this, left = 10;
       if (self.mini) { if (auto) { self.ctx.index++; self.load(next); } else self.close(); return; }
+      self.closeTracks();
       var count = h('span', { class: 'nx-count' });
       function paint() { count.textContent = auto ? T('Startet in {0} Sekunden', left) : T('Weiter mit der nächsten Folge?'); }
       function cleanup() { clearInterval(self.nextTimer); if (box.parentNode) box.parentNode.removeChild(box); self.nextBox = null; self.nextCancel = null; }
@@ -7138,26 +7166,47 @@
     },
     openTracks: function () {
       var t = this.tracks();
-      this.openPanel([[T('Tonspur'), t.audio], [T('Untertitel'), t.subs]]);
+      this.openPanel([[T('Tonspur'), t.audio, 'vol'], [T('Untertitel'), t.subs, 'cc']], 'is-tracks');
     },
     /* Auswahlfenster im Player (Ton & Untertitel, Format). Abschnitte mit nur einer Möglichkeit werden weggelassen. */
-    openPanel: function (sections) {
+    /* Auswahl im Player: Glas-Karte mit Abschnitten (Symbol + kurzer Titel) und Chips.
+       sections: [Titel, Möglichkeiten, Symbol, schließen?] – Abschnitte mit nur einer Möglichkeit fehlen.
+       Eine Wahl wirkt sofort und die Karte bleibt offen; nur was den Stream neu lädt, schließt sie. */
+    openPanel: function (sections, cls) {
       var self = this;
       self.closeTracks();
-      var box = h('div', { class: 'track-panel' });
+      var box = h('div', { class: 'track-panel is-chips' + (cls ? ' ' + cls : '') });
       sections.forEach(function (s) {
         if (!s || s[1].length < 2) return;
-        var title = s[0], sec = h('div', { class: 'tp-sec' }, h('h3', { text: title }));
+        var row = h('div', { class: 'tp-chips' });
+        box.appendChild(h('div', { class: 'tp-sec' }, h('h3', null, s[2] ? icon(s[2]) : null, h('span', { text: s[0] })), row));
         s[1].forEach(function (o) {
-          sec.appendChild(h('button', { class: 'tp-opt f' + (o.on ? ' is-on' : ''), onclick: function () { o.pick(); self.closeTracks(); self.showOsd(); toast(title + ': ' + o.label); } },
-            h('span', { text: o.label }), o.on ? icon('check') : null));
+          var b = h('button', { class: 'tp-opt f' + (o.on ? ' is-on' : ''), title: o.title || null, onclick: function () {
+            if (b.classList.contains('is-on') && !o.again) return;
+            o.pick();
+            if (s[3]) { self.closeTracks(); self.showOsd(); return; }
+            for (var i = 0; i < row.children.length; i++) row.children[i].classList.toggle('is-on', row.children[i] === b);
+            idle(5000);
+          } }, h('span', { text: o.label }));
+          row.appendChild(b);
         });
-        box.appendChild(sec);
       });
       if (!box.firstChild) return;
+      // Ohne Bedienung blendet sich die Karte (und danach die Leiste) wieder aus – außer bei Pause
+      function idle(ms) {
+        clearTimeout(self.panelTimer);
+        self.panelTimer = setTimeout(function () {
+          if (self.trackPanel !== box || (self.video && self.video.paused)) return;
+          self.closeTracks(); self.hideOsd();
+        }, ms);
+      }
+      box.addEventListener('focusin', function () { idle(9000); });
+      box.addEventListener('pointermove', function () { idle(9000); });
+      box._dispose = function () { clearTimeout(self.panelTimer); };
       self.trackPanel = box;
       self.el.appendChild(box);
       clearTimeout(self.hideTimer);
+      idle(12000);
       setTimeout(function () { Nav.focus($('.tp-opt.is-on', box) || $('.tp-opt', box)); }, 30);
     },
     askHide: function () {
@@ -7181,7 +7230,7 @@
     levels: function () {
       var hls = this.hls, out = [], seen = {};
       if (!hls || !hls.levels || hls.levels.length < 2) return out;
-      out.push({ label: T('Automatisch'), on: !!hls.autoLevelEnabled, pick: function () { hls.currentLevel = -1; } });
+      out.push({ label: T('Auto'), title: T('Automatisch'), on: !!hls.autoLevelEnabled, pick: function () { hls.currentLevel = -1; } });
       hls.levels.map(function (l, i) { return { l: l, i: i }; })
         .sort(function (a, b) { return (b.l.height || 0) - (a.l.height || 0) || (b.l.bitrate || 0) - (a.l.bitrate || 0); })
         .forEach(function (x) {
@@ -7252,8 +7301,8 @@
     openSleep: function () {
       var self = this;
       self.openPanel([[T('Schlaf-Timer'), Sleep.options().map(function (o) {
-        return { label: o[1], on: Sleep.min === o[0], pick: function () { Sleep.set(o[0]); } };
-      })]]);
+        return { label: o[1], on: Sleep.min === o[0], again: true, pick: function () { Sleep.set(o[0]); } };
+      }), 'timer', true]]);
     },
     paintSleep: function () {
       if (!this.sleepBtn) return;
@@ -7327,34 +7376,34 @@
     },
     openFormat: function () {
       var self = this, cur = Settings.get('aspect') || 'fit';
-      var aspects = [['fit', T('Original')], ['16:9', '16:9'], ['4:3', '4:3'], ['stretch', T('Vollbild (strecken)')], ['fill', T('Zoom (Bild füllen)')]].map(function (a) {
-        return { label: a[1], on: cur === a[0], pick: function () { Settings.set('aspect', a[0]); self.applyAspect(); } };
+      var aspects = [['fit', T('Original')], ['16:9', '16:9'], ['4:3', '4:3'], ['stretch', T('Strecken'), T('Vollbild (strecken)')], ['fill', T('Zoom'), T('Zoom (Bild füllen)')]].map(function (a) {
+        return { label: a[1], title: a[2], on: cur === a[0], pick: function () { Settings.set('aspect', a[0]); self.applyAspect(); } };
       });
-      var sections = [[T('Bildformat'), aspects]];
+      var sections = [[T('Bildformat'), aspects, 'aspect']];
       // Geschwindigkeit: nur bei Filmen und Folgen (Live läuft immer in Echtzeit)
       if (self.isVod()) sections.push([T('Geschwindigkeit'), [0.5, 0.75, 1, 1.25, 1.5, 2].map(function (r) {
-        return { label: r === 1 ? T('Normal') : String(r).replace('.', Lang.cur === 'en' ? '.' : ',') + '×', on: self.rate === r, pick: function () { self.rate = r; self.applyRate(); } };
-      })]);
+        return { label: String(r).replace('.', Lang.cur === 'en' ? '.' : ',') + '×', on: self.rate === r, pick: function () { self.rate = r; self.applyRate(); } };
+      }), 'speed']);
       // Qualität: nur wenn der Stream mehrere Stufen anbietet (HLS mit hls.js)
       var lv = self.levels();
-      if (lv.length) sections.push([T('Qualität'), lv]);
+      if (lv.length) sections.push([T('Qualität'), lv, 'hq']);
       // Ton-Verzögerung: nur wo es technisch geht (Stream über MSE, Web Audio vorhanden)
-      if (self.delayOk() || self.actx) sections.push([T('Ton verzögern (wenn der Ton zu früh kommt)'), [0, 100, 200, 300, 500, 800].map(function (ms) {
-        return { label: ms ? T('{0} ms später', ms) : T('Aus'), on: (self.audioDelay || 0) === ms, pick: function () { self.setDelay(ms); } };
-      })]);
+      if (self.delayOk() || self.actx) sections.push([T('Ton-Verzögerung') + ' · ms', [0, 100, 200, 300, 500, 800].map(function (ms) {
+        return { label: ms ? '+' + ms : T('Aus'), title: ms ? T('{0} ms später', ms) : null, on: (self.audioDelay || 0) === ms, pick: function () { self.setDelay(ms); } };
+      }), 'sync']);
       // Nächste Folge automatisch (nur bei Serien)
       if (self.item && self.item.kind === 'episode') {
         var an = Settings.get('autoNext') !== false;
         sections.push([T('Nächste Folge automatisch'), [[true, T('An')], [false, T('Aus')]].map(function (o) {
           return { label: o[1], on: an === o[0], pick: function () { Settings.set('autoNext', o[0]); } };
-        })]);
+        }), 'skipNext']);
       }
       if (self.item && self.item.kind === 'live' && App.provider && App.provider.type === 'xtream') {
         var lf = Settings.get('liveFormat') === 'ts' ? 'ts' : 'm3u8';
-        sections.push([T('Stream-Format'), [['m3u8', 'HLS (.m3u8)'], ['ts', 'MPEG-TS (.ts)']].map(function (f) {
+        sections.push([T('Stream-Format'), [['m3u8', 'HLS', 'HLS (.m3u8)'], ['ts', 'MPEG-TS', 'MPEG-TS (.ts)']].map(function (f) {
           // Wechsel lädt den Sender sofort neu; gilt danach für alle Live-Sender
-          return { label: f[1], on: lf === f[0], pick: function () { if (lf === f[0]) return; Settings.set('liveFormat', f[0]); self.load(self.item); } };
-        })]);
+          return { label: f[1], title: f[2], on: lf === f[0], pick: function () { if (lf === f[0]) return; Settings.set('liveFormat', f[0]); self.load(self.item); } };
+        }), 'tvplay', true]);
       }
       // Android: eingebauter Android-Player oder der Telvo-eigene Player (hls.js) – je nach Gerät läuft einer stabiler
       if (Platform.android) {
@@ -7368,7 +7417,7 @@
             if (f[0] === 'native') { var it = self.item, c = self.ctx; self.close(); setTimeout(function () { playItem(it, c); }, 60); }
             else self.load(self.item);
           } };
-        })]);
+        }), 'player', true]);
       }
       self.openPanel(sections);
     },
@@ -7415,10 +7464,10 @@
           clear(self.info);
           var now = Date.now() / 1000;
           var cur = list.filter(function (e) { return e.start <= now && e.end > now; })[0] || list[0];
-          if (!cur) { self.epgNow = ''; self.epgNext = ''; self.info.appendChild(h('div', { class: 'now', text: item.name })); self.bar.style.display = 'none'; return; }
+          if (!cur) { self.epgNow = ''; self.epgNext = ''; self.bar.style.display = 'none'; return; }
           var next = list.filter(function (e) { return e.start >= cur.end - 1; })[0];
-          self.info.appendChild(h('div', { class: 'now', text: fmtClock(cur.start) + ' – ' + fmtClock(cur.end) + '  ' + cur.title }));
-          if (next) self.info.appendChild(h('div', { class: 'next', text: T('Danach: {0}', fmtClock(next.start) + '  ' + next.title) }));
+          self.info.appendChild(h('div', { class: 'now' }, h('span', { class: 'ep-t', text: fmtClock(cur.start) + ' – ' + fmtClock(cur.end) }), h('b', { text: cur.title })));
+          if (next) self.info.appendChild(h('div', { class: 'next' }, icon('arrowR'), h('span', { text: fmtClock(next.start) + '  ' + next.title })));
           self.epgNow = fmtClock(cur.start) + ' – ' + fmtClock(cur.end) + '  ' + cur.title;
           self.epgNext = next ? T('Danach: {0}', fmtClock(next.start) + '  ' + next.title) : '';
           self.lastPlace = '';
@@ -7465,31 +7514,31 @@
       var cx = self.ctx;
       if (self.item && self.item.kind === 'episode' && cx && cx.list && cx.index < cx.list.length - 1) {
         var nx = cx.list[cx.index + 1];
-        self.ctrlLeft.appendChild(h('button', { class: 'btn f', 'data-c': 'nextep', title: T('Nächste Folge') + ': S' + nx.season + ' E' + nx.num, 'aria-label': T('Nächste Folge'), onclick: function () { self.nextEpisode(); } },
-          icon('skipNext'), h('span', { text: T('Nächste Folge') })));
+        self.ctrlLeft.appendChild(h('button', { class: 'cbtn f', 'data-c': 'nextep', title: T('Nächste Folge') + ': S' + nx.season + ' E' + nx.num, 'aria-label': T('Nächste Folge'), onclick: function () { self.nextEpisode(); } }, icon('skipNext')));
       }
       if (self.item && self.item.kind === 'live' && self.ctx && self.ctx.list && self.ctx.list.length > 1) {
-        self.ctrlLeft.appendChild(h('button', { class: 'btn f', 'data-c': 'list', title: T('Senderliste (Pfeil links)'), 'aria-label': T('Senderliste'), onclick: function () { self.openChannels(); } },
-          icon('playlist'), h('span', { text: T('Senderliste') })));
+        self.ctrlLeft.appendChild(h('button', { class: 'cbtn f', 'data-c': 'list', title: T('Senderliste (Pfeil links)'), 'aria-label': T('Senderliste'), onclick: function () { self.openChannels(); } }, icon('playlist')));
       }
       if (self.item && self.item.kind === 'live' && (self.prevLive || prevRecent(self.item))) {
-        self.ctrlLeft.appendChild(h('button', { class: 'btn f', 'data-c': 'last', title: T('Zurück zum letzten Sender'), 'aria-label': T('Letzter Sender'), onclick: function () { self.lastChannel(); } },
-          icon('swap'), h('span', { text: T('Letzter Sender') })));
+        self.ctrlLeft.appendChild(h('button', { class: 'cbtn f', 'data-c': 'last', title: T('Zurück zum letzten Sender'), 'aria-label': T('Letzter Sender'), onclick: function () { self.lastChannel(); } }, icon('swap')));
       }
       if (self.item && self.item.kind === 'live' && self.item.archive && App.provider && App.provider.archive) {
-        self.ctrlLeft.appendChild(h('button', { class: 'btn f', 'data-c': 'arch', 'aria-label': T('Verpasste Sendungen'), onclick: function () { self.openArchive(); } },
-          icon('archive'), h('span', { text: T('Verpasste Sendungen') })));
+        self.ctrlLeft.appendChild(h('button', { class: 'cbtn f', 'data-c': 'arch', title: T('Verpasste Sendungen'), 'aria-label': T('Verpasste Sendungen'), onclick: function () { self.openArchive(); } }, icon('archive')));
       }
       if (self.item && self.item.kind !== 'episode' && self.item.kind !== 'catchup') {
         var on = Favs.has(self.item);
-        self.ctrlLeft.appendChild(h('button', { class: 'btn f', 'data-c': 'fav', 'aria-label': on ? T('Gemerkt') : T('Merken'), onclick: function () { Favs.toggle(self.item); self.paintCtrls(); } },
-          icon(on ? 'heartFill' : 'heart'), h('span', { text: on ? T('Gemerkt') : T('Merken') })));
+        self.ctrlLeft.appendChild(h('button', { class: 'cbtn f' + (on ? ' is-fav' : ''), 'data-c': 'fav', title: on ? T('Gemerkt') : T('Merken'), 'aria-label': on ? T('Gemerkt') : T('Merken'), onclick: function () { Favs.toggle(self.item); self.paintCtrls(); } }, icon(on ? 'heartFill' : 'heart')));
       }
       self.fitCtrls();
       var target = had ? ($('[data-c="' + had + '"]', self.ctrls) || $('[data-c="' + had + '"]', self.ctrlLeft)) : null;
       if (target) Nav.focus(target);
     },
-    // Die Knopfleiste passt sich dem Platz an: erst nur Symbole (links) bzw. ohne Lautstärke-Regler (rechts),
+    paintClock: function () {
+      if (!this.clock) return;
+      var t = fmtClock(Date.now() / 1000);
+      if (this.clock.textContent !== t) this.clock.textContent = t;
+    },
+    // Die Knopfleiste passt sich dem Platz an: erst ohne Lautstärke-Regler,
     // reicht es dann immer noch nicht, kommen die Werkzeuge in eine eigene Zeile unter Abspielen
     fitCtrls: function () {
       var l = this.ctrlLeft, row = l && l.parentNode, r = row && row.lastChild;
@@ -7504,9 +7553,8 @@
         return w;
       }
       function over(el) { return el.offsetParent !== null && need(el) > el.clientWidth + 1; }
-      row.classList.remove('is-stacked'); l.classList.remove('is-compact'); r.classList.remove('is-compact');
+      row.classList.remove('is-stacked'); r.classList.remove('is-compact');
       if (this.el) this.el.classList.remove('ctrl-stacked');
-      if (over(l)) l.classList.add('is-compact');
       if (over(r)) r.classList.add('is-compact');
       if (over(l) || over(r)) {
         row.classList.add('is-stacked');
@@ -7614,7 +7662,7 @@
       if (self.mini) return;
       var wasHidden = self.osd.classList.contains('is-hidden');
       self.osd.classList.remove('is-hidden');
-      if (wasHidden) self.fitCtrls();
+      if (wasHidden) { self.fitCtrls(); self.paintClock(); }
       if (wasHidden || !self.osd.contains(document.activeElement)) {
         var pb = $('[data-c="play"]', self.ctrls);
         if (pb && self.err.style.display === 'none') Nav.focus(pb);
@@ -8033,7 +8081,7 @@
   // Für automatische Tests von außen erreichbar
   window.LumioDebug = {
     parseM3U: parseM3U, catchupUrl: catchupUrl, parseXtreamLink: parseXtreamLink, normalizeServer: normalizeServer, Nav: Nav, Screens: Screens, StillWatching: StillWatching,
-    Xmltv: Xmltv, chanKey: chanKey, EpgStore: EpgStore, makeProvider: makeProvider, Profiles: Profiles, PinGuard: PinGuard, Store: Store, Cloud: Cloud,
+    Xmltv: Xmltv, chanKey: chanKey, trackLabel: trackLabel, EpgStore: EpgStore, makeProvider: makeProvider, Profiles: Profiles, PinGuard: PinGuard, Store: Store, Cloud: Cloud,
     decodeBytes: decodeBytes, readText: readText, fetchText: fetchText, sameConnection: sameConnection, NativePlayer: NativePlayer, App: App, ensureTs: ensureTs, migrateM3uIds: migrateM3uIds,
     ErrLog: ErrLog, techInfo: techInfo,
     CatPrefs: CatPrefs, visibleCats: visibleCats, Parental: Parental, ChanHide: ChanHide,

@@ -490,7 +490,7 @@
     // Qualität: nur mit mehreren Stufen, gleiche Höhe einmal, die beste oben
     var hls = { levels: [{ height: 360, bitrate: 8e5 }, { height: 720, bitrate: 3e6 }, { height: 720, bitrate: 2e6 }], autoLevelEnabled: true, currentLevel: -1 };
     var lv = P.levels.call({ hls: hls });
-    eq(lv.length, 3, 'Automatisch + 720p + 360p');
+    eq(lv.length, 3, 'Auto + 720p + 360p');
     eq(lv[1].label + ' ' + lv[2].label, '720p 360p', 'beste Stufe oben, doppelte 720p nur einmal');
     ok(lv[0].on, 'Automatisch ist gewählt');
     lv[2].pick(); eq(hls.currentLevel, 0, '360p wählen setzt die richtige Stufe');
@@ -505,5 +505,9 @@
     // Ton-Verzögerung nur, wenn das Bild aus einem eigenen Puffer kommt (sonst würde der Ton verstummen)
     ok(!P.delayOk.call({ video: { currentSrc: 'http://anbieter.test/film.mp4' } }), 'direkte Adresse: keine Ton-Verzögerung');
     ok(!P.delayOk.call({ video: null }), 'ohne Video: keine Ton-Verzögerung');
+    // Spurnamen: nur die Sprache, wenn der Anbieter nur die Sprache hinschreibt – Zusätze bleiben
+    eq(D.trackLabel('English', 'en', 0), D.trackLabel('', 'en', 0), '„English“ → nur Sprachname');
+    eq(D.trackLabel('Deutsch', 'ger', 0), D.trackLabel('', 'de', 0), '„Deutsch“ (ger) → nur Sprachname');
+    ok(D.trackLabel('English Commentary', 'en', 0).indexOf('English Commentary') >= 0, 'Zusatz bleibt sichtbar');
   });
 })();

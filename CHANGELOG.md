@@ -62,6 +62,18 @@ und in `scripts/make-icons.py` (Android, Fire TV, Samsung, LG, Windows/Mac, TV-B
 
 Die neuen Daten gehören zum Profil, werden mitgesichert und von „Verlauf löschen“ entfernt.
 
+**Player im Glas-Stil** (wie Menüleiste, Einstellungen und Live TV), mit deutlich weniger Text:
+- **Oben:** rundes Zurück, Senderlogo, Titel (bei Serien: Serie groß, darunter „S1 E1 · Folgenname“), kleine Chips für
+  LIVE (mit pulsierendem Punkt) und Bildqualität (720p, 1080p, 4K), rechts die Uhrzeit.
+- **Unten:** Sendung mit Uhrzeit-Chip, „Danach“ als Pfeil statt Wort, schmaler lila Balken; die Knöpfe sitzen in zwei
+  Glas-Kapseln und zeigen nur Symbole – der Name erscheint beim Auswählen mit der Fernbedienung oder mit der Maus.
+  Aktive Knöpfe sind getönt (Schlaf-Timer lila, Favorit rosé).
+- **Auswahl** (Bild & Wiedergabe, Ton & Untertitel, Schlaf-Timer) als Glas-Karte mit Chips statt langer Listen:
+  kurze Namen (Strecken, Zoom, Auto, +300 ms), eine Wahl wirkt sofort und die Karte bleibt offen; ohne Bedienung blendet
+  sie sich nach ein paar Sekunden aus. Tippen aufs Bild schließt sie.
+- **Spurnamen kürzer:** steht im Stream nur die Sprache („English“), zeigt die App nur „Englisch“; Zusätze bleiben.
+- Senderwechsel-Hinweis, „Nächste Folge“, Senderliste und „Verpasste Sendungen“ im gleichen Glas.
+
 **Player – Profi-Steuerung:** Das Zahnrad im Player („Bild & Wiedergabe“) zeigt nur, was der Stream wirklich kann:
 - **Bildformat:** Original, 16:9, 4:3, Vollbild (strecken), Zoom (Bild füllen).
 - **Geschwindigkeit** 0,5× bis 2× bei Filmen und Folgen (bei Live TV nicht angeboten).

@@ -890,5 +890,8 @@ window.LUMIO_I18N["ru"] = {
   "Zoom (Bild füllen)": "Масштаб (заполнить экран)",
   "Qualität": "Качество",
   "Ton verzögern (wenn der Ton zu früh kommt)": "Задержать звук (если звук опережает)",
-  "{0} ms später": "на {0} мс позже"
+  "{0} ms später": "на {0} мс позже",
+  "Auto": "Авто",
+  "Zoom": "Масштаб",
+  "Ton-Verzögerung": "Задержка звука"
 };

@@ -890,5 +890,8 @@ window.LUMIO_I18N["pl"] = {
   "Zoom (Bild füllen)": "Powiększ (wypełnij obraz)",
   "Qualität": "Jakość",
   "Ton verzögern (wenn der Ton zu früh kommt)": "Opóźnij dźwięk (gdy dźwięk jest za wcześnie)",
-  "{0} ms später": "{0} ms później"
+  "{0} ms später": "{0} ms później",
+  "Auto": "Auto",
+  "Zoom": "Powiększ",
+  "Ton-Verzögerung": "Opóźnienie dźwięku"
 };

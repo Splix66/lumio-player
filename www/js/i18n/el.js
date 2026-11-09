@@ -890,5 +890,8 @@ window.LUMIO_I18N["el"] = {
   "Zoom (Bild füllen)": "Ζουμ (γέμισμα εικόνας)",
   "Qualität": "Ποιότητα",
   "Ton verzögern (wenn der Ton zu früh kommt)": "Καθυστέρηση ήχου (αν ο ήχος έρχεται νωρίς)",
-  "{0} ms später": "{0} ms αργότερα"
+  "{0} ms später": "{0} ms αργότερα",
+  "Auto": "Αυτόματα",
+  "Zoom": "Ζουμ",
+  "Ton-Verzögerung": "Καθυστέρηση ήχου"
 };

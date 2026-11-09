@@ -890,5 +890,8 @@ window.LUMIO_I18N["ar"] = {
   "Zoom (Bild füllen)": "تكبير (ملء الصورة)",
   "Qualität": "الجودة",
   "Ton verzögern (wenn der Ton zu früh kommt)": "تأخير الصوت (إذا جاء الصوت مبكرًا)",
-  "{0} ms später": "متأخر {0} مللي ثانية"
+  "{0} ms später": "متأخر {0} مللي ثانية",
+  "Auto": "تلقائي",
+  "Zoom": "تكبير",
+  "Ton-Verzögerung": "تأخير الصوت"
 };

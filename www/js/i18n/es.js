@@ -890,5 +890,8 @@ window.LUMIO_I18N["es"] = {
   "Zoom (Bild füllen)": "Zoom (llenar imagen)",
   "Qualität": "Calidad",
   "Ton verzögern (wenn der Ton zu früh kommt)": "Retrasar audio (si el sonido llega antes)",
-  "{0} ms später": "{0} ms después"
+  "{0} ms später": "{0} ms después",
+  "Auto": "Auto",
+  "Zoom": "Zoom",
+  "Ton-Verzögerung": "Retraso de audio"
 };

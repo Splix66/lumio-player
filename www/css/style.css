@@ -911,16 +911,6 @@ body.kbd .bar.f:focus, body.is-tv .bar.f:focus { box-shadow: 0 0 0 .2rem var(--a
 .ctrl-side.left > * + * { margin-left: .5rem; }
 .ctrl-side .btn { background: rgba(255, 255, 255, .12); }
 .ctrl-side .btn:hover { background: rgba(255, 255, 255, .22); }
-/* Zu viele Knöpfe links: nur noch Symbole, die Beschriftung erscheint als Hinweis beim Auswählen */
-.ctrl-side.left.is-compact .btn { position: relative; width: 3.4rem; height: 3.4rem; padding: 0; }
-.ctrl-side.left.is-compact .btn span { display: none; }
-.ctrl-side.left.is-compact .btn::after {
-  content: attr(aria-label); position: absolute; left: 50%; bottom: calc(100% + .7rem); transform: translateX(-50%);
-  padding: .35rem .7rem; border-radius: .55rem; background: rgba(20, 20, 26, .96); box-shadow: 0 0 0 1px rgba(255, 255, 255, .12);
-  color: #fff; font-size: .85rem; font-weight: 600; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .12s ease;
-}
-.ctrl-side.left.is-compact .btn:first-child::after { left: 0; transform: none; }
-.ctrl-side.left.is-compact .btn:hover::after, body.kbd .ctrl-side.left.is-compact .btn.f:focus::after, body.is-tv .ctrl-side.left.is-compact .btn.f:focus::after { opacity: 1; }
 .ctrls { grid-column: 2; display: flex; align-items: center; justify-content: center; }
 .ctrl-side.right.is-compact > * + * { margin-left: .3rem; }
 .ctrl-side.right.is-compact .vol-range { display: none; }
@@ -2542,4 +2532,116 @@ body.kbd .pf-person.f:focus small, body.is-tv .pf-person.f:focus small { color: 
   html:not(.tv) .main-tabs .tab.tab-home { width: auto; height: auto; padding: .45rem .2rem; border-radius: .8rem; background: transparent; box-shadow: none; }
   html:not(.tv) .main-tabs .tab.tab-home .i { width: 1.45rem; height: 1.45rem; }
   :root[data-theme="light"] html:not(.tv) .main-tabs .tab.is-on { color: var(--text); }
+}
+
+/* ==========================================================
+   Player im Glas-Stil (wie Menüleiste, Einstellungen, Live TV):
+   oben rundes Zurück, Logo, Titel mit kleinen Chips und Uhr · unten Sendung, schmaler Balken
+   und ein Knopf-Dock aus Glas-Kapseln – nur Symbole, der Name erscheint beim Auswählen.
+   Auswahl (Bild & Wiedergabe, Ton & Untertitel, Schlaf-Timer) als Glas-Karte mit Chips.
+   ========================================================== */
+.osd-top { padding: 1.6rem 2.2rem 5rem; align-items: center; background: linear-gradient(180deg, rgba(0, 0, 0, .78), rgba(0, 0, 0, .35) 55%, rgba(0, 0, 0, 0)); }
+.osd-top > * + * { margin-left: 1.1rem; }
+.p-back.cbtn { width: 3.1rem; height: 3.1rem; }
+.pt-logo { flex: none; width: 3.4rem; height: 3.4rem; border-radius: .9rem; padding: .4rem; display: grid; place-items: center; background: rgba(255, 255, 255, .08); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12); }
+.pt-logo img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+.pt-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.pt-row { display: flex; align-items: center; min-width: 0; }
+.pt-row > * + * { margin-left: .6rem; }
+.osd-top .pt-row h2 { flex: 0 1 auto; font-size: 1.5rem; font-weight: 750; letter-spacing: -.02em; }
+.pt-sub { margin-top: .2rem; color: rgba(255, 255, 255, .62); font-size: .95rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pt-sub:empty { display: none; }
+.live-tag { flex: none; display: inline-flex; align-items: center; padding: .26rem .6rem .26rem .5rem; border-radius: 999px; font-size: .68rem; font-weight: 800; letter-spacing: .08em; color: #ffc2cd; background: rgba(255, 91, 115, .16); box-shadow: inset 0 0 0 1px rgba(255, 91, 115, .45); }
+.live-tag i { width: .45rem; height: .45rem; border-radius: 50%; background: #ff6b83; margin-right: .4rem; box-shadow: 0 0 .5rem rgba(255, 91, 115, .9); animation: livePulse 1.8s ease-in-out infinite; }
+@keyframes livePulse { 50% { opacity: .35; } }
+body.lite .live-tag i { animation: none; }
+.q-tag { margin-left: .6rem; padding: .26rem .6rem; border-radius: 999px; font-size: .7rem; font-weight: 750; letter-spacing: .03em; color: rgba(255, 255, 255, .85); background: rgba(255, 255, 255, .08); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14); }
+.q-tag.is-hd { color: #a8ecd0; background: rgba(52, 211, 153, .12); box-shadow: inset 0 0 0 1px rgba(52, 211, 153, .4); }
+.q-tag.is-sd { color: #ecd4a6; background: rgba(222, 180, 110, .14); box-shadow: inset 0 0 0 1px rgba(222, 180, 110, .42); }
+.p-clock { flex: none; font-size: 1.4rem; font-weight: 650; letter-spacing: -.01em; font-variant-numeric: tabular-nums; color: rgba(255, 255, 255, .92); }
+.p-clock:empty { display: none; }
+
+.osd-bottom { padding: 5rem 2.2rem 1.8rem; background: linear-gradient(0deg, rgba(0, 0, 0, .85), rgba(0, 0, 0, .4) 55%, rgba(0, 0, 0, 0)); }
+.osd-bottom > * + * { margin-top: .9rem; }
+.epg .now { display: flex; align-items: center; min-width: 0; font-weight: 700; }
+.epg .now b { font-size: 1.3rem; letter-spacing: -.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ep-t { flex: none; margin-right: .75rem; padding: .24rem .65rem; border-radius: 999px; font-size: .8rem; font-weight: 700; font-variant-numeric: tabular-nums; color: rgba(255, 255, 255, .85); background: rgba(255, 255, 255, .09); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12); }
+.epg .next { display: flex; align-items: center; margin-top: .45rem; color: rgba(255, 255, 255, .55); font-size: .9rem; font-weight: 600; }
+.epg .next .i { width: .95rem; height: .95rem; margin-right: .45rem; opacity: .8; }
+.epg .next span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.player .bar { height: .32rem; border-radius: 999px; background: rgba(255, 255, 255, .16); }
+.player .bar > i { border-radius: inherit; background: linear-gradient(90deg, var(--accent), #c9b8fb); }
+.player .bar .buf { border-radius: inherit; }
+.times { font-size: .85rem; font-weight: 600; color: rgba(255, 255, 255, .6); }
+
+/* Knopf-Dock: zwei Glas-Kapseln links und rechts, in der Mitte frei stehende Kreise */
+.ctrl-side { width: max-content; max-width: 100%; padding: .32rem; border-radius: 999px; background: rgba(16, 16, 22, .6); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1), 0 .8rem 2rem -1rem rgba(0, 0, 0, .8); }
+.ctrl-side.left { justify-self: start; }
+.ctrl-side.right { justify-self: end; }
+.ctrl-side:empty { visibility: hidden; }
+.ctrl-side.left > * + *, .ctrl-side.right > * + *, .ctrl-side.right.is-compact > * + * { margin-left: .15rem; }
+.ctrl-side .cbtn { width: 3rem; height: 3rem; background: transparent; color: rgba(255, 255, 255, .9); transition: background .15s ease, color .15s ease, transform .15s ease; }
+.ctrl-side .cbtn .i { width: 1.3rem; height: 1.3rem; }
+.ctrl-side .cbtn:hover { background: rgba(255, 255, 255, .1); }
+.ctrl-side .cbtn.is-on { color: #fff; background: linear-gradient(180deg, rgba(167, 139, 250, .38), rgba(167, 139, 250, .18)); box-shadow: inset 0 0 0 1.5px rgba(167, 139, 250, .7); }
+.ctrl-side .cbtn.is-fav { color: #f3c6dc; background: linear-gradient(180deg, rgba(226, 140, 180, .3), rgba(226, 140, 180, .14)); box-shadow: inset 0 0 0 1.5px rgba(226, 140, 180, .6); }
+.ctrl-side .vol { padding: 0 .55rem 0 0; margin: 0; }
+.ctrl-side .vol > * + * { margin-left: .35rem; }
+.ctrl-side .vol .cbtn { width: 3rem; height: 3rem; }
+.ctrl-side .vol-range { width: 6.5rem; }
+.ctrl-side .vol.is-tv-vol { padding: 0; }
+.ctrls > * + * { margin-left: 1rem; }
+.ctrls .cbtn { width: 3.5rem; height: 3.5rem; background: rgba(16, 16, 22, .6); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12); }
+.ctrls .cbtn:hover { background: rgba(40, 40, 50, .75); }
+.ctrls .cbtn.big { width: 4.7rem; height: 4.7rem; background: #fff; color: #0b0b0f; box-shadow: 0 .9rem 2.4rem -.9rem rgba(167, 139, 250, .95); }
+body.kbd .osd .cbtn.f:focus, body.is-tv .osd .cbtn.f:focus { background: #fff; color: #0b0b0f; box-shadow: 0 0 0 .2rem rgba(167, 139, 250, .55); transform: scale(1.08); }
+body.kbd .osd .cbtn.big.f:focus, body.is-tv .osd .cbtn.big.f:focus { box-shadow: 0 0 0 .22rem rgba(0, 0, 0, .6), 0 0 0 .42rem #c9b8fb; }
+/* Name des Knopfs als kleiner Hinweis (beim Auswählen mit der Fernbedienung oder mit der Maus darüber) */
+.osd .cbtn[aria-label]:not(.big)::after {
+  content: attr(aria-label); position: absolute; left: 50%; bottom: calc(100% + .7rem); transform: translateX(-50%);
+  padding: .35rem .7rem; border-radius: 999px; background: rgba(18, 18, 24, .95); box-shadow: 0 0 0 1px rgba(255, 255, 255, .12);
+  color: #fff; font-size: .8rem; font-weight: 650; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .12s ease;
+}
+.osd-top .cbtn[aria-label]::after { top: calc(100% + .6rem); bottom: auto; left: 0; transform: none; }
+.ctrl-side.left > .cbtn:first-child::after { left: -.32rem; transform: none; }
+.ctrl-side.right .vol .cbtn::after, .ctrl-side.right > .cbtn:nth-last-child(2)::after { left: auto; right: -.32rem; transform: none; }
+body.kbd .osd .cbtn.f:focus::after, body.is-tv .osd .cbtn.f:focus::after { opacity: 1; }
+@media (hover: hover) { .osd .cbtn:hover::after { opacity: 1; } }
+
+/* Auswahl-Karte mit Chips */
+.track-panel.is-chips { width: 31rem; min-width: 0; max-width: calc(100% - 4.4rem); max-height: 72%; padding: 1.05rem 1.1rem 1.1rem; border-radius: 1.4rem; background: rgba(18, 18, 24, .95); box-shadow: 0 1.4rem 3.4rem rgba(0, 0, 0, .6), inset 0 0 0 1px rgba(255, 255, 255, .1); }
+.is-chips .tp-sec + .tp-sec { margin-top: .85rem; padding-top: .85rem; border-top: 1px solid rgba(255, 255, 255, .07); }
+.is-chips .tp-sec h3 { display: flex; align-items: center; padding: 0 0 .55rem .1rem; font-size: .76rem; font-weight: 750; letter-spacing: .02em; color: rgba(255, 255, 255, .55); }
+.is-chips .tp-sec h3 .i { width: 1rem; height: 1rem; margin-right: .45rem; color: #c9b8fb; }
+.tp-chips { display: flex; flex-wrap: wrap; margin: -.2rem; }
+.is-chips .tp-opt { width: auto; margin: .2rem; padding: .48rem .9rem; border-radius: 999px; font-size: .92rem; font-weight: 650; color: rgba(255, 255, 255, .88); background: rgba(255, 255, 255, .07); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08); transition: background .15s ease; }
+.is-chips .tp-opt span { flex: none; }
+.is-chips .tp-opt:hover { background: rgba(255, 255, 255, .13); }
+.is-chips .tp-opt.is-on { color: #fff; background: linear-gradient(180deg, rgba(167, 139, 250, .42), rgba(167, 139, 250, .22)); box-shadow: inset 0 0 0 1.5px rgba(167, 139, 250, .8); }
+body.kbd .is-chips .tp-opt.f:focus, body.is-tv .is-chips .tp-opt.f:focus { background: #fff; color: #0b0b0f; box-shadow: none; }
+body.kbd .is-chips .tp-opt.is-on.f:focus, body.is-tv .is-chips .tp-opt.is-on.f:focus { box-shadow: 0 0 0 .2rem rgba(167, 139, 250, .7); }
+
+/* Senderwechsel, nächste Folge, Senderliste: gleiche Glas-Flächen */
+.zap { top: 6.4rem; right: 2.2rem; padding: .45rem 1.15rem .45rem .45rem; border-radius: 999px; background: rgba(16, 16, 22, .82); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12), 0 1rem 2.4rem -1rem rgba(0, 0, 0, .8); font-size: 1.05rem; }
+.zap .num { min-width: 2.5rem; padding: .3rem .7rem; border-radius: 999px; text-align: center; font-size: 1.05rem; color: #ece6ff; background: rgba(167, 139, 250, .3); box-shadow: inset 0 0 0 1px rgba(167, 139, 250, .6); }
+.next-ep, .track-panel.chan-panel, .track-panel.arch-panel { border-radius: 1.4rem; background: rgba(18, 18, 24, .95); box-shadow: 0 1.4rem 3.4rem rgba(0, 0, 0, .6), inset 0 0 0 1px rgba(255, 255, 255, .1); }
+.nx-thumb { border-radius: .9rem; }
+.load-txt { font-size: 1.05rem; color: rgba(255, 255, 255, .75); }
+
+@media (max-width: 960px) and (orientation: portrait) {
+  html:not(.tv) .osd-top { padding: calc(.9rem + env(safe-area-inset-top)) 1rem 3rem; }
+  html:not(.tv) .osd-top > * + * { margin-left: .75rem; }
+  html:not(.tv) .p-back.cbtn { width: 2.7rem; height: 2.7rem; }
+  html:not(.tv) .pt-logo { width: 2.6rem; height: 2.6rem; border-radius: .7rem; padding: .3rem; }
+  html:not(.tv) .osd-top .pt-row h2 { font-size: 1.12rem; }
+  html:not(.tv) .pt-sub { font-size: .82rem; }
+  html:not(.tv) .p-clock, html:not(.tv) .q-tag { display: none; }
+  html:not(.tv) .osd-bottom { padding: 3rem 1rem calc(1rem + env(safe-area-inset-bottom)); }
+  html:not(.tv) .epg .now b { font-size: 1.05rem; }
+  html:not(.tv) .ctrl-side .cbtn, html:not(.tv) .ctrl-side .vol .cbtn { width: 2.7rem; height: 2.7rem; }
+  html:not(.tv) .ctrls .cbtn { width: 3.1rem; height: 3.1rem; }
+  html:not(.tv) .ctrls .cbtn.big { width: 4rem; height: 4rem; }
+  html:not(.tv) .ctrl-row.is-stacked .ctrl-side.right { justify-self: center; }
+  html:not(.tv) .track-panel.is-chips { right: 1rem; left: 1rem; width: auto; max-width: none; }
+  html:not(.tv) .zap { top: calc(4.6rem + env(safe-area-inset-top)); right: 1rem; }
 }

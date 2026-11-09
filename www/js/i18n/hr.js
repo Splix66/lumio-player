@@ -890,5 +890,8 @@ window.LUMIO_I18N["hr"] = {
   "Zoom (Bild füllen)": "Zum (ispuni sliku)",
   "Qualität": "Kvaliteta",
   "Ton verzögern (wenn der Ton zu früh kommt)": "Odgodi zvuk (ako zvuk dolazi prerano)",
-  "{0} ms später": "{0} ms kasnije"
+  "{0} ms später": "{0} ms kasnije",
+  "Auto": "Auto",
+  "Zoom": "Zum",
+  "Ton-Verzögerung": "Odgoda zvuka"
 };
