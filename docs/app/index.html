@@ -10,25 +10,39 @@
   <title>Lumio Player herunterladen</title>
   <link rel="icon" href="../favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="../apple-touch-icon.png">
+  <link rel="preload" href="../assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <style>
-    :root { --bg: #0b0b0f; --surface: #14141a; --line: rgba(255, 255, 255, .1); --text: #f4f4f6; --muted: #a4a4b4; --accent: #8b5cf6; --accent-2: #a78bfa; --gold: #ffc53d; color-scheme: dark; }
+    @font-face { font-family: "Inter"; font-style: normal; font-weight: 100 900; font-display: swap; src: url("../assets/fonts/inter-latin-wght-normal.woff2") format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+2000-206F, U+20AC, U+2122, U+FEFF, U+FFFD; }
+    @font-face { font-family: "Inter"; font-style: normal; font-weight: 100 900; font-display: swap; src: url("../assets/fonts/inter-latin-ext-wght-normal.woff2") format("woff2"); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+20A0-20C0, U+A720-A7FF; }
+    :root { --bg: #0b0b0f; --surface: #14141a; --line: rgba(255, 255, 255, .1); --text: #f4f4f6; --muted: #a4a4b4; --accent-btn: #7442e6; --accent-2: #a78bfa; --gold: #ffc53d; color-scheme: dark; }
     * { box-sizing: border-box; }
     html, body { margin: 0; background: var(--bg); color: var(--text); }
-    body { font: 18px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px 16px; }
+    body {
+      font: 18px/1.55 "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px 16px;
+      background: radial-gradient(40rem 26rem at 80% -4rem, rgba(139, 92, 246, .22), transparent 70%), var(--bg);
+    }
     main { width: 100%; max-width: 40rem; display: flex; flex-direction: column; gap: 1.4rem; }
-    .brand { display: flex; align-items: center; gap: .8rem; font-weight: 800; font-size: 2rem; letter-spacing: -.03em; }
+    .brand { display: flex; align-items: center; gap: .8rem; font-weight: 800; font-size: 2rem; letter-spacing: -.035em; }
     .brand span:last-child { font-weight: 400; color: var(--muted); }
     .mark { width: 3rem; height: 3rem; }
     .mark svg { width: 100%; height: 100%; overflow: visible; }
     .mark .play { fill: url(#lumioPlay); }
     .mark .dot { fill: var(--gold); }
-    .status { display: flex; align-items: center; gap: .8rem; font-size: 1.15rem; color: var(--muted); }
+    .status { display: flex; align-items: center; gap: .8rem; font-size: 1.15rem; color: var(--muted); margin: 0; }
     .spin { width: 1.4rem; height: 1.4rem; border-radius: 50%; border: .2rem solid var(--line); border-top-color: var(--accent-2); animation: spin .8s linear infinite; flex: none; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    a.btn { display: inline-flex; align-items: center; justify-content: center; gap: .7rem; background: var(--accent); color: #fff; text-decoration: none; font-weight: 700; font-size: 1.3rem; padding: 1.05rem 1.6rem; border-radius: 999px; outline: none; }
-    a.btn:focus, a.btn:hover { box-shadow: 0 0 0 .25rem var(--bg), 0 0 0 .5rem var(--accent-2); }
+    p { margin: 0; }
+    a.btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: .7rem; color: #fff; text-decoration: none; font-weight: 700; font-size: 1.3rem;
+      padding: 1.05rem 1.8rem; border-radius: 999px; outline: none;
+      background: linear-gradient(180deg, #7c4ff0, var(--accent-btn));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18), 0 .8rem 2rem -.8rem rgba(124, 79, 240, .85);
+    }
+    /* Fernbedienung: deutlich sichtbarer Fokus-Ring */
+    a.btn:focus, a.btn:hover { box-shadow: 0 0 0 .25rem var(--bg), 0 0 0 .5rem var(--accent-2), 0 .8rem 2rem -.8rem rgba(124, 79, 240, .85); }
     a.btn svg { width: 1.4rem; height: 1.4rem; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-    ol { margin: 0; padding: 1.1rem 1.2rem 1.1rem 2.6rem; background: var(--surface); border-radius: 1rem; box-shadow: inset 0 0 0 1px var(--line); color: var(--muted); }
+    ol { margin: 0; padding: 1.1rem 1.2rem; padding-inline-start: 2.6rem; background: var(--surface); border-radius: 1rem; box-shadow: inset 0 0 0 1px var(--line); color: var(--muted); }
     ol li + li { margin-top: .45rem; }
     ol b { color: var(--text); }
     .small { font-size: .85rem; color: #8a8a9b; }
@@ -56,29 +70,24 @@
   </main>
   <script>
     (function () {
-      var L = (navigator.language || 'de').slice(0, 2).toLowerCase();
-      var D = {
-        en: {
-          'Der Download startet gleich von selbst …': 'The download starts automatically …',
-          'Jetzt herunterladen': 'Download now', 'Downloader-Code:': 'Downloader code:',
-          'Nach dem Download auf <b>Installieren</b> drücken.': 'After the download, press <b>Install</b>.',
-          'Fragt das Gerät nach einer Erlaubnis: „Apps unbekannter Herkunft“ für Downloader einschalten.': 'If your device asks for permission: allow “unknown apps” for Downloader.',
-          'Danach <b>Öffnen</b> wählen – fertig. Die Datei kann anschließend gelöscht werden.': 'Then choose <b>Open</b> – done. You can delete the file afterwards.',
-          'Für Fire TV, Android-TV-Boxen, Android-Handys und Tablets. Es wird immer die neueste Version geladen.': 'For Fire TV, Android TV boxes, Android phones and tablets. Always downloads the latest version.'
-        },
-        tr: {
-          'Der Download startet gleich von selbst …': 'İndirme birazdan kendiliğinden başlar …',
-          'Jetzt herunterladen': 'Şimdi indir', 'Downloader-Code:': 'Downloader kodu:',
-          'Nach dem Download auf <b>Installieren</b> drücken.': 'İndirmeden sonra <b>Yükle</b>’ye bas.',
-          'Fragt das Gerät nach einer Erlaubnis: „Apps unbekannter Herkunft“ für Downloader einschalten.': 'Cihaz izin isterse: Downloader için “bilinmeyen uygulamalar” iznini aç.',
-          'Danach <b>Öffnen</b> wählen – fertig. Die Datei kann anschließend gelöscht werden.': 'Sonra <b>Aç</b>’ı seç – bitti. Dosyayı ardından silebilirsin.',
-          'Für Fire TV, Android-TV-Boxen, Android-Handys und Tablets. Es wird immer die neueste Version geladen.': 'Fire TV, Android TV kutuları, Android telefon ve tabletler için. Her zaman en yeni sürüm indirilir.'
-        }
-      };
-      var d = D[L];
-      if (d) {
+      // Sprache: ?lang= (aus App/Webseite) oder Gerätesprache. Übersetzungen = dieselben Dateien wie die Webseite.
+      var LANGS = ['en', 'tr', 'pl', 'ru', 'ar', 'uk', 'ro', 'it', 'el', 'ku', 'hr', 'es', 'fr'];
+      var m = /[?&]lang=([a-z]{2})/i.exec(location.search);
+      var L = (m ? m[1] : (navigator.language || 'de')).slice(0, 2).toLowerCase();
+      if (L === 'bs' || L === 'sr') L = 'hr';
+      function apply() {
+        var d = window.LUMIO_I18N && window.LUMIO_I18N[L];
+        if (!d) return;
         document.documentElement.lang = L;
+        if (L === 'ar') document.documentElement.dir = 'rtl';
+        if (d['Lumio Player herunterladen']) document.title = d['Lumio Player herunterladen'];
         Array.prototype.forEach.call(document.querySelectorAll('[data-t]'), function (el) { var k = el.innerHTML.trim(); if (d[k]) el.innerHTML = d[k]; });
+      }
+      if (LANGS.indexOf(L) >= 0) {
+        var sc = document.createElement('script');
+        sc.src = '../assets/i18n/' + L + '.js';
+        sc.onload = apply;
+        document.head.appendChild(sc);
       }
       try { document.getElementById('dl').focus(); } catch (e) {}
     })();

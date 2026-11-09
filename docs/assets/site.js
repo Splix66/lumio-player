@@ -59,16 +59,46 @@
       'Playlists, Favoriten und Einstellungen bleiben dabei erhalten.']]
   ];
 
-  var I18N = window.LUMIO_I18N || {};
+  /* ---------- Sprachen: dieselben 14 wie in der App ----------
+     Deutsch ist die Grundsprache (steht direkt im HTML). Jede andere Sprache liegt in assets/i18n/<code>.js
+     und wird erst geladen, wenn sie gebraucht wird. Reihenfolge und Namen wie in der App (www/js/app.js). */
+  var LANGS = [['de', 'Deutsch'], ['en', 'English'], ['tr', 'Türkçe'], ['pl', 'Polski'], ['ru', 'Русский'], ['ar', 'العربية'],
+    ['uk', 'Українська'], ['ro', 'Română'], ['it', 'Italiano'], ['el', 'Ελληνικά'], ['ku', 'Kurdî (Kurmancî)'],
+    ['hr', 'Bosanski / Hrvatski / Srpski'], ['es', 'Español'], ['fr', 'Français']];
+  var LOCALES = { de: 'de-DE', en: 'en-GB', tr: 'tr-TR', pl: 'pl-PL', ru: 'ru-RU', ar: 'ar-u-nu-latn', uk: 'uk-UA', ro: 'ro-RO', it: 'it-IT', el: 'el-GR', ku: 'ku', hr: 'hr-HR', es: 'es-ES', fr: 'fr-FR' };
+  var RTL = { ar: 1 };
+  function known(l) { return LOCALES.hasOwnProperty(l); }
+  function normLang(l) { l = String(l || '').slice(0, 2).toLowerCase(); return l === 'bs' || l === 'sr' ? 'hr' : l; }
 
-  /* ---------- Sprache: Deutsch ist die Grundsprache; die App gibt ?lang= mit ---------- */
+  // Reihenfolge: ?lang= aus der App > zuletzt gewählt > Sprache des Browsers > Deutsch
   var qs0 = new URLSearchParams(location.search);
-  var lang = 'de';
-  try { lang = sessionStorage.getItem('lumio.lang') || lang; } catch (e) {}
-  if (qs0.get('lang')) lang = qs0.get('lang').slice(0, 2).toLowerCase();
-  if (lang !== 'de' && !I18N[lang]) lang = 'de';
-  function tr(s) { var d = I18N[lang]; return d && d[s] != null ? d[s] : s; }
+  var lang = '';
+  if (qs0.get('lang')) lang = normLang(qs0.get('lang'));
+  if (!known(lang)) try { lang = sessionStorage.getItem('lumio.lang') || ''; } catch (e) {}
+  if (!known(lang)) lang = normLang((navigator.languages && navigator.languages[0]) || navigator.language);
+  if (!known(lang)) lang = 'de';
+  function dict() { var all = window.LUMIO_I18N || {}; return lang !== 'de' ? all[lang] : null; }
+  function tr(s) { var d = dict(); return d && d[s] != null ? d[s] : s; }
   var docTitle = document.title;
+
+  // Lädt die Sprachdatei (einmal) und ruft dann done() auf. Fehlt sie, bleibt es bei Deutsch.
+  var langLoading = {};
+  function loadLang(l, done) {
+    if (l === 'de' || (window.LUMIO_I18N && window.LUMIO_I18N[l])) { done(true); return; }
+    if (langLoading[l]) { langLoading[l].push(done); return; }
+    langLoading[l] = [done];
+    var sc = document.createElement('script');
+    sc.src = 'assets/i18n/' + l + '.js';
+    function fin(ok) { var cbs = langLoading[l]; delete langLoading[l]; cbs.forEach(function (cb) { cb(ok); }); }
+    sc.onload = function () { fin(!!(window.LUMIO_I18N && window.LUMIO_I18N[l])); };
+    sc.onerror = function () { sc.parentNode && sc.parentNode.removeChild(sc); fin(false); };
+    document.head.appendChild(sc);
+  }
+  function setLang(l, remember) {
+    if (!known(l)) l = 'de';
+    if (remember) try { sessionStorage.setItem('lumio.lang', l); } catch (e) {}
+    loadLang(l, function (ok) { lang = ok ? l : 'de'; applyLang(); });
+  }
 
   function buildFaq(box, list) {
     var open = {};
@@ -94,7 +124,8 @@
       if (!el.hasAttribute('data-kp')) el.setAttribute('data-kp', el.placeholder);
       el.placeholder = tr(el.getAttribute('data-kp'));
     });
-    Array.prototype.forEach.call(document.querySelectorAll('.lang button'), function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-lang') === lang)); });
+    document.documentElement.setAttribute('dir', RTL[lang] ? 'rtl' : 'ltr');
+    paintLangPicker();
     buildFaq($('faq'), FAQ);
     buildFaq($('dlFaq'), DL_FAQ);
     renderDownloads();
@@ -102,13 +133,48 @@
     else $('tabMainLabel').textContent = tr('Playlist hochladen');
     $('showPass').textContent = tr($('pass').type === 'password' ? 'Anzeigen' : 'Verbergen');
   }
-  Array.prototype.forEach.call(document.querySelectorAll('.lang button'), function (b) {
-    b.addEventListener('click', function () {
-      lang = b.getAttribute('data-lang');
-      try { sessionStorage.setItem('lumio.lang', lang); } catch (e) {}
-      applyLang();
-    });
+
+  /* ---------- Sprachauswahl: Knopf mit aktueller Sprache, Liste erst nach Klick (wie in der App) ---------- */
+  var langBtn = $('langBtn'), langMenu = $('langMenu');
+  LANGS.forEach(function (l) {
+    var li = document.createElement('li');
+    li.setAttribute('role', 'none');
+    var b = document.createElement('button');
+    b.type = 'button'; b.setAttribute('role', 'menuitemradio'); b.setAttribute('data-lang', l[0]);
+    b.setAttribute('lang', l[0]);
+    b.textContent = l[1];
+    b.addEventListener('click', function () { closeLangMenu(true); if (l[0] !== lang) setLang(l[0], true); });
+    li.appendChild(b); langMenu.appendChild(li);
   });
+  function paintLangPicker() {
+    var cur = LANGS.filter(function (l) { return l[0] === lang; })[0] || LANGS[0];
+    $('langName').textContent = cur[1];
+    $('langCode').textContent = cur[0].toUpperCase();
+    langBtn.setAttribute('aria-label', 'Sprache / Language: ' + cur[1]);
+    Array.prototype.forEach.call(langMenu.querySelectorAll('button'), function (b) { b.setAttribute('aria-checked', String(b.getAttribute('data-lang') === lang)); });
+  }
+  function langItems() { return Array.prototype.slice.call(langMenu.querySelectorAll('button')); }
+  function openLangMenu() {
+    langMenu.hidden = false; langBtn.setAttribute('aria-expanded', 'true');
+    var cur = langMenu.querySelector('[aria-checked="true"]') || langItems()[0];
+    cur.focus(); cur.scrollIntoView({ block: 'nearest' });
+  }
+  function closeLangMenu(focusBtn) {
+    if (langMenu.hidden) return;
+    langMenu.hidden = true; langBtn.setAttribute('aria-expanded', 'false');
+    if (focusBtn) langBtn.focus();
+  }
+  langBtn.addEventListener('click', function () { if (langMenu.hidden) openLangMenu(); else closeLangMenu(true); });
+  langMenu.addEventListener('keydown', function (e) {
+    var items = langItems(), i = items.indexOf(document.activeElement);
+    if (e.key === 'ArrowDown') { e.preventDefault(); items[(i + 1) % items.length].focus(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); items[(i - 1 + items.length) % items.length].focus(); }
+    else if (e.key === 'Home') { e.preventDefault(); items[0].focus(); }
+    else if (e.key === 'End') { e.preventDefault(); items[items.length - 1].focus(); }
+    else if (e.key === 'Escape') { e.preventDefault(); closeLangMenu(true); }
+    else if (e.key === 'Tab') closeLangMenu(false);
+  });
+  document.addEventListener('click', function (e) { if (!langMenu.hidden && !$('langPick').contains(e.target)) closeLangMenu(false); });
 
   /* ---------- Hilfsfunktionen ---------- */
   var device = null, items = null, editing = null, mode = 'm3u', toastTimer = null;
@@ -194,7 +260,7 @@
     if (/Macintosh|Mac OS X/.test(ua)) return 'mac';
     return '';
   }
-  function locale() { return lang === 'tr' ? 'tr-TR' : lang === 'en' ? 'en-GB' : 'de-DE'; }
+  function locale() { return LOCALES[lang] || 'de-DE'; }
   function dlMeta(x) {
     var i = relInfo && relInfo[x.id];
     if (!i || !i.date) return tr('Immer die neueste Version');
@@ -464,25 +530,28 @@
   // Neue Playlists aus der App erscheinen, sobald man zur Seite zurückkehrt
   document.addEventListener('visibilitychange', function () { if (!document.hidden && device && $('editor').hidden) refresh(); });
 
-  /* ---------- Sanftes Einblenden beim Scrollen ---------- */
-// Nur wenn der Browser es kann und „Bewegung reduzieren“ aus ist – sonst bleibt alles sofort sichtbar.
-(function () {
-  var calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (calm || !('IntersectionObserver' in window)) return;
-  var io = new IntersectionObserver(function (es) {
-    es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
-  }, { rootMargin: '0px 0px -8% 0px' });
-  var sel = '.hero-txt > *, .hero-art, .avail, .block > h2, .steps li, .feat, .notice, .cta-band, .req, .page-head';
-  Array.prototype.forEach.call(document.querySelectorAll(sel), function (n, i) {
-    n.classList.add('rv');
-    var sib = n.parentNode ? Array.prototype.indexOf.call(n.parentNode.children, n) : 0;
-    n.style.transitionDelay = Math.min(sib, 5) * 70 + 'ms';
-    io.observe(n);
-  });
-})();
+    /* ---------- Sanftes Einblenden beim Scrollen ---------- */
+  // Nur wenn der Browser es kann und „Bewegung reduzieren“ aus ist – sonst bleibt alles sofort sichtbar.
+  (function () {
+    var calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (calm || !('IntersectionObserver' in window)) return;
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { rootMargin: '0px 0px -8% 0px' });
+    var sel = '.hero-txt > *, .hero-art, .avail, .block > h2, .steps li, .feat, .notice, .cta-band, .req, .page-head';
+    Array.prototype.forEach.call(document.querySelectorAll(sel), function (n, i) {
+      n.classList.add('rv');
+      var sib = n.parentNode ? Array.prototype.indexOf.call(n.parentNode.children, n) : 0;
+      n.style.transitionDelay = Math.min(sib, 5) * 70 + 'ms';
+      io.observe(n);
+    });
+  })();
 
-/* ---------- Start: Werte aus dem QR-Code übernehmen ---------- */
+  /* ---------- Start: Werte aus dem QR-Code übernehmen ---------- */
+  // Erst sofort auf Deutsch zeichnen (steht im HTML), dann die gewünschte Sprache nachladen
+  var wantLang = lang; lang = 'de';
   applyLang();
+  if (wantLang !== 'de') setLang(wantLang, false);
   var qm = normMac(qs0.get('mac')), qk = (qs0.get('key') || '').toUpperCase();
   if (qm) $('mac').value = qm;
   if (qk) $('key').value = qk;
