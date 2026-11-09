@@ -18,3 +18,6 @@ $Q -f server/admin.sql > /dev/null
 $Q -f server/sicherheit-2026-11.sql
 $Q -f server/sicherheit-2026-11.sql   # muss wiederholbar sein
 $Q -f tests/sql/sicherheit.test.sql
+$Q -f server/sicherung-2026-11.sql
+$Q -f server/sicherung-2026-11.sql   # muss wiederholbar sein
+$Q -f tests/sql/sicherung.test.sql

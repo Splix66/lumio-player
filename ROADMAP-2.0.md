@@ -48,7 +48,8 @@ Bis zum offiziellen Start bleiben alle Versionen unter 2.0 (1.11.x, 1.12 …).
   timeshift/tvg-rec) – Programmführer behält für diese Sender die vergangenen Tage, ohne Programmdaten Stundenblöcke.
 - ✅ **Programmführer:** Zeitverschiebung je Playlist (−5 bis +5 Std., Einstellungen → Programmführer-Zeit);
   eigene EPG-Adresse gab es schon (M3U, Profil → Programmführer)
-- **Sichern und Wiederherstellen** von Einstellungen und Favoriten (Export/Import)
+- ✅ **Sichern und Wiederherstellen** (Einstellungen → Sichern & Wiederherstellen): online, ohne Passwörter, auf einem
+  neuen Gerät mit MAC + KEY des alten. **Datenbank: `server/sicherung-2026-11.sql` muss noch in Supabase eingespielt werden.**
 - ✅ **Kategorien verwalten:** ausblenden, oben anheften (Stern), umbenennen (Stift) – Kindersicherung prüft immer den
   Originalnamen. ✅ **Einzelne Sender ausblenden** (rechte Spalte bei Live TV, im Player; Einstellungen → Ausgeblendete Sender)
 

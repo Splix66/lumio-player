@@ -36,6 +36,13 @@ mit dem Stern ganz nach oben anheften und mit dem Stift umbenennen. Umbenennen h
 **Neu: Sender ausblenden** – bei Live TV rechts neben der Senderliste oder im Player (Auge-Symbol); wieder einblenden
 unter Einstellungen → Ausgeblendete Sender. Favoriten und „Zuletzt gesehen“ bleiben unberührt.
 
+**Neu: Sichern & Wiederherstellen** (Einstellungen → Darstellung & Gerät): Einstellungen, Favoriten, Weiterschauen,
+Verlauf, Kategorien und ausgeblendete Sender online sichern – ohne Passwörter, Links und PINs (Playlists werden über einen
+Prüfwert wiedererkannt). Wiederherstellen auf diesem Gerät (z. B. nach „Alles zurücksetzen“) oder auf einem neuen Gerät mit
+MAC + KEY des alten; Playlists von der Webseite kommen mit, andere übernehmen ihre Daten, sobald man sie einträgt.
+Optional täglich automatisch. Datenbank: `server/sicherung-2026-11.sql` (mit Tests). Datenschutzerklärung ergänzt
+(auch „Problem melden“). „Alles zurücksetzen“ behält jetzt auch den App-Token (gehört wie MAC und KEY zum Gerät).
+
 **Android-TV-Player:** Media3 (ExoPlayer) von 1.4.1 auf 1.9.4 – gut ein Jahr Fehlerbehebungen, u. a. für HLS-Livestreams.
 
 ## 1.11.1 – 2026-11-09 · Neue Willkommensseite

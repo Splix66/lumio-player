@@ -114,6 +114,7 @@
     up: '<path d="M6 15l6-6 6 6"/>',
     down: '<path d="M6 9l6 6 6-6"/>',
     restart: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>',
+    upload: '<path d="M7 18.5a4.5 4.5 0 0 1-.7-8.9A6 6 0 0 1 17.9 11a3.8 3.8 0 0 1-.4 7.5"/><path d="M12 12.5v8M8.8 15.6L12 12.4l3.2 3.2"/>',
     playlist: '<path d="M4 6h12M4 11h12M4 16h7"/><path d="M15.5 14v6.5l5-3.25z"/>',
     refresh: '<path d="M20.5 11a8.5 8.5 0 0 0-15.3-4.6L3.5 8.5"/><path d="M3.5 3.5v5h5"/><path d="M3.5 13a8.5 8.5 0 0 0 15.3 4.6l1.7-2.1"/><path d="M20.5 20.5v-5h-5"/>',
     trash: '<path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/>',
@@ -1657,11 +1658,186 @@
     try { for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (k.indexOf('lumio.') === 0) n += k.length + (localStorage.getItem(k) || '').length; } } catch (e) {}
     return Math.round(n * 2 / 1024);
   }
+  /* ==========================================================
+     Sichern & Wiederherstellen (Online-Dienst, server/sicherung-2026-11.sql)
+     Gesichert: Einstellungen und pro Playlist Favoriten, Weiterschauen, Verlauf, Gesehen, Kategorien, ausgeblendete
+     Sender, Programmführer-Zeit. KEINE Passwörter und keine Playlist-Adressen: Playlists werden über einen
+     Fingerabdruck (Prüfwert der Verbindung) wiedererkannt. Daten für eine Playlist, die es auf dem Gerät (noch) nicht
+     gibt, warten und werden übernommen, sobald man sie einträgt und öffnet.
+     ========================================================== */
+  var BACKUP_DATA = ['fav', 'resume', 'recent', 'seen', 'seenNew', 'last', 'cats', 'hidech'];
+  var BACKUP_SKIP = ['parentPin', 'adminPin', 'deviceType', 'engine', 'extPlayer', 'volume', 'muted'];   // Sicherheit / gerätespezifisch
+  function profileFp(p) {
+    if (!p) return '';
+    var s = p.type === 'xtream' ? 'x|' + normalizeServer(p.server).toLowerCase() + '|' + String(p.username || '').toLowerCase()
+      : p.type === 'm3u' ? 'm|' + String(p.url || '').trim() : 'd|' + p.type;
+    return hashCode(s).toString(36) + hashCode(s + '#telvo').toString(36);
+  }
+  var Backup = {
+    build: function () {
+      var settings = {}, sd = Settings.data || {};
+      Object.keys(sd).forEach(function (k) { if (BACKUP_SKIP.indexOf(k) < 0) settings[k] = sd[k]; });
+      var lists = Profiles.list().filter(function (p) { return p.type === 'xtream' || p.type === 'm3u'; }).map(function (p) {
+        var o = { fp: profileFp(p), name: p.name, type: p.type, d: {} };
+        if (p.epgShift) o.epgShift = p.epgShift;
+        BACKUP_DATA.forEach(function (k) { var v = Store.get(k + '.' + p.id, null); if (v !== null) o.d[k] = v; });
+        return o;
+      });
+      return { v: 1, at: Date.now(), app: CONFIG.version, settings: settings, lists: lists };
+    },
+    ready: function () {
+      if (!CONFIG.cloudUrl) return Promise.reject(new Error(T('Online-Dienst nicht erreichbar')));
+      return (Cloud.registered ? Promise.resolve({ ok: true }) : Cloud.register()).then(function (r) {
+        if (!r || !r.ok) throw new Error(rpcErr(r) || T('Online-Dienst nicht erreichbar'));
+        Cloud.registered = true;
+        if (Cloud.mode !== 'token') throw new Error(T('Der Online-Dienst kennt diese Funktion noch nicht.'));
+      });
+    },
+    err: function (r) {
+      var m = rpcErr(r);
+      if ((r && r.code === 'PGRST202') || /could not find the function/i.test(m)) return T('Der Online-Dienst kennt diese Funktion noch nicht.');
+      return m ? T(m) : T('Online-Dienst nicht erreichbar');
+    },
+    save: function (quiet) {
+      var self = this;
+      return self.ready().then(function () {
+        return Cloud.rpc('app_save_backup', { p_mac: Device.mac(), p_token: Device.token(), p_data: self.build() });
+      }).then(function (r) {
+        if (!r || !r.ok) throw new Error(self.err(r));
+        Store.set('backupAt', Date.now());
+        if (!quiet) toast(T('Gesichert'), 2500);
+        return r;
+      });
+    },
+    remove: function () {
+      var self = this;
+      return self.ready().then(function () { return Cloud.rpc('app_delete_backup', { p_mac: Device.mac(), p_token: Device.token() }); })
+        .then(function (r) { if (!r || !r.ok) throw new Error(self.err(r)); Store.del('backupAt'); return r; });
+    },
+    fetch: function (mac, key) {
+      var self = this;
+      if (!CONFIG.cloudUrl) return Promise.reject(new Error(T('Online-Dienst nicht erreichbar')));
+      return Cloud.rpc('restore_backup', { p_mac: mac, p_key: key }).then(function (r) { if (!r || !r.ok) throw new Error(self.err(r)); return r; });
+    },
+    // Daten einer gesicherten Playlist in eine Playlist auf diesem Gerät schreiben
+    applyList: function (p, l) {
+      BACKUP_DATA.forEach(function (k) { if (l.d && l.d[k] !== undefined) Store.set(k + '.' + p.id, l.d[k]); });
+      if (l.epgShift) p.epgShift = l.epgShift; else delete p.epgShift;
+    },
+    // Wiederherstellen: Playlists von der Webseite ergänzen, Einstellungen ersetzen (außer gerätespezifische), Daten zuordnen
+    apply: function (r) {
+      var self = this, b = r.backup || {}, list = Profiles.list(), added = 0;
+      (r.playlists || []).forEach(function (it) {
+        var data = it.type === 'xtream' ? { type: 'xtream', server: normalizeServer(it.server), username: it.username, password: it.password } : { type: 'm3u', url: it.url };
+        data.name = it.name;
+        if (list.some(function (q) { return sameConnection(q, data); })) return;
+        data.id = uid(); list.push(data); added++;
+      });
+      if (b.settings) {
+        var keep = {};
+        BACKUP_SKIP.forEach(function (k) { if (Settings.data[k] !== undefined) keep[k] = Settings.data[k]; });
+        var ns = {};
+        Object.keys(b.settings).forEach(function (k) { if (BACKUP_SKIP.indexOf(k) < 0) ns[k] = b.settings[k]; });
+        Object.keys(keep).forEach(function (k) { ns[k] = keep[k]; });
+        Settings.data = ns; Store.set('settings', ns);
+      }
+      var pending = Store.get('restorePending', {}), matched = 0;
+      (b.lists || []).forEach(function (l) {
+        var p = list.filter(function (q) { return profileFp(q) === l.fp; })[0];
+        if (p) { self.applyList(p, l); matched++; delete pending[l.fp]; } else pending[l.fp] = l;
+      });
+      Profiles.save(list);
+      if (Object.keys(pending).length) Store.set('restorePending', pending); else Store.del('restorePending');
+      return { added: added, matched: matched, waiting: Object.keys(pending).length };
+    },
+    // Beim Öffnen einer Playlist: wartende Daten aus einer Sicherung übernehmen
+    pendingFor: function (p) {
+      var pending = Store.get('restorePending', null), fp = p && profileFp(p);
+      if (!pending || !fp || !pending[fp]) return false;
+      var list = Profiles.list(), x = list.filter(function (q) { return q.id === p.id; })[0];
+      this.applyList(x || p, pending[fp]);
+      if (x) { if (x.epgShift) p.epgShift = x.epgShift; else delete p.epgShift; Profiles.save(list); }
+      delete pending[fp];
+      if (Object.keys(pending).length) Store.set('restorePending', pending); else Store.del('restorePending');
+      return true;
+    },
+    // „Täglich automatisch sichern“ (Einstellung): beim Start, wenn die letzte Sicherung älter als ein Tag ist
+    daily: function () {
+      if (!Settings.get('backupAuto') || !CONFIG.cloudUrl) return;
+      if (Date.now() - (Store.get('backupAt', 0) || 0) < 86400000) return;
+      this.save(true).catch(function (e) { ErrLog.add('Sicherung', e && e.message); });
+    }
+  };
+  function fmtWhen(ms) { return ms ? fmtDate(ms / 1000) + ' ' + fmtClock(ms / 1000) : ''; }
+  function showBackup() {
+    var status = h('p', { class: 'up-status' }), err = h('div', { class: 'error' }), actions = h('div', { class: 'row' });
+    function paintStatus() {
+      var at = Store.get('backupAt', 0);
+      status.textContent = at ? T('Letzte Sicherung: {0}', fmtWhen(at)) : T('Auf diesem Gerät wurde noch nichts gesichert.');
+      status.className = 'up-status' + (at ? ' is-ok' : '');
+    }
+    function busy(btn, on, label) { btn.disabled = on; btn.lastChild.textContent = label; }
+    var saveBtn = sheetBtn('upload', T('Jetzt sichern'), function () {
+      err.textContent = ''; busy(saveBtn, true, T('Wird gesichert …'));
+      Backup.save().then(function () { busy(saveBtn, false, T('Jetzt sichern')); paintStatus(); },
+        function (e) { busy(saveBtn, false, T('Jetzt sichern')); err.textContent = e.message; });
+    }, 'primary');
+    var restoreBtn = sheetBtn('restart', T('Wiederherstellen'), function () { askRestore(Device.mac(), Device.key()); });
+    var otherBtn = sheetBtn('device', T('Von anderem Gerät übernehmen'), function () {
+      var fm = inputField(T('MAC-Adresse des alten Geräts'), '00:1A:79:…', 'text'), fk = inputField('KEY', '', 'text'), e2 = h('div', { class: 'error' });
+      fm.input.setAttribute('data-autofocus', '');
+      fk.input.setAttribute('autocapitalize', 'characters');
+      function go() {
+        var mac = String(fm.input.value).toUpperCase().replace(/[^0-9A-F]/g, '').replace(/(..)(?!$)/g, '$1:');
+        var key = String(fk.input.value).trim().toUpperCase();
+        if (!/^([0-9A-F]{2}:){5}[0-9A-F]{2}$/.test(mac)) { e2.textContent = T('Bitte eine vollständige MAC-Adresse eingeben (12 Zeichen).'); return; }
+        if (!/^[A-Z0-9]{6,12}$/.test(key)) { e2.textContent = T('Bitte den KEY eingeben.'); return; }
+        goBack();
+        setTimeout(function () { askRestore(mac, key); }, 40);
+      }
+      fk.input.addEventListener('keydown', function (e) { if (e.keyCode === 13) go(); });
+      openSheet(T('Von anderem Gerät übernehmen'), 'device', [
+        h('p', { class: 'hint', text: T('MAC und KEY stehen auf dem alten Gerät unten am Bildschirm oder unter „Profil“.') }),
+        fm.wrap, h('div', { class: 'rep-mail' }, fk.wrap), e2, h('div', { class: 'row' }, sheetBtn('check', T('Weiter'), go, 'primary'))]);
+    });
+    var delBtn = sheetBtn('trash', T('Sicherung löschen'), function () {
+      confirmBox(T('Sicherung löschen?'), T('Die online gespeicherte Sicherung dieses Geräts wird gelöscht.'), T('Löschen'), function () {
+        Backup.remove().then(function () { toast(T('Sicherung gelöscht')); paintStatus(); }, function (e) { err.textContent = e.message; });
+      });
+    });
+    var auto = toggleRow(T('Täglich automatisch sichern'), T('Beim Start, höchstens einmal am Tag.'),
+      function () { return !!Settings.get('backupAuto'); }, function (v) { Settings.set('backupAuto', v); if (v) Backup.daily(); });
+    actions.appendChild(saveBtn); actions.appendChild(restoreBtn); actions.appendChild(otherBtn); actions.appendChild(delBtn);
+    paintStatus();
+    openSheet(T('Sichern & Wiederherstellen'), 'upload', [
+      h('p', { class: 'hint', text: T('Sichert Einstellungen, Favoriten, Weiterschauen, Verlauf und Kategorien online – ohne Passwörter. Wiederherstellen geht auch auf einem neuen Gerät mit MAC und KEY von diesem Gerät.') }),
+      status, actions, auto, err], { wide: true, onClose: paintSettings });
+  }
+  function askRestore(mac, key) {
+    var w = h('p', { class: 'hint', text: T('Sicherung wird gesucht …') });
+    openSheet(T('Wiederherstellen'), 'restart', [w]);
+    Backup.fetch(mac, key).then(function (r) {
+      var n = (r.playlists || []).length, has = !!r.backup;
+      if (!has && !n) { w.textContent = T('Für dieses Gerät gibt es keine Sicherung.'); return; }
+      goBack();
+      setTimeout(function () {
+        confirmBox(has ? T('Sicherung vom {0} übernehmen?', fmtWhen(r.at ? Date.parse(r.at) : 0)) : T('Playlists übernehmen?'),
+          (has ? T('Einstellungen, Favoriten und Verlauf werden durch die Sicherung ersetzt.') + ' ' : '') + (n ? T('{0} Playlists von der Webseite kommen dazu.', n) : ''),
+          T('Übernehmen'), function () {
+            var res = Backup.apply(r);
+            try { sessionStorage.setItem('lumio.restored', JSON.stringify(res)); } catch (e) {}
+            reloadApp();
+          });
+      }, 60);
+    }, function (e) { w.textContent = e.message; w.className = 'error'; });
+  }
+
   function resetAll() {
     try {
       var keys = [];
       for (var i = 0; i < localStorage.length; i++) keys.push(localStorage.key(i));
-      keys.forEach(function (k) { if (k.indexOf('lumio.') === 0 && k !== 'lumio.mac' && k !== 'lumio.devkey') localStorage.removeItem(k); });
+      // Geräte-Kennung bleibt: MAC, KEY und der App-Token (sonst könnte das Gerät danach nichts mehr online sichern)
+      keys.forEach(function (k) { if (k.indexOf('lumio.') === 0 && k !== 'lumio.mac' && k !== 'lumio.devkey' && k !== 'lumio.devtoken') localStorage.removeItem(k); });
     } catch (e) {}
     // auch den zwischengespeicherten Programmführer löschen, dann neu starten
     var done = false;
@@ -2930,6 +3106,7 @@
   }
 
   function activateProfile(p, isNew) {
+    if (Backup.pendingFor(p)) toast(T('Favoriten und Verlauf aus der Sicherung übernommen'), 3500);
     App.profile = p;
     App.provider = makeProvider(p);
     Store.set('active', p.id);
@@ -4963,6 +5140,9 @@
         })]);
     });
     var tReport = tile('help', T('Problem melden'), T('Nachricht an den Support'), showReport);
+    var tBackup = !CONFIG.cloudUrl ? null : tile('upload', T('Sichern & Wiederherstellen'), function () {
+      var at = Store.get('backupAt', 0); return at ? T('Gesichert: {0}', fmtWhen(at)) : T('Noch nicht gesichert');
+    }, showBackup);
     var tAbout = tile('info', T('Über & Updates'), function () { var v = Updates.cached(); return v ? T('Neue Version {0} verfügbar', v) : T('Version {0}', CONFIG.version); }, function () {
       var status = h('p', { class: 'up-status' });
       var actions = h('div', { class: 'row' });
@@ -5001,7 +5181,7 @@
       group(T('Playlist'), [tAdd, tPl, tUpd, tAuto, tShift]),
       group(T('Kindersicherung & Kategorien'), [tPar, tHideL, tHideM, tHideS, tHideCh, tHisL, tHisM, tHisS]),
       group(T('Wiedergabe'), [tSort, tFmt, tQual, tEng, tExt, tSub, tLast, tIdle]),
-      group(T('Darstellung & Gerät'), [tLang, tTheme, tClock, tDev, tAbout, tReport]),
+      group(T('Darstellung & Gerät'), [tLang, tTheme, tClock, tDev, tBackup, tAbout, tReport]),
       h('div', { class: 'st-foot' }, macTag(profileUser(p), true)));
     tAdd.setAttribute('data-autofocus', '');
     settingsPaint = paint;
@@ -6439,6 +6619,7 @@
     else showProfiles();
     Terms.check();
     setTimeout(function () { Updates.daily(); }, 8000);
+    setTimeout(function () { Backup.daily(); }, 15000);
     Cloud.start();
     StillWatching.start();
     // Internet wieder da: hängengebliebene Wiedergabe automatisch neu starten
@@ -6446,6 +6627,11 @@
     var reloaded = false;
     try { reloaded = sessionStorage.getItem('lumio.reloaded'); sessionStorage.removeItem('lumio.reloaded'); } catch (e) {}
     if (reloaded) setTimeout(function () { toast(T('Daten neu geladen')); }, 600);
+    var restored = null;
+    try { restored = JSON.parse(sessionStorage.getItem('lumio.restored') || 'null'); sessionStorage.removeItem('lumio.restored'); } catch (e) {}
+    if (restored) setTimeout(function () {
+      toast(T('Wiederhergestellt') + (restored.waiting ? ' – ' + T('{0} Playlists fehlen noch auf diesem Gerät', restored.waiting) : ''), 5000);
+    }, 900);
   }
 
   // Für automatische Tests von außen erreichbar
@@ -6455,6 +6641,7 @@
     decodeBytes: decodeBytes, readText: readText, fetchText: fetchText, sameConnection: sameConnection, NativePlayer: NativePlayer, App: App, ensureTs: ensureTs, migrateM3uIds: migrateM3uIds,
     ErrLog: ErrLog, techInfo: techInfo,
     CatPrefs: CatPrefs, visibleCats: visibleCats, Parental: Parental, ChanHide: ChanHide,
+    Backup: Backup, profileFp: profileFp, Settings: Settings,
     config: CONFIG
   };
 

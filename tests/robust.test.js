@@ -308,4 +308,47 @@
     ok(/f\.m3u8\?utc=/.test(url('F')) && byName.F.cu.d === 5, 'alte Form timeshift="5"');
     eq(url('G'), null, 'unbekannte Form → kein Catch-up');
   });
+
+  t('Sichern', 'Sichern und auf einem „neuen Gerät“ wiederherstellen: ohne Passwörter, Zuordnung über Fingerabdruck', function () {
+    var S = D.Store, B = D.Backup, saved = {}, k;
+    // aktuellen Zustand merken (Test läuft im echten Speicher der Test-Seite)
+    for (k = 0; k < localStorage.length; k++) { var n = localStorage.key(k); if (n.indexOf('lumio.') === 0) saved[n] = localStorage.getItem(n); }
+    var settingsBefore = JSON.stringify(D.Settings.data);
+    try {
+      var A = { id: 'altA', type: 'xtream', name: 'Mein TV', server: 'http://srv.invalid:8080/', username: 'Max', password: 'geheim123' };
+      var M = { id: 'altM', type: 'm3u', name: 'Liste', url: 'http://m3u.invalid/get.php?username=u&password=geheimM' };
+      D.Profiles.save([A, M]);
+      S.set('fav.altA', { live: [{ kind: 'live', id: '7', name: 'Sender 7' }], movie: [], series: [] });
+      S.set('cats.altA', { hide: { live: { '3': 1 } }, pin: { live: ['5'] } });
+      S.set('hidech.altM', { 'l-abc': 'Teleshop' });
+      D.Settings.data = { lang: 'de', theme: 'light', parentPin: 'hash-pin', deviceType: 'tv' };
+      var b = B.build(), js = JSON.stringify(b);
+      ok(js.indexOf('geheim') < 0 && js.indexOf('get.php') < 0 && js.indexOf('srv.invalid') < 0, 'keine Passwörter, Links oder Server in der Sicherung');
+      ok(js.indexOf('hash-pin') < 0 && !b.settings.deviceType, 'keine PIN, kein Gerätetyp');
+      eq(b.lists.length, 2, 'beide Playlists');
+      // „neues Gerät“: andere Kennungen, Xtream mit anderer Schreibweise; M3U fehlt noch
+      D.Profiles.save([{ id: 'neuA', type: 'xtream', name: 'TV', server: 'http://SRV.invalid:8080', username: 'max', password: 'geheim123' }]);
+      ['fav.altA', 'cats.altA', 'hidech.altM'].forEach(function (x) { S.del(x); });
+      D.Settings.data = { lang: 'en', deviceType: 'touch' };
+      var res = B.apply({ backup: b, playlists: [] });
+      eq(res.matched, 1, 'Xtream-Playlist wiedererkannt');
+      eq(res.waiting, 1, 'M3U wartet, bis sie eingetragen wird');
+      eq(S.get('fav.neuA', {}).live[0].id, '7', 'Favoriten übernommen');
+      eq(S.get('cats.neuA', {}).pin.live[0], '5', 'Kategorien übernommen');
+      eq(D.Settings.data.theme, 'light', 'Einstellung übernommen');
+      eq(D.Settings.data.deviceType, 'touch', 'Gerätetyp des neuen Geräts bleibt');
+      // M3U wird eingetragen und geöffnet → wartende Daten kommen dazu
+      var M2 = { id: 'neuM', type: 'm3u', name: 'Liste', url: 'http://m3u.invalid/get.php?username=u&password=geheimM' };
+      ok(B.pendingFor(M2), 'beim Öffnen übernommen');
+      eq(S.get('hidech.neuM', {})['l-abc'], 'Teleshop', 'ausgeblendete Sender übernommen');
+      ok(!B.pendingFor(M2), 'nur einmal');
+      // Playlists von der Webseite (mit Zugangsdaten aus dem Online-Dienst) kommen dazu, ohne Doppel
+      var r2 = B.apply({ backup: null, playlists: [{ name: 'TV', type: 'xtream', server: 'http://SRV.invalid:8080', username: 'max', password: 'geheim123' }, { name: 'Neu', type: 'm3u', url: 'http://neu.invalid/x.m3u' }] });
+      eq(r2.added, 1, 'nur die neue Playlist hinzugefügt');
+    } finally {
+      for (k = localStorage.length - 1; k >= 0; k--) { var n2 = localStorage.key(k); if (n2.indexOf('lumio.') === 0) localStorage.removeItem(n2); }
+      Object.keys(saved).forEach(function (x) { localStorage.setItem(x, saved[x]); });
+      D.Settings.data = JSON.parse(settingsBefore);
+    }
+  });
 })();
