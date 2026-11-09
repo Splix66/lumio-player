@@ -652,5 +652,18 @@ window.LUMIO_I18N["hr"] = {
   "Danke! Deine Nachricht ist angekommen.": "Hvala! Tvoja poruka je stigla.",
   "Technische Angaben anhängen": "Priloži tehničke podatke",
   "App-Version, Gerät und die letzten Fehler – ohne Links und Passwörter.": "Verzija aplikacije, uređaj i posljednje greške – bez poveznica i lozinki.",
-  "Angaben anzeigen": "Prikaži podatke"
+  "Angaben anzeigen": "Prikaži podatke",
+  "Open-Source-Lizenzen": "Licencije otvorenog koda",
+  "Telvo nutzt diese freie Software. Vielen Dank an alle, die daran mitarbeiten.": "Telvo koristi ovaj slobodni softver. Hvala svima koji na njemu rade.",
+  "Wiedergabe von HLS-Streams": "Reprodukcija HLS streamova",
+  "Wiedergabe von MPEG-TS-Streams": "Reprodukcija MPEG-TS streamova",
+  "QR-Code": "QR kôd",
+  "Schrift": "Font",
+  "Android-App": "Android aplikacija",
+  "TV-Player auf Android": "TV player na Androidu",
+  "Windows- und Mac-App": "Aplikacija za Windows i Mac",
+  "Demo-Filme": "Demo filmovi",
+  "Lizenztext": "Tekst licencije",
+  "Lizenztexte konnten nicht geladen werden.": "Tekstovi licencija nisu se mogli učitati.",
+  "Windows und Mac: Weitere Lizenzen (Chromium) liegen dem Programm bei – Datei LICENSES.chromium.html.": "Windows i Mac: dodatne licencije (Chromium) priložene su programu – datoteka LICENSES.chromium.html."
 };

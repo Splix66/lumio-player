@@ -652,5 +652,18 @@ window.LUMIO_I18N["fr"] = {
   "Danke! Deine Nachricht ist angekommen.": "Merci ! Ton message a bien été reçu.",
   "Technische Angaben anhängen": "Joindre les détails techniques",
   "App-Version, Gerät und die letzten Fehler – ohne Links und Passwörter.": "Version de l’app, appareil et dernières erreurs – sans liens ni mots de passe.",
-  "Angaben anzeigen": "Afficher les détails"
+  "Angaben anzeigen": "Afficher les détails",
+  "Open-Source-Lizenzen": "Licences open source",
+  "Telvo nutzt diese freie Software. Vielen Dank an alle, die daran mitarbeiten.": "Telvo utilise ces logiciels libres. Merci à toutes les personnes qui y contribuent.",
+  "Wiedergabe von HLS-Streams": "Lecture des flux HLS",
+  "Wiedergabe von MPEG-TS-Streams": "Lecture des flux MPEG-TS",
+  "QR-Code": "Code QR",
+  "Schrift": "Police",
+  "Android-App": "App Android",
+  "TV-Player auf Android": "Lecteur TV sur Android",
+  "Windows- und Mac-App": "App Windows et Mac",
+  "Demo-Filme": "Films de démo",
+  "Lizenztext": "Texte de la licence",
+  "Lizenztexte konnten nicht geladen werden.": "Impossible de charger les textes des licences.",
+  "Windows und Mac: Weitere Lizenzen (Chromium) liegen dem Programm bei – Datei LICENSES.chromium.html.": "Windows et Mac : d’autres licences (Chromium) sont fournies avec le programme – fichier LICENSES.chromium.html."
 };

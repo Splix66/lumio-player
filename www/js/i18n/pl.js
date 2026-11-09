@@ -652,5 +652,18 @@ window.LUMIO_I18N["pl"] = {
   "Danke! Deine Nachricht ist angekommen.": "Dziękujemy! Twoja wiadomość dotarła.",
   "Technische Angaben anhängen": "Dołącz dane techniczne",
   "App-Version, Gerät und die letzten Fehler – ohne Links und Passwörter.": "Wersja aplikacji, urządzenie i ostatnie błędy – bez linków i haseł.",
-  "Angaben anzeigen": "Pokaż dane"
+  "Angaben anzeigen": "Pokaż dane",
+  "Open-Source-Lizenzen": "Licencje open source",
+  "Telvo nutzt diese freie Software. Vielen Dank an alle, die daran mitarbeiten.": "Telvo korzysta z tego wolnego oprogramowania. Dziękujemy wszystkim, którzy nad nim pracują.",
+  "Wiedergabe von HLS-Streams": "Odtwarzanie strumieni HLS",
+  "Wiedergabe von MPEG-TS-Streams": "Odtwarzanie strumieni MPEG-TS",
+  "QR-Code": "Kod QR",
+  "Schrift": "Czcionka",
+  "Android-App": "Aplikacja na Androida",
+  "TV-Player auf Android": "Odtwarzacz TV na Androidzie",
+  "Windows- und Mac-App": "Aplikacja na Windows i Mac",
+  "Demo-Filme": "Filmy demo",
+  "Lizenztext": "Tekst licencji",
+  "Lizenztexte konnten nicht geladen werden.": "Nie udało się wczytać tekstów licencji.",
+  "Windows und Mac: Weitere Lizenzen (Chromium) liegen dem Programm bei – Datei LICENSES.chromium.html.": "Windows i Mac: dalsze licencje (Chromium) są dołączone do programu – plik LICENSES.chromium.html."
 };

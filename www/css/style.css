@@ -714,6 +714,15 @@ body.kbd .field input.f:focus, body.is-tv .field input.f:focus { box-shadow: 0 0
 }
 .field textarea:focus, body.kbd .field textarea.f:focus, body.is-tv .field textarea.f:focus { border-color: var(--accent); box-shadow: 0 0 0 .2rem var(--accent-soft); }
 .rep-msg, .rep-mail { margin-top: 1rem; }
+/* Open-Source-Lizenzen */
+.lic-list { display: flex; flex-direction: column; }
+.lic-list > * + * { margin-top: .6rem; }
+.lic-item .ch-txt small { line-height: 1.45; }
+.lic-go { flex: none; margin-left: 1rem; font-size: .8rem; font-weight: 650; color: var(--accent); }
+.lic-text { margin: 0; padding: .9rem 1rem; border-radius: var(--radius-sm); background: var(--bg-2); color: var(--muted);
+  font: .8rem/1.5 ui-monospace, Menlo, Consolas, monospace; white-space: pre-wrap; word-break: break-word; outline: none; }
+.lic-text + .lic-text { margin-top: .5rem; }
+body.kbd .lic-text.f:focus, body.is-tv .lic-text.f:focus { box-shadow: 0 0 0 .2rem var(--accent); color: var(--text); }
 .rep-show { display: inline-block; margin-top: .6rem; font-size: .88rem; }
 .rep-tech { margin: .6rem 0 0; padding: .8rem 1rem; max-height: 12rem; overflow: auto; border-radius: var(--radius-sm); background: var(--bg-2);
   color: var(--muted); font: .78rem/1.5 ui-monospace, Menlo, Consolas, monospace; white-space: pre-wrap; word-break: break-word; }

@@ -31,8 +31,9 @@ Bis zum offiziellen Start bleiben alle Versionen unter 2.0 (1.11.x, 1.12 …).
 3. ✅ **Fehlerberichte:** „Problem melden“ in den Einstellungen – Thema, Nachricht, freiwillige E-Mail und (abschaltbar)
    technische Angaben: App-Version, Gerät, letzte Fehler – ohne Links, Benutzernamen und Passwörter. Geht über den
    vorhandenen Support-Weg und erscheint im Verwaltungsbereich (keine Änderung an der Datenbank nötig).
-4. **Rechtliches und Store-Paket:** Impressum vollständig, Nutzungsbedingungen beim ersten Start, Seite mit
-   Open-Source-Lizenzen, Store-Texte und Bilder ohne fremde Senderlogos und ohne Begriffe, die nach Piraterie klingen.
+4. **Rechtliches und Store-Paket:** ✅ Open-Source-Lizenzen in der App (Einstellungen → Über & Updates).
+   Offen: Impressum vollständig (Name, Adresse), Nutzungsbedingungen beim ersten Start, Store-Texte und Bilder
+   ohne fremde Senderlogos und ohne Begriffe, die nach Piraterie klingen.
 5. **Tests auf echten Geräten:** schwacher Fire TV Stick (Lite), Android-TV-Box, Samsung, LG, Handy, Windows, Mac –
    Live (HLS, TS), Filme, Serien, große Listen, kaputte Streams, Fernbedienung.
 6. **Wartbarkeit:** `app.js` (rund 5.900 Zeilen) in mehrere Dateien aufteilen – weiterhin ohne Build-Schritt.

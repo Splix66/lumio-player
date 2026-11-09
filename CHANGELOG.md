@@ -14,6 +14,9 @@ geschickt. Die Webseite liest beides, QR-Codes älterer App-Versionen funktionie
 für eine Antwort. Technische Angaben (Version, Gerät, letzte Fehler) lassen sich abschalten und vorher ansehen – Links,
 Benutzernamen und Passwörter werden nie mitgeschickt. Kommt im Verwaltungsbereich unter „Support“ an.
 
+**App – Open-Source-Lizenzen** (Einstellungen → Über & Updates): alle eingebauten Bausteine mit Lizenz, Urheber und
+vollständigem Lizenztext (Apache 2.0, MIT, OFL 1.1) – auch mit der Fernbedienung lesbar. Pflicht für die Stores.
+
 **Android-TV-Player:** Media3 (ExoPlayer) von 1.4.1 auf 1.9.4 – gut ein Jahr Fehlerbehebungen, u. a. für HLS-Livestreams.
 
 ## 1.11.1 – 2026-11-09 · Neue Willkommensseite

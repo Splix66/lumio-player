@@ -652,5 +652,18 @@ window.LUMIO_I18N["el"] = {
   "Danke! Deine Nachricht ist angekommen.": "Ευχαριστούμε! Το μήνυμά σου ελήφθη.",
   "Technische Angaben anhängen": "Επισύναψη τεχνικών στοιχείων",
   "App-Version, Gerät und die letzten Fehler – ohne Links und Passwörter.": "Έκδοση εφαρμογής, συσκευή και τελευταία σφάλματα – χωρίς συνδέσμους και κωδικούς.",
-  "Angaben anzeigen": "Εμφάνιση στοιχείων"
+  "Angaben anzeigen": "Εμφάνιση στοιχείων",
+  "Open-Source-Lizenzen": "Άδειες ανοιχτού κώδικα",
+  "Telvo nutzt diese freie Software. Vielen Dank an alle, die daran mitarbeiten.": "Το Telvo χρησιμοποιεί αυτό το ελεύθερο λογισμικό. Ευχαριστούμε όλους όσοι συμβάλλουν.",
+  "Wiedergabe von HLS-Streams": "Αναπαραγωγή ροών HLS",
+  "Wiedergabe von MPEG-TS-Streams": "Αναπαραγωγή ροών MPEG-TS",
+  "QR-Code": "Κωδικός QR",
+  "Schrift": "Γραμματοσειρά",
+  "Android-App": "Εφαρμογή Android",
+  "TV-Player auf Android": "Πρόγραμμα αναπαραγωγής TV σε Android",
+  "Windows- und Mac-App": "Εφαρμογή Windows και Mac",
+  "Demo-Filme": "Ταινίες επίδειξης",
+  "Lizenztext": "Κείμενο άδειας",
+  "Lizenztexte konnten nicht geladen werden.": "Δεν ήταν δυνατή η φόρτωση των κειμένων αδειών.",
+  "Windows und Mac: Weitere Lizenzen (Chromium) liegen dem Programm bei – Datei LICENSES.chromium.html.": "Windows και Mac: περαιτέρω άδειες (Chromium) συνοδεύουν το πρόγραμμα – αρχείο LICENSES.chromium.html."
 };

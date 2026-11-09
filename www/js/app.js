@@ -4344,6 +4344,54 @@
     });
     return lines.join('\n');
   }
+  /* ---------- Open-Source-Lizenzen (Einstellungen → Über & Updates) ----------
+     Daten und vollständige Lizenztexte stehen in js/licenses.js und werden erst beim Öffnen geladen. */
+  var licLoading = null;
+  function loadLicenses() {
+    if (window.LUMIO_LICENSES) return Promise.resolve(window.LUMIO_LICENSES);
+    if (!licLoading) licLoading = new Promise(function (resolve) {
+      var sc = document.createElement('script');
+      sc.src = 'js/licenses.js';
+      sc.onload = function () { resolve(window.LUMIO_LICENSES || null); };
+      sc.onerror = function () { licLoading = null; resolve(null); };
+      document.head.appendChild(sc);
+    });
+    return licLoading;
+  }
+  function showLicenses() {
+    var USE = { hls: T('Wiedergabe von HLS-Streams'), mpegts: T('Wiedergabe von MPEG-TS-Streams'), qr: T('QR-Code'), font: T('Schrift'),
+      cap: T('Android-App'), media3: T('TV-Player auf Android'), electron: T('Windows- und Mac-App'), blender: T('Demo-Filme') };
+    var box = h('div', { class: 'lic-list' }, h('p', { class: 'hint', text: T('Wird geladen …') }));
+    openSheet(T('Open-Source-Lizenzen'), 'info', [h('p', { class: 'hint', text: T('Telvo nutzt diese freie Software. Vielen Dank an alle, die daran mitarbeiten.') }), box], { wide: true });
+    loadLicenses().then(function (L) {
+      clear(box);
+      if (!L) { box.appendChild(h('p', { class: 'error', text: T('Lizenztexte konnten nicht geladen werden.') })); return; }
+      L.list.forEach(function (x) {
+        var hasText = !!L.texts[x.lic];
+        box.appendChild(h('button', { class: 'ch-opt f lic-item', onclick: hasText ? function () { showLicenseText(x.lic, L.texts[x.lic]); } : null },
+          h('span', { class: 'ch-txt' }, h('b', { text: x.name + (x.ver ? ' ' + x.ver : '') }),
+            h('small', { text: (USE[x.id] || '') + ' · ' + x.lic + ' · ' + x.by + ' · ' + x.url })),
+          hasText ? h('span', { class: 'lic-go', text: T('Lizenztext') }) : null));
+      });
+      box.appendChild(h('p', { class: 'hint', text: T('Windows und Mac: Weitere Lizenzen (Chromium) liegen dem Programm bei – Datei LICENSES.chromium.html.') }));
+      // auf den ersten Eintrag – nach dem Öffnen des Fensters (das setzt den Fokus kurz danach selbst)
+      var f = $('.f', box);
+      if (f) setTimeout(function () {
+        var a = document.activeElement;
+        if (document.body.contains(f) && (!a || a === document.body || (a.classList && a.classList.contains('sh-close')))) Nav.focus(f);
+      }, 60);
+    });
+  }
+  // Langer Text in Abschnitten – so lässt er sich auch mit der Fernbedienung Stück für Stück durchblättern
+  function showLicenseText(name, text) {
+    var parts = String(text).split(/\n\s*\n/), chunks = [], cur = '';
+    parts.forEach(function (p) {
+      if (cur && (cur + '\n\n' + p).length > 900) { chunks.push(cur); cur = p; } else cur = cur ? cur + '\n\n' + p : p;
+    });
+    if (cur) chunks.push(cur);
+    openSheet(name, 'info', chunks.map(function (c) { return h('pre', { class: 'f lic-text', tabindex: '0', text: c }); }), { wide: true });
+  }
+
   // Fehlermeldung aus einer Antwort des Online-Dienstes ({ ok:false, error:'…' } oder PostgREST { message })
   function rpcErr(r) { return (r && (typeof r.error === 'string' ? r.error : (r.error && r.error.message) || r.message)) || ''; }
   function showReport() {
@@ -4581,6 +4629,7 @@
         h('button', { class: 'about-version f', onclick: function () { Admin.tap(); } }, CONFIG.appName + ' ' + CONFIG.version),
         status, actions,
         Updates.possible() ? h('div', { class: 'row' }, sheetBtn('refresh', T('Nach Updates suchen'), check)) : null,
+        h('div', { class: 'row' }, sheetBtn('info', T('Open-Source-Lizenzen'), showLicenses)),
         h('p', { class: 'hint', text: T('Dieser Player enthält keine Inhalte. Du bist selbst dafür verantwortlich, nur Streams zu nutzen, für die du eine Berechtigung hast. Datenschutz und Impressum: splix66.github.io/lumio-player') })], { onClose: paint });
       if (Updates.possible() && !cached) check();
     });

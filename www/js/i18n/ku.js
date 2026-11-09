@@ -652,5 +652,18 @@ window.LUMIO_I18N["ku"] = {
   "Danke! Deine Nachricht ist angekommen.": "Spas! Peyama te gihîşt.",
   "Technische Angaben anhängen": "Agahiyên teknîkî pêve bike",
   "App-Version, Gerät und die letzten Fehler – ohne Links und Passwörter.": "Guhertoya sepanê, cîhaz û xeletiyên dawî – bê girêdan û şîfre.",
-  "Angaben anzeigen": "Agahiyan nîşan bide"
+  "Angaben anzeigen": "Agahiyan nîşan bide",
+  "Open-Source-Lizenzen": "Lîsansên çavkaniya vekirî",
+  "Telvo nutzt diese freie Software. Vielen Dank an alle, die daran mitarbeiten.": "Telvo vê nermalava azad bi kar tîne. Spas ji bo hemû beşdaran.",
+  "Wiedergabe von HLS-Streams": "Lêdana weşanên HLS",
+  "Wiedergabe von MPEG-TS-Streams": "Lêdana weşanên MPEG-TS",
+  "QR-Code": "Koda QR",
+  "Schrift": "Font",
+  "Android-App": "Sepana Android",
+  "TV-Player auf Android": "Lîstikvana TV li ser Android",
+  "Windows- und Mac-App": "Sepana Windows û Mac",
+  "Demo-Filme": "Fîlmên demo",
+  "Lizenztext": "Nivîsa lîsansê",
+  "Lizenztexte konnten nicht geladen werden.": "Nivîsên lîsansê nehatin barkirin.",
+  "Windows und Mac: Weitere Lizenzen (Chromium) liegen dem Programm bei – Datei LICENSES.chromium.html.": "Windows û Mac: lîsansên din (Chromium) bi bernameyê re ne – pela LICENSES.chromium.html."
 };

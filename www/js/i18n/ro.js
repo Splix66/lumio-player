@@ -652,5 +652,18 @@ window.LUMIO_I18N["ro"] = {
   "Danke! Deine Nachricht ist angekommen.": "Mulțumim! Mesajul tău a fost primit.",
   "Technische Angaben anhängen": "Atașează detalii tehnice",
   "App-Version, Gerät und die letzten Fehler – ohne Links und Passwörter.": "Versiunea aplicației, dispozitivul și ultimele erori – fără linkuri și parole.",
-  "Angaben anzeigen": "Afișează detaliile"
+  "Angaben anzeigen": "Afișează detaliile",
+  "Open-Source-Lizenzen": "Licențe open source",
+  "Telvo nutzt diese freie Software. Vielen Dank an alle, die daran mitarbeiten.": "Telvo folosește acest software liber. Mulțumim tuturor celor care contribuie.",
+  "Wiedergabe von HLS-Streams": "Redarea fluxurilor HLS",
+  "Wiedergabe von MPEG-TS-Streams": "Redarea fluxurilor MPEG-TS",
+  "QR-Code": "Cod QR",
+  "Schrift": "Font",
+  "Android-App": "Aplicația Android",
+  "TV-Player auf Android": "Player TV pe Android",
+  "Windows- und Mac-App": "Aplicația pentru Windows și Mac",
+  "Demo-Filme": "Filme demo",
+  "Lizenztext": "Textul licenței",
+  "Lizenztexte konnten nicht geladen werden.": "Textele licențelor nu au putut fi încărcate.",
+  "Windows und Mac: Weitere Lizenzen (Chromium) liegen dem Programm bei – Datei LICENSES.chromium.html.": "Windows și Mac: alte licențe (Chromium) sunt incluse în program – fișierul LICENSES.chromium.html."
 };
