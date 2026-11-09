@@ -4,7 +4,8 @@
 
 **App – Willkommensseite neu angeordnet:** QR-Code in der Mitte · rechts MAC, KEY, „Playlist hinzufügen“, „Demo“ und
 neuer Knopf „Aktualisieren“ (sieht sofort nach, ob auf der Webseite eine Playlist eingetragen wurde) · Begrüßung über der
-Karte · Link zur Webseite als ruhige Schaltfläche statt unterstrichen.
+Karte · Link zur Webseite als ruhige Schaltfläche statt unterstrichen · eigene kompakte Ansicht für Handys im Querformat
+(alles ohne Scrollen sichtbar; die Android-App läuft weiterhin nur quer).
 
 ## 1.11.1 – 2026-11-09 · Neue Willkommensseite
 

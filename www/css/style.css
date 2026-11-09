@@ -2007,6 +2007,49 @@ html.tv .wl-main { padding-top: 1.2rem; }
   html:not(.tv) .wl .brand { font-size: 1.2rem; }
   html:not(.tv) .wl-chip { font-size: .72rem; }
 }
+/* Handy quer (die Android-App läuft nur quer): alles Wichtige ohne Scrollen – Schritte | QR-Code | MAC, KEY, Knöpfe, kompakt */
+@media (max-height: 540px) and (min-width: 600px) {
+  html:not(.tv) .wl-top { flex-wrap: nowrap; padding-top: calc(.7rem + env(safe-area-inset-top)); }
+  html:not(.tv) .wl-tools { display: flex; }
+  html:not(.tv) .wl-status { order: 0; width: auto; margin-top: 0; justify-content: flex-end; }
+  html:not(.tv) .wl-status .wl-chip { margin: .15rem 0 .15rem .4rem; }
+  html:not(.tv) .wl-help { margin-left: .5rem; width: 2.2rem; height: 2.2rem; }
+  html:not(.tv) .wl-top .lang-btn { margin-left: .5rem; }
+  html:not(.tv) .wl .brand { font-size: 1.1rem; }
+  html:not(.tv) .wl .brand-mark { width: 1.8rem; height: 1.8rem; }
+  html:not(.tv) .wl-chip { font-size: .68rem; padding: .28rem .6rem .28rem .5rem; }
+  html:not(.tv) .wl-main { padding: .5rem var(--pad) .8rem; justify-content: flex-start; }
+  html:not(.tv) .wl-head { text-align: center; margin-bottom: .7rem; }
+  html:not(.tv) .wl-title { font-size: 1.5rem; }
+  html:not(.tv) .wl-sub { margin-top: .2rem; font-size: .9rem; }
+  html:not(.tv) .wl-card { grid-template-columns: minmax(0, .8fr) auto minmax(0, 1.2fr); grid-gap: 1.4rem; gap: 1.4rem; padding: 1rem 1.2rem; border-radius: 1.2rem; }
+  html:not(.tv) .wl-steps { -webkit-box-ordinal-group: 1; order: 0; grid-column: auto; flex-direction: column; padding: 0 1.2rem 0 0; border: 0; border-right: 1px solid var(--wl-line); }
+  html:not(.tv) .wl-step { flex: none; padding: 0 0 1rem; }
+  html:not(.tv) .wl-step:last-child { padding-bottom: 0; }
+  html:not(.tv) .wl-step::before { display: block; top: 1.9rem; left: .85rem; }
+  html:not(.tv) .wl-step:last-child::before { display: none; }
+  html:not(.tv) .wl-step-n { width: 1.7rem; height: 1.7rem; font-size: .8rem; }
+  html:not(.tv) .wl-step-t { margin-left: .65rem; padding-top: .2rem; }
+  html:not(.tv) .wl-step-t b { font-size: .85rem; }
+  html:not(.tv) .wl-step-t small { display: none; }
+  html:not(.tv) .wl-qr { -webkit-box-ordinal-group: 1; order: 0; padding: 0; border: 0; }
+  html:not(.tv) .wl .qr.wl-qrcode { width: 8.5rem; padding: .45rem; }
+  html:not(.tv) .wl-qr-frame { padding: .4rem; border-radius: 1rem; }
+  html:not(.tv) .wl-qr-title { margin: .6rem 0 .4rem; font-size: .62rem; }
+  html:not(.tv) .wl-link { font-size: .72rem; padding: .35rem .7rem .35rem .6rem; }
+  html:not(.tv) .wl-side { -webkit-box-ordinal-group: 1; order: 0; }
+  html:not(.tv) .wl-id { margin-bottom: .5rem; padding: .5rem .8rem .55rem; border-radius: .8rem; }
+  html:not(.tv) .wl-id-label { font-size: .6rem; }
+  html:not(.tv) .wl-id-row { margin-top: .15rem; }
+  html:not(.tv) .wl-id-value { font-size: 1.05rem; }
+  html:not(.tv) .wl .wl-id .copy-btn { width: 1.8rem; height: 1.8rem; }
+  /* „Demo“ und „Aktualisieren“ nebeneinander unter „Playlist hinzufügen“ */
+  html:not(.tv) .wl-actions { flex-direction: row; flex-wrap: wrap; margin: .15rem -.25rem 0; }
+  html:not(.tv) .wl-btn { width: auto; flex: 1 1 0; margin: 0 .25rem .45rem; padding: .55rem .8rem; font-size: .88rem; }
+  html:not(.tv) .wl-btn.wl-primary { flex-basis: 100%; }
+  html:not(.tv) .wl-btn .i { width: 1rem; height: 1rem; margin-right: .4rem; }
+  html:not(.tv) .wl-legal { margin-top: .8rem; font-size: .7rem; }
+}
 /* Ruhe für alte Fernseher und „Bewegung reduzieren“ */
 body.lite .wl-card, body.lite .wl-head, body.lite .wl-chip i { animation: none; }
 @media (prefers-reduced-motion: reduce) { .wl-card, .wl-head, .wl-chip i { animation: none; } .wl-btn, .wl-link, .wl .qr.wl-qrcode { transition: none; } }
