@@ -20,6 +20,11 @@ vollständigem Lizenztext (Apache 2.0, MIT, OFL 1.1) – auch mit der Fernbedien
 **Nutzungsbedingungen:** neue Seite auf der Webseite (Fußzeile, Impressum, Datenschutz verlinkt) und einmaliger Hinweis
 beim ersten Start der App („Bevor es losgeht“ → „Verstanden“). Erscheint erneut nur, wenn sich die Bedingungen ändern.
 
+**Neu: „Verpasste Sendungen“ (Catch-up)** für Xtream-Zugänge, wenn der Anbieter aufzeichnet: Sender mit Archiv sind
+in der Senderliste markiert. Rechts neben der Liste und im Player öffnet „Verpasste Sendungen“ die vergangenen Sendungen
+nach Tagen (Heute, Gestern …), die laufende Sendung lässt sich von Anfang an schauen. Startzeit in Serverzeit, Ersatz-
+Adresse als HLS. Vergangene Sendungen landen nicht unter „Weiterschauen“. Im Demo-Modus zum Ausprobieren. Neuer Test.
+
 **Android-TV-Player:** Media3 (ExoPlayer) von 1.4.1 auf 1.9.4 – gut ein Jahr Fehlerbehebungen, u. a. für HLS-Livestreams.
 
 ## 1.11.1 – 2026-11-09 · Neue Willkommensseite

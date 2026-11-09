@@ -668,5 +668,14 @@ window.LUMIO_I18N["ro"] = {
   "Windows und Mac: Weitere Lizenzen (Chromium) liegen dem Programm bei – Datei LICENSES.chromium.html.": "Windows și Mac: alte licențe (Chromium) sunt incluse în program – fișierul LICENSES.chromium.html.",
   "Bevor es losgeht": "Înainte de a începe",
   "Nutzungsbedingungen lesen": "Citește termenii de utilizare",
-  "Telvo ist ein Player ohne eigene Sender oder Inhalte. Du trägst deine eigene Playlist ein und nutzt nur Quellen, für die du eine Berechtigung hast. Mit „Verstanden“ stimmst du den Nutzungsbedingungen zu: {0}": "Telvo este un player fără canale sau conținut propriu. Adaugi propriul playlist și folosești doar surse pentru care ai drept de utilizare. Cu „Am înțeles” accepți termenii de utilizare: {0}"
+  "Telvo ist ein Player ohne eigene Sender oder Inhalte. Du trägst deine eigene Playlist ein und nutzt nur Quellen, für die du eine Berechtigung hast. Mit „Verstanden“ stimmst du den Nutzungsbedingungen zu: {0}": "Telvo este un player fără canale sau conținut propriu. Adaugi propriul playlist și folosești doar surse pentru care ai drept de utilizare. Cu „Am înțeles” accepți termenii de utilizare: {0}",
+  "Verpasste Sendungen": "Emisiuni ratate",
+  "Verpasste Sendungen verfügbar": "Emisiuni ratate disponibile",
+  "Heute": "Azi",
+  "Gestern": "Ieri",
+  "Ohne Titel": "Fără titlu",
+  "Läuft gerade – von Anfang an": "Acum – de la început",
+  "Für diesen Sender gibt es gerade keine Aufzeichnungen.": "Pentru acest canal nu există înregistrări acum.",
+  "Aufzeichnungen konnten nicht geladen werden.": "Înregistrările nu au putut fi încărcate.",
+  "Freier Film der Blender Foundation (CC BY).": "Film liber al Blender Foundation (CC BY)."
 };

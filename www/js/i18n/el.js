@@ -668,5 +668,14 @@ window.LUMIO_I18N["el"] = {
   "Windows und Mac: Weitere Lizenzen (Chromium) liegen dem Programm bei – Datei LICENSES.chromium.html.": "Windows και Mac: περαιτέρω άδειες (Chromium) συνοδεύουν το πρόγραμμα – αρχείο LICENSES.chromium.html.",
   "Bevor es losgeht": "Πριν ξεκινήσεις",
   "Nutzungsbedingungen lesen": "Ανάγνωση όρων χρήσης",
-  "Telvo ist ein Player ohne eigene Sender oder Inhalte. Du trägst deine eigene Playlist ein und nutzt nur Quellen, für die du eine Berechtigung hast. Mit „Verstanden“ stimmst du den Nutzungsbedingungen zu: {0}": "Το Telvo είναι ένα πρόγραμμα αναπαραγωγής χωρίς δικά του κανάλια ή περιεχόμενο. Προσθέτεις τη δική σου λίστα και χρησιμοποιείς μόνο πηγές για τις οποίες έχεις δικαίωμα. Με το «Κατάλαβα» αποδέχεσαι τους όρους χρήσης: {0}"
+  "Telvo ist ein Player ohne eigene Sender oder Inhalte. Du trägst deine eigene Playlist ein und nutzt nur Quellen, für die du eine Berechtigung hast. Mit „Verstanden“ stimmst du den Nutzungsbedingungen zu: {0}": "Το Telvo είναι ένα πρόγραμμα αναπαραγωγής χωρίς δικά του κανάλια ή περιεχόμενο. Προσθέτεις τη δική σου λίστα και χρησιμοποιείς μόνο πηγές για τις οποίες έχεις δικαίωμα. Με το «Κατάλαβα» αποδέχεσαι τους όρους χρήσης: {0}",
+  "Verpasste Sendungen": "Εκπομπές που έχασες",
+  "Verpasste Sendungen verfügbar": "Διαθέσιμες εκπομπές που έχασες",
+  "Heute": "Σήμερα",
+  "Gestern": "Χθες",
+  "Ohne Titel": "Χωρίς τίτλο",
+  "Läuft gerade – von Anfang an": "Τώρα – από την αρχή",
+  "Für diesen Sender gibt es gerade keine Aufzeichnungen.": "Δεν υπάρχουν εγγραφές για αυτό το κανάλι αυτή τη στιγμή.",
+  "Aufzeichnungen konnten nicht geladen werden.": "Δεν ήταν δυνατή η φόρτωση των εγγραφών.",
+  "Freier Film der Blender Foundation (CC BY).": "Ελεύθερη ταινία του Blender Foundation (CC BY)."
 };

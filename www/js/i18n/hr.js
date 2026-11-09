@@ -668,5 +668,14 @@ window.LUMIO_I18N["hr"] = {
   "Windows und Mac: Weitere Lizenzen (Chromium) liegen dem Programm bei – Datei LICENSES.chromium.html.": "Windows i Mac: dodatne licencije (Chromium) priložene su programu – datoteka LICENSES.chromium.html.",
   "Bevor es losgeht": "Prije nego što počneš",
   "Nutzungsbedingungen lesen": "Pročitaj uvjete korištenja",
-  "Telvo ist ein Player ohne eigene Sender oder Inhalte. Du trägst deine eigene Playlist ein und nutzt nur Quellen, für die du eine Berechtigung hast. Mit „Verstanden“ stimmst du den Nutzungsbedingungen zu: {0}": "Telvo je player bez vlastitih programa ili sadržaja. Dodaješ vlastitu playlistu i koristiš samo izvore za koje imaš pravo. Odabirom „Razumijem” prihvaćaš uvjete korištenja: {0}"
+  "Telvo ist ein Player ohne eigene Sender oder Inhalte. Du trägst deine eigene Playlist ein und nutzt nur Quellen, für die du eine Berechtigung hast. Mit „Verstanden“ stimmst du den Nutzungsbedingungen zu: {0}": "Telvo je player bez vlastitih programa ili sadržaja. Dodaješ vlastitu playlistu i koristiš samo izvore za koje imaš pravo. Odabirom „Razumijem” prihvaćaš uvjete korištenja: {0}",
+  "Verpasste Sendungen": "Propuštene emisije",
+  "Verpasste Sendungen verfügbar": "Dostupne propuštene emisije",
+  "Heute": "Danas",
+  "Gestern": "Jučer",
+  "Ohne Titel": "Bez naslova",
+  "Läuft gerade – von Anfang an": "Upravo – od početka",
+  "Für diesen Sender gibt es gerade keine Aufzeichnungen.": "Za ovaj program trenutačno nema snimaka.",
+  "Aufzeichnungen konnten nicht geladen werden.": "Snimke se nisu mogle učitati.",
+  "Freier Film der Blender Foundation (CC BY).": "Slobodni film Blender Foundationa (CC BY)."
 };

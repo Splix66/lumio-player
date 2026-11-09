@@ -668,5 +668,14 @@ window.LUMIO_I18N["ru"] = {
   "Windows und Mac: Weitere Lizenzen (Chromium) liegen dem Programm bei – Datei LICENSES.chromium.html.": "Windows и Mac: другие лицензии (Chromium) прилагаются к программе – файл LICENSES.chromium.html.",
   "Bevor es losgeht": "Прежде чем начать",
   "Nutzungsbedingungen lesen": "Прочитать условия использования",
-  "Telvo ist ein Player ohne eigene Sender oder Inhalte. Du trägst deine eigene Playlist ein und nutzt nur Quellen, für die du eine Berechtigung hast. Mit „Verstanden“ stimmst du den Nutzungsbedingungen zu: {0}": "Telvo — это плеер без собственных каналов и контента. Вы добавляете свой плейлист и используете только источники, на которые у вас есть права. Нажимая «Понятно», вы принимаете условия использования: {0}"
+  "Telvo ist ein Player ohne eigene Sender oder Inhalte. Du trägst deine eigene Playlist ein und nutzt nur Quellen, für die du eine Berechtigung hast. Mit „Verstanden“ stimmst du den Nutzungsbedingungen zu: {0}": "Telvo — это плеер без собственных каналов и контента. Вы добавляете свой плейлист и используете только источники, на которые у вас есть права. Нажимая «Понятно», вы принимаете условия использования: {0}",
+  "Verpasste Sendungen": "Пропущенные передачи",
+  "Verpasste Sendungen verfügbar": "Доступны пропущенные передачи",
+  "Heute": "Сегодня",
+  "Gestern": "Вчера",
+  "Ohne Titel": "Без названия",
+  "Läuft gerade – von Anfang an": "Идёт сейчас – с начала",
+  "Für diesen Sender gibt es gerade keine Aufzeichnungen.": "Для этого канала сейчас нет записей.",
+  "Aufzeichnungen konnten nicht geladen werden.": "Не удалось загрузить записи.",
+  "Freier Film der Blender Foundation (CC BY).": "Свободный фильм Blender Foundation (CC BY)."
 };

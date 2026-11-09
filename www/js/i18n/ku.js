@@ -668,5 +668,14 @@ window.LUMIO_I18N["ku"] = {
   "Windows und Mac: Weitere Lizenzen (Chromium) liegen dem Programm bei – Datei LICENSES.chromium.html.": "Windows û Mac: lîsansên din (Chromium) bi bernameyê re ne – pela LICENSES.chromium.html.",
   "Bevor es losgeht": "Berî ku dest pê bikî",
   "Nutzungsbedingungen lesen": "Mercên bikaranînê bixwîne",
-  "Telvo ist ein Player ohne eigene Sender oder Inhalte. Du trägst deine eigene Playlist ein und nutzt nur Quellen, für die du eine Berechtigung hast. Mit „Verstanden“ stimmst du den Nutzungsbedingungen zu: {0}": "Telvo lîstikvanek bê kanal an naveroka xwe ye. Tu lîsteya xwe zêde dikî û tenê çavkaniyên ku mafê te heye bi kar tînî. Bi “Fêm kir” tu mercên bikaranînê qebûl dikî: {0}"
+  "Telvo ist ein Player ohne eigene Sender oder Inhalte. Du trägst deine eigene Playlist ein und nutzt nur Quellen, für die du eine Berechtigung hast. Mit „Verstanden“ stimmst du den Nutzungsbedingungen zu: {0}": "Telvo lîstikvanek bê kanal an naveroka xwe ye. Tu lîsteya xwe zêde dikî û tenê çavkaniyên ku mafê te heye bi kar tînî. Bi “Fêm kir” tu mercên bikaranînê qebûl dikî: {0}",
+  "Verpasste Sendungen": "Weşanên ji dest çûyî",
+  "Verpasste Sendungen verfügbar": "Weşanên ji dest çûyî hene",
+  "Heute": "Îro",
+  "Gestern": "Duh",
+  "Ohne Titel": "Bê sernav",
+  "Läuft gerade – von Anfang an": "Niha – ji destpêkê",
+  "Für diesen Sender gibt es gerade keine Aufzeichnungen.": "Ji bo vê kanalê niha tu tomar tune ne.",
+  "Aufzeichnungen konnten nicht geladen werden.": "Tomar nehatin barkirin.",
+  "Freier Film der Blender Foundation (CC BY).": "Fîlmeke azad a Blender Foundation (CC BY)."
 };

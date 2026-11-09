@@ -207,4 +207,40 @@
     }
     function Store_clear() { try { localStorage.removeItem('lumio.errlog'); } catch (x) {} }
   });
+
+  t('Catch-up', 'Xtream: Archiv-Sender, vergangene Sendungen und Abspiel-Adresse in Serverzeit', function () {
+    var realFetch = window.fetch, now = Math.floor(Date.now() / 1000), h0 = now - (now % 3600);
+    function two(n) { return n < 10 ? '0' + n : '' + n; }
+    function srvTime(ts) { var d = new Date((ts + 7200) * 1000); return d.getUTCFullYear() + '-' + two(d.getUTCMonth() + 1) + '-' + two(d.getUTCDate()) + ' ' + two(d.getUTCHours()) + ':' + two(d.getUTCMinutes()) + ':00'; }
+    var listings = [], k;
+    for (k = -60; k <= 2; k++) {
+      var st = h0 + k * 3600;
+      listings.push({ title: btoa('Sendung ' + k), description: '', start_timestamp: String(st), stop_timestamp: String(st + 3600),
+        start: k === -2 ? '' : srvTime(st), has_archive: st + 3600 <= now ? 1 : 0 });
+    }
+    window.fetch = function (url) {
+      var body = /get_live_streams/.test(url) ? [{ stream_id: 7, name: 'A', category_id: '1', tv_archive: 1, tv_archive_duration: '2' }, { stream_id: 8, name: 'B', category_id: '1', tv_archive: 0 }]
+        : /get_simple_data_table/.test(url) ? { epg_listings: listings }
+        : { user_info: { auth: 1, status: 'Active' }, server_info: { time_now: srvTime(now), timestamp_now: now } };
+      return Promise.resolve({ ok: true, status: 200, body: null, text: function () { return Promise.resolve(JSON.stringify(body)); } });
+    };
+    var p = D.makeProvider({ type: 'xtream', server: 'http://srv.invalid:8080', username: 'u', password: 'p w' });
+    return p.items('live', '__all').then(function (l) {
+      eq(l[0].archive, 2, 'Sender mit Archiv: 2 Tage');
+      eq(l[1].archive, 0, 'Sender ohne Archiv');
+      return p.archive(l[0]).then(function (progs) {
+        window.fetch = realFetch;
+        ok(progs.length >= 48 && progs.length <= 51, 'nur die letzten 2 Tage (+ laufende Sendung): ' + progs.length);
+        ok(progs[0].start <= now && progs[0].end > now, 'neueste zuerst – laufende Sendung oben');
+        ok(progs.every(function (e) { return e.start <= now; }), 'keine künftigen Sendungen');
+        var e1 = progs[1], it = p.catchup(l[0], e1);
+        eq(it.kind, 'catchup', 'eigener Typ');
+        eq(it.url, 'http://srv.invalid:8080/timeshift/u/p%20w/60/' + srvTime(e1.start).slice(0, 10) + ':' + srvTime(e1.start).slice(11, 13) + '-' + srvTime(e1.start).slice(14, 16) + '/7.ts', 'Adresse mit Startzeit des Servers');
+        ok(/\.m3u8$/.test(it.alt), 'Ersatz-Adresse als HLS');
+        var e2 = progs.filter(function (e) { return e.start === h0 - 2 * 3600; })[0];
+        eq(e2.at, srvTime(e2.start).slice(0, 10) + ':' + srvTime(e2.start).slice(11, 13) + '-' + srvTime(e2.start).slice(14, 16), 'ohne Zeittext: aus Serverzeit-Abstand (+2 h) berechnet');
+        eq(p.streamUrl(it).url, it.url, 'Player nimmt die Catch-up-Adresse');
+      });
+    }).catch(function (e) { window.fetch = realFetch; throw e; });
+  });
 })();

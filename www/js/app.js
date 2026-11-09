@@ -127,6 +127,7 @@
     eye: '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>',
     sort: '<path d="M7 4v16M3.5 16.5L7 20l3.5-3.5"/><path d="M14 6h7M14 11h5M14 16h3"/>',
     clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/>',
+    archive: '<path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3.5 4.5v4h4"/><path d="M12 7.5V12l3 2"/>',
     cc: '<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M10.6 10.2a2.3 2.3 0 1 0 0 3.6M17 10.2a2.3 2.3 0 1 0 0 3.6"/>',
     device: '<rect x="2.5" y="4" width="13.5" height="10" rx="1.6"/><path d="M6 18.5h6.5M9.2 14v4.5"/><rect x="17.5" y="8" width="4" height="12" rx="1.1"/>',
     ext: '<path d="M14 4h6v6M20 4l-8.5 8.5"/><path d="M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/>',
@@ -593,8 +594,28 @@
       }
       throw new Error(T('Unerwartete Antwort vom Server.'));
     }
+    /* Catch-up braucht die Startzeit in der Uhrzeit des Servers. Am genauesten ist der Text aus dem Programm
+       („2026-11-09 20:15:00“); sonst wird der Abstand Server – Weltzeit aus der Kontoauskunft berechnet. */
+    var tzOff = null;
+    function serverOffset() {
+      if (tzOff !== null) return Promise.resolve(tzOff);
+      return api('', '').then(function (d) {
+        var sv = (d && d.server_info) || {}, now = Number(sv.timestamp_now);
+        var m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/.exec(sv.time_now || '');
+        tzOff = m && now > 0 ? Math.round((Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] || 0)) / 1000 - now) / 900) * 900 : 0;
+        return tzOff;
+      }, function () { return 0; });
+    }
+    function tsStart(e, off) {
+      var m = /^(\d{4}-\d{2}-\d{2})[ T](\d{2}):(\d{2})/.exec(e.startText || '');
+      if (m) return m[1] + ':' + m[2] + '-' + m[3];
+      var d = new Date((e.start + off) * 1000), two = function (n) { return n < 10 ? '0' + n : '' + n; };
+      return d.getUTCFullYear() + '-' + two(d.getUTCMonth() + 1) + '-' + two(d.getUTCDate()) + ':' + two(d.getUTCHours()) + '-' + two(d.getUTCMinutes());
+    }
     function mapItem(kind, s) {
-      if (kind === 'live') return { kind: 'live', id: String(s.stream_id), name: s.name || T('Kanal'), logo: s.stream_icon, num: s.num, catId: String(s.category_id) };
+      // tv_archive = 1: der Anbieter zeichnet auf (Catch-up), tv_archive_duration = wie viele Tage zurück
+      if (kind === 'live') return { kind: 'live', id: String(s.stream_id), name: s.name || T('Kanal'), logo: s.stream_icon, num: s.num, catId: String(s.category_id),
+        archive: String(s.tv_archive) === '1' ? Math.max(1, Math.min(30, Number(s.tv_archive_duration) || 1)) : 0 };
       if (kind === 'movie') return { kind: 'movie', id: String(s.stream_id), name: s.name || T('Film'), logo: s.stream_icon, ext: s.container_extension || 'mp4', rating: s.rating, catId: String(s.category_id), added: s.added };
       return { kind: 'series', id: String(s.series_id), name: s.name || T('Serie'), logo: s.cover, rating: s.rating, catId: String(s.category_id), year: s.releaseDate || s.release_date, plot: s.plot, added: s.last_modified };
     }
@@ -691,7 +712,27 @@
           });
         }).catch(function () { return []; });
       },
+      /* Catch-up: vergangene Sendungen eines Senders mit Aufzeichnung (neueste zuerst).
+         Laufende Sendung ist dabei – sie lässt sich von Anfang an schauen. */
+      archive: function (item) {
+        var days = item.archive || 0;
+        return Promise.all([api('get_simple_data_table', '&stream_id=' + item.id, true), serverOffset()]).then(function (r) {
+          var now = Date.now() / 1000, from = now - days * 86400 - 3600, off = r[1];
+          return ((r[0] && r[0].epg_listings) || []).map(function (e) {
+            return { title: b64(e.title), desc: b64(e.description), start: Number(e.start_timestamp), end: Number(e.stop_timestamp), startText: e.start, rec: e.has_archive };
+          }).filter(function (e) {
+            return e.start > 0 && e.end > e.start && e.start <= now && e.start >= from && (String(e.rec) !== '0' || e.end > now);
+          }).map(function (e) { e.at = tsStart(e, off); return e; }).sort(function (a, b) { return b.start - a.start; });
+        });
+      },
+      // Abspielbarer Eintrag für eine vergangene Sendung: /timeshift/BENUTZER/PASSWORT/DAUER(MIN)/JJJJ-MM-TT:HH-MM/ID.ts
+      catchup: function (item, e) {
+        var path = base + '/timeshift/' + user + '/' + pass + '/' + Math.max(1, Math.ceil((e.end - e.start) / 60)) + '/' + e.at + '/' + item.id;
+        return { kind: 'catchup', id: item.id + '@' + e.start, name: item.name + ' · ' + (e.title || T('Ohne Titel')), logo: item.logo, catId: item.catId,
+          plot: e.desc, url: path + '.ts', alt: path + '.m3u8' };
+      },
       streamUrl: function (item) {
+        if (item.kind === 'catchup') return { url: item.url, alt: item.alt };
         if (item.kind === 'live') {
           var fmt = Settings.get('liveFormat') || 'm3u8';
           return {
@@ -1144,7 +1185,7 @@
     var live = [
       [T('Demo Live 1'), 'news', S.live1], [T('Demo Test-Bild'), 'news', S.bip], [T('Demo Kino 24/7'), 'film', S.bbb],
       [T('Demo Animation'), 'film', S.sintel], [T('Demo Science-Fiction'), 'film', S.tos], [T('Demo Live 2'), 'news', S.live1]
-    ].map(function (x, i) { return { kind: 'live', id: 'd' + i, name: x[0], catId: x[1], url: x[2], num: i + 1 }; });
+    ].map(function (x, i) { return { kind: 'live', id: 'd' + i, name: x[0], catId: x[1], url: x[2], num: i + 1, archive: i === 2 || i === 3 ? 2 : 0 }; });
     var movies = [
       { id: 'm1', name: 'Big Buck Bunny', url: S.bbb, catId: 'anim', year: '2008', plot: T('Ein gutmütiger Riesenhase rächt sich mit viel Fantasie an drei frechen Nagern. Offener Animationsfilm der Blender Foundation.'), genre: T('Animation, Komödie'), duration: '00:09:56', rating: '7.2' },
       { id: 'm2', name: 'Sintel', url: S.sintel, catId: 'anim', year: '2010', plot: T('Eine junge Frau sucht ihren verlorenen Drachen und findet dabei mehr, als sie erwartet hat. Offener Kurzfilm der Blender Foundation.'), genre: T('Animation, Fantasy'), duration: '00:14:48', rating: '7.4' },
@@ -1177,6 +1218,19 @@
           plot: item.plot, genre: item.genre, year: item.year,
           seasons: [{ num: 1, episodes: eps.slice(0, 2) }, { num: 2, episodes: eps.slice(2) }]
         });
+      },
+      // Demo-Archiv: alle zwei Stunden einer der freien Filme, zwei Tage zurück
+      archive: function () {
+        var films = [['Big Buck Bunny', S.bbb], ['Sintel', S.sintel], ['Tears of Steel', S.tos]], out = [];
+        var now = Math.floor(Date.now() / 1000), t = now - (now % 7200);
+        for (var i = 0; t - i * 7200 > now - 2 * 86400; i++) {
+          var f = films[i % 3], st = t - i * 7200;
+          out.push({ title: f[0], desc: T('Freier Film der Blender Foundation (CC BY).'), start: st, end: st + 7200, url: f[1] });
+        }
+        return Promise.resolve(out);
+      },
+      catchup: function (item, e) {
+        return { kind: 'catchup', id: item.id + '@' + e.start, name: item.name + ' · ' + e.title, logo: item.logo, catId: item.catId, plot: e.desc, url: e.url };
       },
       epg: function () {
         var now = Math.floor(Date.now() / 1000), start = now - (now % 3600);
@@ -1736,7 +1790,7 @@
   function pid() { return App.profile ? App.profile.id : 'none'; }
   function slim(item) {
     var o = {};
-    ['kind', 'id', 'name', 'logo', 'backdrop', 'num', 'ext', 'url', 'catId', 'season', 'seriesId', 'seriesName', 'year', 'rating', 'plot', 'genre', 'duration'].forEach(function (k) {
+    ['kind', 'id', 'name', 'logo', 'backdrop', 'num', 'ext', 'url', 'catId', 'season', 'seriesId', 'seriesName', 'year', 'rating', 'plot', 'genre', 'duration', 'archive'].forEach(function (k) {
       if (item[k] !== undefined && item[k] !== null && item[k] !== '') o[k] = item[k];
     });
     return o;
@@ -1761,6 +1815,7 @@
     key: function (item) { return item.kind + ':' + item.id; },
     get: function (item) { return this.all()[this.key(item)]; },
     set: function (item, t, d) {
+      if (item && item.kind === 'catchup') return;    // vergangene Sendungen nicht unter „Weiterschauen“
       var a = this.all(); var k = this.key(item);
       if (d && t > d - 60) Seen.add(item);          // bis (fast) zum Ende geschaut = gesehen
       if (!d || t < 30 || t > d - 60) delete a[k];
@@ -1797,7 +1852,7 @@
         var s = App.openSeries && App.openSeries.id === item.seriesId ? App.openSeries : { kind: 'series', id: item.seriesId, name: item.seriesName, logo: item.logo };
         it = s;
       }
-      if (!it || !it.id) return;
+      if (!it || !it.id || it.kind === 'catchup') return;
       Store.set('last.' + pid(), { item: slim(it), at: Date.now() });
     }
   };
@@ -2104,6 +2159,7 @@
       h('span', { class: 'num', text: item.num ? String(item.num) : '' }),
       logoBox(item),
       h('span', { class: 'ch-txt' }, h('span', { class: 'name', text: item.name }), h('span', { class: 'now', text: cur ? cur.title : '' })),
+      item.archive ? h('span', { class: 'arch', title: T('Verpasste Sendungen verfügbar') }, icon('archive')) : null,
       Favs.has(item) ? h('span', { class: 'fav', title: T('Favorit') }, icon('heartFill')) : null);
     if (onFocus) {
       row.addEventListener('focus', function () { onFocus(item); });
@@ -3621,9 +3677,10 @@
     var ph = h('div', { class: 'lp-ph' });
     var box = h('div', { class: 'mini-slot-box' }, ph);
     var name = h('h2', { class: 'lp-name' });
+    var arch = h('div', { class: 'lp-arch' });
     var epg = h('div', { class: 'lp-epg' });
     var el = h('aside', { class: 'live-panel' }, box,
-      h('p', { class: 'lp-hint', text: T('Denselben Sender noch einmal wählen öffnet das Vollbild.') }), name, epg);
+      h('p', { class: 'lp-hint', text: T('Denselben Sender noch einmal wählen öffnet das Vollbild.') }), name, arch, epg);
     var cur = null, timer = null;
     function show(item) {
       if (!item || (cur && cur.id === item.id)) return;
@@ -3631,6 +3688,11 @@
       clear(ph).appendChild(logoBox(item));
       ph.appendChild(h('span', null, icon('play'), T('Zum Abspielen auswählen')));
       name.textContent = item.name;
+      clear(arch);
+      if (item.archive && App.provider && App.provider.archive) {
+        arch.appendChild(h('button', { class: 'btn f', onclick: function () { showArchive(item); } },
+          icon('archive'), h('span', { text: T('Verpasste Sendungen') }), h('small', { text: T('{0} Tage', item.archive) })));
+      }
       clear(epg);
       clearTimeout(timer);
       timer = setTimeout(function () {
@@ -3662,6 +3724,59 @@
       }
     }
     return { el: el, show: show, current: function () { return cur; } };
+  }
+
+  /* ---------- Catch-up: vergangene Sendungen eines Senders, nach Tagen ---------- */
+  function archDayLabel(d) {
+    var today = new Date(); today.setHours(0, 0, 0, 0);
+    var diff = Math.round((today - new Date(d.getFullYear(), d.getMonth(), d.getDate())) / 86400000);
+    return diff === 0 ? T('Heute') : diff === 1 ? T('Gestern') : d.toLocaleDateString(locale(), { weekday: 'short', day: '2-digit', month: '2-digit' });
+  }
+  function showArchive(ch) {
+    var days = h('div', { class: 'seg arch-days' });
+    var list = h('div', { class: 'arch-list' }, h('p', { class: 'hint', text: T('Wird geladen …') }));
+    openSheet(T('Verpasste Sendungen') + ': ' + ch.name, 'archive', [days, list], { wide: true });
+    function progBtn(e) {
+      var now = Date.now() / 1000, running = e.end > now, mins = Math.max(1, Math.round((e.end - e.start) / 60));
+      return h('button', { class: 'ch-opt f arch-prog' + (running ? ' is-running' : ''), onclick: function () {
+        var it = App.provider.catchup(ch, e);
+        goBack();
+        setTimeout(function () { playItem(it, { list: [it], index: 0 }); }, 40);
+      } },
+        h('span', { class: 'arch-time', text: fmtClock(e.start) }),
+        h('span', { class: 'ch-txt' }, h('b', { text: e.title || T('Ohne Titel') }),
+          h('small', { text: running ? T('Läuft gerade – von Anfang an') : fmtClock(e.start) + ' – ' + fmtClock(e.end) + ' · ' + T('{0} Min.', mins) })),
+        h('span', { class: 'arch-go' }, icon('play')));
+    }
+    App.provider.archive(ch).then(function (progs) {
+      clear(list);
+      if (!progs || !progs.length) { list.appendChild(h('p', { class: 'hint', text: T('Für diesen Sender gibt es gerade keine Aufzeichnungen.') })); return; }
+      var groups = [], byDay = {};
+      progs.forEach(function (e) {
+        var d = new Date(e.start * 1000), k = d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
+        if (!byDay[k]) { byDay[k] = []; groups.push({ k: k, d: d }); }
+        byDay[k].push(e);
+      });
+      var btns = groups.map(function (g, i) {
+        var b = h('button', { class: 'btn f', onclick: function () { pick(i, true); } }, archDayLabel(g.d));
+        days.appendChild(b);
+        return b;
+      });
+      function pick(i, focusList) {
+        btns.forEach(function (b, j) { b.classList.toggle('is-on', i === j); });
+        clear(list);
+        byDay[groups[i].k].forEach(function (e) { list.appendChild(progBtn(e)); });
+        if (focusList) { var f = $('.f', list); if (f) Nav.focus(f); }
+      }
+      pick(0, false);
+      // auf die neueste Sendung – nach dem Öffnen des Fensters (das setzt den Fokus kurz danach selbst)
+      setTimeout(function () {
+        var a = document.activeElement, f = $('.f', list);
+        if (f && document.body.contains(f) && (!a || a === document.body || days.contains(a) || (a.classList && a.classList.contains('sh-close')))) Nav.focus(f);
+      }, 60);
+    }, function (err) {
+      clear(list).appendChild(h('p', { class: 'error', text: T('Aufzeichnungen konnten nicht geladen werden.') + (err && err.message ? ' ' + err.message : '') }));
+    });
   }
 
   /* ---------- Favoriten ---------- */
@@ -4700,7 +4815,7 @@
   }
   function parentalGate(item, ctx, go) {
     if (!Parental.on() || Parental.unlocked || !App.provider) { go(ctx); return; }
-    var kind = item.kind === 'episode' ? 'series' : item.kind;
+    var kind = item.kind === 'episode' ? 'series' : item.kind === 'catchup' ? 'live' : item.kind;
     Promise.all([lockedCats(kind), itemCatId(item)]).then(function (r) {
       var m = r[0], cid = r[1];
       if (!m) { go(ctx); return; }
@@ -5592,6 +5707,39 @@
       clearTimeout(self.hideTimer);
       setTimeout(function () { Nav.focus($('.tp-opt.is-on', box) || $('.tp-opt', box)); }, 30);
     },
+    /* Verpasste Sendungen des laufenden Senders als Liste im Player (nach Tagen) */
+    openArchive: function () {
+      var self = this, ch = self.item;
+      if (!ch || !ch.archive || !App.provider || !App.provider.archive) return;
+      self.closeTracks();
+      var head = h('h3', { text: T('Verpasste Sendungen') });
+      var box = h('div', { class: 'track-panel arch-panel' }, h('div', { class: 'tp-sec' }, head, h('p', { class: 'tp-note', text: T('Wird geladen …') })));
+      self.trackPanel = box;
+      self.el.appendChild(box);
+      clearTimeout(self.hideTimer);
+      App.provider.archive(ch).then(function (progs) {
+        if (self.trackPanel !== box) return;
+        clear(box);
+        if (!progs || !progs.length) {
+          box.appendChild(h('div', { class: 'tp-sec' }, head, h('p', { class: 'tp-note', text: T('Für diesen Sender gibt es gerade keine Aufzeichnungen.') })));
+          return;
+        }
+        var day = null, sec = null;
+        progs.forEach(function (e) {
+          var d = new Date(e.start * 1000), k = d.toDateString();
+          if (k !== day) { sec = h('div', { class: 'tp-sec' }, h('h3', { text: (day ? '' : T('Verpasste Sendungen') + ' · ') + archDayLabel(d) })); day = k; box.appendChild(sec); }
+          sec.appendChild(h('button', { class: 'tp-opt f', onclick: function () {
+            var it = App.provider.catchup(ch, e);
+            self.closeTracks();
+            playItem(it, { list: [it], index: 0 });
+          } }, h('b', { class: 'tp-time', text: fmtClock(e.start) }), h('span', { text: e.title || T('Ohne Titel') })));
+        });
+        setTimeout(function () { var f = $('.tp-opt', box); if (f && self.trackPanel === box) Nav.focus(f); }, 30);
+      }, function () {
+        if (self.trackPanel !== box) return;
+        clear(box).appendChild(h('div', { class: 'tp-sec' }, head, h('p', { class: 'tp-note', text: T('Aufzeichnungen konnten nicht geladen werden.') })));
+      });
+    },
     openFormat: function () {
       var self = this, cur = Settings.get('aspect') || 'fit';
       var aspects = [['fit', T('Original')], ['fill', T('Bild füllen (Zoom)')], ['stretch', T('Strecken')], ['16:9', '16:9'], ['4:3', '4:3']].map(function (a) {
@@ -5710,7 +5858,11 @@
         self.ctrls.appendChild(playBtn);
         self.ctrls.appendChild(cbtn('next', 'down', T('Nächster Sender'), function () { self.zapBy(1); }));
       }
-      if (self.item && self.item.kind !== 'episode') {
+      if (self.item && self.item.kind === 'live' && self.item.archive && App.provider && App.provider.archive) {
+        self.ctrlLeft.appendChild(h('button', { class: 'btn f', 'data-c': 'arch', onclick: function () { self.openArchive(); } },
+          icon('archive'), h('span', { text: T('Verpasste Sendungen') })));
+      }
+      if (self.item && self.item.kind !== 'episode' && self.item.kind !== 'catchup') {
         var on = Favs.has(self.item);
         self.ctrlLeft.appendChild(h('button', { class: 'btn f', 'data-c': 'fav', onclick: function () { Favs.toggle(self.item); self.paintCtrls(); } },
           icon(on ? 'heartFill' : 'heart'), h('span', { text: on ? T('Gemerkt') : T('Merken') })));
