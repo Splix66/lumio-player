@@ -52,6 +52,16 @@ der gelbe Lichtpunkt entfällt. App-Symbol dunkel mit leichtem Verlauf und feine
 Webseite (Kopf- und Fußzeile, Verwaltungsbereich, Download-Seite), Favicon, iPhone-Symbol, Vorschaubild für geteilte Links
 und in `scripts/make-icons.py` (Android, Fire TV, Samsung, LG, Windows/Mac, TV-Banner, Startbildschirm).
 
+**Filme & Serien:**
+- **Als gesehen markieren:** jede Folge mit eigenem Häkchen, ganze Staffel mit einem Knopf, Filme in der Detailansicht.
+- **Staffel-Fortschritt** direkt auf den Staffel-Knöpfen („Staffel 1 · 5/8“, Häkchen wenn fertig).
+- **Nächste Folge unter „Weiterschauen“:** ist eine Folge zu Ende, steht die nächste dort bereit (auch auf dem Startbildschirm).
+- **„Neue Folgen“** auf dem Poster, wenn der Anbieter seit dem letzten Schauen Folgen ergänzt hat.
+- **Sortieren:** wie beim Anbieter, Neueste, A–Z, Beste Bewertung, Jahr – für Filme und Serien getrennt gemerkt.
+- **„Gesehene ausblenden“** im selben Menü.
+
+Die neuen Daten gehören zum Profil, werden mitgesichert und von „Verlauf löschen“ entfernt.
+
 **Android-TV-Player:** Media3 (ExoPlayer) von 1.4.1 auf 1.9.4 – gut ein Jahr Fehlerbehebungen, u. a. für HLS-Livestreams.
 
 ## 1.11.1 – 2026-11-09 · Neue Willkommensseite

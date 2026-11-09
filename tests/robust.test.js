@@ -351,4 +351,57 @@
       D.Settings.data = JSON.parse(settingsBefore);
     }
   });
+
+  t('Filme & Serien', 'Nächste Folge in „Weiterschauen“, „Neue Folgen“, Sortieren und Gesehene ausblenden', function () {
+    var saved = {}, k, n;
+    for (k = 0; k < localStorage.length; k++) { n = localStorage.key(k); if (n.indexOf('lumio.') === 0) saved[n] = localStorage.getItem(n); }
+    var sBefore = JSON.stringify(D.Settings.data), profBefore = D.App.profile;
+    try {
+      D.App.profile = { id: 'vodtest', type: 'xtream' };
+      ['seen', 'resume', 'upnext', 'swatch'].forEach(function (x) { localStorage.removeItem('lumio.' + x + '.vodtest'); });
+      var eps = [1, 2, 3].map(function (i) { return { kind: 'episode', id: 'e' + i, name: 'Folge ' + i, season: 1, num: i, seriesId: 's9', seriesName: 'Serie' }; });
+      // Player kennt die Folgenliste; Folge 1 zu Ende → Serie mit Folge 2 in „Weiterschauen“
+      D.UpNext.hint(eps);
+      D.Seen.add(eps[0]);
+      var e = D.UpNext.entries();
+      eq(e.length, 1, 'ein Eintrag');
+      eq(e[0].item.id, 'e2', 'nächste Folge');
+      eq(e[0].upNext.series.name, 'Serie', 'Serienname');
+      // Folge 2 angefangen → Eintrag weicht der angefangenen Folge
+      D.Resume.set(eps[1], 300, 2700);
+      eq(D.UpNext.entries().length, 0, 'angefangene Folge geht vor');
+      // Von Hand gesehen markieren entfernt den Fortsetzen-Punkt
+      D.Seen.setMany([eps[1]], true);
+      ok(D.Seen.has(eps[1]) && !D.Resume.get(eps[1]), 'gesehen markiert, kein Fortsetzen mehr');
+      D.Seen.setMany([eps[1]], false);
+      ok(!D.Seen.has(eps[1]), 'wieder ungesehen');
+      // Neue Folgen: Anbieter hat die Serie nach dem letzten Schauen geändert
+      D.SeriesWatch.touch('s9');
+      var later = { kind: 'series', id: 's9', added: String(Math.floor(Date.now() / 1000) + 3600) };
+      var older = { kind: 'series', id: 's9', added: String(Math.floor(Date.now() / 1000) - 3600) };
+      ok(D.SeriesWatch.hasNew(later), 'neue Folgen erkannt');
+      ok(!D.SeriesWatch.hasNew(older), 'keine neuen Folgen');
+      ok(!D.SeriesWatch.hasNew({ kind: 'series', id: 'nie', added: later.added }), 'nie geschaut → kein Hinweis');
+      // Sortieren und Gesehene ausblenden
+      var films = [
+        { kind: 'movie', id: 'a', name: 'Zebra (2019)', rating: '6.1', added: '100' },
+        { kind: 'movie', id: 'b', name: 'Apfel', year: '2024', rating: '8.4', added: '300' },
+        { kind: 'movie', id: 'c', name: 'Mond (2021)', rating: '7.0', added: '200' }];
+      function ids(l) { return l.map(function (x) { return x.id; }).join(''); }
+      D.Settings.data.vodSort = { movie: 'az' }; eq(ids(D.sortVod('movie', films)), 'bca', 'A–Z');
+      D.Settings.data.vodSort = { movie: 'rating' }; eq(ids(D.sortVod('movie', films)), 'bca', 'Bewertung');
+      D.Settings.data.vodSort = { movie: 'year' }; eq(ids(D.sortVod('movie', films)), 'bca', 'Jahr (auch aus dem Namen)');
+      D.Settings.data.vodSort = { movie: 'new' }; eq(ids(D.sortVod('movie', films)), 'bca', 'Neueste');
+      D.Settings.data.vodSort = { movie: 'default' }; eq(ids(D.sortVod('movie', films)), 'abc', 'wie beim Anbieter');
+      eq(ids(D.sortVod('movie', films, true)), 'bca', '„Alle“: neueste zuerst wie bisher');
+      D.Seen.setMany([films[1]], true);
+      D.Settings.data.vodHide = { movie: true };
+      eq(ids(D.sortVod('movie', films)), 'ac', 'gesehener Film ausgeblendet');
+      eq(films.length, 3, 'Liste des Anbieters unverändert');
+    } finally {
+      for (k = localStorage.length - 1; k >= 0; k--) { n = localStorage.key(k); if (n.indexOf('lumio.') === 0) localStorage.removeItem(n); }
+      Object.keys(saved).forEach(function (x) { localStorage.setItem(x, saved[x]); });
+      D.Settings.data = JSON.parse(sBefore); D.App.profile = profBefore;
+    }
+  });
 })();

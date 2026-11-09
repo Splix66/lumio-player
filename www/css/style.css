@@ -326,6 +326,11 @@ body.kbd .chip.f:focus, body.is-tv .chip.f:focus { transform: scale(1.06); }
 .mv-head { display: flex; align-items: baseline; padding: 1.6rem var(--pad) 1rem; }
 .mv-title { font-size: 1.45rem; font-weight: 800; letter-spacing: -.02em; }
 .mv-head .count { margin-left: .7rem; color: var(--muted); font-weight: 600; font-variant-numeric: tabular-nums; }
+/* Sortieren & Filtern (rechts in der Kopfzeile der Liste) */
+.mv-head { align-items: center; }
+.mv-head .mv-sort { margin-left: auto; padding: .5rem .95rem; font-size: .88rem; color: var(--muted); }
+.mv-head .mv-sort.is-on { color: var(--text); box-shadow: inset 0 0 0 1px var(--accent); }
+.mv-head .mv-sort .i { width: 1.05rem; height: 1.05rem; }
 .mv-grid { padding: 0 var(--pad); grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr)); grid-gap: 1.8rem 1.3rem; gap: 1.8rem 1.3rem; }
 .mv-grid > .state { grid-column: 1 / -1; }
 .cat-special .i { width: 1rem; height: 1rem; margin-right: .55rem; flex: none; color: var(--k, var(--accent-2)); }
@@ -463,6 +468,7 @@ body.kbd .t10.f:focus .t10-n, body.is-tv .t10.f:focus .t10-n { color: var(--k, v
 .poster .prog { position: absolute; left: .6rem; right: .6rem; bottom: .6rem; height: .25rem; border-radius: 1rem; background: rgba(255, 255, 255, .25); overflow: hidden; }
 .poster .prog i { display: block; height: 100%; background: var(--k, var(--accent)); }
 /* Abzeichen auf Covern: Serienstand („S2 E5“) und „gesehen“ */
+.poster.has-new .badge { background: var(--accent); box-shadow: none; }
 .poster .badge { position: absolute; left: .5rem; top: .5rem; z-index: 2; padding: .22rem .5rem; border-radius: .45rem; background: rgba(0, 0, 0, .75); color: #fff; font-size: .72rem; font-weight: 800; letter-spacing: .02em; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .15); }
 .poster .seen-mark { position: absolute; right: .5rem; top: .5rem; z-index: 2; width: 1.6rem; height: 1.6rem; border-radius: 50%; display: grid; place-items: center; background: rgba(0, 0, 0, .72); color: #fff; }
 .poster .seen-mark .i { width: .95rem; height: .95rem; }
@@ -798,6 +804,22 @@ body.kbd .d-close.f:focus, body.is-tv .d-close.f:focus { position: absolute; z-i
 .seasons { position: relative; padding: .4rem 2.6rem 0; display: flex; overflow-x: auto; scrollbar-width: none; }
 .seasons::-webkit-scrollbar { display: none; }
 .seasons .btn { flex: none; margin-right: .5rem; }
+/* Staffel-Fortschritt („5/8“, ganz gesehen = Häkchen) und „Staffel als gesehen markieren“ */
+.seasons .btn .sn-prog { margin-left: .5rem; padding: .05rem .4rem; border-radius: .4rem; background: rgba(255, 255, 255, .1); font-size: .75rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.seasons .btn.is-on .sn-prog { background: rgba(0, 0, 0, .12); }
+.seasons .btn.is-done .i { width: 1rem; height: 1rem; margin-right: .35rem; color: var(--ok); }
+.seasons .btn.is-on.is-done .i { color: inherit; }
+.seasons .season-mark { margin-left: .8rem; color: var(--muted); }
+.seasons .season-mark .i { width: 1rem; height: 1rem; }
+/* Folge mit Häkchen-Knopf daneben */
+.ep-line { display: flex; align-items: center; margin-bottom: .4rem; }
+.ep-line .ep { flex: 1; min-width: 0; margin-bottom: 0; }
+.ep-mark { flex: none; display: grid; place-items: center; width: 2.9rem; height: 2.9rem; margin-left: .5rem; border-radius: 50%; color: var(--dim); background: var(--surface); }
+.ep-mark .i { width: 1.3rem; height: 1.3rem; }
+.ep-mark.is-on { color: var(--ok); }
+.ep-mark:hover { background: var(--surface-2); color: var(--text); }
+body.kbd .ep-mark.f:focus, body.is-tv .ep-mark.f:focus { background: var(--text); color: var(--bg); box-shadow: none; }
+body.kbd .ep-mark.is-on.f:focus, body.is-tv .ep-mark.is-on.f:focus { color: #16a34a; }
 .episodes { position: relative; padding: 1.2rem 2.6rem 3rem; display: flex; flex-direction: column; }
 .ep { display: flex; align-items: center; padding: .7rem; border-radius: var(--radius); background: transparent; margin-bottom: .4rem; width: 100%; }
 .ep > * + * { margin-left: 1.1rem; }
@@ -1865,11 +1887,13 @@ body.kbd .tr-close.f:focus, body.is-tv .tr-close.f:focus { background: #fff; col
   html:not(.tv) .tr-frame { border-radius: 0; height: auto; }
 }
 
-/* Die Kategorie steht schon links in der Liste – rechts nicht noch einmal.
+/* Die Kategorie steht schon links in der Liste – rechts nicht noch einmal (nur „Sortieren“ bleibt).
    Auf schmalen Bildschirmen wird die Liste zur Zeile, dort hilft die Zeile. */
-.mv2 .mv-head { display: none; }
+.mv2 .mv-head { padding: 0 0 .9rem; }
+.mv2 .mv-head .mv-title, .mv2 .mv-head .count { display: none; }
 @media (max-width: 700px) {
-  html:not(.tv) .mv2 .mv-head { display: flex; padding: .2rem 0 .8rem; }
+  html:not(.tv) .mv2 .mv-head { padding: .2rem 0 .8rem; }
+  html:not(.tv) .mv2 .mv-head .mv-title, html:not(.tv) .mv2 .mv-head .count { display: inline; }
 }
 
 /* Playlist-Übersicht: „Webseite: an/aus“ (Zugangsdaten nur mit Zustimmung online) */

@@ -100,6 +100,7 @@
     back: '<path d="M15 18l-6-6 6-6"/>',
     next: '<path d="M9 6l6 6-6 6"/>',
     check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+    checkCircle: '<circle cx="12" cy="12" r="9.5" fill="currentColor" stroke="none"/><path d="M7.6 12.4l3 3 5.8-5.8" stroke="#0b0b0f"/>',
     tracks: '<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M7 11h3M13 11h4M7 15h7M16 15h1"/>',
     fullscreen: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
     aspect: '<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M6.5 11.5V9h3M17.5 12.5V15h-3"/>',
@@ -1362,7 +1363,7 @@
       this.dropData(id);
     },
     /* Alles löschen, was zu einer Playlist auf dem Gerät gespeichert ist (Datenschutz: keine Reste) */
-    DATA_KEYS: ['fav', 'resume', 'recent', 'seen', 'last', 'stats', 'seenNew', 'cats', 'expiry', 'idv', 'hidech'],
+    DATA_KEYS: ['fav', 'resume', 'recent', 'seen', 'last', 'stats', 'seenNew', 'cats', 'expiry', 'idv', 'hidech', 'upnext', 'swatch'],
     dropData: function (id) {
       this.DATA_KEYS.forEach(function (k) { Store.del(k + '.' + id); });
       EpgStore.del('epg.' + id);   // zwischengespeicherter Programmführer
@@ -1665,7 +1666,7 @@
      Fingerabdruck (Prüfwert der Verbindung) wiedererkannt. Daten für eine Playlist, die es auf dem Gerät (noch) nicht
      gibt, warten und werden übernommen, sobald man sie einträgt und öffnet.
      ========================================================== */
-  var BACKUP_DATA = ['fav', 'resume', 'recent', 'seen', 'seenNew', 'last', 'cats', 'hidech'];
+  var BACKUP_DATA = ['fav', 'resume', 'recent', 'seen', 'seenNew', 'last', 'cats', 'hidech', 'upnext', 'swatch'];
   var BACKUP_SKIP = ['parentPin', 'adminPin', 'deviceType', 'engine', 'extPlayer', 'volume', 'muted'];   // Sicherheit / gerätespezifisch
   function profileFp(p) {
     if (!p) return '';
@@ -2102,6 +2103,7 @@
       Store.set('resume.' + pid(), a);
     },
     recent: function () { var a = this.all(); return Object.keys(a).map(function (k) { return a[k]; }).sort(function (x, y) { return y.at - x.at; }); },
+    drop: function (item) { var a = this.all(), k = this.key(item); if (a[k]) { delete a[k]; Store.set('resume.' + pid(), a); } },
     clear: function () { Store.del('resume.' + pid()); }
   };
 
@@ -2117,6 +2119,57 @@
       var keys = Object.keys(a);
       if (keys.length > 2500) keys.sort(function (x, y) { return a[x] - a[y]; }).slice(0, keys.length - 2000).forEach(function (x) { delete a[x]; });
       Store.set('seen.' + pid(), a);
+      if (item.kind === 'episode') UpNext.finished(item);
+    },
+    // Von Hand: mehrere Einträge als gesehen / nicht gesehen markieren (Folgen, Filme, ganze Serie „series:<id>“)
+    setMany: function (items, on) {
+      var a = this.all();
+      items.forEach(function (it) { var k = it.kind + ':' + it.id; if (on) a[k] = a[k] || Date.now(); else delete a[k]; });
+      Store.set('seen.' + pid(), a);
+      if (on) items.forEach(function (it) { Resume.drop(it); });
+    }
+  };
+
+  /* „Weiterschauen“ mit der nächsten Folge: Ist eine Folge zu Ende geschaut, steht die Serie mit der nächsten Folge
+     in „Weiterschauen“ (statt zu verschwinden). Die nächste Folge kennt der Player (Folgenliste der Staffel). */
+  var UpNext = {
+    hints: {},
+    key: function () { return 'upnext.' + pid(); },
+    all: function () { return Store.get(this.key(), {}); },
+    hint: function (list) { var self = this; (list || []).forEach(function (e, i) { if (e && e.kind === 'episode') self.hints[e.id] = list[i + 1] || null; }); },
+    finished: function (ep) {
+      if (!ep || !ep.seriesId) return;
+      var a = this.all(), next = this.hints[ep.id];
+      a[ep.seriesId] = { at: Date.now(), done: slim(ep), next: next ? slim(next) : null,
+        series: { kind: 'series', id: ep.seriesId, name: ep.seriesName || '', logo: ep.logo } };
+      Object.keys(a).sort(function (x, y) { return a[y].at - a[x].at; }).slice(20).forEach(function (k) { delete a[k]; });
+      Store.set(this.key(), a);
+    },
+    drop: function (seriesId) { var a = this.all(); if (a[seriesId]) { delete a[seriesId]; Store.set(this.key(), a); } },
+    // Einträge für „Weiterschauen“ – nur Serien ohne angefangene Folge
+    entries: function () {
+      var a = this.all(), busy = {};
+      Resume.recent().forEach(function (r) { if (r.item && r.item.seriesId) busy[r.item.seriesId] = 1; });
+      return Object.keys(a).filter(function (k) { return !busy[k]; }).map(function (k) { var e = a[k]; return { item: e.next || e.series, t: 0, d: 0, at: e.at, upNext: e }; });
+    }
+  };
+  // Zuletzt geschaut pro Serie (für den Hinweis „Neue Folgen“): { serienId: Zeitpunkt }
+  var SeriesWatch = {
+    key: function () { return 'swatch.' + pid(); },
+    all: function () { return Store.get(this.key(), {}); },
+    touch: function (seriesId, onlyKnown) {
+      if (!seriesId) return;
+      var a = this.all();
+      if (onlyKnown && !a[seriesId]) return;
+      a[seriesId] = Date.now();
+      var ks = Object.keys(a);
+      if (ks.length > 300) ks.sort(function (x, y) { return a[x] - a[y]; }).slice(0, ks.length - 250).forEach(function (k) { delete a[k]; });
+      Store.set(this.key(), a);
+    },
+    // Anbieter hat die Serie nach dem letzten Schauen geändert (Xtream: last_modified) → neue Folgen
+    hasNew: function (series, map) {
+      var w = (map || this.all())[series.id], added = Number(series.added) || 0;
+      return !!(w && added && added * 1000 > w + 60000);
     }
   };
 
@@ -2490,18 +2543,27 @@
     var m = Math.max(1, Math.round(sec / 60));
     return m >= 60 ? T('{0} Std. {1} Min.', Math.floor(m / 60), m % 60) : T('{0} Min.', m);
   }
+  // „Weiterschauen“-Eintrag öffnen: angefangene Folge/Film abspielen, nächste Folge abspielen oder die Serie öffnen
+  function openContinue(r) {
+    var u = r.upNext, it = r.item;
+    if (u && !u.next) { openItem(u.series); return; }
+    playItem(it, { list: [it], index: 0, fromStart: !!u });
+  }
+  function upNextText(u) {
+    return u.next ? T('Nächste Folge: S{0} E{1}', u.next.season, u.next.num) : T('Weiter nach S{0} E{1}', u.done.season, u.done.num);
+  }
   function continueCard(r) {
-    var it = r.item, ep = it.kind === 'episode';
-    var title = ep ? (it.seriesName || it.name) : it.name;
-    var sub = ep ? 'S' + it.season + ' E' + it.num : T('Noch {0}', fmtLeft(r.d - r.t));
+    var it = r.item, ep = it.kind === 'episode', u = r.upNext;
+    var title = ep ? (it.seriesName || it.name) : u ? u.series.name : it.name;
+    var sub = u ? upNextText(u) : ep ? 'S' + it.season + ' E' + it.num : T('Noch {0}', fmtLeft(r.d - r.t));
     var src = it.backdrop || it.logo;
     var pic = src ? h('span', { class: 'cw-img' }, img(src, '', function (i) { var b = i.parentNode; if (b && b.parentNode) b.parentNode.removeChild(b); })) : null;
-    return h('button', { class: 'cw f k-' + (ep || it.kind === 'series' ? 'series' : it.kind === 'live' ? 'live' : 'movie') + (it.backdrop ? '' : ' is-poster'), 'data-key': (ep ? 'series:' + it.seriesId : it.kind + ':' + it.id), title: title, onclick: function () { playItem(it, { list: [it], index: 0 }); } },
+    return h('button', { class: 'cw f k-' + (ep || it.kind === 'series' ? 'series' : it.kind === 'live' ? 'live' : 'movie') + (it.backdrop ? '' : ' is-poster') + (u ? ' is-next' : ''), 'data-key': (ep ? 'series:' + it.seriesId : it.kind + ':' + it.id), title: title, onclick: function () { openContinue(r); } },
       pic,
       h('span', { class: 'cw-txt' },
         h('span', { class: 'cw-title', text: title }),
         h('span', { class: 'cw-sub', text: sub }),
-        h('span', { class: 'cw-bar' }, h('i', { style: 'width:' + Math.max(2, Math.round(r.t / r.d * 100)) + '%' }))));
+        u ? null : h('span', { class: 'cw-bar' }, h('i', { style: 'width:' + Math.max(2, Math.round(r.t / r.d * 100)) + '%' }))));
   }
 
   /* Lange Listen werden stückweise gezeichnet, damit auch 10.000 Sender flüssig laufen */
@@ -2544,6 +2606,7 @@
   function seriesBadges() {
     var out = {};
     Resume.recent().forEach(function (r) { var it = r.item; if (it.kind === 'episode' && it.seriesId && !out[it.seriesId]) out[it.seriesId] = 'S' + it.season + ' E' + it.num; });
+    out._watch = SeriesWatch.all();
     return out;
   }
   /* Top 10 (wie bei Streaming-Diensten): große Platzziffer neben dem Cover */
@@ -2569,11 +2632,15 @@
 
   function mediaCard(it, badges) {
     var r = it.kind === 'movie' ? Resume.get(it) : null;
-    return posterCard(it, function () { openItem(it); }, {
+    // Neue Folgen bei einer angefangenen Serie (Anbieter hat sie nach dem letzten Schauen geändert) gehen vor „S1 E3“
+    var fresh = it.kind === 'series' && badges && SeriesWatch.hasNew(it, badges._watch);
+    var card = posterCard(it, function () { openItem(it); }, {
       progress: r ? r.t / r.d : 0,
-      badge: badges && badges[it.id] ? badges[it.id] : null,
-      seen: it.kind === 'movie' && !r && Seen.has(it)
+      badge: fresh ? T('Neue Folgen') : badges && badges[it.id] ? badges[it.id] : null,
+      seen: !r && !fresh && Seen.has(it)
     });
+    if (fresh) card.classList.add('has-new');
+    return card;
   }
 
   /* Großes Titelbild oben (wie bei Streaming-Diensten): Hintergrundbild, Titel, Infos und Knöpfe */
@@ -2633,6 +2700,27 @@
      Großes Titelbild, darunter eine Leiste (Sprache → Genre, jeweils mit Anzahl) und große Cover.
      Serien zeigen zusätzlich „Weiterschauen“ und den Stand pro Serie („S2 E5“).
      ========================================================== */
+  /* Filme/Serien sortieren und Gesehene ausblenden (Einstellung pro Art: vodSort = { movie: 'new', … }, vodHide = { … }) */
+  var VOD_SORTS = function () { return [['default', T('Wie beim Anbieter')], ['new', T('Neueste zuerst')], ['az', T('Name A–Z')], ['rating', T('Beste Bewertung')], ['year', T('Jahr (neueste zuerst)')]]; };
+  function vodPref(name, kind, def) { var o = Settings.get(name) || {}; return o[kind] !== undefined ? o[kind] : def; }
+  function setVodPref(name, kind, v) { var o = Settings.get(name) || {}; o[kind] = v; Settings.set(name, o); }
+  function yearOf(it) {
+    var y = Number(String(it.year || '').slice(0, 4));
+    if (y > 1900) return y;
+    var m = /(?:\(|\b)((?:19|20)\d{2})(?:\)|\b)/.exec(String(it.name || ''));
+    return m ? Number(m[1]) : 0;
+  }
+  function sortVod(kind, list, isAll) {
+    var m = vodPref('vodSort', kind, 'default'), a = list;
+    if (vodPref('vodHide', kind, false)) a = a.filter(function (x) { return !Seen.has(x); });
+    if (m === 'default') return isAll && some(a, function (x) { return Number(x.added) > 0; }) ? a.slice().sort(byAdded) : a;
+    a = a.slice();
+    if (m === 'new') a.sort(byAdded);
+    else if (m === 'az') a.sort(function (x, y) { return String(x.name || '').localeCompare(String(y.name || ''), undefined, { numeric: true, sensitivity: 'base' }); });
+    else if (m === 'rating') a.sort(function (x, y) { return (Number(y.rating) || 0) - (Number(x.rating) || 0); });
+    else if (m === 'year') a.sort(function (x, y) { return yearOf(y) - yearOf(x); });
+    return a;
+  }
   function MediaView(kind) {
     var key = pid() + kind, isSeries = kind === 'series';
     var allCat = { id: '__all', name: isSeries ? T('Alle Serien') : T('Alle Filme') };
@@ -2640,12 +2728,30 @@
     var topSlot = h('div', { class: 'mv-top' });
     var side = h('div', { class: 'mv-cats' });
     var title = h('h2', { class: 'mv-title' }), count = h('span', { class: 'count' });
+    var sortBtn = h('button', { class: 'btn f mv-sort', onclick: function () { openSort(); } }, icon('sort'), h('span'));
+    function paintSort() {
+      var m = vodPref('vodSort', kind, 'default'), hide = vodPref('vodHide', kind, false), label = '';
+      VOD_SORTS().forEach(function (o) { if (o[0] === m) label = o[1]; });
+      sortBtn.lastChild.textContent = m === 'default' ? T('Sortieren') : label;
+      sortBtn.classList.toggle('is-on', m !== 'default' || hide);
+      if (hide) sortBtn.lastChild.textContent += ' · ' + T('ohne Gesehene');
+    }
+    function openSort() {
+      var cur = lastCatObj;
+      openSheet(T('Sortieren & Filtern'), 'sort', [
+        choiceList(VOD_SORTS(), function () { return vodPref('vodSort', kind, 'default'); }, function (v) { setVodPref('vodSort', kind, v); }),
+        h('div', { class: 'rep-msg' }, toggleRow(isSeries ? T('Gesehene Serien ausblenden') : T('Gesehene Filme ausblenden'),
+          isSeries ? T('Serien, bei denen du alle Folgen gesehen hast.') : T('Filme, die du zu Ende geschaut oder als gesehen markiert hast.'),
+          function () { return vodPref('vodHide', kind, false); }, function (v) { setVodPref('vodHide', kind, v); }))
+      ], { onClose: function () { paintSort(); if (cur) selectCat(cur, false); } });
+    }
+    paintSort();
     var resumeSlot = h('div', { class: 'mv-resume' });
     var grid = h('div', { class: 'poster-grid mv-grid' });
     var el = h('div', { class: 'page media mv2 media-' + kind + ' k-' + kind },
       topSlot,
-      h('div', { class: 'mv-body' }, h('aside', { class: 'mv-side' }, side), h('div', { class: 'mv-main' }, resumeSlot, h('div', { class: 'mv-head' }, title, count), grid)));
-    var flat = [], groups = null, curGroup = null, activeId = null, counts = null, req = 0, chunker = null;
+      h('div', { class: 'mv-body' }, h('aside', { class: 'mv-side' }, side), h('div', { class: 'mv-main' }, resumeSlot, h('div', { class: 'mv-head' }, title, count, sortBtn), grid)));
+    var flat = [], groups = null, curGroup = null, activeId = null, counts = null, req = 0, chunker = null, lastCatObj = null;
 
     function grpCat(g) { return { id: '__grp:' + g.key, name: T('Alle'), group: g }; }
     function inGroup(g, id) { if (id === '__grp:' + g.key) return grpCat(g); for (var i = 0; i < g.cats.length; i++) if (g.cats[i].id === id) return g.cats[i]; return null; }
@@ -2719,17 +2825,19 @@
           var ids = {};
           cat.group.cats.forEach(function (c) { ids[c.id] = 1; });
           var out = all.filter(function (x) { return ids[x.catId]; });
-          return some(out, function (x) { return Number(x.added) > 0; }) ? out.sort(byAdded) : out;
+          return sortVod(kind, out, true);
         });
       }
       return (cat.id === '__all' ? visibleItems(kind, App.provider.items(kind, cat.id)) : App.provider.items(kind, cat.id)).then(function (list) {
-        return cat.id === '__all' && some(list, function (x) { return Number(x.added) > 0; }) ? list.slice().sort(byAdded) : list;
+        return sortVod(kind, list, cat.id === '__all');
       });
     }
     function paintResume() {
       clear(resumeSlot);
       if (activeId !== '__all' && activeId.indexOf('__grp:') !== 0) return;
-      var mine = Resume.recent().filter(function (r) { return isSeries ? r.item.kind === 'episode' : r.item.kind === 'movie'; }).slice(0, 12);
+      var mine = Resume.recent().filter(function (r) { return isSeries ? r.item.kind === 'episode' : r.item.kind === 'movie'; });
+      if (isSeries) mine = mine.concat(UpNext.entries()).sort(function (a, b) { return b.at - a.at; });
+      mine = mine.slice(0, 12);
       if (mine.length) resumeSlot.appendChild(railEl(T('Weiterschauen'), mine.map(continueCard), kind));
     }
     // Top 10 immer aus allen Titeln – so bleibt der obere Bereich gleich, egal welche Kategorie gewählt ist
@@ -2750,7 +2858,7 @@
         if (byUser) { Parental.ask(function () { selectCat(cat, true); }); return; }
         cat = allCat;
       }
-      lastCat[key] = cat.id; activeId = cat.id;
+      lastCat[key] = cat.id; activeId = cat.id; lastCatObj = cat;
       markActive();
       var my = ++req;
       if (chunker) { chunker.dispose(); chunker = null; }
@@ -3331,8 +3439,8 @@
     // Zuletzt geschaut: angefangene Filme (gelb) und Serien (blau) als Bildkarten – keine Live-Sender
     var recent = h('section', { class: 'ln-recent' });
     function recCard(r) {
-      var it = r.item, ep = it.kind === 'episode', kind = ep ? 'series' : 'movie';
-      var src = it.logo || it.backdrop;
+      var it = r.item, ep = it.kind === 'episode' || !!r.upNext, kind = ep ? 'series' : 'movie';
+      var src = it.logo || it.backdrop || (r.upNext && r.upNext.series.logo);
       var thumb = h('span', { class: 'lr-thumb' }, h('span', { class: 'ph', style: 'background:' + gradientFor(it.seriesName || it.name) }));
       if (src) {
         // Cover vollständig zeigen, dahinter dasselbe Bild unscharf als Hintergrund
@@ -3340,16 +3448,18 @@
         thumb.appendChild(img(src, 'lr-cover', function (i) { if (i.parentNode) i.parentNode.removeChild(i); }));
       }
       thumb.appendChild(h('span', { class: 'lr-tag', text: ep ? T('Serie') : T('Film') }));
-      thumb.appendChild(h('span', { class: 'lr-bar' }, h('i', { style: 'width:' + Math.max(3, Math.round(r.t / r.d * 100)) + '%' })));
-      return h('button', { class: 'lr-card f k-' + kind, 'data-key': 'lr:' + (ep ? 'series:' + it.seriesId : 'movie:' + it.id), title: ep ? (it.seriesName || it.name) : it.name, onclick: function () { playItem(it, { list: [it], index: 0 }); } },
+      if (!r.upNext) thumb.appendChild(h('span', { class: 'lr-bar' }, h('i', { style: 'width:' + Math.max(3, Math.round(r.t / r.d * 100)) + '%' })));
+      var u = r.upNext, sid = it.seriesId || (u && u.series.id), name = ep ? (it.seriesName || it.name) : u ? u.series.name : it.name;
+      return h('button', { class: 'lr-card f k-' + kind, 'data-key': 'lr:' + (ep || u ? 'series:' + sid : 'movie:' + it.id), title: name, onclick: function () { openContinue(r); } },
         thumb,
         h('span', { class: 'lr-txt' },
-          h('b', { text: ep ? (it.seriesName || it.name) : it.name }),
-          h('small', null, ep ? h('span', { class: 'lr-ep', text: 'S' + it.season + ' E' + it.num }) : null, h('span', { text: T('Noch {0}', fmtLeft(r.d - r.t)) }))));
+          h('b', { text: name }),
+          h('small', null, u ? h('span', { text: upNextText(u) }) : [ep ? h('span', { class: 'lr-ep', text: 'S' + it.season + ' E' + it.num }) : null, h('span', { text: T('Noch {0}', fmtLeft(r.d - r.t)) })])));
     }
     function paintRecent() {
       clear(recent);
-      var res = Resume.recent().filter(function (r) { return r.item && (r.item.kind === 'movie' || r.item.kind === 'episode'); }).slice(0, 10);
+      var res = Resume.recent().filter(function (r) { return r.item && (r.item.kind === 'movie' || r.item.kind === 'episode'); })
+        .concat(UpNext.entries()).sort(function (a, b) { return b.at - a.at; }).slice(0, 10);
       recent.hidden = !res.length;
       if (!res.length) return;
       var track = h('div', { class: 'lr-track' });
@@ -4689,8 +4799,9 @@
       Object.keys(r).forEach(function (k) { if (r[k].item && r[k].item.kind === want) delete r[k]; });
       Store.set('resume.' + pid(), r);
       var s = Seen.all();
-      Object.keys(s).forEach(function (k) { if (k.indexOf(want + ':') === 0) delete s[k]; });
+      Object.keys(s).forEach(function (k) { if (k.indexOf(want + ':') === 0 || (want === 'episode' && k.indexOf('series:') === 0)) delete s[k]; });
       Store.set('seen.' + pid(), s);
+      if (want === 'episode') { Store.del('upnext.' + pid()); Store.del('swatch.' + pid()); }
     }
     var l = Last.get();
     if (l && l.item && (l.item.kind === kind || (kind === 'series' && l.item.kind === 'series'))) Store.del('last.' + pid());
@@ -5377,6 +5488,13 @@
     return h('button', { class: 'btn f', onclick: function () { showTrailer(name, id); } }, icon('play'), h('span', { text: T('Trailer') }));
   }
 
+  // Knopf „Gesehen“ (Film): von Hand als gesehen / nicht gesehen markieren
+  function seenButton(item, done) {
+    var on = Seen.has(item);
+    return h('button', { class: 'btn f' + (on ? ' is-on' : ''), 'data-c': 'seen', title: on ? T('Als nicht gesehen markieren') : T('Als gesehen markieren'),
+      onclick: function () { Seen.setMany([item], !on); toast(!on ? T('Als gesehen markiert') : T('Als nicht gesehen markiert')); if (done) done(); } },
+      icon(on ? 'checkCircle' : 'check'), h('span', { text: on ? T('Gesehen') : T('Als gesehen markieren') }));
+  }
   function showMovie(item) {
     var f = detailFrame(item);
     var actions = h('div', { class: 'row' });
@@ -5392,6 +5510,7 @@
       var tb = trailerButton(item.name, item.trailer);
       if (tb) actions.appendChild(tb);
       actions.appendChild(favButton(item));
+      actions.appendChild(seenButton(item, function () { var had = document.activeElement && document.activeElement.getAttribute('data-c'); paintActions(); if (had) Nav.focus($('[data-c="' + had + '"]', actions)); }));
     }
     paintActions();
     var metaBox = h('div'), plotBox = h('p', { class: 'plot', text: item.plot || '' });
@@ -5423,25 +5542,56 @@
     var metaBox = h('div'), plotBox = h('p', { class: 'plot', text: item.plot || '' });
     f.info.appendChild(metaBox); f.info.appendChild(actions); f.info.appendChild(plotBox);
     f.panel.appendChild(seasonsBar); f.panel.appendChild(epBox);
-    var seasons = [], curSeason = null, continueBtn = null;
+    var seasons = [], curSeason = null, continueBtn = null, seasonMark = null;
+    SeriesWatch.touch(item.id, true);   // Serie geöffnet: Hinweis „Neue Folgen“ ist gesehen
 
+    function seenCount(s) { var n = 0; s.episodes.forEach(function (e) { if (Seen.has(e)) n++; }); return n; }
+    // Staffel-Knöpfe mit Fortschritt („5/8“, ganz gesehen = Häkchen) und Knopf „Staffel als gesehen markieren“
+    function paintSeasons() {
+      $all('.btn[data-s]', seasonsBar).forEach(function (b) {
+        var s = seasons.filter(function (x) { return x.num === Number(b.getAttribute('data-s')); })[0];
+        if (!s) return;
+        var n = seenCount(s), all = n === s.episodes.length && n > 0;
+        b.classList.toggle('is-on', !!curSeason && s.num === curSeason.num);
+        b.classList.toggle('is-done', all);
+        clear(b);
+        if (all) b.appendChild(icon('check'));
+        b.appendChild(h('span', { text: T('Staffel {0}', s.num) }));
+        if (n && !all) b.appendChild(h('small', { class: 'sn-prog', text: n + '/' + s.episodes.length }));
+      });
+      if (seasonMark && curSeason) {
+        var allSeen = seenCount(curSeason) === curSeason.episodes.length;
+        seasonMark.lastChild.textContent = allSeen ? T('Staffel als nicht gesehen markieren') : T('Staffel als gesehen markieren');
+        seasonMark._all = allSeen;
+      }
+      // ganze Serie gesehen? (für „Gesehene ausblenden“ und das Häkchen auf dem Poster)
+      var done = seasons.length > 0 && seasons.every(function (s) { return seenCount(s) === s.episodes.length; });
+      if (done !== Seen.has(item)) Seen.setMany([{ kind: 'series', id: item.id }], done);
+    }
+    function refreshAll(keepKey) {
+      renderEpisodes(curSeason); paintSeasons(); paintContinue();
+      if (keepKey) { var t = $('[data-k="' + keepKey + '"]', f.el); if (t) Nav.focus(t); }
+    }
     function renderEpisodes(season) {
       curSeason = season;
-      $all('.btn', seasonsBar).forEach(function (b) { b.classList.toggle('is-on', Number(b.getAttribute('data-s')) === season.num); });
+      $all('.btn[data-s]', seasonsBar).forEach(function (b) { b.classList.toggle('is-on', Number(b.getAttribute('data-s')) === season.num); });
       clear(epBox);
       var list = season.episodes;
       list.forEach(function (ep, i) {
         ep.seriesName = ep.seriesName || item.name;
         ep.logo = ep.logo || item.logo;
-        var r = Resume.get(ep);
-        epBox.appendChild(h('button', { class: 'ep f', onclick: function () { playItem(ep, { list: list, index: i }); } },
+        var r = Resume.get(ep), seen = Seen.has(ep);
+        var mark = h('button', { class: 'ep-mark f' + (seen ? ' is-on' : ''), 'data-k': 'm' + ep.id, title: seen ? T('Als nicht gesehen markieren') : T('Als gesehen markieren'),
+          'aria-label': seen ? T('Als nicht gesehen markieren') : T('Als gesehen markieren'),
+          onclick: function () { Seen.setMany([ep], !seen); refreshAll('m' + ep.id); } }, icon(seen ? 'checkCircle' : 'check'));
+        epBox.appendChild(h('div', { class: 'ep-line' }, h('button', { class: 'ep f', 'data-k': 'e' + ep.id, onclick: function () { playItem(ep, { list: list, index: i }); } },
           h('span', { class: 'thumb' },
             ep.logo ? img(ep.logo, '') : null,
             h('span', { class: 'n', text: String(ep.num || i + 1) }),
             r ? h('span', { class: 'seen' }, h('i', { style: 'width:' + Math.round(r.t / r.d * 100) + '%' })) : null,
-            !r && Seen.has(ep) ? h('span', { class: 'ep-done', title: T('Gesehen') }, icon('check')) : null),
+            !r && seen ? h('span', { class: 'ep-done', title: T('Gesehen') }, icon('check')) : null),
           h('span', { class: 't' }, h('b', { text: ep.name }), ep.plot || ep.duration ? h('small', { text: [ep.duration ? String(ep.duration).replace(/^00:/, '') : '', ep.plot].filter(Boolean).join(' – ') }) : null),
-          h('span', { class: 'play-i' }, icon('play'))));
+          h('span', { class: 'play-i' }, icon('play'))), mark));
       });
     }
     /* Wo geht es weiter? Angefangene Folge, sonst die erste noch nicht gesehene, sonst Folge 1 */
@@ -5478,18 +5628,25 @@
       seasons = (d && d.seasons) || [];
       if (!seasons.length) { clear(epBox).appendChild(stateBox(T('Keine Folgen gefunden'), null)); return; }
       seasons.forEach(function (s) {
-        seasonsBar.appendChild(h('button', { class: 'btn f', 'data-s': s.num, onclick: function () { renderEpisodes(s); } }, T('Staffel {0}', s.num)));
+        seasonsBar.appendChild(h('button', { class: 'btn f', 'data-s': s.num, onclick: function () { renderEpisodes(s); paintSeasons(); } }, T('Staffel {0}', s.num)));
       });
+      seasonMark = h('button', { class: 'btn f ghost season-mark', 'data-k': 'smark', onclick: function () {
+        Seen.setMany(curSeason.episodes, !seasonMark._all);
+        toast(!seasonMark._all ? T('Staffel {0} als gesehen markiert', curSeason.num) : T('Staffel {0} als nicht gesehen markiert', curSeason.num));
+        refreshAll('smark');
+      } }, icon('check'), h('span'));
+      seasonsBar.appendChild(seasonMark);
       var nt = nextTarget(), startSeason = seasons[0];
       if (nt) seasons.forEach(function (x) { if (x.num === nt.ep.season) startSeason = x; });
       renderEpisodes(startSeason);
+      paintSeasons();
       paintContinue();
       similarRail(item, f.panel);
       if (Screens.top() && Screens.top().el === f.el) Nav.focus(continueBtn || $('.f', f.el));
     }, function (e) {
       clear(epBox).appendChild(stateBox(T('Laden fehlgeschlagen'), e.message));
     });
-    Screens.push('series', f.el, { overlay: true, onShow: function () { if (curSeason) { renderEpisodes(curSeason); paintContinue(); } } });
+    Screens.push('series', f.el, { overlay: true, onShow: function () { if (curSeason) { renderEpisodes(curSeason); paintSeasons(); paintContinue(); } } });
   }
 
   /* ==========================================================
@@ -5571,6 +5728,7 @@
       var startMs = r && !(ctx && ctx.fromStart) ? Math.round(r.t * 1000) : 0;
       if (ctx) ctx.fromStart = false;
       if (live) Recent.push(item);
+      if (item.kind === 'episode') { UpNext.hint(full); SeriesWatch.touch(item.seriesId); }
       Last.set(item);
       var sub = SubStyle.native();
       return self.plugin().play({
@@ -5923,6 +6081,7 @@
       self.resumeAt = self.isVod() && r && !(self.ctx && self.ctx.fromStart) ? r.t : 0;
       if (self.ctx) self.ctx.fromStart = false;
       if (item.kind === 'live') { Recent.push(item); self.loadEpg(); }
+      if (item.kind === 'episode') { UpNext.hint(self.ctx && self.ctx.list); SeriesWatch.touch(item.seriesId); }
       Last.set(item);
 
       var src = App.provider.streamUrl(item);
@@ -6696,6 +6855,7 @@
     ErrLog: ErrLog, techInfo: techInfo,
     CatPrefs: CatPrefs, visibleCats: visibleCats, Parental: Parental, ChanHide: ChanHide,
     Backup: Backup, profileFp: profileFp, Settings: Settings,
+    Seen: Seen, Resume: Resume, UpNext: UpNext, SeriesWatch: SeriesWatch, sortVod: sortVod,
     config: CONFIG
   };
 
