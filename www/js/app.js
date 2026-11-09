@@ -262,16 +262,27 @@
     for (var i = 1; i < arguments.length; i++) out = out.split('{' + (i - 1) + '}').join(String(arguments[i]));
     return out;
   }
-  /* Ein Knopf mit der aktuellen Sprache („Deutsch“) – erst ein Druck darauf zeigt die Auswahl */
+  // Reihenfolge in der Auswahl: die meistgenutzten zuerst (Englisch, Deutsch), danach die übrigen
+  var LANG_TOP = ['en', 'de'];
+  function langsSorted() {
+    return LANG_TOP.map(function (k) { return LANGS.filter(function (l) { return l[0] === k; })[0]; })
+      .concat(LANGS.filter(function (l) { return LANG_TOP.indexOf(l[0]) < 0; }));
+  }
+  /* Ein Knopf mit Flagge und aktueller Sprache (Flagge + „Deutsch“) – erst ein Druck darauf klappt die Auswahl auf */
   function langButton() {
     var name = (LANGS.filter(function (l) { return l[0] === Lang.cur; })[0] || LANGS[0])[1];
     return h('button', { class: 'btn f lang-btn', title: 'Sprache / Language / Dil', 'aria-label': 'Sprache / Language / Dil: ' + name, onclick: pickLanguage },
-      icon('globe'), h('span', { text: name }), icon('down'));
+      flagFor(Lang.cur) || icon('globe'), h('span', { text: name }), icon('down'));
+  }
+  // Sprachliste mit Flaggen (Willkommensseite: klappt oben rechts unter dem Knopf auf; Einstellungen: normales Fenster)
+  function langChoice() {
+    var list = choiceList(langsSorted().map(function (l) { return [l[0], l[1], null, flagFor(l[0])]; }),
+      function () { return Lang.cur; }, function (v) { if (v !== Lang.cur) Lang.set(v); });
+    list.classList.add('lang-choice');
+    return list;
   }
   function pickLanguage() {
-    Dialog.show('Sprache / Language / Dil', null, LANGS.map(function (l) {
-      return { label: l[1], primary: l[0] === Lang.cur, action: function () { if (l[0] !== Lang.cur) Lang.set(l[0]); } };
-    }), 'dlg-list');
+    openSheet('Sprache / Language / Dil', 'globe', langChoice(), { cls: 'is-drop' });
   }
 
   /* ---------------- Geräte-Kennung (MAC-Adresse) ----------------
@@ -2952,17 +2963,21 @@
       if (NativePlayer.available() || hlsNative) { self.player = 'ok'; return; }
       if (!mse) { self.player = 'off'; return; }
       self.player = 'wait';
-      ensureHls().then(function (Hls) { self.player = Hls && Hls.isSupported() ? 'ok' : 'off'; self.paint(); }, function () { self.player = 'off'; self.paint(); });
+      ensureHls().then(function (Hls) { self.player = Hls && Hls.isSupported() ? 'ok' : 'off'; self.paint(); StatusLine.paint(); }, function () { self.player = 'off'; self.paint(); StatusLine.paint(); });
     },
-    paint: function () {
-      if (!this.box) return;
+    // [Zustand, Symbol, Text] für Internet, Player und Playlist
+    items: function () {
       this.checkPlayer();
       var n = this.net(), pl = Profiles.list().length;
-      var items = [
+      return [
         [n[0], 'wifi', n[1]],
         [this.player, 'player', this.player === 'ok' ? T('Player bereit') : this.player === 'wait' ? T('Player wird geprüft …') : T('Player eingeschränkt')],
         [pl ? 'ok' : 'none', 'playlist', pl ? T('Playlist hinterlegt') : T('Keine Playlist')]
       ];
+    },
+    paint: function () {
+      if (!this.box) return;
+      var items = this.items();
       clear(this.box);
       var box = this.box;
       items.forEach(function (it) { box.appendChild(h('span', { class: 'wl-chip is-' + it[0] }, h('i', { 'aria-hidden': 'true' }), icon(it[1]), h('span', { text: it[2] }))); });
@@ -2973,6 +2988,30 @@
       function tick() { if (!document.body.contains(screenEl)) { clearInterval(self.timer); window.removeEventListener('online', tick); window.removeEventListener('offline', tick); return; } self.paint(); }
       self.timer = setInterval(tick, 3000);
       window.addEventListener('online', tick); window.addEventListener('offline', tick);
+    }
+  };
+  /* Dieselbe Statusanzeige klein in der Fußleiste neben MAC und KEY, sobald eine Playlist da ist – immer sichtbar */
+  var StatusLine = {
+    box: null, sig: '', timer: null, wired: false,
+    el: function () {
+      var self = this, box = h('div', { class: 'sb-status', role: 'status', 'aria-live': 'polite' });
+      self.box = box; self.sig = ''; self.paint();
+      clearInterval(self.timer);
+      self.timer = setInterval(function () { if (!document.body.contains(box)) { clearInterval(self.timer); return; } self.paint(); }, 5000);
+      if (!self.wired) {
+        self.wired = true;
+        window.addEventListener('online', function () { self.paint(); });
+        window.addEventListener('offline', function () { self.paint(); });
+      }
+      return box;
+    },
+    paint: function () {
+      var box = this.box;
+      if (!box) return;
+      var items = WelcomeStatus.items(), sig = items.map(function (it) { return it[0] + it[2]; }).join('|');
+      if (sig === this.sig) return;
+      this.sig = sig; clear(box);
+      items.forEach(function (it) { box.appendChild(h('span', { class: 'sb-st is-' + it[0], title: it[2] }, h('i', { 'aria-hidden': 'true' }), h('span', { text: it[2] }))); });
     }
   };
   /* Kurze Hilfe auf der Willkommensseite */
@@ -3272,7 +3311,7 @@
         runTime.appendChild(h('b', { text: txt }));
         if (d !== null && d <= 30) runTime.classList.add(d <= 0 ? 'is-expired' : 'is-warn');
       }).catch(function () {});
-      self.el = h('div', { class: 'shell' }, head, h('main', { class: 'content' }, self.view), h('footer', { class: 'statusbar' }, macTag(profileUser(App.profile), true), runTime, h('span', { class: 'sb-clock' })));
+      self.el = h('div', { class: 'shell' }, head, h('main', { class: 'content' }, self.view), h('footer', { class: 'statusbar' }, macTag(profileUser(App.profile), true), StatusLine.el(), runTime, h('span', { class: 'sb-clock' })));
       QuickSearch.build(self.el, searchBtn);
       Screens.reset('shell', self.el, {
         // Beim Verlassen (Playlist-Wechsel, Zurücksetzen) die offene Ansicht aufräumen –
@@ -4495,7 +4534,7 @@
     // Fokus auf den ersten Knopf im Inhalt (nicht auf „Schließen“)
     var body = panel.lastChild;
     if (!$('[data-autofocus]', body)) { var first = $('.f', body); if (first) first.setAttribute('data-autofocus', ''); }
-    Screens.push('sheet', h('div', { class: 'modal set-modal' }, h('div', { class: 'modal-backdrop', onclick: goBack }), panel), { overlay: true, onLeave: opts.onClose });
+    Screens.push('sheet', h('div', { class: 'modal set-modal' + (opts.cls ? ' ' + opts.cls : '') }, h('div', { class: 'modal-backdrop', onclick: goBack }), panel), { overlay: true, onLeave: opts.onClose });
     return panel;
   }
   // Auswahl als Liste großer Knöpfe mit Häkchen – gut mit der Fernbedienung
@@ -5280,8 +5319,7 @@
 
     // ---- Darstellung & Gerät ----
     var tLang = tile('globe', T('Sprache'), function () { return LANGS.filter(function (l) { return l[0] === Lang.cur; })[0][1]; }, function () {
-      openSheet('Sprache / Language / Dil', 'globe', choiceList(LANGS.map(function (l) { return [l[0], l[1], null, flagFor(l[0])]; }),
-        function () { return Lang.cur; }, function (v) { if (v !== Lang.cur) Lang.set(v); }), { wide: true });
+      openSheet('Sprache / Language / Dil', 'globe', langChoice(), { wide: true });
     });
     var tTheme = tile('sun', T('Darstellung'), function () { return opt(THEMES, Settings.get('theme') || 'dark') + ' · ' + T('Cover {0}', opt(POSTERS, Settings.get('posterSize') || 'm')); }, function () {
       var s = Season.current();

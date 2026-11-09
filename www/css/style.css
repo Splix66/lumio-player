@@ -238,6 +238,16 @@ body.kbd .tab.f:focus .i, body.is-tv .tab.f:focus .i { color: var(--bg); }
 .statusbar .mac-tag { background: transparent; box-shadow: none; padding: 0; font-size: .7rem; color: var(--dim); }
 .statusbar .mac-tag b { color: var(--muted); font-weight: 500; }
 .statusbar .mac-tag span { font-size: .62rem; }
+/* Status (Internet, Player, Playlist) klein neben MAC und KEY */
+.sb-status { display: inline-flex; align-items: center; min-width: 0; margin-left: 1.2rem; padding-left: 1.2rem; box-shadow: inset 1px 0 0 var(--line); font-size: .66rem; font-weight: 600; color: var(--dim); white-space: nowrap; overflow: hidden; }
+.sb-st { display: inline-flex; align-items: center; }
+.sb-st + .sb-st { margin-left: 1rem; }
+.sb-st i { width: .42rem; height: .42rem; margin-right: .4rem; border-radius: 50%; background: var(--dim); flex: none; }
+.sb-st.is-ok i { background: #4ADE80; }
+.sb-st.is-warn i { background: #FBBF24; }
+.sb-st.is-off i { background: #F87171; }
+.sb-st.is-off { color: var(--live); }
+.sb-st.is-wait i { background: var(--accent); animation: wlPulse 1.6s ease-out infinite; }
 .icon-btn { width: 2.75rem; height: 2.75rem; border-radius: 50%; display: grid; place-items: center; color: var(--text-2); }
 .icon-btn .i { width: 1.45rem; height: 1.45rem; }
 .icon-btn:hover { color: var(--text); background: var(--surface); }
@@ -544,6 +554,17 @@ body.kbd .cat-back.f:focus, body.is-tv .cat-back.f:focus { position: sticky; z-i
 .lang-btn { padding: .5rem .95rem; font-size: .9rem; }
 .lang-btn .i { width: 1.1rem; height: 1.1rem; }
 .lang-btn .i:last-child { width: .95rem; height: .95rem; opacity: .6; }
+.lang-btn .flag { width: 1.5rem; height: 1rem; margin-right: 0; border-radius: .18rem; }
+/* Sprachliste: klappt oben rechts unter dem Knopf auf; Englisch und Deutsch stehen oben, danach eine Trennlinie */
+.screen.set-modal.is-drop { align-items: flex-end; justify-content: flex-start; padding: 5.4rem 2.6rem 1.6rem; }
+.is-drop .modal-backdrop { background: rgba(0, 0, 0, .5); }
+.is-drop .set-sheet { width: 25rem; max-width: 100%; max-height: 100%; }
+.is-drop .sh-head h2 { font-size: 1.05rem; }
+.is-drop .sh-body { padding: .8rem .9rem 1rem; }
+.is-drop .ch-opt { padding: .62rem .85rem; }
+.is-drop .ch-opt .flag { width: 1.8rem; height: 1.2rem; margin-right: .75rem; }
+.lang-choice .ch-opt:nth-child(2) { position: relative; margin-bottom: 1.15rem; }
+.lang-choice .ch-opt:nth-child(2)::after { content: ""; position: absolute; left: .3rem; right: .3rem; bottom: -.62rem; height: 1px; background: var(--line); pointer-events: none; }
 .items { flex: 1; min-width: 0; overflow-y: auto; padding: .3rem var(--pad) 3rem 1rem; position: relative; }
 .items > .state { min-height: 60%; }
 .poster-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr)); grid-gap: 1.6rem 1.2rem; gap: 1.6rem 1.2rem; }
@@ -1141,6 +1162,9 @@ body.kbd .lr-card.f:focus, body.is-tv .lr-card.f:focus { transform: scale(1.05);
 .shell.is-launcher .statusbar .mac-tag { font-size: 1.2rem; }
 .shell.is-launcher .statusbar .mac-tag span { font-size: .78rem; }
 .shell.is-launcher .statusbar .mac-tag b { color: var(--text); font-weight: 600; }
+.shell.is-launcher .sb-status { font-size: .8rem; margin-left: 1.6rem; padding-left: 1.6rem; }
+.shell.is-launcher .sb-st + .sb-st { margin-left: 1.3rem; }
+.shell.is-launcher .sb-st i { width: .5rem; height: .5rem; margin-right: .5rem; }
 .shell.is-launcher .statusbar .mac-tag b + span, .shell.is-launcher .statusbar .mac-tag .copy-btn + span { margin-left: 1.6rem; }
 .shell.is-launcher .statusbar .mac-tag .copy-btn { width: 1.9rem; height: 1.9rem; margin-left: .3rem; }
 .shell.is-launcher .statusbar .mac-tag .copy-btn .i { width: 1rem; height: 1rem; }

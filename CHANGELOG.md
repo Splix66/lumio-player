@@ -62,6 +62,12 @@ und in `scripts/make-icons.py` (Android, Fire TV, Samsung, LG, Windows/Mac, TV-B
 
 Die neuen Daten gehören zum Profil, werden mitgesichert und von „Verlauf löschen“ entfernt.
 
+**Status immer sichtbar:** Internet, Player und Playlist stehen nach dem Einrichten klein unten in der Fußleiste neben
+MAC und KEY (grün = in Ordnung, rot = kein Internet) – vorher nur auf der Willkommensseite.
+
+**Sprachauswahl mit Flaggen:** Der Knopf oben rechts zeigt Flagge und gewählte Sprache. Die Liste klappt direkt darunter auf,
+Englisch und Deutsch stehen ganz oben, danach eine Trennlinie und die übrigen Sprachen. Gleiche Reihenfolge in den Einstellungen.
+
 **Behoben:** Quadratische Senderlogos wurden in der Senderliste und bei den Favoriten unten abgeschnitten.
 
 **Android-TV-Player:** Media3 (ExoPlayer) von 1.4.1 auf 1.9.4 – gut ein Jahr Fehlerbehebungen, u. a. für HLS-Livestreams.
