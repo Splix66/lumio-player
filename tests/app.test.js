@@ -30,10 +30,10 @@
     });
   });
 
-  t(G, 'Playlist löschen entfernt alle 10 gespeicherten Datenarten', function () {
+  t(G, 'Playlist löschen entfernt alle 11 gespeicherten Datenarten', function () {
     var id = 'test-profil-' + Date.now();
     D.Profiles.DATA_KEYS.forEach(function (k) { D.Store.set(k + '.' + id, { x: 1 }); });
-    eq(D.Profiles.DATA_KEYS.length, 10);
+    eq(D.Profiles.DATA_KEYS.length, 11);
     D.Profiles.dropData(id);
     var left = D.Profiles.DATA_KEYS.filter(function (k) { return D.Store.get(k + '.' + id, null) !== null; });
     eq(left, [], 'nichts bleibt übrig');

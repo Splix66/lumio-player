@@ -264,4 +264,24 @@
       eq(l[0].start, h0, 'Originalzeit');
     }, function (e) { window.fetch = realFetch; throw e; });
   });
+
+  t(G, 'Kategorien: anheften, umbenennen – Umbenennen hebt die Kindersicherung nicht auf', function () {
+    var C = D.CatPrefs, key = 'lumio.' + C.key(), before = localStorage.getItem(key), sBefore = localStorage.getItem('lumio.settings');
+    try {
+      localStorage.removeItem(key);
+      var cats = [{ id: '1', name: 'Nachrichten' }, { id: '2', name: 'Sport' }, { id: '3', name: 'XXX Adults' }, { id: '4', name: 'Kinder' }];
+      C.togglePin('live', '4'); C.togglePin('live', '2');
+      C.setName('live', '3', 'Doku'); C.set('live', 'hide', '1', true);
+      var v = D.visibleCats('live', cats);
+      eq(v.map(function (c) { return c.name; }).join(','), 'Kinder,Sport,Doku', 'ausgeblendet weg, angeheftete zuerst (in Reihenfolge), eigener Name');
+      eq(v[2].orig, 'XXX Adults', 'Originalname bleibt erhalten');
+      ok(D.Parental.isAdult(v[2]), 'umbenannte Erwachsenen-Kategorie wird weiter erkannt');
+      eq(cats[2].name, 'XXX Adults', 'Liste des Anbieters bleibt unverändert');
+      C.setName('live', '3', '');
+      eq(D.visibleCats('live', cats)[2].name, 'XXX Adults', 'leerer Name = Originalname');
+    } finally {
+      if (before === null) localStorage.removeItem(key); else localStorage.setItem(key, before);
+      if (sBefore !== null) localStorage.setItem('lumio.settings', sBefore);
+    }
+  });
 })();

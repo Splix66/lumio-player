@@ -48,7 +48,8 @@ Bis zum offiziellen Start bleiben alle Versionen unter 2.0 (1.11.x, 1.12 …).
 - ✅ **Programmführer:** Zeitverschiebung je Playlist (−5 bis +5 Std., Einstellungen → Programmführer-Zeit);
   eigene EPG-Adresse gab es schon (M3U, Profil → Programmführer)
 - **Sichern und Wiederherstellen** von Einstellungen und Favoriten (Export/Import)
-- **Kategorien umbenennen und sortieren**, einzelne Sender ausblenden
+- ✅ **Kategorien verwalten:** ausblenden, oben anheften (Stern), umbenennen (Stift) – Kindersicherung prüft immer den
+  Originalnamen. ✅ **Einzelne Sender ausblenden** (rechte Spalte bei Live TV, im Player; Einstellungen → Ausgeblendete Sender)
 
 ## Nach 2.0
 

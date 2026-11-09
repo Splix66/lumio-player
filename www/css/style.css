@@ -574,7 +574,10 @@ body.kbd .cat-back.f:focus, body.is-tv .cat-back.f:focus { position: sticky; z-i
 .chan .arch { flex: none; margin-left: .5rem; color: var(--dim); }
 .chan .arch .i { width: 1.05rem; height: 1.05rem; }
 .lp-arch:empty { display: none; }
-.lp-arch { margin-top: .8rem; }
+.lp-arch { margin-top: .8rem; display: flex; flex-wrap: wrap; }
+.lp-arch .btn { margin: 0 .5rem .5rem 0; }
+.lp-arch .lp-hide { color: var(--muted); }
+.chan.is-hidden { display: none; }
 .lp-arch .btn small { margin-left: .5rem; font-size: .78rem; color: var(--muted); font-weight: 600; }
 .arch-days { margin-bottom: 1rem; }
 .arch-prog .arch-time { flex: none; width: 4rem; font-weight: 750; font-variant-numeric: tabular-nums; color: var(--muted); }
@@ -1452,6 +1455,16 @@ body.kbd .pin-key.f:focus, body.is-tv .pin-key.f:focus { background: var(--text)
 .cp-list { display: flex; flex-direction: column; }
 .cp-row { display: flex; align-items: center; width: 100%; padding: .62rem .9rem; text-align: left; border-radius: .75rem; background: var(--surface); color: var(--text); }
 .cp-row + .cp-row { margin-top: .35rem; }
+/* Kategorien verwalten: Zeile mit Stern (oben anheften) und Stift (umbenennen) */
+.cp-line { display: flex; align-items: stretch; }
+.cp-line + .cp-line { margin-top: .35rem; }
+.cp-line .cp-row { flex: 1; min-width: 0; }
+.cp-line .cp-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cp-act { flex: none; display: grid; place-items: center; width: 2.9rem; margin-left: .35rem; border-radius: .75rem; background: var(--surface); color: var(--dim); }
+.cp-act .i { width: 1.15rem; height: 1.15rem; }
+.cp-act:hover { background: var(--surface-2); color: var(--text); }
+.cp-act.is-on { color: var(--accent); }
+body.kbd .cp-act.f:focus, body.is-tv .cp-act.f:focus { background: var(--text); color: var(--bg); box-shadow: none; }
 .cp-row:hover { background: var(--surface-2); }
 .cp-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 550; }
 .cp-state { flex: none; display: inline-flex; align-items: center; margin-left: .8rem; font-size: .8rem; font-weight: 700; color: var(--ok); }

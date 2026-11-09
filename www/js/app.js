@@ -106,6 +106,7 @@
     copy: '<rect x="8.5" y="8.5" width="12" height="12" rx="2"/><path d="M15.5 8.5V5.5a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h3"/>',
     globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/>',
     star: '<path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/>',
+    pencil: '<path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17v3z"/><path d="M14.5 7.5l3 3"/>',
     starFill: '<path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z" fill="currentColor"/>',
     plus: '<path d="M12 5v14M5 12h14"/>',
     rew: '<path d="M11 19l-7-7 7-7M20 19l-7-7 7-7"/>',
@@ -1271,7 +1272,7 @@
       this.dropData(id);
     },
     /* Alles löschen, was zu einer Playlist auf dem Gerät gespeichert ist (Datenschutz: keine Reste) */
-    DATA_KEYS: ['fav', 'resume', 'recent', 'seen', 'last', 'stats', 'seenNew', 'cats', 'expiry', 'idv'],
+    DATA_KEYS: ['fav', 'resume', 'recent', 'seen', 'last', 'stats', 'seenNew', 'cats', 'expiry', 'idv', 'hidech'],
     dropData: function (id) {
       this.DATA_KEYS.forEach(function (k) { Store.del(k + '.' + id); });
       EpgStore.del('epg.' + id);   // zwischengespeicherter Programmführer
@@ -3337,7 +3338,7 @@
         g = byKey[key] = { key: key, ord: groups.length, code: key === '_' ? '' : key.toUpperCase(), name: key === '_' ? T('Weitere') : T(LANG_NAMES[key]), cats: [] };
         groups.push(g);
       }
-      g.cats.push({ id: c.id, name: r ? r.label : c.name, full: c.name });
+      g.cats.push({ id: c.id, name: r ? r.label : c.name, full: c.name, orig: c.orig });
     });
     if (groups.filter(function (g) { return g.key !== '_'; }).length < 2 || tagged < list.length * 0.4) return null;
     // Sprache der App zuerst, „Weitere“ zuletzt, sonst wie beim Anbieter sortiert
@@ -3606,6 +3607,7 @@
       Shell.setCount(kind, '');
       (cat.local ? Promise.resolve(cat.local()) : cat.id === '__all' ? visibleItems(kind, App.provider.items(kind, cat.id)) : App.provider.items(kind, cat.id)).then(function (list) {
         if (my !== req) return;
+        if (kind === 'live' && !cat.local) list = ChanHide.filter(list);
         if (kind === 'live' && cat.id !== '__recent') list = sortChannels(list);
         // „Alle Filme/Serien“: die neuesten zuerst
         if (cat.id === '__all' && kind !== 'live' && some(list, function (x) { return Number(x.added) > 0; })) list = list.slice().sort(byAdded);
@@ -3704,6 +3706,17 @@
         arch.appendChild(h('button', { class: 'btn f', onclick: function () { showArchive(item); } },
           icon('archive'), h('span', { text: T('Verpasste Sendungen') }), h('small', { text: T('{0} Tage', item.archive) })));
       }
+      // Sender ausblenden – direkt hier, weil der TV-Player auf Android-Boxen keinen eigenen Knopf dafür hat
+      arch.appendChild(h('button', { class: 'btn f lp-hide', title: T('Sender ausblenden'), onclick: function () {
+        askHideChannel(item, function () {
+          $all('.chan[data-cid]').forEach(function (r) {
+            if (r.getAttribute('data-cid') !== String(item.id)) return;
+            var nx = r.nextElementSibling || r.previousElementSibling;
+            r.classList.add('is-hidden');
+            if (nx && nx.classList.contains('chan')) Nav.focus(nx);
+          });
+        });
+      } }, icon('eyeOff'), h('span', { text: T('Ausblenden') })));
       clear(epg);
       clearTimeout(timer);
       timer = setTimeout(function () {
@@ -4165,12 +4178,42 @@
       a[mode][kind] = m;
       this.save(a);
     },
-    count: function (kind, mode) { return Object.keys(this.map(kind, mode)).length; }
+    count: function (kind, mode) { return Object.keys(this.map(kind, mode)).length; },
+    // eigene Namen: { id: 'Name' }
+    names: function (kind) { var a = this.all(); return (a.name && a.name[kind]) || {}; },
+    setName: function (kind, id, name) {
+      var a = this.all(); a.name = a.name || {}; var m = a.name[kind] = a.name[kind] || {};
+      name = String(name || '').trim().slice(0, 60);
+      if (name) m[String(id)] = name; else delete m[String(id)];
+      this.save(a);
+    },
+    // oben angeheftet, in dieser Reihenfolge: [id, id, …]
+    pins: function (kind) { var a = this.all(); return (a.pin && a.pin[kind]) || []; },
+    togglePin: function (kind, id) {
+      var a = this.all(); a.pin = a.pin || {}; var l = (a.pin[kind] || []).slice(), i = l.indexOf(String(id));
+      if (i >= 0) l.splice(i, 1); else l.push(String(id));
+      a.pin[kind] = l; this.save(a);
+      return i < 0;
+    }
   };
-  // Kategorien, die man sehen soll (ausgeblendete fallen weg)
+  // Kategorien, die man sehen soll: ausgeblendete fallen weg, eigene Namen, angeheftete zuerst.
+  // orig = Originalname – die Kindersicherung prüft immer diesen (Umbenennen hebt keine Sperre auf).
   function visibleCats(kind, list) {
-    var hid = CatPrefs.map(kind, 'hide');
-    return (list || []).filter(function (c) { return !hid[String(c.id)]; });
+    var hid = CatPrefs.map(kind, 'hide'), names = CatPrefs.names(kind), pins = CatPrefs.pins(kind);
+    var out = (list || []).filter(function (c) { return !hid[String(c.id)]; }).map(function (c) {
+      var nn = names[String(c.id)];
+      if (!nn) return c;
+      var o = {}; for (var k in c) if (c.hasOwnProperty(k)) o[k] = c[k];
+      o.orig = c.orig || c.name; o.name = nn;
+      return o;
+    });
+    if (!pins.length) return out;
+    var pos = {}; pins.forEach(function (id, i) { pos[id] = i; });
+    return out.map(function (c, i) { return [c, i]; }).sort(function (x, y) {
+      var a = pos[String(x[0].id)], b = pos[String(y[0].id)];
+      if (a !== undefined || b !== undefined) return a === undefined ? 1 : b === undefined ? -1 : a - b;
+      return x[1] - y[1];
+    }).map(function (x) { return x[0]; });
   }
   // Einträge aus ausgeblendeten und (noch) gesperrten Kategorien aus „Alle …“ und der Suche entfernen
   function blockedMap(kind) {
@@ -4184,10 +4227,31 @@
   }
   function visibleItems(kind, p) {
     return Promise.all([p, blockedMap(kind)]).then(function (r) {
-      var bad = r[1];
-      return bad ? r[0].filter(function (x) { return !bad[String(x.catId)]; }) : r[0];
+      var bad = r[1], list = bad ? r[0].filter(function (x) { return !bad[String(x.catId)]; }) : r[0];
+      return kind === 'live' ? ChanHide.filter(list) : list;
     });
   }
+  function askHideChannel(it, done) {
+    Dialog.show(T('Sender ausblenden?'), T('„{0}“ erscheint dann nicht mehr in den Senderlisten. Wieder einblenden: Einstellungen → Ausgeblendete Sender.', it.name),
+      [{ label: T('Abbrechen') }, { label: T('Ausblenden'), primary: true, action: function () { ChanHide.set(it, true); toast(T('„{0}“ ausgeblendet', it.name)); if (done) done(); } }]);
+  }
+  /* Einzelne Sender ausblenden (pro Playlist): { id: Name } – Favoriten und „Zuletzt gesehen“ bleiben unberührt */
+  var ChanHide = {
+    key: function () { return 'hidech.' + pid(); },
+    all: function () { return Store.get(this.key(), {}); },
+    has: function (item) { return !!this.all()[String(item.id)]; },
+    set: function (item, on) {
+      var a = this.all();
+      if (on) a[String(item.id)] = item.name || ''; else delete a[String(item.id)];
+      Store.set(this.key(), a); searchCache = {};
+    },
+    count: function () { return Object.keys(this.all()).length; },
+    filter: function (list) {
+      var a = this.all();
+      if (!Object.keys(a).length) return list;
+      return (list || []).filter(function (x) { return !a[String(x.id)]; });
+    }
+  };
 
   /* ---------- Kindersicherung: Kategorien mit PIN sperren ---------- */
   var ADULT_RE = /(^|[^0-9A-Za-zÀ-ɏ])(XXX|ADULTS?|18\+|\+18|PORNO?|EROTI[CK]|EROTIK|SEX|SEXY|PLAYBOY|BRAZZERS|FOR ADULTS)($|[^0-9A-Za-zÀ-ɏ])/i;
@@ -4196,7 +4260,7 @@
     on: function () { return !!Settings.get('parentPin'); },
     hash: function (p) { return pinHash('parent:' + p); },
     adult: function () { return Settings.get('lockAdult') !== false; },
-    isAdult: function (c) { return ADULT_RE.test(String(c.full || c.name || '')); },
+    isAdult: function (c) { return ADULT_RE.test(String(c.orig || c.full || c.name || '')); },
     isLocked: function (kind, c) { return this.on() && (CatPrefs.is(kind, 'lock', c.id) || (this.adult() && this.isAdult(c))); },
     blocked: function (kind, c) { return !this.unlocked && this.isLocked(kind, c); },
     // PIN abfragen. keep: true = nur für die Einstellungen, Inhalte bleiben gesperrt
@@ -4290,17 +4354,29 @@
       var rows = h('div', { class: 'cp-list' });
       list.forEach(function (c) {
         var r = langOf(c.name);
-        var st = h('span', { class: 'cp-state' });
+        var st = h('span', { class: 'cp-state' }), nm = h('span', { class: 'cp-name', text: c.name });
         var b = h('button', { class: 'cp-row f', title: c.name },
           r ? langBadge({ key: r.g, name: T(LANG_NAMES[r.g]), code: r.g.toUpperCase() }) : null,
-          catIcon(c.name), h('span', { class: 'cp-name', text: c.name }), st);
+          catIcon(c.name), nm, st);
         var auto = !hide && Parental.adult() && Parental.isAdult(c);
+        // Verwalten: zusätzlich „oben anheften“ (Stern) und „umbenennen“ (Stift) – nur beim Ausblenden, nicht bei der Kindersicherung
+        var pinB = hide ? h('button', { class: 'cp-act f', title: T('Oben anheften'), 'aria-label': T('Oben anheften'), onclick: function () {
+          toast(CatPrefs.togglePin(kind, c.id) ? T('„{0}“ steht jetzt oben.', c.name) : T('„{0}“ ist nicht mehr angeheftet.', c.name)); paint();
+        } }) : null;
+        var renB = hide ? h('button', { class: 'cp-act f', title: T('Umbenennen'), 'aria-label': T('Umbenennen'), onclick: function () { renameCat(kind, c, paint); } }, icon('pencil')) : null;
         function paint() {
           var on = CatPrefs.is(kind, mode, c.id) || auto;
           b.classList.toggle('is-on', on);
           clear(st);
           st.appendChild(icon(hide ? (on ? 'eyeOff' : 'eye') : (on ? 'lock' : 'check')));
           st.appendChild(h('span', { text: hide ? (on ? T('Ausgeblendet') : T('Sichtbar')) : auto ? T('18+ gesperrt') : (on ? T('Gesperrt') : T('Frei')) }));
+          if (!hide) return;
+          var own = CatPrefs.names(kind)[String(c.id)], pinned = CatPrefs.pins(kind).indexOf(String(c.id)) >= 0;
+          nm.textContent = own || c.name;
+          b.title = own ? own + ' (' + c.name + ')' : c.name;
+          clear(pinB).appendChild(icon(pinned ? 'starFill' : 'star'));
+          pinB.classList.toggle('is-on', pinned);
+          renB.classList.toggle('is-on', !!own);
         }
         b.onclick = function () {
           if (auto) { toast(T('Wird automatisch gesperrt (Erwachsenen-Inhalte).'), 3500); return; }
@@ -4308,7 +4384,7 @@
         };
         paint(); painters.push(paint);
         if (!rows.firstChild) b.setAttribute('data-autofocus', '');
-        rows.appendChild(b);
+        rows.appendChild(hide ? h('div', { class: 'cp-line' }, b, pinB, renB) : b);
       });
       box.appendChild(rows);
       paintCount();
@@ -4320,9 +4396,22 @@
   }
   var KIND_LABEL = function (kind) { return kind === 'live' ? T('Live TV') : kind === 'movie' ? T('Filme') : T('Serien'); };
   function hideCatsSheet(kind) {
-    openSheet(T('{0}: Kategorien ausblenden', KIND_LABEL(kind)), 'eyeOff',
-      [h('p', { class: 'hint', text: T('Ausgeblendete Kategorien erscheinen nicht mehr in der Liste und nicht in „Alle“. Du kannst sie hier jederzeit wieder einblenden.') }), catPicker(kind, 'hide')],
-      { wide: true, onClose: paintSettings });
+    openSheet(T('{0}: Kategorien verwalten', KIND_LABEL(kind)), 'eyeOff',
+      [h('p', { class: 'hint', text: T('Antippen blendet eine Kategorie aus oder ein. Mit dem Stern kommt sie ganz nach oben, mit dem Stift bekommt sie einen eigenen Namen.') }), catPicker(kind, 'hide')],
+      { wide: true, onClose: function () { paintSettings(); searchCache = {}; } });
+  }
+  // Eigener Name für eine Kategorie (leer = Originalname)
+  function renameCat(kind, c, done) {
+    var f = inputField(T('Name'), c.name, 'text');
+    f.input.value = CatPrefs.names(kind)[String(c.id)] || c.name;
+    f.input.setAttribute('maxlength', '60');
+    f.input.setAttribute('data-autofocus', '');
+    function save(v) { CatPrefs.setName(kind, c.id, String(v).trim() === c.name ? '' : v); goBack(); if (done) setTimeout(done, 40); }
+    f.input.addEventListener('keydown', function (e) { if (e.keyCode === 13) save(f.input.value); });
+    openSheet(T('Umbenennen'), 'pencil', [
+      h('p', { class: 'hint', text: T('Original: {0}', c.name) }), f.wrap,
+      h('div', { class: 'row' }, sheetBtn('check', T('Speichern'), function () { save(f.input.value); }, 'primary'),
+        sheetBtn('restart', T('Originalname'), function () { save(''); }))]);
   }
 
   /* ---------- Verlauf löschen ---------- */
@@ -4682,11 +4771,32 @@
       else parentalSheet();
     });
     function hideTile(kind, label) {
-      return tile('eyeOff', label, function () { var n = CatPrefs.count(kind, 'hide'); return n ? T('{0} ausgeblendet', n) : T('Alle sichtbar'); }, function () { hideCatsSheet(kind); });
+      return tile('eyeOff', label, function () {
+        var n = CatPrefs.count(kind, 'hide'), pn = CatPrefs.pins(kind).length, rn = Object.keys(CatPrefs.names(kind)).length, out = [];
+        if (n) out.push(T('{0} ausgeblendet', n));
+        if (pn) out.push(T('{0} oben', pn));
+        if (rn) out.push(T('{0} umbenannt', rn));
+        return out.length ? out.join(' · ') : T('Alle sichtbar');
+      }, function () { hideCatsSheet(kind); });
     }
-    var tHideL = hideTile('live', T('Live-Kategorien ausblenden'));
-    var tHideM = hideTile('movie', T('Film-Kategorien ausblenden'));
-    var tHideS = hideTile('series', T('Serien-Kategorien ausblenden'));
+    var tHideCh = p && p.type === 'demo' ? null : tile('eyeOff', T('Ausgeblendete Sender'), function () { var n = ChanHide.count(); return n ? T('{0} ausgeblendet', n) : T('Keine'); }, function () {
+      var box = h('div', { class: 'cp-list' });
+      function render() {
+        clear(box);
+        var a = ChanHide.all(), ids = Object.keys(a);
+        if (!ids.length) { box.appendChild(h('p', { class: 'hint', text: T('Keine Sender ausgeblendet. Ausblenden geht bei Live TV rechts neben der Senderliste oder im Player (Auge-Symbol).') })); return; }
+        box.appendChild(h('div', { class: 'row' }, sheetBtn('eye', T('Alle einblenden'), function () { ids.forEach(function (id) { ChanHide.set({ id: id }, false); }); render(); paint(); })));
+        ids.forEach(function (id) {
+          box.appendChild(h('button', { class: 'cp-row f is-on', onclick: function () { ChanHide.set({ id: id }, false); toast(T('„{0}“ wird wieder angezeigt.', a[id] || id)); render(); paint(); } },
+            h('span', { class: 'cp-name', text: a[id] || id }), h('span', { class: 'cp-state' }, icon('eye'), h('span', { text: T('Einblenden') }))));
+        });
+      }
+      render();
+      openSheet(T('Ausgeblendete Sender'), 'eyeOff', [box], { wide: true, onClose: paintSettings });
+    });
+    var tHideL = hideTile('live', T('Live-Kategorien verwalten'));
+    var tHideM = hideTile('movie', T('Film-Kategorien verwalten'));
+    var tHideS = hideTile('series', T('Serien-Kategorien verwalten'));
     var tHisL = tile('trash', T('Verlauf löschen: Sender'), null, function () { askClearHistory('live'); });
     var tHisM = tile('trash', T('Verlauf löschen: Filme'), null, function () { askClearHistory('movie'); });
     var tHisS = tile('trash', T('Verlauf löschen: Serien'), null, function () { askClearHistory('series'); });
@@ -4800,7 +4910,7 @@
     var el = h('div', { class: 'page settings st-page' },
       h('div', { class: 'page-head' }, h('h1', { text: T('Einstellungen') })),
       group(T('Playlist'), [tAdd, tPl, tUpd, tAuto, tShift]),
-      group(T('Kindersicherung & Kategorien'), [tPar, tHideL, tHideM, tHideS, tHisL, tHisM, tHisS]),
+      group(T('Kindersicherung & Kategorien'), [tPar, tHideL, tHideM, tHideS, tHideCh, tHisL, tHisM, tHisS]),
       group(T('Wiedergabe'), [tSort, tFmt, tQual, tEng, tExt, tSub, tLast, tIdle]),
       group(T('Darstellung & Gerät'), [tLang, tTheme, tClock, tDev, tAbout, tReport]),
       h('div', { class: 'st-foot' }, macTag(profileUser(p), true)));
@@ -5228,12 +5338,14 @@
       self.tracksBtn = h('button', { class: 'cbtn f is-gone', 'data-c': 'tracks', title: T('Ton & Untertitel'), 'aria-label': T('Ton & Untertitel'), onclick: function () { self.openTracks(); } }, icon('tracks'));
       // Bildformat (Original, Zoom, Strecken, 16:9, 4:3) und bei Live-Sendern das Stream-Format (HLS / MPEG-TS)
       self.fmtBtn = h('button', { class: 'cbtn f', 'data-c': 'format', title: T('Format'), 'aria-label': T('Format'), onclick: function () { self.openFormat(); } }, icon('aspect'));
+      // Sender ausblenden (nur Live): erscheint dann nicht mehr in den Senderlisten
+      self.hideBtn = h('button', { class: 'cbtn f is-gone', 'data-c': 'hide', title: T('Sender ausblenden'), 'aria-label': T('Sender ausblenden'), onclick: function () { self.askHide(); } }, icon('eyeOff'));
       var fsOk = !Platform.tv && (document.fullscreenEnabled || document.webkitFullscreenEnabled);
       self.fsBtn = fsOk ? h('button', { class: 'cbtn f', 'data-c': 'fs', title: T('Vollbild (F)'), 'aria-label': T('Vollbild'), onclick: function () { self.toggleFullscreen(); } }, icon('fullscreen')) : null;
       self.osd = h('div', { class: 'osd' },
         h('div', { class: 'osd-top' }, h('button', { class: 'btn f', onclick: goBack }, icon('back'), h('span', { text: T('Zurück') })), self.liveTag, self.title, self.qTag),
         h('div', { class: 'osd-bottom' }, self.info, self.barWrap, self.times,
-          h('div', { class: 'ctrl-row' }, self.ctrlLeft, self.ctrls, h('div', { class: 'ctrl-side right' }, self.fmtBtn, self.tracksBtn, self.fsBtn, self.volumeUi()))));
+          h('div', { class: 'ctrl-row' }, self.ctrlLeft, self.ctrls, h('div', { class: 'ctrl-side right' }, self.hideBtn, self.fmtBtn, self.tracksBtn, self.fsBtn, self.volumeUi()))));
       self.miniTitle = h('span', { class: 'mini-title' });
       self.miniUi = h('div', { class: 'mini-ui' },
         h('button', { class: 'mini-open f', title: T('Vollbild'), onclick: function () { self.maximize(); } }, self.miniTitle),
@@ -5472,6 +5584,7 @@
       self.lastPlace = '';
       self.title.textContent = item.kind === 'episode' ? (item.seriesName ? item.seriesName + ' · ' : '') + 'S' + item.season + ' E' + item.num + ' – ' + item.name : item.name;
       self.liveTag.style.display = item.kind === 'live' ? '' : 'none';
+      if (self.hideBtn) self.hideBtn.classList.toggle('is-gone', item.kind !== 'live');
       self.bar.classList.toggle('seek', self.isVod());
       self.bar.classList.toggle('f', self.isVod());
       if (self.isVod()) self.bar.setAttribute('tabindex', '0'); else self.bar.removeAttribute('tabindex');
@@ -5734,6 +5847,10 @@
       self.el.appendChild(box);
       clearTimeout(self.hideTimer);
       setTimeout(function () { Nav.focus($('.tp-opt.is-on', box) || $('.tp-opt', box)); }, 30);
+    },
+    askHide: function () {
+      var it = this.item;
+      if (it && it.kind === 'live') askHideChannel(it);
     },
     /* Verpasste Sendungen des laufenden Senders als Liste im Player (nach Tagen) */
     openArchive: function () {
@@ -6248,6 +6365,7 @@
     Xmltv: Xmltv, chanKey: chanKey, EpgStore: EpgStore, makeProvider: makeProvider, Profiles: Profiles, PinGuard: PinGuard, Store: Store, Cloud: Cloud,
     decodeBytes: decodeBytes, readText: readText, fetchText: fetchText, sameConnection: sameConnection, NativePlayer: NativePlayer, App: App, ensureTs: ensureTs, migrateM3uIds: migrateM3uIds,
     ErrLog: ErrLog, techInfo: techInfo,
+    CatPrefs: CatPrefs, visibleCats: visibleCats, Parental: Parental, ChanHide: ChanHide,
     config: CONFIG
   };
 

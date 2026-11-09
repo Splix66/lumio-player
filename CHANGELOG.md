@@ -28,6 +28,11 @@ Adresse als HLS. Vergangene Sendungen landen nicht unter „Weiterschauen“. Im
 **Neu: Programmführer-Zeit** (Einstellungen → Playlist): Zeigt der Anbieter das Programm zu früh oder zu spät, lässt es
 sich je Playlist um bis zu ±5 Stunden verschieben – gilt für Senderliste, Vorschau, Player und „Verpasste Sendungen“.
 
+**Neu: Kategorien verwalten** (Einstellungen → Live-/Film-/Serien-Kategorien verwalten): ausblenden wie bisher, dazu
+mit dem Stern ganz nach oben anheften und mit dem Stift umbenennen. Umbenennen hebt keine Kindersicherung auf.
+**Neu: Sender ausblenden** – bei Live TV rechts neben der Senderliste oder im Player (Auge-Symbol); wieder einblenden
+unter Einstellungen → Ausgeblendete Sender. Favoriten und „Zuletzt gesehen“ bleiben unberührt.
+
 **Android-TV-Player:** Media3 (ExoPlayer) von 1.4.1 auf 1.9.4 – gut ein Jahr Fehlerbehebungen, u. a. für HLS-Livestreams.
 
 ## 1.11.1 – 2026-11-09 · Neue Willkommensseite
