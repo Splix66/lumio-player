@@ -707,6 +707,16 @@ body.kbd .card.f:focus, body.is-tv .card.f:focus { transform: scale(1.05); }
 }
 .field input:focus { border-color: var(--accent); box-shadow: 0 0 0 .2rem var(--accent-soft); }
 body.kbd .field input.f:focus, body.is-tv .field input.f:focus { box-shadow: 0 0 0 .2rem var(--accent-soft); }
+/* Passwortfeld mit Auge-Knopf zum Anzeigen/Verbergen */
+.pass-wrap { position: relative; }
+.pass-wrap input { padding-right: 3.4rem; }
+.pass-toggle {
+  position: absolute; right: .3rem; top: 50%; transform: translateY(-50%);
+  width: 2.7rem; height: 2.7rem; border-radius: var(--radius-sm); display: grid; place-items: center;
+  background: transparent; color: var(--muted); border: 0; cursor: pointer;
+}
+.pass-toggle svg { width: 1.3rem; height: 1.3rem; }
+.pass-toggle:hover, .pass-toggle:focus { color: var(--text); background: var(--accent-soft); }
 
 /* ==========================================================
    Pop-up: Film- und Seriendetails

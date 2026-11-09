@@ -1066,11 +1066,15 @@
       /* ---------- Hilfsfunktionen ---------- */
       var device = null, items = null, editing = null, mode = 'm3u', toastTimer = null;
       function rpc(fn, body) {
+        // Zeitlimit 15 s: ohne Antwort blieb der Knopf sonst für immer auf „Verbinde …“ stehen
+        var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 15000);
         return fetch(API + fn, {
           method: 'POST',
           headers: { apikey: KEY, 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
-        }).then(function (r) { return r.json(); }).then(function (j) {
+          body: JSON.stringify(body),
+          signal: ctrl ? ctrl.signal : undefined
+        }).then(function (r) { clearTimeout(timer); return r.json(); }).then(function (j) {
           return j && typeof j === 'object' && 'ok' in j ? j : { ok: false, error: (j && j.message) || 'Keine Verbindung. Bitte Internet prüfen und erneut versuchen.' };
         }, function () {
           return { ok: false, error: 'Keine Verbindung. Bitte Internet prüfen und erneut versuchen.' };

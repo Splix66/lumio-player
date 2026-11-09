@@ -1,0 +1,195 @@
+# Änderungsprotokoll – Lumio Player
+
+## [Unveröffentlicht] – 2026-11-09 · Automatische Tests
+
+Neue Dateien: `tests/run.html`, `tests/runner.js`, `tests/*.test.js`, `tests/fixtures/*`,
+`.github/workflows/tests.yml`. Die App selbst ist unverändert bis auf zusätzliche Einträge in der
+Test-Schnittstelle `window.LumioDebug`. Die Tests werden nicht mit in die Apps gepackt (nur `www/` wird ausgeliefert).
+
+### 30 Tests in 4 Bereichen
+- **M3U & Zugang (10):** Sendernamen mit Kommas, Ersatzname/-gruppe, `#EXTGRP`, Windows-Zeilenenden,
+  EPG-Adressen in der Kopfzeile, Xtream-Links (auch mit kodiertem Passwort und Unterordner), Server-Adressen,
+  Einteilung in Live/Filme/Serien inkl. Staffeln und Folgen, verständliche Meldung bei kaputter Playlist.
+- **Programmführer (10):** Zeitzonen, Sonderzeichen/CDATA, Namensvergleich, zerteilte Dateien,
+  echte Downloads über einen Webserver: ungepackt, gzip, ISO-8859-1, Zwischenspeicher (kein zweiter
+  Download), falsche Adresse (Meldung, kein Dauer-Nachladen), Playlist ohne EPG.
+- **Sicherheit & Daten (6):** PIN-Sperre (Stufen, Höchstwert, Ablauf, Zurücksetzen), Löschen aller
+  9 Datenarten und des gespeicherten Programmführers, Testmodus sendet nichts an den Online-Dienst,
+  kaputte Speicher-Einträge.
+- **Sprachen (4):** alle Sprachdateien laden, keine leeren Texte, **Platzhalter `{0}`, `{1}` stimmen in
+  jeder Übersetzung**, Übersicht über fehlende und nicht mehr genutzte Übersetzungen.
+
+### Dabei gefunden und behoben
+- „NEU“ (Abzeichen auf den Startkacheln) und „Neue Serien oder Folgen“ waren in **keiner** Sprache übersetzt
+  und erschienen immer auf Deutsch – jetzt in allen 13 Sprachen.
+
+### Hinweise aus den Tests (keine Fehler)
+- 50 Übersetzungen werden in der App nicht mehr verwendet (Überbleibsel früherer Versionen, unschädlich).
+  Darunter „Demo ansehen“ und „Karte „Demo ansehen“ bei den Playlists.“ – es gab also früher einen
+  Demo-Zugang, der entfernt wurde. Falls das **bewusst** war (z. B. wegen einer App-Store-Prüfung),
+  sollte der neue Knopf „Demo ausprobieren“ wieder entfernt werden.
+
+### Geprüft
+- Im Browser und dreimal hintereinander im unsichtbaren Chrome (genau wie auf GitHub): jeweils alle 30 bestanden.
+- **Nicht geprüft:** der Workflow selbst auf GitHub – das geht erst nach dem ersten Upload.
+
+## [Unveröffentlicht] – 2026-11-09 · Programmführer (EPG) für M3U-Playlists
+
+Bisher gab es Programmdaten nur für Xtream-Zugänge – M3U-Nutzer sahen nie, was gerade läuft.
+
+### Neu
+- **XMLTV-Programmführer für M3U:** Die Adresse wird aus der Playlist-Kopfzeile gelesen
+  (`url-tvg`, `x-tvg-url`, `tvg-url`, auch mehrere mit Komma) oder selbst eingetragen.
+  Bis zu 3 Quellen werden zusammengeführt (doppelte Sendungen entfallen).
+- **Zuordnung der Sender** über `tvg-id` (Groß-/Kleinschreibung egal), sonst über den Namen –
+  Vorsilben und Qualitätsangaben werden dabei ignoriert („DE: ZDF HD“ ≈ „ZDF“, „|DE| Das Erste FHD“ ≈ „Das Erste“).
+- **Überall sichtbar, wo es auch bei Xtream erscheint:** Seitenpanel in Live TV (Jetzt + Fortschritt +
+  nächste Sendungen), „Jetzt / Danach“ im Player. Zusätzlich zeigt die **Senderliste bei M3U für alle
+  Sender „läuft gerade“**, sobald der Programmführer geladen ist.
+- **Eingabe der EPG-Adresse:** optionales Feld beim Anlegen einer M3U-Playlist; auf der Profilseite
+  neuer Bereich „Programmführer (EPG)“ mit Quelle, Stand (Anzahl Sender, Ladezeit), Fehlermeldung,
+  „EPG-Adresse ändern“, „Adresse aus der Playlist verwenden“ und „Jetzt neu laden“.
+  Die eigene Adresse bleibt beim Abgleich mit dem Kundenportal erhalten.
+- Titel und Beschreibung bevorzugt in der App-Sprache, wenn die EPG-Datei mehrere Sprachen enthält.
+
+### Leistung & Speicher (wichtig für TV-Boxen)
+- EPG-Dateien (oft 50–200 MB) werden **Stück für Stück gelesen** statt komplett in den Speicher.
+  Behalten wird nur, was gebraucht wird: Sender der Playlist, 3 Stunden zurück bis 36 Stunden voraus.
+- **gzip-Dateien (.xml.gz)** werden automatisch erkannt und entpackt (an den ersten Bytes, nicht am Namen).
+- Zeichensatz aus der XML-Kopfzeile (z. B. ISO-8859-1) wird beachtet.
+- Geladen wird erst, wenn der Programmführer gebraucht wird (Live TV, Player) – nicht beim App-Start.
+- **Zwischenspeicher im Gerät (IndexedDB), 12 Stunden gültig:** Nach einem Neustart ist das Programm
+  sofort da, ohne erneuten Download. „Playlist aktualisieren“ und „Jetzt neu laden“ holen ihn frisch.
+- Nach einem Fehler wird 10 Minuten lang nicht erneut geladen – sonst würde die große Datei bei jedem
+  Senderwechsel neu angefragt.
+
+### Datenschutz
+- Gespeicherter Programmführer wird beim Löschen einer Playlist und bei „Alles zurücksetzen“ mit entfernt.
+
+### Getestet (Browser, eigene Test-Playlist und Test-EPG, keine Kundendaten)
+- 19 Einzeltests: Zeitzonen (+0100, -0500, +01:00, ohne Zone), Sonderzeichen/CDATA, Namenszuordnung,
+  Kopfzeile mit mehreren Adressen, Zeitfenster, fehlende Endzeit, Datei mitten in Einträgen zerteilt
+- Gesamtablauf: Playlist mit gepacktem EPG anlegen → Live TV → Seitenpanel, Senderliste, Player
+- Zwischenspeicher: nach Neustart kein erneuter Download
+- Profilseite: eigene Adresse (.xml), falsche Adresse (Fehlermeldung, keine Wiederholungs-Downloads),
+  zurück zur Playlist-Adresse
+- Alle 25 neuen Texte in 13 Sprachen, Platzhalter geprüft; keine Konsolenfehler
+
+**Nicht getestet:** echte große EPG-Dateien von Anbietern sowie das Verhalten in der **Android-App**:
+Dort laufen Anfragen über das native HTTP-Modul von Capacitor (`CapacitorHttp`). Ob es große bzw.
+gepackte (.gz) Dateien unverändert durchreicht, ist ungeklärt. Falls auf Android kein Programm erscheint:
+eine ungepackte `.xml`-Adresse eintragen und mir Bescheid geben.
+
+## [Unveröffentlicht] – 2026-11-09 · Neuer Web-Verwaltungsbereich
+
+Neue Dateien: `docs/admin.html`, `docs/admin.css`, `docs/admin.js`, `server/admin.sql`.
+Bestehende Tabellen, Funktionen, App und Kundenportal bleiben unverändert (nur Ergänzungen).
+Einrichtung: siehe README → „Verwaltungsbereich einrichten“.
+
+### Funktionen
+- **Anmeldung** mit Supabase-Konto; Zugriff nur für Konten in der Tabelle `admins`.
+  Sitzung gilt nur im Browser-Tab, automatische Abmeldung nach 30 Minuten ohne Aktivität,
+  Token werden automatisch erneuert.
+- **Übersicht:** Geräte gesamt / neu in 7 Tagen, aktiv heute / 7 Tage, Playlists (Xtream/M3U),
+  offene Support-Anfragen, gesperrte Geräte; Diagramm „Neue Geräte pro Tag“ (14 Tage) mit
+  Tooltip und Tabellenansicht; die neuesten offenen Anfragen.
+- **Support-Postfach:** Filter Offen/Erledigt/Alle, Suche (MAC, Text, Kontakt), interne Notiz,
+  „Als erledigt markieren“ / „Wieder öffnen“ (mit Zeitpunkt und bearbeitendem Admin),
+  Antwort per E-Mail-Link, Sprung zum Gerät.
+- **Geräte:** Liste mit Suche (MAC, auch ohne Doppelpunkte), Filter Aktiv / Inaktiv /
+  Fehlversuche, Status-Kennzeichen, seitenweises Laden. Detailansicht mit Playlists,
+  Support-Verlauf, „Sperre aufheben“ und „Gerät löschen“ (Bestätigung per Doppelklick).
+- **Protokoll:** Jede ändernde Admin-Aktion wird mit Admin, Zeitpunkt und Ziel gespeichert.
+
+### Sicherheit & Datenschutz
+- Datenbankfunktionen prüfen bei jedem Aufruf die Admin-Berechtigung (`security definer`,
+  nur für angemeldete Benutzer freigegeben). Tabellen bleiben per RLS gesperrt.
+- **Keine Kunden-Zugangsdaten im Verwaltungsbereich:** Benutzername, Passwort und vollständige
+  M3U-Links werden vom Server gar nicht ausgeliefert – nur Name, Typ und Server-Host
+  (auch `benutzer:passwort@` in Adressen wird entfernt).
+- Kundentexte werden nur als Text dargestellt (kein HTML) – Support-Nachrichten können keinen
+  Code einschleusen. Strenge Content-Security-Policy (Skripte nur aus eigener Datei,
+  Verbindungen nur zu Supabase), Schutz vor Einbetten in fremde Seiten, `noindex`.
+
+### Getestet (Demo-Modus `admin.html?demo` auf localhost, erfundene Daten)
+- Anmeldung, Wiederherstellen der Sitzung nach Neuladen, Abmelden, automatische Abmeldung nach
+  30 Minuten (Daten werden aus der Seite entfernt)
+- Kennzahlen, Diagramm inkl. Tooltip, Liste offener Anfragen
+- Support: Notiz, erledigt/wieder öffnen inkl. Zähler, Filter, Suche, E-Mail-Link
+- Geräte: Seitenweises Laden, Filter, Suche, Detailansicht, Sperre aufheben, Löschen
+- Protokoll, Navigation per Adresse (#support, #geraete …) und Zurück-Taste
+- Desktop und Handy (375 px): keine waagerechte Scrollleiste, Tabellen werden zu Karten
+- Keine Konsolenfehler, keine CSP-Verstöße
+
+**Nicht getestet:** `server/admin.sql` gegen die echte Datenbank und die echte Supabase-Anmeldung –
+beides habe ich bewusst nicht an der Produktionsdatenbank ausgeführt. Bitte nach dem Einrichten
+einmal anmelden und die Bereiche durchklicken; Fehlermeldungen werden in der Oberfläche angezeigt.
+
+## [Unveröffentlicht] – 2026-11-09 · Überarbeitung Sicherheit, Stabilität, Bedienung
+
+Die Versionsnummer in `www/js/app.js` (`CONFIG.version`) wurde **bewusst nicht** erhöht –
+das passiert beim nächsten Release zusammen mit dem GitHub-Release-Namen (Update-Prüfung vergleicht beide).
+
+Sicherung des Stands vor der Überarbeitung: `../lumio-backup-2026-11-09-vor-Ueberarbeitung.zip`
+
+### Sicherheit
+- **Kindersicherung umgehbar (behoben):** Ohne Admin-PIN konnte jeder durch 7× Tippen auf die
+  Versionsnummer eine neue Admin-PIN festlegen und über „Alles zurücksetzen“ die Kindersicherung
+  löschen. Ist die Kindersicherung aktiv, wird jetzt vorher deren PIN verlangt. (`www/js/app.js`, `Admin.unlock`)
+- **PIN-Sperre gegen Durchprobieren (neu):** Kindersicherungs- und Admin-PIN sperren ab dem
+  5. Fehlversuch für 30 s, danach jeweils doppelt so lange (max. 30 min). Der Zähler übersteht
+  Neustarts; während der Sperre wird auch die richtige PIN abgelehnt. (`PinGuard`)
+- **Desktop-App (Electron):** Externe Links werden nur noch mit `http/https` geöffnet
+  (vorher jedes Schema, z. B. `file:` oder `ms-…:` → konnte Programme starten). Das App-Fenster
+  kann nicht mehr auf fremde Seiten wegnavigieren, Renderer läuft in der Sandbox,
+  Kamera/Mikrofon/Standort-Anfragen werden abgelehnt. (`desktop/main.js`)
+- **Android-Plugin:** `NativePlayer.openExternal` akzeptiert nur noch Web-/Streaming-Schemata
+  (http, https, rtmp, rtsp, rtp, udp, mms) – keine `intent:`, `file:` oder `content:` Links.
+  (`platforms/android/java/NativePlayerPlugin.java`)
+- **Test-Webserver:** Path-Traversal in Nachbarordner (z. B. `www-alt`) geschlossen, kaputte
+  URL-Kodierung lässt den Server nicht mehr abstürzen, Sicherheits-Header ergänzt. (`scripts/serve.js`)
+
+### Fehlerbehebungen
+- **Playlist-Abgleich hing dauerhaft:** Eine nie beantwortete Anfrage an den Online-Dienst ließ
+  den Abgleich für immer auf „beschäftigt“ stehen – neue Playlists vom Handy kamen bis zum
+  Neustart nicht mehr an. Jetzt mit 15-s-Zeitlimit (`CONFIG.cloudTimeout`). Gleiches Zeitlimit
+  im Kundenportal (`docs/index.html`), dort blieb sonst der Knopf auf „Verbinde …“ stehen.
+- **Speicherleck beim Playlist-Wechsel:** Wurde die Oberfläche ersetzt (Playlist wechseln,
+  Playlist übers Portal gelöscht), liefen die Timer des Startbildschirms weiter und luden im
+  Hintergrund Listen der alten Playlist. Die Ansicht wird jetzt beim Verlassen aufgeräumt.
+- **Datenreste beim Löschen einer Playlist (Datenschutz):** Es wurden nur 5 von 9 gespeicherten
+  Datenarten entfernt (beim Löschen über das Portal sogar nur 3). Jetzt werden Favoriten,
+  Weiterschauen, Verlauf, Gesehen, Zuletzt, Statistik, Neu-Markierung, Kategorie-Einstellungen
+  und Ablauf-Erinnerungen vollständig gelöscht (`Profiles.dropData`).
+
+### Bedienung & Funktionen
+- **„Demo ausprobieren“** auf dem Willkommensbildschirm: Der vorhandene Demo-Modus (freie
+  Test-Videos) war nirgends erreichbar. Nützlich für neue Nutzer und für die App-Store-Prüfung
+  (Apple/Google verlangen eine testbare App ohne eigenen Zugang). Die Demo bleibt lokal.
+- **Passwort anzeigen/verbergen** (Auge-Knopf) im Formular „Playlist hinzufügen“.
+- **Enter im letzten Feld** (Passwort bzw. M3U-Link) speichert direkt.
+- Alle neuen Texte in allen 14 Sprachen übersetzt.
+
+### Leistung
+- Schnellsuche: Der normalisierte Name wird pro Eintrag einmal berechnet und gemerkt statt bei
+  jedem Tastendruck für jeden Eintrag neu – spürbar bei Playlists mit zehntausenden Einträgen
+  auf schwachen TV-Boxen.
+
+### Entwicklung
+- `?nocloud` an der Adresse (z. B. `http://localhost:8080/?nocloud`) startet die App ohne
+  Online-Dienst – es wird dann kein Testgerät in der Produktionsdatenbank angelegt.
+
+### Getestet (Browser, Demo-Modus, ohne Online-Dienst)
+- Willkommensbildschirm inkl. Demo-Knopf (Desktop- und Handy-Breite), Demo-Start
+- Passwort-Auge, keine Anfragen an Supabase mit `?nocloud`
+- PIN-Sperre: 4 Fehlversuche → Hinweis, 5. → 30 s Sperre, richtige PIN in der Sperre abgelehnt,
+  nach Ablauf angenommen und Zähler gelöscht
+- Admin-Zugang bei aktiver Kindersicherung verlangt zuerst die Kindersicherungs-PIN
+- Timer des Startbildschirms wird beim Ersetzen der Oberfläche beendet
+- Löschen einer Playlist entfernt alle 9 Datenarten
+- Alle 13 Übersetzungsdateien laden fehlerfrei, Platzhalter `{0}` vorhanden
+- Kundenportal lädt fehlerfrei
+
+**Nicht getestet** (auf dem Entwicklungs-PC fehlen Node.js, Android Studio, Electron):
+Android-Build (`NativePlayerPlugin.java`), Desktop-Build (`desktop/main.js`), `scripts/serve.js`,
+das Zeitlimit gegen einen echt hängenden Server.
