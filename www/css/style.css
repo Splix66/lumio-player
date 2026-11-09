@@ -1998,10 +1998,10 @@ body.lite .wl-card, body.lite .wl-head, body.lite .wl-chip i { animation: none; 
    unten „Zuletzt angesehen“ als breite Bildkarten.
    ========================================================== */
 .launcher { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 1.4rem 3.4rem .8rem; overflow: hidden; }
-.ln-head { flex: none; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; }
+.ln-head { flex: none; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; }
 .ln-head .brand { justify-self: start; font-size: 1.55rem; }
 .ln-head .brand-mark { width: 2.4rem; height: 2.4rem; }
-.ln-status { display: flex; align-items: center; justify-content: center; }
+.ln-status { display: flex; align-items: center; justify-content: center; min-width: 0; overflow: hidden; padding: 0 1rem; }
 .ln-chip { display: inline-flex; align-items: center; height: 2.6rem; margin: 0 .3rem; padding: 0 1rem 0 .85rem; border-radius: 999px; background: rgba(255, 255, 255, .05); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1); color: var(--text-2); font-size: .8rem; font-weight: 650; white-space: nowrap; }
 .ln-chip i { width: .48rem; height: .48rem; flex: none; border-radius: 50%; background: var(--dim); }
 .ln-chip .i { width: 1rem; height: 1rem; margin: 0 .45rem 0 .5rem; opacity: .85; }
@@ -2304,3 +2304,68 @@ body.kbd .chan-panel .chan.f:focus .now-bar, body.is-tv .chan-panel .chan.f:focu
 .nt-verdict.is-ok { color: var(--warn); }
 .nt-verdict.is-bad { color: var(--live); }
 .nt-act { margin-top: 1rem; }
+
+/* ==========================================================
+   Bildschirmschoner: Uhr wandert, Poster wechseln langsam
+   ========================================================== */
+.saver { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 200; overflow: hidden; background: #000; color: #fff; cursor: none; animation: svIn .8s ease; }
+@keyframes svIn { from { opacity: 0; } to { opacity: 1; } }
+.sv-pic { position: absolute; top: 0; right: 0; bottom: 0; left: 0; opacity: 0; transition: opacity 2.4s ease; }
+.sv-pic.is-on { opacity: 1; }
+.sv-blur { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(1.3); filter: blur(40px) brightness(.32) saturate(1.2); }
+.sv-poster { position: absolute; top: 50%; right: 8%; width: 21vw; display: flex; flex-direction: column; align-items: center; transform: translateY(-50%); }
+.sv-poster img { display: block; width: 100%; height: 31.5vw; object-fit: cover; border-radius: 1.2rem; box-shadow: 0 2rem 4rem rgba(0, 0, 0, .6); }
+.sv-poster span { max-width: 100%; margin-top: 1rem; color: rgba(255, 255, 255, .75); font-size: 1.1rem; font-weight: 650; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sv-shade { position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: linear-gradient(90deg, rgba(0, 0, 0, .55), transparent 60%); }
+.sv-clock { position: absolute; display: flex; flex-direction: column; transition: left 3s ease, top 3s ease; }
+.sv-clock b { font-size: 7rem; font-weight: 800; line-height: 1; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+.sv-clock span { margin-top: .7rem; color: rgba(255, 255, 255, .75); font-size: 1.5rem; font-weight: 500; }
+.sv-brand { position: absolute; left: 3rem; bottom: 2.4rem; display: flex; align-items: center; color: rgba(255, 255, 255, .55); font-size: 1.1rem; }
+.sv-brand .brand-mark { width: 1.8rem; height: 1.8rem; margin-right: .6rem; }
+body.lite .sv-pic { transition: none; }
+@media (orientation: landscape) and (max-height: 540px) {
+  html:not(.tv) .sv-clock b { font-size: 4.5rem; }
+  html:not(.tv) .sv-clock span { font-size: 1.1rem; }
+}
+
+/* ==========================================================
+   Personen (Familienprofile): Kreis mit Anfangsbuchstabe, „Wer schaut?“
+   ========================================================== */
+.avatar { position: relative; flex: none; display: inline-grid; place-items: center; width: 2.2rem; height: 2.2rem; border-radius: 50%; color: #fff; font-size: 1rem; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .18); }
+.avatar b { font-weight: 800; line-height: 1; }
+.avatar.is-kids::after { content: ""; position: absolute; right: -.1rem; bottom: -.1rem; width: .75rem; height: .75rem; border-radius: 50%; background: #fbbf24; box-shadow: 0 0 0 2px var(--bg); }
+.avatar.av-add { background: var(--surface-2); color: var(--muted); }
+.avatar.av-add .i { width: 1.1rem; height: 1.1rem; }
+.ln-person { display: inline-flex; align-items: center; height: 2.9rem; padding: 0 .35rem; border-radius: 999px; background: rgba(255, 255, 255, .05); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12); color: var(--text); }
+.ln-person.has-name { padding: 0 1rem 0 .35rem; }
+.ln-person span { margin-left: .6rem; max-width: 8rem; font-size: .9rem; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ln-person:hover { background: rgba(255, 255, 255, .1); }
+body.kbd .ln-person.f:focus, body.is-tv .ln-person.f:focus { background: var(--text); color: var(--bg); box-shadow: none; }
+:root[data-theme="light"] .ln-person { background: var(--surface); box-shadow: inset 0 0 0 1px var(--line-2); }
+.who { position: absolute; top: 0; right: 0; bottom: 0; left: 0; display: flex; align-items: center; justify-content: center; overflow-y: auto; padding: 2rem var(--pad); background: radial-gradient(60% 50% at 50% 0%, rgba(124, 58, 237, .22), transparent 70%), var(--bg); }
+.who-in { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.who .brand { font-size: 1.4rem; opacity: .85; }
+.who h1 { margin-top: 2.2rem; font-size: 2.6rem; font-weight: 800; letter-spacing: -.03em; }
+.who-grid { display: flex; flex-wrap: wrap; justify-content: center; margin-top: 2.4rem; }
+.who-p { display: flex; flex-direction: column; align-items: center; width: 10rem; margin: 0 .8rem 1.2rem; padding: 1rem .5rem; border-radius: 1.2rem; color: var(--text); }
+.who-p b { margin-top: .9rem; max-width: 100%; font-size: 1.15rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.who-p small { margin-top: .2rem; color: #fbbf24; font-size: .8rem; font-weight: 650; }
+.avatar.av-big { width: 7rem; height: 7rem; font-size: 3rem; box-shadow: inset 0 0 0 3px rgba(255, 255, 255, .2); transition: transform .18s ease, box-shadow .18s ease; }
+.avatar.av-big.is-kids::after { width: 1.6rem; height: 1.6rem; box-shadow: 0 0 0 4px var(--bg); }
+.who-p.is-on .avatar.av-big { box-shadow: inset 0 0 0 3px rgba(255, 255, 255, .55); }
+.who-p:hover .avatar.av-big { transform: scale(1.05); }
+body.kbd .who-p.f:focus, body.is-tv .who-p.f:focus { background: transparent; box-shadow: none; }
+body.kbd .who-p.f:focus .avatar.av-big, body.is-tv .who-p.f:focus .avatar.av-big { transform: scale(1.08); box-shadow: 0 0 0 .3rem var(--bg), 0 0 0 .55rem #fff; }
+.who-manage { margin-top: 1.4rem; }
+.pp-row .avatar, .pp-add .avatar { margin-right: .9rem; }
+.pp-row > .i { flex: none; width: 1.1rem; height: 1.1rem; margin-left: .8rem; color: var(--dim); }
+@media (orientation: landscape) and (max-height: 540px) {
+  html:not(.tv) .ln-person { height: 2.3rem; }
+  html:not(.tv) .ln-person .avatar { width: 1.7rem; height: 1.7rem; font-size: .8rem; }
+  html:not(.tv) .ln-person span { display: none; }
+  html:not(.tv) .ln-person.has-name { padding: 0 .3rem; }
+  html:not(.tv) .who h1 { margin-top: .8rem; font-size: 1.6rem; }
+  html:not(.tv) .who-grid { margin-top: 1rem; }
+  html:not(.tv) .avatar.av-big { width: 4.5rem; height: 4.5rem; font-size: 2rem; }
+  html:not(.tv) .who-p { width: 7rem; margin: 0 .4rem .6rem; padding: .5rem .3rem; }
+}

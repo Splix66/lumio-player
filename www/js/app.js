@@ -133,6 +133,8 @@
     sort: '<path d="M7 4v16M3.5 16.5L7 20l3.5-3.5"/><path d="M14 6h7M14 11h5M14 16h3"/>',
     clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/>',
     timer: '<circle cx="12" cy="13.5" r="7.5"/><path d="M12 9.5v4l2.6 1.6M9.5 2.5h5"/>',
+    saver: '<rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 20.5h8M12 17v3.5"/><path d="M14.6 7.6a3.3 3.3 0 1 0 1.4 4.8 2.7 2.7 0 0 1-1.4-4.8z"/>',
+    users: '<circle cx="9" cy="8.5" r="3.5"/><path d="M2.8 19.5a6.2 6.2 0 0 1 12.4 0"/><circle cx="17" cy="9.5" r="2.8"/><path d="M15.6 14.2a5 5 0 0 1 5.6 5.3"/>',
     bell: '<path d="M6 16.5V11a6 6 0 1 1 12 0v5.5l1.6 2.2H4.4z"/><path d="M10 20.6a2.1 2.1 0 0 0 4 0"/>',
     guide: '<rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="M3 9.5h18M8.5 9.5v10M3 14.5h18M14 9.5v5"/>',
     archive: '<path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3.5 4.5v4h4"/><path d="M12 7.5V12l3 2"/>',
@@ -1383,6 +1385,7 @@
     DATA_KEYS: ['fav', 'resume', 'recent', 'seen', 'last', 'stats', 'seenNew', 'cats', 'expiry', 'idv', 'hidech', 'upnext', 'swatch', 'remind', 'later'],
     dropData: function (id) {
       this.DATA_KEYS.forEach(function (k) { Store.del(k + '.' + id); });
+      Persons.list().forEach(function (pe) { PERSONAL_KEYS.forEach(function (k) { Store.del(k + '.' + id + '~' + pe.id); }); });
       EpgStore.del('epg.' + id);   // zwischengespeicherter Programmführer
       if (Store.get('active') === id) Store.del('active');
     },
@@ -1699,9 +1702,18 @@
         var o = { fp: profileFp(p), name: p.name, type: p.type, d: {} };
         if (p.epgShift) o.epgShift = p.epgShift;
         BACKUP_DATA.forEach(function (k) { var v = Store.get(k + '.' + p.id, null); if (v !== null) o.d[k] = v; });
+        // weitere Personen: ihre eigenen Daten je Playlist
+        Persons.list().forEach(function (pe) {
+          if (pe.id === 'main') return;
+          var d = {};
+          PERSONAL_KEYS.forEach(function (k) { if (BACKUP_DATA.indexOf(k) < 0) return; var v = Store.get(k + '.' + p.id + '~' + pe.id, null); if (v !== null) d[k] = v; });
+          if (Object.keys(d).length) { o.pd = o.pd || {}; o.pd[pe.id] = d; }
+        });
         return o;
       });
-      return { v: 1, at: Date.now(), app: CONFIG.version, settings: settings, lists: lists };
+      var out = { v: 1, at: Date.now(), app: CONFIG.version, settings: settings, lists: lists };
+      if (Persons.multi()) out.persons = Persons.list();
+      return out;
     },
     ready: function () {
       if (!CONFIG.cloudUrl) return Promise.reject(new Error(T('Online-Dienst nicht erreichbar')));
@@ -1740,6 +1752,10 @@
     // Daten einer gesicherten Playlist in eine Playlist auf diesem Gerät schreiben
     applyList: function (p, l) {
       BACKUP_DATA.forEach(function (k) { if (l.d && l.d[k] !== undefined) Store.set(k + '.' + p.id, l.d[k]); });
+      Object.keys(l.pd || {}).forEach(function (pe) {
+        if (!/^p[0-9a-z]+$/.test(pe)) return;
+        PERSONAL_KEYS.forEach(function (k) { if (BACKUP_DATA.indexOf(k) >= 0 && l.pd[pe][k] !== undefined) Store.set(k + '.' + p.id + '~' + pe, l.pd[pe][k]); });
+      });
       if (l.epgShift) p.epgShift = l.epgShift; else delete p.epgShift;
     },
     // Wiederherstellen: Playlists von der Webseite ergänzen, Einstellungen ersetzen (außer gerätespezifische), Daten zuordnen
@@ -1758,6 +1774,12 @@
         Object.keys(b.settings).forEach(function (k) { if (BACKUP_SKIP.indexOf(k) < 0) ns[k] = b.settings[k]; });
         Object.keys(keep).forEach(function (k) { ns[k] = keep[k]; });
         Settings.data = ns; Store.set('settings', ns);
+      }
+      // Personen übernehmen (nur gültige Einträge)
+      if (Array.isArray(b.persons) && b.persons.length) {
+        var ok = b.persons.filter(function (pe) { return pe && (pe.id === 'main' || /^p[0-9a-z]+$/.test(pe.id)) && typeof pe.name === 'string'; }).slice(0, Persons.MAX)
+          .map(function (pe) { var o = { id: pe.id, name: pe.name.slice(0, 20), color: PERSON_COLORS.indexOf(pe.color) >= 0 ? pe.color : PERSON_COLORS[0] }; if (pe.kids) o.kids = true; return o; });
+        if (ok.length) Persons.save(ok);
       }
       var pending = Store.get('restorePending', {}), matched = 0;
       (b.lists || []).forEach(function (l) {
@@ -2083,6 +2105,8 @@
     return DemoProvider();
   }
   function pid() { return App.profile ? App.profile.id : 'none'; }
+  // Daten der gerade schauenden Person (Favoriten, Verlauf …). Die erste Person nutzt die bisherigen Schlüssel.
+  function uid() { return pid() + Persons.suffix(); }
   function slim(item) {
     var o = {};
     ['kind', 'id', 'name', 'logo', 'backdrop', 'num', 'ext', 'url', 'catId', 'season', 'seriesId', 'seriesName', 'year', 'rating', 'plot', 'genre', 'duration', 'archive'].forEach(function (k) {
@@ -2091,22 +2115,152 @@
     return o;
   }
 
+  /* ---------- Personen (Familienprofile) ----------
+     Mehrere Personen teilen sich ein Gerät: jede hat eigene Favoriten, eigenen Verlauf, „Weiterschauen“, „Später ansehen“
+     und Erinnerungen. Playlists, Kategorien, ausgeblendete Sender und die Kindersicherung gelten für alle.
+     Kinderprofil: gesperrte Kategorien (Erwachsene und selbst gesperrte) sind ganz ausgeblendet, entsperren geht nicht;
+     zum Wechseln in ein anderes Profil und für die Einstellungen braucht es die PIN der Kindersicherung. */
+  var PERSON_COLORS = ['#a855f7', '#f97316', '#0ea5e9', '#22c55e', '#ec4899', '#eab308'];
+  var PERSONAL_KEYS = ['fav', 'resume', 'recent', 'seen', 'last', 'upnext', 'swatch', 'remind', 'later'];
+  var Persons = {
+    MAX: 6, pinOk: false,
+    list: function () {
+      var l = Store.get('persons', null);
+      return l && l.length ? l : [{ id: 'main', name: T('Ich'), color: PERSON_COLORS[0] }];
+    },
+    save: function (l) { Store.set('persons', l); },
+    get: function (id) { return this.list().filter(function (p) { return p.id === id; })[0] || null; },
+    curId: function () { var id = Store.get('person', 'main'); return this.get(id) ? id : 'main'; },
+    cur: function () { return this.get(this.curId()); },
+    kids: function () { var c = this.cur(); return !!(c && c.kids); },
+    multi: function () { return this.list().length > 1; },
+    suffix: function () { var id = this.curId(); return id === 'main' ? '' : '~' + id; },
+    add: function (name, kids) {
+      var l = this.list(), used = l.map(function (p) { return p.color; });
+      var color = PERSON_COLORS.filter(function (c) { return used.indexOf(c) < 0; })[0] || PERSON_COLORS[l.length % PERSON_COLORS.length];
+      var id;
+      do { id = 'p' + Date.now().toString(36) + Math.floor(Math.random() * 1296).toString(36); } while (this.get(id));   // eindeutig, auch wenn schnell hintereinander angelegt
+      var p = { id: id, name: name, color: color };
+      if (kids) p.kids = true;
+      l.push(p); this.save(l);
+      return p;
+    },
+    update: function (id, ch) {
+      var l = this.list();
+      l.forEach(function (p) { if (p.id === id) { for (var k in ch) if (ch.hasOwnProperty(k)) { if (ch[k] === false || ch[k] === null) delete p[k]; else p[k] = ch[k]; } } });
+      this.save(l);
+    },
+    // Person löschen: auch ihre Daten in allen Playlists (Datenschutz, keine Reste)
+    remove: function (id) {
+      if (id === 'main') return;
+      this.save(this.list().filter(function (p) { return p.id !== id; }));
+      Profiles.list().forEach(function (pl) { PERSONAL_KEYS.forEach(function (k) { Store.del(k + '.' + pl.id + '~' + id); }); });
+      if (Store.get('person') === id) Store.del('person');
+    },
+    // Wechseln. Aus dem Kinderprofil heraus nur mit der PIN der Kindersicherung (falls eine festgelegt ist).
+    switchTo: function (id) {
+      var self = this, from = self.cur(), to = self.get(id);
+      if (!to) return;
+      function go() {
+        Store.set('person', id);
+        searchCache = {}; Parental.unlocked = false; self.pinOk = false;
+        if (Player.el) Player.close();
+        if (App.profile) Shell.open();
+        toast(T('Hallo {0}!', to.name));
+      }
+      if (id === from.id) { if (Screens.top() && Screens.top().name === 'who') goBack(); return; }
+      if (from.kids && !to.kids && Settings.get('parentPin')) Parental.ask(go, { keep: true, text: T('Zum Wechseln aus dem Kinderprofil bitte die PIN der Kindersicherung eingeben.') });
+      else go();
+    },
+    // Kinderprofil: Einstellungen und Playlists nur mit PIN
+    guard: function (go) {
+      if (!this.kids() || !Settings.get('parentPin') || this.pinOk) { go(); return; }
+      var self = this;
+      Parental.ask(function () { self.pinOk = true; go(); }, { keep: true, text: T('Im Kinderprofil braucht es dafür die PIN der Kindersicherung.') });
+    }
+  };
+  // Knopf oben auf dem Startbildschirm: wer gerade schaut (bei einer Person nur der Kreis)
+  function personButton() {
+    var p = Persons.cur(), multi = Persons.multi();
+    return h('button', { class: 'ln-person f' + (multi ? ' has-name' : ''), 'data-key': 'ln:person', title: multi ? T('Wer schaut? ({0})', p.name) : T('Personen'), 'aria-label': T('Wer schaut?') + ': ' + p.name,
+      onclick: function () { if (multi) showWhoWatches(); else Persons.guard(function () { showPersons(); }); } },
+      avatar(p), multi ? h('span', { text: p.name }) : null);
+  }
+  function avatar(p, cls) {
+    return h('span', { class: 'avatar' + (cls ? ' ' + cls : '') + (p.kids ? ' is-kids' : ''), style: 'background:' + p.color, 'aria-hidden': 'true' },
+      h('b', { text: String(p.name || '?').trim().charAt(0).toUpperCase() || '?' }));
+  }
+  /* „Wer schaut?“ – beim Start, wenn mehrere Personen angelegt sind, und über den Personen-Knopf */
+  function showWhoWatches() {
+    var cur = Persons.curId(), grid = h('div', { class: 'who-grid' });
+    Persons.list().forEach(function (p) {
+      grid.appendChild(h('button', { class: 'who-p f' + (p.id === cur ? ' is-on' : ''), 'data-autofocus': p.id === cur ? true : null, onclick: function () { Persons.switchTo(p.id); } },
+        avatar(p, 'av-big'), h('b', { text: p.name }), p.kids ? h('small', { text: T('Kinderprofil') }) : null));
+    });
+    var el = h('div', { class: 'who' }, h('div', { class: 'who-in' },
+      h('div', { class: 'brand' }, brandMark(), wordmark()),
+      h('h1', { text: T('Wer schaut?') }), grid,
+      h('button', { class: 'btn f ghost who-manage', onclick: function () { Persons.guard(showPersons); } }, icon('users'), h('span', { text: T('Personen verwalten') }))));
+    Screens.push('who', el);
+  }
+  /* Personen verwalten: hinzufügen, umbenennen, Kinderprofil an/aus, löschen */
+  function showPersons(onDone) {
+    var box = h('div', { class: 'pp-list' });
+    function paint() {
+      clear(box);
+      var l = Persons.list(), cur = Persons.curId();
+      l.forEach(function (p) {
+        box.appendChild(h('button', { class: 'ch-opt f pp-row', onclick: function () { editPerson(p, paint); } },
+          avatar(p), h('span', { class: 'ch-txt' }, h('b', { text: p.name }), h('small', { text: [p.id === cur ? T('Schaut gerade') : '', p.kids ? T('Kinderprofil') : ''].filter(Boolean).join(' · ') || ' ' })),
+          icon('pencil')));
+      });
+      if (l.length < Persons.MAX) box.appendChild(h('button', { class: 'ch-opt f pp-add', onclick: function () { editPerson(null, paint); } }, h('span', { class: 'avatar av-add' }, icon('plus')), h('span', { class: 'ch-txt' }, h('b', { text: T('Person hinzufügen') }))));
+    }
+    paint();
+    openSheet(T('Personen'), 'users', [h('p', { class: 'hint', text: T('Jede Person hat eigene Favoriten, eigenen Verlauf, „Weiterschauen“ und „Später ansehen“. Playlists und Einstellungen gelten für alle.') }), box], { onClose: onDone });
+  }
+  function editPerson(p, done) {
+    var isNew = !p, f = inputField(T('Name'), T('z. B. Lea'), 'text');
+    f.input.value = p ? p.name : '';
+    f.input.setAttribute('maxlength', '20');
+    f.input.setAttribute('data-autofocus', '');
+    var kids = !!(p && p.kids), err = h('div', { class: 'error' });
+    var kidRow = toggleRow(T('Kinderprofil'), T('Zeigt keine gesperrten Kategorien (z. B. für Erwachsene). Wechseln und Einstellungen nur mit der PIN der Kindersicherung.'),
+      function () { return kids; }, function (v) { kids = v; });
+    var tip = h('p', { class: 'hint', text: Settings.get('parentPin') ? '' : T('Tipp: Lege unter Einstellungen → Kindersicherung eine PIN fest, damit Kinder nicht einfach wechseln können.') });
+    function save() {
+      var name = f.input.value.trim();
+      if (!name) { err.textContent = T('Bitte einen Namen eingeben.'); return; }
+      if (isNew) Persons.add(name, kids); else Persons.update(p.id, { name: name, kids: p.id === 'main' ? false : kids });
+      goBack(); if (done) setTimeout(done, 40);
+    }
+    f.input.addEventListener('keydown', function (e) { if (e.keyCode === 13) save(); });
+    var btns = h('div', { class: 'row' }, sheetBtn('check', T('Speichern'), save, 'primary'));
+    if (p && p.id !== 'main') btns.appendChild(sheetBtn('trash', T('Löschen'), function () {
+      confirmBox(T('„{0}“ löschen?', p.name), T('Favoriten, Verlauf und Listen dieser Person werden auf diesem Gerät gelöscht.'), T('Löschen'), function () {
+        Persons.remove(p.id); goBack(); if (done) setTimeout(done, 40);
+        if (!Persons.get(Persons.curId()) || Persons.curId() === 'main') { if (App.profile) Shell.open(); }
+      });
+    }));
+    openSheet(isNew ? T('Person hinzufügen') : p.name, 'users', [f.wrap, p && p.id === 'main' ? null : kidRow, tip, err, btns]);
+  }
+
   var Favs = {
-    all: function () { return Store.get('fav.' + pid(), { live: [], movie: [], series: [] }); },
+    all: function () { return Store.get('fav.' + uid(), { live: [], movie: [], series: [] }); },
     list: function (kind) { return this.all()[kind] || []; },
     has: function (item) { return this.list(item.kind).some(function (x) { return x.id === item.id; }); },
     toggle: function (item) {
       var a = this.all(); var l = a[item.kind] || [];
       var on = l.some(function (x) { return x.id === item.id; });
       a[item.kind] = on ? l.filter(function (x) { return x.id !== item.id; }) : [slim(item)].concat(l);
-      Store.set('fav.' + pid(), a);
+      Store.set('fav.' + uid(), a);
       toast(on ? T('Aus Favoriten entfernt') : T('Zu Favoriten hinzugefügt'));
       return !on;
     }
   };
 
   var Resume = {
-    all: function () { return Store.get('resume.' + pid(), {}); },
+    all: function () { return Store.get('resume.' + uid(), {}); },
     key: function (item) { return item.kind + ':' + item.id; },
     get: function (item) { return this.all()[this.key(item)]; },
     set: function (item, t, d) {
@@ -2117,17 +2271,17 @@
       else a[k] = { t: Math.floor(t), d: Math.floor(d), at: Date.now(), item: slim(item) };
       var keys = Object.keys(a).sort(function (x, y) { return a[y].at - a[x].at; });
       keys.slice(40).forEach(function (x) { delete a[x]; });
-      Store.set('resume.' + pid(), a);
+      Store.set('resume.' + uid(), a);
     },
     recent: function () { var a = this.all(); return Object.keys(a).map(function (k) { return a[k]; }).sort(function (x, y) { return y.at - x.at; }); },
-    drop: function (item) { var a = this.all(), k = this.key(item); if (a[k]) { delete a[k]; Store.set('resume.' + pid(), a); } },
-    clear: function () { Store.del('resume.' + pid()); }
+    drop: function (item) { var a = this.all(), k = this.key(item); if (a[k]) { delete a[k]; Store.set('resume.' + uid(), a); } },
+    clear: function () { Store.del('resume.' + uid()); }
   };
 
   /* Fertig geschaute Filme und Folgen (für Häkchen und „nächste ungesehene Folge“) */
   /* „Später ansehen“: eigene Merkliste für Filme und Serien (zuletzt gemerkt zuerst), getrennt von den Favoriten */
   var Later = {
-    key: function () { return 'later.' + pid(); },
+    key: function () { return 'later.' + uid(); },
     all: function () { return Store.get(this.key(), []); },
     list: function (kind) { return this.all().filter(function (x) { return x.kind === kind; }); },
     same: function (a, b) { return a.kind === b.kind && String(a.id) === String(b.id); },
@@ -2145,7 +2299,7 @@
     }
   };
   var Seen = {
-    all: function () { return Store.get('seen.' + pid(), {}); },
+    all: function () { return Store.get('seen.' + uid(), {}); },
     has: function (item) { return !!this.all()[item.kind + ':' + item.id]; },
     add: function (item) {
       if (!item || (item.kind !== 'movie' && item.kind !== 'episode')) return;
@@ -2154,7 +2308,7 @@
       a[k] = Date.now();
       var keys = Object.keys(a);
       if (keys.length > 2500) keys.sort(function (x, y) { return a[x] - a[y]; }).slice(0, keys.length - 2000).forEach(function (x) { delete a[x]; });
-      Store.set('seen.' + pid(), a);
+      Store.set('seen.' + uid(), a);
       if (item.kind === 'episode') UpNext.finished(item);
       if (item.kind === 'movie') Later.drop(item);   // fertig geschaut: von „Später ansehen“ streichen
     },
@@ -2162,7 +2316,7 @@
     setMany: function (items, on) {
       var a = this.all();
       items.forEach(function (it) { var k = it.kind + ':' + it.id; if (on) a[k] = a[k] || Date.now(); else delete a[k]; });
-      Store.set('seen.' + pid(), a);
+      Store.set('seen.' + uid(), a);
       if (on) items.forEach(function (it) { Resume.drop(it); });
     }
   };
@@ -2171,7 +2325,7 @@
      in „Weiterschauen“ (statt zu verschwinden). Die nächste Folge kennt der Player (Folgenliste der Staffel). */
   var UpNext = {
     hints: {},
-    key: function () { return 'upnext.' + pid(); },
+    key: function () { return 'upnext.' + uid(); },
     all: function () { return Store.get(this.key(), {}); },
     hint: function (list) { var self = this; (list || []).forEach(function (e, i) { if (e && e.kind === 'episode') self.hints[e.id] = list[i + 1] || null; }); },
     finished: function (ep) {
@@ -2192,7 +2346,7 @@
   };
   // Zuletzt geschaut pro Serie (für den Hinweis „Neue Folgen“): { serienId: Zeitpunkt }
   var SeriesWatch = {
-    key: function () { return 'swatch.' + pid(); },
+    key: function () { return 'swatch.' + uid(); },
     all: function () { return Store.get(this.key(), {}); },
     touch: function (seriesId, onlyKnown) {
       if (!seriesId) return;
@@ -2212,7 +2366,7 @@
 
   /* Was zuletzt lief (Sender, Film oder Serie) – beim nächsten App-Start landet man genau dort */
   var Last = {
-    get: function () { return Store.get('last.' + pid(), null); },
+    get: function () { return Store.get('last.' + uid(), null); },
     set: function (item) {
       var it = item;
       if (item.kind === 'episode') {
@@ -2220,15 +2374,15 @@
         it = s;
       }
       if (!it || !it.id || it.kind === 'catchup') return;
-      Store.set('last.' + pid(), { item: slim(it), at: Date.now() });
+      Store.set('last.' + uid(), { item: slim(it), at: Date.now() });
     }
   };
 
   var Recent = {
-    list: function () { return Store.get('recent.' + pid(), []); },
+    list: function () { return Store.get('recent.' + uid(), []); },
     push: function (item) {
       var l = this.list().filter(function (x) { return x.id !== item.id; });
-      l.unshift(slim(item)); Store.set('recent.' + pid(), l.slice(0, 15));
+      l.unshift(slim(item)); Store.set('recent.' + uid(), l.slice(0, 15));
     }
   };
 
@@ -2887,7 +3041,7 @@
         var slot = $('.lc-n', b), n = null, g = b._group || (b._cat && b._cat.group);
         if (!slot) return;
         if (g) { n = 0; g.cats.forEach(function (c) { n += counts.by[c.id] || 0; }); }
-        else if (b._cat) n = b._cat.id === '__all' ? counts.total : b._cat.id === '__later' ? Later.list(kind).length : (counts.by[b._cat.id] || 0);
+        else if (b._cat) n = b._cat.id === '__all' ? visTotal(flat, counts) : b._cat.id === '__later' ? Later.list(kind).length : (counts.by[b._cat.id] || 0);
         if (n !== null) slot.textContent = fmtCount(n);
       });
     }
@@ -3439,6 +3593,10 @@
     },
     show: function (name, focusContent, keepFocus) {
       var self = this, prev = self.current;
+      if ((name === 'settings' || name === 'profile') && Persons.kids() && Settings.get('parentPin') && !Persons.pinOk) {
+        Persons.guard(function () { self.show(name, focusContent, keepFocus); });
+        return;
+      }
       self.current = name;
       // Mini-Player beenden, wenn man zu Filmen, Serien oder zum Startbildschirm wechselt
       if ((name === 'movie' || name === 'series' || name === 'home') && Player.mini) Player.close();
@@ -3577,7 +3735,7 @@
       StatusLine.el('ln-status'),
       h('div', { class: 'ln-tools' }, searchBtn, reloadBtn,
         round('settings', 'settings', T('Einstellungen'), function () { Shell.show('settings', true); }),
-        round('help', 'help', T('Hilfe'), showWelcomeHelp), langButton()));
+        round('help', 'help', T('Hilfe'), showWelcomeHelp), personButton(), langButton()));
 
     // Live TV / Filme / Serien
     function tile(kind, label, unit, none) {
@@ -4065,6 +4223,13 @@
       return App.provider.items('live', '__all').then(function (list) { return list.filter(function (x) { return ids[String(x.catId)]; }); });
     });
   }
+  /* Zahl hinter „Alle …“: nur sichtbare Kategorien (ausgeblendete, im Kinderprofil gesperrte zählen nicht mit) */
+  function visTotal(cats, counts) {
+    if (!cats || !cats.length) return counts.total;
+    var n = 0;
+    cats.forEach(function (c) { n += counts.by[String(c.id)] || 0; });
+    return n || counts.total;
+  }
   function fmtCount(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, Lang.cur === 'en' ? ',' : '.'); }
 
   /* ---------- Live TV / Filme / Serien ---------- */
@@ -4085,7 +4250,7 @@
       { id: '__fav', name: T('Favoriten'), ic: 'heart', local: function () { return Favs.list('live'); } },
       { id: '__recent', name: T('Zuletzt gesehen'), ic: 'history', local: function () { return Recent.list(); } }
     ];
-    var groups = null, curGroup = null, activeId = null, req = 0, counts = null, chunker = null, nowLoader = null;
+    var groups = null, curGroup = null, activeId = null, req = 0, counts = null, chunker = null, nowLoader = null, visCats = null;
     // Zahlen hinter Sprachen und Kategorien: bei einer Sprache alle Einträge dieser Sprache, sonst je Kategorie
     function paintCounts() {
       if (!counts) return;
@@ -4095,7 +4260,7 @@
         if (b._group) { n = 0; b._group.cats.forEach(function (c) { n += counts.by[c.id] || 0; }); }
         else if (b._cat && b._cat.local) n = b._cat.local().length;
         else if (b._cat && b._cat.id === '__radio') n = counts.radio != null ? counts.radio : null;
-        else if (b._cat) n = b._cat.id === '__all' ? counts.total : (counts.by[b._cat.id] || 0);
+        else if (b._cat) n = b._cat.id === '__all' ? visTotal(visCats, counts) : (counts.by[b._cat.id] || 0);
         if (n !== null) slot.textContent = fmtCount(n);
       }
     }
@@ -4233,6 +4398,7 @@
 
     App.provider.categories(kind).then(function (list) {
       list = visibleCats(kind, list || []);
+      visCats = list;
       var want = lastCat[key], target = null, radioCat = null;
       // Radio (vom Startbildschirm): alle Radiosender als eigene Liste unter „Zuletzt gesehen“
       if (kind === 'live' && Object.keys(radioIds(list)).length) {
@@ -4353,7 +4519,7 @@
   /* ---------- Erinnerungen an kommende Sendungen ----------
      Je Playlist gespeichert. Eine Minute vor Beginn erscheint ein Hinweis, „Umschalten“ startet den Sender. */
   var Reminders = {
-    key: function () { return 'remind.' + pid(); },
+    key: function () { return 'remind.' + uid(); },
     all: function () { return Store.get(this.key(), {}); },
     id: function (ch, e) { return String(ch.id) + '@' + e.start; },
     has: function (ch, e) { return !!this.all()[this.id(ch, e)]; },
@@ -4683,6 +4849,78 @@
   }
   /* „Schaust du noch?“ – wie bei Netflix: Wurde lange keine Taste gedrückt und nichts angetippt,
      fragt die App nach. Kommt keine Antwort, stoppt die Wiedergabe – so bleibt der Zugang beim Anbieter frei. */
+  /* ---------- Bildschirmschoner ----------
+     Nach einigen Minuten ohne Bedienung (und ohne laufendes Video): Uhr, Datum und langsam wechselnde Poster.
+     Die Uhr wandert jede Minute ein Stück weiter (schont OLED-Fernseher). Die erste Taste beendet ihn nur – sie löst nichts aus. */
+  var Saver = {
+    el: null, timer: null, pics: [], idx: 0, n: 0,
+    mins: function () { var v = Settings.get('saverMin'); return typeof v === 'number' ? v : 10; },
+    start: function () {
+      var self = this, mx = -1, my = -1;
+      function wake(e) { if (!self.el) return; e.preventDefault(); e.stopPropagation(); self.hide(); }
+      // am Fenster, damit die Taste vor der normalen Steuerung abgefangen wird
+      ['keydown', 'pointerdown', 'touchstart', 'wheel'].forEach(function (ev) { window.addEventListener(ev, wake, true); });
+      window.addEventListener('mousemove', function (e) {
+        if (!self.el) { mx = e.clientX; my = e.clientY; return; }
+        if (Math.abs(e.clientX - mx) + Math.abs(e.clientY - my) > 30) self.hide();
+      }, true);
+      setInterval(function () { self.check(); }, 15000);
+    },
+    check: function () {
+      if (this.el) { this.tick(); return; }
+      var m = this.mins();
+      if (!m || document.hidden || Dialog.open || StillWatching.playing()) return;
+      var t = document.activeElement;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
+      if (Date.now() - StillWatching.last >= m * 60000) this.show();
+    },
+    show: function () {
+      var self = this;
+      self.clock = h('b'); self.date = h('span');
+      self.layers = [h('div', { class: 'sv-pic' }), h('div', { class: 'sv-pic' })];
+      self.card = h('div', { class: 'sv-clock' }, self.clock, self.date);
+      self.el = h('div', { class: 'saver', 'aria-hidden': 'true' }, self.layers[0], self.layers[1], h('div', { class: 'sv-shade' }), self.card,
+        h('div', { class: 'sv-brand' }, brandMark(), wordmark()));
+      document.body.appendChild(self.el);
+      self.n = 0; self.tick();
+      // Poster der Playlist (Filme und Serien mit Bild), zufällig gemischt
+      self.pics = [];
+      if (App.profile && App.provider) {
+        Promise.all([allItems('movie').catch(function () { return []; }), allItems('series').catch(function () { return []; })]).then(function (r) {
+          var all = r[0].concat(r[1]).filter(function (x) { return x.logo; });
+          for (var i = 0; i < 40 && all.length; i++) self.pics.push(all.splice(Math.floor(Math.random() * all.length), 1)[0]);
+          self.next();
+        });
+      }
+      clearInterval(self.timer);
+      self.timer = setInterval(function () { self.next(); }, 12000);
+    },
+    // nächstes Poster überblenden
+    next: function () {
+      if (!this.el || !this.pics.length) return;
+      var it = this.pics[this.idx++ % this.pics.length], back = this.layers[this.n % 2], front = this.layers[(this.n + 1) % 2];
+      this.n++;
+      clear(front);
+      if (!Platform.lite) front.appendChild(img(it.logo, 'sv-blur', function () {}));
+      front.appendChild(h('div', { class: 'sv-poster' }, img(it.logo, '', function (i) { if (i.parentNode) i.parentNode.removeChild(i); }), h('span', { text: it.name })));
+      front.classList.add('is-on'); back.classList.remove('is-on');
+    },
+    tick: function () {
+      if (!this.el) return;
+      var d = new Date();
+      this.clock.textContent = clockStr(d);
+      this.date.textContent = d.toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' });
+      // jede Minute eine andere Stelle (Einbrennen vermeiden)
+      var m = d.getMinutes(), x = 6 + (m * 37 % 40), y = 8 + (m * 23 % 55);
+      this.card.style.left = x + '%'; this.card.style.top = y + '%';
+    },
+    hide: function () {
+      clearInterval(this.timer);
+      if (this.el && this.el.parentNode) this.el.parentNode.removeChild(this.el);
+      this.el = null; this.pics = [];
+      StillWatching.touch();
+    }
+  };
   var StillWatching = {
     last: Date.now(), timer: null, countdown: null,
     hours: function () { var v = Settings.get('idleHours'); return typeof v === 'number' ? v : 3; },
@@ -4939,8 +5177,9 @@
   // Kategorien, die man sehen soll: ausgeblendete fallen weg, eigene Namen, angeheftete zuerst.
   // orig = Originalname – die Kindersicherung prüft immer diesen (Umbenennen hebt keine Sperre auf).
   function visibleCats(kind, list) {
-    var hid = CatPrefs.map(kind, 'hide'), names = CatPrefs.names(kind), pins = CatPrefs.pins(kind);
-    var out = (list || []).filter(function (c) { return !hid[String(c.id)]; }).map(function (c) {
+    var hid = CatPrefs.map(kind, 'hide'), names = CatPrefs.names(kind), pins = CatPrefs.pins(kind), kids = Persons.kids();
+    // Kinderprofil: gesperrte Kategorien gar nicht erst zeigen
+    var out = (list || []).filter(function (c) { return !hid[String(c.id)] && !(kids && Parental.isLocked(kind, c)); }).map(function (c) {
       var nn = names[String(c.id)];
       if (!nn) return c;
       var o = {}; for (var k in c) if (c.hasOwnProperty(k)) o[k] = c[k];
@@ -4957,7 +5196,7 @@
   }
   // Einträge aus ausgeblendeten und (noch) gesperrten Kategorien aus „Alle …“ und der Suche entfernen
   function blockedMap(kind) {
-    var hid = CatPrefs.map(kind, 'hide'), lockOn = Parental.on() && !Parental.unlocked;
+    var hid = CatPrefs.map(kind, 'hide'), lockOn = Parental.on() && (Persons.kids() || !Parental.unlocked);
     if (!Object.keys(hid).length && !lockOn) return Promise.resolve(null);
     return App.provider.categories(kind).then(function (cats) {
       var m = {}, n = 0;
@@ -4997,12 +5236,12 @@
   var ADULT_RE = /(^|[^0-9A-Za-zÀ-ɏ])(XXX|ADULTS?|18\+|\+18|PORNO?|EROTI[CK]|EROTIK|SEX|SEXY|PLAYBOY|BRAZZERS|FOR ADULTS)($|[^0-9A-Za-zÀ-ɏ])/i;
   var Parental = {
     unlocked: false,
-    on: function () { return !!Settings.get('parentPin'); },
+    on: function () { return !!Settings.get('parentPin') || Persons.kids(); },
     hash: function (p) { return pinHash('parent:' + p); },
-    adult: function () { return Settings.get('lockAdult') !== false; },
+    adult: function () { return Persons.kids() || Settings.get('lockAdult') !== false; },
     isAdult: function (c) { return ADULT_RE.test(String(c.orig || c.full || c.name || '')); },
     isLocked: function (kind, c) { return this.on() && (CatPrefs.is(kind, 'lock', c.id) || (this.adult() && this.isAdult(c))); },
-    blocked: function (kind, c) { return !this.unlocked && this.isLocked(kind, c); },
+    blocked: function (kind, c) { return (Persons.kids() || !this.unlocked) && this.isLocked(kind, c); },
     // PIN abfragen. keep: true = nur für die Einstellungen, Inhalte bleiben gesperrt
     ask: function (onOk, opts) {
       var self = this;
@@ -5156,19 +5395,19 @@
 
   /* ---------- Verlauf löschen ---------- */
   function clearHistory(kind) {
-    if (kind === 'live') { Store.del('recent.' + pid()); }
+    if (kind === 'live') { Store.del('recent.' + uid()); }
     else {
       var want = kind === 'movie' ? 'movie' : 'episode';
       var r = Resume.all();
       Object.keys(r).forEach(function (k) { if (r[k].item && r[k].item.kind === want) delete r[k]; });
-      Store.set('resume.' + pid(), r);
+      Store.set('resume.' + uid(), r);
       var s = Seen.all();
       Object.keys(s).forEach(function (k) { if (k.indexOf(want + ':') === 0 || (want === 'episode' && k.indexOf('series:') === 0)) delete s[k]; });
-      Store.set('seen.' + pid(), s);
+      Store.set('seen.' + uid(), s);
       if (want === 'episode') { Store.del('upnext.' + pid()); Store.del('swatch.' + pid()); }
     }
     var l = Last.get();
-    if (l && l.item && (l.item.kind === kind || (kind === 'series' && l.item.kind === 'series'))) Store.del('last.' + pid());
+    if (l && l.item && (l.item.kind === kind || (kind === 'series' && l.item.kind === 'series'))) Store.del('last.' + uid());
   }
   function askClearHistory(kind) {
     var txt = kind === 'live' ? T('„Zuletzt gesehen“ bei Live TV wird geleert.')
@@ -5729,6 +5968,7 @@
       openSheet(T('Letzten Sender beim Start'), 'tvplay', [toggleRow(T('Letzten abgespielten Sender beim Start abspielen'), T('Die App startet direkt mit dem Sender, den du zuletzt geschaut hast.'),
         function () { return !!Settings.get('autoLast'); }, function (v) { Settings.set('autoLast', v); })], { onClose: paint });
     });
+    var tPersons = tile('users', T('Personen'), function () { var l = Persons.list(); return l.length > 1 ? T('{0} Personen', l.length) + ' · ' + Persons.cur().name : T('Nur eine Person'); }, function () { showPersons(paint); });
     var tSleep = tile('timer', T('Schlaf-Timer'), function () { return Sleep.label(); }, function () { Sleep.pick(paint); });
     var tIdle = tile('moon', T('Schaust du noch?'), function () { return opt(IDLES, StillWatching.hours()); }, function () {
       openSheet(T('Schaust du noch?'), 'moon', [h('p', { class: 'hint', text: T('Wie bei Netflix: Wurde so lange keine Taste gedrückt, fragt die App nach. Ohne Antwort stoppt die Wiedergabe nach einer Minute – das hält deinen Zugang frei.') }),
@@ -5745,6 +5985,12 @@
         h('h3', { class: 'sh-sub', text: T('Farben') }), choiceList(THEMES, function () { return Settings.get('theme') || 'dark'; }, function (v) { Settings.set('theme', v); Theme.apply(); }),
         s ? h('p', { class: 'hint', text: T('Gerade läuft das {0}-Design. Danach gilt wieder das Telvo-Violett.', T(SEASONS[s].name)) }) : null,
         h('h3', { class: 'sh-sub', text: T('Größe der Cover bei Filmen und Serien') }), choiceList(POSTERS, function () { return Settings.get('posterSize') || 'm'; }, function (v) { Settings.set('posterSize', v); Theme.apply(); })], { onClose: paint });
+    });
+    var SAVERS = [[0, T('Aus')], [5, T('{0} Min.', 5)], [10, T('{0} Min.', 10)], [15, T('{0} Min.', 15)], [30, T('{0} Min.', 30)]];
+    var tSaver = tile('saver', T('Bildschirmschoner'), function () { return opt(SAVERS, Saver.mins()); }, function () {
+      openSheet(T('Bildschirmschoner'), 'saver', [h('p', { class: 'hint', text: T('Wird die App so lange nicht bedient (und läuft kein Video), erscheinen Uhr und Poster. Schont OLED-Fernseher. Eine beliebige Taste beendet ihn.') }),
+        choiceList(SAVERS, function () { return Saver.mins(); }, function (v) { Settings.set('saverMin', v); }),
+        h('div', { class: 'row nt-act' }, sheetBtn('play', T('Jetzt ansehen'), function () { goBack(); setTimeout(function () { Saver.show(); }, 300); }))], { onClose: paint });
     });
     var tClock = tile('clock', T('Zeitformat'), function () { return opt(CLOCKS, !!Settings.get('clock12')); }, function () {
       openSheet(T('Zeitformat'), 'clock', choiceList(CLOCKS, function () { return !!Settings.get('clock12'); }, function (v) { Settings.set('clock12', v); }), { onClose: paint });
@@ -5801,9 +6047,9 @@
     var el = h('div', { class: 'page settings st-page' },
       h('div', { class: 'page-head' }, h('h1', { text: T('Einstellungen') })),
       group(T('Playlist'), [tAdd, tPl, tUpd, tAuto, tShift]),
-      group(T('Kindersicherung & Kategorien'), [tPar, tHideL, tHideM, tHideS, tHideCh, tHisL, tHisM, tHisS]),
+      group(T('Kindersicherung & Kategorien'), [tPersons, tPar, tHideL, tHideM, tHideS, tHideCh, tHisL, tHisM, tHisS]),
       group(T('Wiedergabe'), [tSort, tFmt, tQual, tEng, tExt, tSub, tLast, tSleep, tIdle]),
-      group(T('Darstellung & Gerät'), [tLang, tTheme, tClock, tDev, tBackup, tAbout, tSpeed, tFeedback, tReport]),
+      group(T('Darstellung & Gerät'), [tLang, tTheme, tClock, tSaver, tDev, tBackup, tAbout, tSpeed, tFeedback, tReport]),
       h('div', { class: 'st-foot' }, macTag(profileUser(p), true)));
     tAdd.setAttribute('data-autofocus', '');
     settingsPaint = paint;
@@ -7506,6 +7752,7 @@
     var active = Profiles.get(Store.get('active'));
     if (active) {
       activateProfile(active, false);
+      if (Persons.multi()) setTimeout(function () { if (App.profile === active) showWhoWatches(); }, 300);
       // Einstellung „Letzten Sender beim Start abspielen“
       var lastLive = Settings.get('autoLast') && Recent.list()[0];
       if (lastLive) setTimeout(function () {
@@ -7520,6 +7767,7 @@
     Cloud.start();
     StillWatching.start();
     Reminders.start();
+    Saver.start();
     // Internet wieder da: hängengebliebene Wiedergabe automatisch neu starten
     window.addEventListener('online', function () { if (Player.el && Player.err && Player.err.style.display !== 'none' && Player.item) Player.load(Player.item); });
     var reloaded = false;
@@ -7541,7 +7789,7 @@
     CatPrefs: CatPrefs, visibleCats: visibleCats, Parental: Parental, ChanHide: ChanHide,
     Backup: Backup, profileFp: profileFp, Settings: Settings,
     Seen: Seen, Resume: Resume, UpNext: UpNext, SeriesWatch: SeriesWatch, sortVod: sortVod,
-    Reminders: Reminders, NumEntry: NumEntry, Sleep: Sleep, Later: Later, showGuide: showGuide, Player: Player, Dialog: Dialog,
+    Reminders: Reminders, NumEntry: NumEntry, Sleep: Sleep, Later: Later, Saver: Saver, Persons: Persons, Favs: Favs, Recent: Recent, showGuide: showGuide, Player: Player, Dialog: Dialog,
     config: CONFIG
   };
 

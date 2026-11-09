@@ -62,6 +62,23 @@ und in `scripts/make-icons.py` (Android, Fire TV, Samsung, LG, Windows/Mac, TV-B
 
 Die neuen Daten gehören zum Profil, werden mitgesichert und von „Verlauf löschen“ entfernt.
 
+**Neu: Personen (Familienprofile):** bis zu 6 Personen pro Gerät, jede mit eigenen Favoriten, Verlauf, „Weiterschauen“,
+„Später ansehen“ und Erinnerungen. Beim Start „Wer schaut?“, oben auf dem Startbildschirm der Personen-Knopf, verwalten
+unter Einstellungen → Personen. **Kinderprofil:** gesperrte Kategorien (Erwachsene und selbst gesperrte) sind ganz ausgeblendet
+und lassen sich nicht entsperren; Wechseln in ein anderes Profil, Einstellungen und Playlists nur mit der PIN der
+Kindersicherung. Personen werden mitgesichert (Datenschutzerklärung ergänzt), beim Löschen verschwinden ihre Daten.
+
+**Neu:**
+- **Schlaf-Timer** (15 Min. bis 2 Std.) im Player und unter Einstellungen → Wiedergabe – beendet auch den Android-TV-Player.
+- **Senderliste im Player:** Pfeil links (oder Knopf „Senderliste“) blendet die Sender mit laufender Sendung ein.
+- **„Später ansehen“:** eigene Merkliste für Filme und Serien (Knopf auf der Detailseite, Liste links bei Filme/Serien);
+  fertig geschaute Filme verschwinden von selbst.
+- **Verbindungstest** (Einstellungen → Darstellung & Gerät): Antwortzeit des Anbieters und Geschwindigkeit mit Einschätzung
+  SD/HD/Full HD/4K. Das letzte Ergebnis steht in „Problem melden“.
+- **Bildschirmschoner** (Aus/5/10/15/30 Min., voreingestellt 10): Uhr und wechselnde Poster, die Uhr wandert (OLED).
+  Die erste Taste beendet ihn nur.
+- „Alle …“ zählt nur noch sichtbare Kategorien (ausgeblendete und im Kinderprofil gesperrte nicht mehr).
+
 **Live TV:**
 - **Lila statt Rot** wie auf dem Startbildschirm, Vorschau und Programm im Glas-Look (die LIVE-Abzeichen bleiben rot).
 - **Laufende Sendung bei jedem Sender** mit kleinem Fortschrittsbalken. Bei Xtream wird sie nur für die Sender geholt, die gerade

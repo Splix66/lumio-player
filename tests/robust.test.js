@@ -439,4 +439,45 @@
       D.App.profile = profBefore;
     }
   });
+  t('Personen', 'Eigene Favoriten je Person, Kinderprofil blendet gesperrte Kategorien aus, Löschen entfernt die Daten', function () {
+    var saved = {}, k, n;
+    for (k = 0; k < localStorage.length; k++) { n = localStorage.key(k); if (n.indexOf('lumio.') === 0) saved[n] = localStorage.getItem(n); }
+    var profBefore = D.App.profile, sBefore = JSON.stringify(D.Settings.data);
+    try {
+      D.App.profile = { id: 'pertest', type: 'xtream' };
+      ['persons', 'person'].forEach(function (x) { localStorage.removeItem('lumio.' + x); });
+      localStorage.removeItem('lumio.fav.pertest');
+      var ch = { kind: 'live', id: '1', name: 'Eins' };
+      D.Favs.toggle(ch);
+      ok(D.Favs.has(ch), 'erste Person: Favorit gesetzt');
+      var kid = D.Persons.add('Lea', true), max = D.Persons.add('Max', false);
+      eq(D.Persons.list().length, 3, 'drei Personen');
+      localStorage.setItem('lumio.person', JSON.stringify(max.id));
+      ok(!D.Favs.has(ch), 'Max hat eigene (leere) Favoriten');
+      D.Favs.toggle(ch);
+      ok(localStorage.getItem('lumio.fav.pertest~' + max.id), 'Max speichert unter eigenem Schlüssel');
+      ok(!D.Persons.kids(), 'Max ist kein Kind');
+      var cats = [{ id: 'a', name: 'Nachrichten' }, { id: 'x', name: 'XXX Adult' }];
+      eq(D.visibleCats('live', cats).length, 2, 'Erwachsene: alle Kategorien (ohne PIN)');
+      localStorage.setItem('lumio.person', JSON.stringify(kid.id));
+      ok(D.Persons.kids() && D.Parental.on(), 'Kinderprofil: Kindersicherung immer an');
+      eq(D.visibleCats('live', cats).map(function (c) { return c.id; }).join(), 'a', 'Kinderprofil: Erwachsenen-Kategorie fehlt');
+      D.Parental.unlocked = true;
+      ok(D.Parental.blocked('live', cats[1]), 'Kinderprofil: lässt sich nicht entsperren');
+      D.Parental.unlocked = false;
+      // Sicherung enthält die Personen und ihre Daten
+      D.Profiles.save([{ id: 'pertest', type: 'xtream', server: 'http://s', username: 'u', password: 'p' }]);
+      var b = D.Backup.build();
+      eq(b.persons.length, 3, 'Personen in der Sicherung');
+      ok(b.lists[0].pd && b.lists[0].pd[max.id] && b.lists[0].pd[max.id].fav, 'Favoriten von Max gesichert');
+      // Max löschen: seine Daten sind weg
+      D.Persons.remove(max.id);
+      ok(!localStorage.getItem('lumio.fav.pertest~' + max.id), 'Daten von Max gelöscht');
+      eq(D.Persons.list().length, 2, 'zwei Personen übrig');
+    } finally {
+      for (k = localStorage.length - 1; k >= 0; k--) { n = localStorage.key(k); if (n.indexOf('lumio.') === 0) localStorage.removeItem(n); }
+      Object.keys(saved).forEach(function (x) { localStorage.setItem(x, saved[x]); });
+      D.App.profile = profBefore; D.Settings.data = JSON.parse(sBefore); D.Parental.unlocked = false;
+    }
+  });
 })();
