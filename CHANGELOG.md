@@ -7,6 +7,11 @@ neuer Knopf „Aktualisieren“ (sieht sofort nach, ob auf der Webseite eine Pla
 Karte · Link zur Webseite als ruhige Schaltfläche statt unterstrichen · eigene kompakte Ansicht für Handys im Querformat
 (alles ohne Scrollen sichtbar; die Android-App läuft weiterhin nur quer).
 
+**Sicherheit:** MAC und KEY stehen im QR-Code jetzt hinter „#“ – dieser Teil der Adresse wird nie an einen Server
+geschickt. Die Webseite liest beides, QR-Codes älterer App-Versionen funktionieren weiter.
+
+**Android-TV-Player:** Media3 (ExoPlayer) von 1.4.1 auf 1.11.1 – zwei Jahre Fehlerbehebungen, u. a. für HLS-Livestreams.
+
 ## 1.11.1 – 2026-11-09 · Neue Willkommensseite
 
 **App – Willkommensseite (noch keine Playlist) neu:** dunkles Premium-Design (#0B0B0F, Karten #17171E, Akzent #9B83D5) ·

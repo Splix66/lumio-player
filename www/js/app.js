@@ -277,7 +277,9 @@
       }
       return t;
     },
-    portalLink: function () { return CONFIG.portalUrl + '?mac=' + encodeURIComponent(this.mac()) + '&key=' + this.key() + '&lang=' + Lang.cur; }
+    // MAC und KEY stehen hinter „#“: Dieser Teil der Adresse wird nie an einen Server geschickt
+    // (taucht also in keinem Server-Protokoll auf). Die Webseite liest ihn und löscht ihn sofort aus der Adresszeile.
+    portalLink: function () { return CONFIG.portalUrl + '#mac=' + encodeURIComponent(this.mac()) + '&key=' + this.key() + '&lang=' + Lang.cur; }
   };
   function macTag(user, noCopy) {
     return h('div', { class: 'mac-tag' }, h('span', { text: 'MAC' }), h('b', { text: Device.mac() }), noCopy ? null : copyBtn(Device.mac(), 'MAC'),

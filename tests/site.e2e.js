@@ -224,11 +224,27 @@ async function newPage(browser, opts, backend) {
       check('„Anderes Gerät“ meldet ab', await page.isVisible('#loginForm') && await page.isHidden('#dash'));
       check('keine Fehler', !errors.length, errors[0]);
       await ctx.close();
+      // neuer QR-Code (ab 1.11.2): MAC und KEY hinter „#“ – wird nie an den Server geschickt
       const q = await newPage(browser, null, be);
-      await q.page.goto(base + '?mac=AABBCCDDEE01&key=TEST42&lang=en'); await q.page.waitForTimeout(500);
+      const sent = [];
+      q.page.on('request', r => { if (r.url().indexOf(base) === 0) sent.push(r.url()); });
+      await q.page.goto(base + '#mac=AA%3ABB%3ACC%3ADD%3AEE%3A01&key=TEST42&lang=en'); await q.page.waitForTimeout(500);
       check('QR-Code-Link aus der App verbindet automatisch (und in App-Sprache)', await q.page.isVisible('#dash') && await q.page.evaluate(() => document.documentElement.lang) === 'en');
-      check('QR-Code-Link: KEY verschwindet aus der Adresszeile', !/key=/i.test(q.page.url()), q.page.url());
+      check('QR-Code-Link: KEY verschwindet aus der Adresszeile', !/key=|TEST42/i.test(q.page.url()), q.page.url());
+      check('QR-Code-Link: KEY wird nie an den Webserver geschickt', sent.length > 0 && !sent.some(u => /TEST42/i.test(u)), sent.join(' '));
+      check('QR-Code-Link: Gerät ist eingetragen', await q.page.inputValue('#mac') === 'AA:BB:CC:DD:EE:01');
       await q.ctx.close();
+      // alter QR-Code (App bis 1.11.1): ?mac=…&key=… funktioniert weiter
+      const o = await newPage(browser, null, be);
+      await o.page.goto(base + '?mac=AABBCCDDEE01&key=TEST42&lang=en'); await o.page.waitForTimeout(500);
+      check('Alter QR-Code-Link (?mac=…) verbindet weiterhin', await o.page.isVisible('#dash') && await o.page.evaluate(() => document.documentElement.lang) === 'en');
+      check('Alter QR-Code-Link: KEY verschwindet aus der Adresszeile', !/key=/i.test(o.page.url()), o.page.url());
+      await o.ctx.close();
+      // normale Bereichs-Links (#hilfe …) werden nicht als Gerätedaten gelesen
+      const n = await newPage(browser, null, be);
+      await n.page.goto(base + '#hilfe'); await n.page.waitForTimeout(300);
+      check('Bereichs-Link #hilfe bleibt ein Bereichs-Link', /#hilfe$/i.test(n.page.url()) && await n.page.isHidden('#dash'), n.page.url());
+      await n.ctx.close();
     }
 
     /* ---------- 7. Kontakt per E-Mail ---------- */
