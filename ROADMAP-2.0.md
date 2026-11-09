@@ -34,8 +34,8 @@ Bis zum offiziellen Start bleiben alle Versionen unter 2.0 (1.11.x, 1.12 …).
 4. **Rechtliches und Store-Paket:** ✅ Open-Source-Lizenzen in der App (Einstellungen → Über & Updates).
    ✅ Nutzungsbedingungen: Seite auf der Webseite (ENTWURF – vor dem Start anwaltlich prüfen lassen) und
    einmaliger Hinweis beim ersten Start der App.
-   Offen: Impressum vollständig (Name, Adresse), Store-Texte und Bilder ohne fremde Senderlogos und ohne
-   Begriffe, die nach Piraterie klingen.
+   ✅ Store-Texte (Deutsch, Englisch) und Angaben zur Datensicherheit: `STORE-TEXTE.md` (Entwurf).
+   Offen: Impressum vollständig (Name, Adresse); Bildschirmfotos im Demo-Modus.
 5. **Tests auf echten Geräten:** schwacher Fire TV Stick (Lite), Android-TV-Box, Samsung, LG, Handy, Windows, Mac –
    Live (HLS, TS), Filme, Serien, große Listen, kaputte Streams, Fernbedienung.
 6. **Wartbarkeit:** `app.js` (rund 5.900 Zeilen) in mehrere Dateien aufteilen – weiterhin ohne Build-Schritt.
