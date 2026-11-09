@@ -62,6 +62,20 @@ und in `scripts/make-icons.py` (Android, Fire TV, Samsung, LG, Windows/Mac, TV-B
 
 Die neuen Daten gehören zum Profil, werden mitgesichert und von „Verlauf löschen“ entfernt.
 
+**Player – Profi-Steuerung:** Das Zahnrad im Player („Bild & Wiedergabe“) zeigt nur, was der Stream wirklich kann:
+- **Bildformat:** Original, 16:9, 4:3, Vollbild (strecken), Zoom (Bild füllen).
+- **Geschwindigkeit** 0,5× bis 2× bei Filmen und Folgen (bei Live TV nicht angeboten).
+- **Qualität** (Automatisch, 1080p, 720p …), wenn ein HLS-Stream mehrere Stufen hat.
+- **Ton verzögern** (100–800 ms), wenn der Ton dem Bild vorauseilt – nur bei Streams, die die App selbst puffert
+  (HLS, MPEG-TS); bleibt beim Umschalten erhalten, „Aus“ stellt den normalen Ton wieder her.
+- **Nächste Folge automatisch** an/aus (auch unter Einstellungen → Wiedergabe). Aus: Am Ende fragt die App nur.
+- **Tonspur und Untertitel** wie bisher über den eigenen Knopf, der nur bei mehreren Spuren erscheint.
+Neu im Player: Knopf **„Nächste Folge“** bei Serien und **Bild-in-Bild** – Film oder Sender läuft klein in der Ecke
+weiter, während man durch Telvo geht (auch beim Wechsel der Reiter). Die Knopfleiste passt sich dem Platz an: bei
+vielen Knöpfen nur Symbole (Name erscheint beim Auswählen), auf dem Handy hochkant zweizeilig. „Letzter Sender“ hat ein
+eigenes Symbol. Android-TV-Player: „Nächste Folge automatisch“ gilt auch dort (aus: am Ende der Folge zurück zur Serie, die nächste
+Folge ist markiert). Neuer Test.
+
 **Neue Menüleiste:** in der Mitte eine Glas-Leiste mit Herz (Favoriten) · Live TV · Filme · Serien · Haus (Start).
 Der gewählte Reiter ist farbig hinterlegt (Lila, Sand, Himmelblau, Rosé) und zeigt die Anzahl; Einstellungen und Profil
 oben rechts im gleichen ruhigen Lila. Auf dem Handy dieselben Farben in der Leiste unten bzw. links.

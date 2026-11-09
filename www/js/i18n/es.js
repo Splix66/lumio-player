@@ -877,5 +877,18 @@ window.LUMIO_I18N["es"] = {
   "Wer auf diesem Gerät schaut – jede Person hat eigene Favoriten und Listen.": "Quién ve en este dispositivo: cada persona tiene sus favoritos y listas.",
   "Mit dem Handy scannen": "Escanea con el móvil",
   "Programmführer": "Guía de programación",
-  "Woher die Programmdaten kommen und wann sie geladen wurden.": "De dónde vienen los datos de programación y cuándo se cargaron."
+  "Woher die Programmdaten kommen und wann sie geladen wurden.": "De dónde vienen los datos de programación y cuándo se cargaron.",
+  "Nächste Folge automatisch": "Siguiente episodio automáticamente",
+  "Nach einer Folge die nächste starten": "Iniciar el siguiente episodio al terminar",
+  "Kurz vor dem Start erscheint ein Hinweis mit Countdown – „Schließen“ stoppt. Aus: Die App fragt nur.": "Poco antes de empezar aparece un aviso con cuenta atrás – «Cerrar» lo detiene. Desactivado: la app solo pregunta.",
+  "Bild & Wiedergabe": "Imagen y reproducción",
+  "Bild-in-Bild": "Imagen en imagen",
+  "Weiter mit der nächsten Folge?": "¿Continuar con el siguiente episodio?",
+  "{0} kbit/s": "{0} kbit/s",
+  "Ton-Verzögerung ist auf diesem Gerät gerade nicht möglich.": "El retraso de audio no es posible ahora en este dispositivo.",
+  "Vollbild (strecken)": "Pantalla completa (estirar)",
+  "Zoom (Bild füllen)": "Zoom (llenar imagen)",
+  "Qualität": "Calidad",
+  "Ton verzögern (wenn der Ton zu früh kommt)": "Retrasar audio (si el sonido llega antes)",
+  "{0} ms später": "{0} ms después"
 };

@@ -234,6 +234,9 @@ public class PlayerActivity extends Activity {
         List<MediaItem> items = new ArrayList<>();
         for (int i = 0; i < urls.size(); i++) items.add(item(urls.get(i), titles.get(i)));
         player.setMediaItems(items, index, live ? C.TIME_UNSET : startMs);
+        // „Nächste Folge automatisch“ aus: am Ende der Folge anhalten und zurück zur Serie (dort ist die nächste markiert)
+        final boolean stopAtEnd = !live && urls.size() > 1 && !in.getBooleanExtra("autoNext", true);
+        if (stopAtEnd) player.setPauseAtEndOfMediaItems(true);
         player.addListener(new Player.Listener() {
             @Override
             public void onPlaybackStateChanged(int state) {
@@ -241,6 +244,14 @@ public class PlayerActivity extends Activity {
                     status.setVisibility(View.GONE);
                     retries = 0;
                 } else if (state == Player.STATE_ENDED && !live && !closing) {
+                    ended = true;
+                    finishWith();
+                }
+            }
+
+            @Override
+            public void onPlayWhenReadyChanged(boolean playWhenReady, int reason) {
+                if (stopAtEnd && !playWhenReady && reason == Player.PLAY_WHEN_READY_CHANGE_REASON_END_OF_MEDIA_ITEM && !closing) {
                     ended = true;
                     finishWith();
                 }

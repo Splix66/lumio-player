@@ -877,5 +877,18 @@ window.LUMIO_I18N["ro"] = {
   "Wer auf diesem Gerät schaut – jede Person hat eigene Favoriten und Listen.": "Cine se uită pe acest dispozitiv – fiecare are propriile favorite și liste.",
   "Mit dem Handy scannen": "Scanează cu telefonul",
   "Programmführer": "Ghid TV",
-  "Woher die Programmdaten kommen und wann sie geladen wurden.": "De unde provin datele de program și când au fost încărcate."
+  "Woher die Programmdaten kommen und wann sie geladen wurden.": "De unde provin datele de program și când au fost încărcate.",
+  "Nächste Folge automatisch": "Episodul următor automat",
+  "Nach einer Folge die nächste starten": "Pornește episodul următor după terminare",
+  "Kurz vor dem Start erscheint ein Hinweis mit Countdown – „Schließen“ stoppt. Aus: Die App fragt nur.": "Cu puțin înainte de pornire apare un mesaj cu numărătoare inversă – „Închide” oprește. Oprit: aplicația doar întreabă.",
+  "Bild & Wiedergabe": "Imagine și redare",
+  "Bild-in-Bild": "Imagine în imagine",
+  "Weiter mit der nächsten Folge?": "Continui cu episodul următor?",
+  "{0} kbit/s": "{0} kbit/s",
+  "Ton-Verzögerung ist auf diesem Gerät gerade nicht möglich.": "Întârzierea sunetului nu este posibilă acum pe acest dispozitiv.",
+  "Vollbild (strecken)": "Ecran complet (întinde)",
+  "Zoom (Bild füllen)": "Zoom (umple imaginea)",
+  "Qualität": "Calitate",
+  "Ton verzögern (wenn der Ton zu früh kommt)": "Întârzie sunetul (dacă sunetul vine prea devreme)",
+  "{0} ms später": "cu {0} ms mai târziu"
 };

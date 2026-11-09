@@ -877,5 +877,18 @@ window.LUMIO_I18N["it"] = {
   "Wer auf diesem Gerät schaut – jede Person hat eigene Favoriten und Listen.": "Chi guarda su questo dispositivo: ognuno ha preferiti e liste propri.",
   "Mit dem Handy scannen": "Scansiona col telefono",
   "Programmführer": "Guida TV",
-  "Woher die Programmdaten kommen und wann sie geladen wurden.": "Da dove arrivano i dati della guida e quando sono stati caricati."
+  "Woher die Programmdaten kommen und wann sie geladen wurden.": "Da dove arrivano i dati della guida e quando sono stati caricati.",
+  "Nächste Folge automatisch": "Episodio successivo automatico",
+  "Nach einer Folge die nächste starten": "Avvia l'episodio successivo alla fine",
+  "Kurz vor dem Start erscheint ein Hinweis mit Countdown – „Schließen“ stoppt. Aus: Die App fragt nur.": "Poco prima dell'avvio appare un avviso con conto alla rovescia – «Chiudi» lo ferma. Off: l'app chiede soltanto.",
+  "Bild & Wiedergabe": "Immagine e riproduzione",
+  "Bild-in-Bild": "Picture-in-picture",
+  "Weiter mit der nächsten Folge?": "Continuare con l'episodio successivo?",
+  "{0} kbit/s": "{0} kbit/s",
+  "Ton-Verzögerung ist auf diesem Gerät gerade nicht möglich.": "Il ritardo audio non è possibile ora su questo dispositivo.",
+  "Vollbild (strecken)": "Schermo intero (allunga)",
+  "Zoom (Bild füllen)": "Zoom (riempi immagine)",
+  "Qualität": "Qualità",
+  "Ton verzögern (wenn der Ton zu früh kommt)": "Ritarda l'audio (se l'audio arriva troppo presto)",
+  "{0} ms später": "{0} ms dopo"
 };

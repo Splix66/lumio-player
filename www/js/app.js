@@ -135,6 +135,9 @@
     timer: '<circle cx="12" cy="13.5" r="7.5"/><path d="M12 9.5v4l2.6 1.6M9.5 2.5h5"/>',
     saver: '<rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 20.5h8M12 17v3.5"/><path d="M14.6 7.6a3.3 3.3 0 1 0 1.4 4.8 2.7 2.7 0 0 1-1.4-4.8z"/>',
     users: '<circle cx="9" cy="8.5" r="3.5"/><path d="M2.8 19.5a6.2 6.2 0 0 1 12.4 0"/><circle cx="17" cy="9.5" r="2.8"/><path d="M15.6 14.2a5 5 0 0 1 5.6 5.3"/>',
+    pip: '<rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><rect x="12" y="11.5" width="7" height="5.5" rx="1.2" fill="currentColor" stroke="none"/>',
+    skipNext: '<path d="M6 5.5v13l9.5-6.5z" fill="currentColor" stroke="none"/><path d="M18 5.5v13"/>',
+    swap: '<path d="M7.5 4 4 7.5 7.5 11"/><path d="M4 7.5h14"/><path d="M16.5 13l3.5 3.5-3.5 3.5"/><path d="M20 16.5H6"/>',
     bell: '<path d="M6 16.5V11a6 6 0 1 1 12 0v5.5l1.6 2.2H4.4z"/><path d="M10 20.6a2.1 2.1 0 0 0 4 0"/>',
     guide: '<rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="M3 9.5h18M8.5 9.5v10M3 14.5h18M14 9.5v5"/>',
     archive: '<path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3.5 4.5v4h4"/><path d="M12 7.5V12l3 2"/>',
@@ -3606,7 +3609,8 @@
       }
       self.current = name;
       // Mini-Player beenden, wenn man zu Filmen, Serien oder zum Startbildschirm wechselt
-      if ((name === 'movie' || name === 'series' || name === 'home') && Player.mini) Player.close();
+      // (außer bei Bild-in-Bild: das läuft absichtlich überall weiter)
+      if ((name === 'movie' || name === 'series' || name === 'home') && Player.mini && !Player.pip) Player.close();
       if (QuickSearch.isOpen) QuickSearch.close(true);
       // Startbildschirm ohne Menüleiste – er ist selbst das Menü
       self.el.classList.toggle('is-launcher', name === 'home');
@@ -6025,6 +6029,10 @@
         function () { return !!Settings.get('autoLast'); }, function (v) { Settings.set('autoLast', v); })], { onClose: paint });
     });
     var tPersons = tile('users', T('Personen'), function () { var l = Persons.list(); return l.length > 1 ? T('{0} Personen', l.length) + ' · ' + Persons.cur().name : T('Nur eine Person'); }, function () { showPersons(paint); });
+    var tNext = tile('skipNext', T('Nächste Folge automatisch'), function () { return Settings.get('autoNext') !== false ? T('An') : T('Aus'); }, function () {
+      openSheet(T('Nächste Folge automatisch'), 'skipNext', [toggleRow(T('Nach einer Folge die nächste starten'), T('Kurz vor dem Start erscheint ein Hinweis mit Countdown – „Schließen“ stoppt. Aus: Die App fragt nur.'),
+        function () { return Settings.get('autoNext') !== false; }, function (v) { Settings.set('autoNext', v); })], { onClose: paint });
+    });
     var tSleep = tile('timer', T('Schlaf-Timer'), function () { return Sleep.label(); }, function () { Sleep.pick(paint); });
     var tIdle = tile('moon', T('Schaust du noch?'), function () { return opt(IDLES, StillWatching.hours()); }, function () {
       openSheet(T('Schaust du noch?'), 'moon', [h('p', { class: 'hint', text: T('Wie bei Netflix: Wurde so lange keine Taste gedrückt, fragt die App nach. Ohne Antwort stoppt die Wiedergabe nach einer Minute – das hält deinen Zugang frei.') }),
@@ -6104,7 +6112,7 @@
     var el = sidePage('settings st-page', T('Einstellungen'), 'settings', [
       { id: 'playlist', ic: 'playlist', c: 'violet', name: T('Playlist'), hint: T('Playlists hinzufügen, wechseln und aktuell halten.'), body: grid([tAdd, tPl, tUpd, tAuto, tShift]) },
       { id: 'family', ic: 'lock', c: 'pink', name: T('Personen & Kindersicherung'), hint: T('Wer schaut, was gesperrt ist und welche Kategorien und Sender du siehst.'), body: grid([tPersons, tPar, tHideL, tHideM, tHideS, tHideCh, tHisL, tHisM, tHisS]) },
-      { id: 'play', ic: 'play', c: 'blue', name: T('Wiedergabe'), hint: T('Player, Stream-Format, Untertitel und Zeitschaltungen.'), body: grid([tSort, tFmt, tQual, tEng, tExt, tSub, tLast, tSleep, tIdle]) },
+      { id: 'play', ic: 'play', c: 'blue', name: T('Wiedergabe'), hint: T('Player, Stream-Format, Untertitel und Zeitschaltungen.'), body: grid([tSort, tFmt, tQual, tEng, tExt, tSub, tNext, tLast, tSleep, tIdle]) },
       { id: 'look', ic: 'sun', c: 'amber', name: T('Darstellung'), hint: T('Sprache, Farben, Uhrzeit und Bildschirmschoner.'), body: grid([tLang, tTheme, tClock, tSaver, tDev]) },
       { id: 'help', ic: 'help', c: 'green', name: T('Gerät & Hilfe'), hint: T('Sichern, Updates, Verbindungstest und Kontakt zum Support.'), body: grid([tBackup, tAbout, tSpeed, tFeedback, tReport]) }
     ], 'settings');
@@ -6538,7 +6546,8 @@
         txtReconnect: T('Verbindung wird wiederhergestellt …'),
         txtFailed: T('Wiedergabe nicht möglich. Mit „Zurück“ schließen.'),
         txtNoChannel: T('Sender {0} nicht gefunden'),
-        sleepAt: Sleep.at || 0
+        sleepAt: Sleep.at || 0,
+        autoNext: Settings.get('autoNext') !== false
       }).then(function (res) {
         res = res || {};
         if (res.sleep) Sleep.fire(true);
@@ -6594,6 +6603,7 @@
 
   var Player = {
     el: null, video: null, hls: null, item: null, ctx: null, osd: null, hideTimer: null, saveTimer: null, epgTimer: null,
+    rate: 1, audioDelay: 0, pip: false, actx: null, adelay: null,
     triedAlt: false, retried: false,
 
     open: function (item, ctx) {
@@ -6622,7 +6632,9 @@
       // Ton & Untertitel: der Knopf erscheint nur, wenn der Stream wirklich mehrere Tonspuren oder Untertitel hat
       self.tracksBtn = h('button', { class: 'cbtn f is-gone', 'data-c': 'tracks', title: T('Ton & Untertitel'), 'aria-label': T('Ton & Untertitel'), onclick: function () { self.openTracks(); } }, icon('tracks'));
       // Bildformat (Original, Zoom, Strecken, 16:9, 4:3) und bei Live-Sendern das Stream-Format (HLS / MPEG-TS)
-      self.fmtBtn = h('button', { class: 'cbtn f', 'data-c': 'format', title: T('Format'), 'aria-label': T('Format'), onclick: function () { self.openFormat(); } }, icon('aspect'));
+      self.fmtBtn = h('button', { class: 'cbtn f', 'data-c': 'format', title: T('Bild & Wiedergabe'), 'aria-label': T('Bild & Wiedergabe'), onclick: function () { self.openFormat(); } }, icon('settings'));
+      // Bild-in-Bild: Film oder Sender läuft klein in der Ecke weiter, während man durch Telvo geht
+      self.pipBtn = h('button', { class: 'cbtn f', 'data-c': 'pip', title: T('Bild-in-Bild'), 'aria-label': T('Bild-in-Bild'), onclick: function () { self.toPip(); } }, icon('pip'));
       // Schlaf-Timer: Knopf zeigt die restlichen Minuten
       self.sleepBtn = h('button', { class: 'cbtn f', 'data-c': 'sleep', title: T('Schlaf-Timer'), 'aria-label': T('Schlaf-Timer'), onclick: function () { self.openSleep(); } }, icon('timer'), h('small', { class: 'sleep-n' }));
       // Sender ausblenden (nur Live): erscheint dann nicht mehr in den Senderlisten
@@ -6632,7 +6644,7 @@
       self.osd = h('div', { class: 'osd' },
         h('div', { class: 'osd-top' }, h('button', { class: 'btn f', onclick: goBack }, icon('back'), h('span', { text: T('Zurück') })), self.liveTag, self.title, self.qTag),
         h('div', { class: 'osd-bottom' }, self.info, self.barWrap, self.times,
-          h('div', { class: 'ctrl-row' }, self.ctrlLeft, self.ctrls, h('div', { class: 'ctrl-side right' }, self.hideBtn, self.sleepBtn, self.fmtBtn, self.tracksBtn, self.fsBtn, self.volumeUi()))));
+          h('div', { class: 'ctrl-row' }, self.ctrlLeft, self.ctrls, h('div', { class: 'ctrl-side right' }, self.hideBtn, self.pipBtn, self.sleepBtn, self.fmtBtn, self.tracksBtn, self.fsBtn, self.volumeUi()))));
       self.miniTitle = h('span', { class: 'mini-title' });
       self.miniUi = h('div', { class: 'mini-ui' },
         h('button', { class: 'mini-open f', title: T('Vollbild'), onclick: function () { self.maximize(); } }, self.miniTitle),
@@ -6641,7 +6653,7 @@
       self.el = h('div', { class: 'player' }, video, self.spinner, self.osd, self.zap, self.err, self.miniUi);
       self.paintVol();
       self.paintSleep();
-      self.onResize = function () { self.applyAspect(); };
+      self.onResize = function () { self.applyAspect(); self.fitCtrls(); };
       window.addEventListener('resize', self.onResize);
       setTimeout(function () { self.applyAspect(); }, 0);
 
@@ -6655,7 +6667,7 @@
       }
       barWrap.addEventListener('mousemove', function (e) {
         if (dragging || !self.canSeek()) return;
-        self.preview(frac(px(e)) * video.duration);
+        self.preview(frac(px(e)) * self.video.duration);
       });
       barWrap.addEventListener('mouseleave', function () { if (!dragging && self.scrubT == null) self.hidePreview(); });
       function down(e) {
@@ -6665,12 +6677,12 @@
         dragging = true;
         var touch = e.type === 'touchstart';
         clearTimeout(self.scrubTimer);
-        self.scrubT = frac(px(e)) * video.duration;
+        self.scrubT = frac(px(e)) * self.video.duration;
         self.preview(self.scrubT);
         self.showOsd(true);
         function move(ev) {
           ev.preventDefault();
-          self.scrubT = frac(px(ev)) * video.duration;
+          self.scrubT = frac(px(ev)) * self.video.duration;
           self.preview(self.scrubT);
         }
         function up(ev) {
@@ -6711,6 +6723,33 @@
         self.showOsd();
       }, { passive: false });
 
+      self.bindVideo(video);
+
+      Screens.push('player', self.el, self.screenOpts());
+      self.enterFullscreen();
+      self.load(item);
+    },
+
+    isVod: function () { return this.item && this.item.kind !== 'live'; },
+
+    screenOpts: function () {
+      var self = this;
+      return {
+        onLeave: function () { self.teardown(); },
+        // Zurück bei Live TV: Sender läuft klein weiter
+        onBack: function () {
+          if (self.closeTracks()) { self.showOsd(); return true; }
+          if (self.nextBox) { self.nextCancel(); return false; }
+          if (self.scrubT != null) { self.cancelScrub(); return true; }
+          if (self.item && self.item.kind === 'live' && self.err.style.display === 'none') { self.minimize(); return true; }
+          return false;
+        }
+      };
+    },
+
+    /* Ereignisse des <video>-Elements (eigene Funktion: bei der Ton-Verzögerung wird das Element ausgetauscht) */
+    bindVideo: function (video) {
+      var self = this;
       video.addEventListener('waiting', function () { if (!self.reconnect) self.loadTxt.textContent = T('Wird geladen …'); self.spinner.style.display = ''; });
       video.addEventListener('playing', function () {
         self.spinner.style.display = 'none'; self.err.style.display = 'none'; self.reconnect = false;
@@ -6738,29 +6777,10 @@
         self.errInfo = 'Video-Fehler ' + (video.error ? video.error.code : '?') + (self.ts ? ' (mpegts.js)' : '');
         self.onError(T('Das Video konnte nicht abgespielt werden (Format oder Verbindung).'));
       });
-
-      Screens.push('player', self.el, self.screenOpts());
-      self.enterFullscreen();
-      self.load(item);
+      // Ton-Verzögerung nach dem Umschalten wieder anwenden (nur wenn der neue Stream sie erlaubt)
+      video.addEventListener('playing', function () { if (self.audioDelay && !self.actx && self.delayOk()) self.setDelay(self.audioDelay, true); });
+      video.addEventListener('loadedmetadata', function () { self.applyRate(); });
     },
-
-    isVod: function () { return this.item && this.item.kind !== 'live'; },
-
-    screenOpts: function () {
-      var self = this;
-      return {
-        onLeave: function () { self.teardown(); },
-        // Zurück bei Live TV: Sender läuft klein weiter
-        onBack: function () {
-          if (self.closeTracks()) { self.showOsd(); return true; }
-          if (self.nextBox) { self.nextCancel(); return false; }
-          if (self.scrubT != null) { self.cancelScrub(); return true; }
-          if (self.item && self.item.kind === 'live' && self.err.style.display === 'none') { self.minimize(); return true; }
-          return false;
-        }
-      };
-    },
-
     minimize: function () {
       var self = this;
       if (!self.el || self.mini) return;
@@ -6791,7 +6811,7 @@
     maximize: function () {
       var self = this;
       if (!self.el || !self.mini) return;
-      self.mini = false;
+      self.mini = false; self.pip = false;
       self.maxAt = Date.now();
       clearInterval(self.placeTimer);
       self.el.classList.remove('is-mini', 'is-docked');
@@ -6803,6 +6823,7 @@
       self.enterFullscreen();
       self.showOsd();
       self.applyAspect();
+      self.fitCtrls();
     },
 
     close: function () {
@@ -6856,6 +6877,7 @@
 
     load: function (item) {
       var self = this, before = self.item;
+      if (self.actx) self.dropAudio(false);   // frisches Video-Element; Verzögerung wird nach dem Start wieder angewendet, wenn möglich
       if (item.kind === 'live' && before && before.kind === 'live' && String(before.id) !== String(item.id)) self.prevLive = before;
       self.item = item;
       markPlaying(item);
@@ -7056,15 +7078,15 @@
       var c = self.ctx;
       if (self.isVod()) Seen.add(self.item);
       if (self.item.kind === 'live') { self.reconnecting(); self.attach(self.curUrl); return; }   // Live-Sender „enden“ nicht – neu verbinden
-      if (self.item.kind === 'episode' && c && c.list && c.index < c.list.length - 1) { self.showNext(c.list[c.index + 1]); return; }
-      if (self.isVod()) goBack();
+      if (self.item.kind === 'episode' && c && c.list && c.index < c.list.length - 1) { self.showNext(c.list[c.index + 1], Settings.get('autoNext') !== false); return; }
+      if (self.isVod()) { if (self.mini) self.close(); else goBack(); }
     },
     /* Nächste Folge: kleine Karte mit Countdown, wie bei Netflix */
-    showNext: function (next) {
+    showNext: function (next, auto) {
       var self = this, left = 10;
-      if (self.mini) { self.ctx.index++; self.load(next); return; }
+      if (self.mini) { if (auto) { self.ctx.index++; self.load(next); } else self.close(); return; }
       var count = h('span', { class: 'nx-count' });
-      function paint() { count.textContent = T('Startet in {0} Sekunden', left); }
+      function paint() { count.textContent = auto ? T('Startet in {0} Sekunden', left) : T('Weiter mit der nächsten Folge?'); }
       function cleanup() { clearInterval(self.nextTimer); if (box.parentNode) box.parentNode.removeChild(box); self.nextBox = null; self.nextCancel = null; }
       function go() { cleanup(); self.ctx.index++; self.load(next); }
       var box = h('div', { class: 'next-ep' },
@@ -7079,7 +7101,7 @@
       self.hideOsd();
       setTimeout(function () { Nav.focus($('.btn', box)); }, 30);
       clearInterval(self.nextTimer);
-      self.nextTimer = setInterval(function () { left--; if (left <= 0) go(); else paint(); }, 1000);
+      if (auto) self.nextTimer = setInterval(function () { left--; if (left <= 0) go(); else paint(); }, 1000);
     },
 
     /* ---------- Ton & Untertitel ---------- */
@@ -7141,6 +7163,91 @@
     askHide: function () {
       var it = this.item;
       if (it && it.kind === 'live') askHideChannel(it);
+    },
+    /* Bild-in-Bild: klein in der Ecke weiterlaufen lassen – auch beim Wechsel zu Filmen, Serien oder Start */
+    toPip: function () {
+      if (!this.el || this.mini) return;
+      this.closeTracks();
+      this.pip = true;
+      this.minimize();
+    },
+    applyRate: function () {
+      var v = this.video;
+      if (!v) return;
+      var r = this.isVod() ? (this.rate || 1) : 1;
+      try { v.defaultPlaybackRate = r; v.playbackRate = r; } catch (e) {}
+    },
+    // Qualitätsstufen des Streams (nur hls.js liefert sie). Gleiche Höhe nur einmal, die beste oben.
+    levels: function () {
+      var hls = this.hls, out = [], seen = {};
+      if (!hls || !hls.levels || hls.levels.length < 2) return out;
+      out.push({ label: T('Automatisch'), on: !!hls.autoLevelEnabled, pick: function () { hls.currentLevel = -1; } });
+      hls.levels.map(function (l, i) { return { l: l, i: i }; })
+        .sort(function (a, b) { return (b.l.height || 0) - (a.l.height || 0) || (b.l.bitrate || 0) - (a.l.bitrate || 0); })
+        .forEach(function (x) {
+          var hh = x.l.height || 0, k = hh || x.l.bitrate;
+          if (!k || seen[k]) return;
+          seen[k] = 1;
+          out.push({ label: hh ? hh + 'p' : T('{0} kbit/s', Math.round(x.l.bitrate / 1000)), on: !hls.autoLevelEnabled && hls.currentLevel === x.i, pick: function () { hls.currentLevel = x.i; } });
+        });
+      return out.length > 2 ? out : [];
+    },
+    /* ---------- Ton-Verzögerung ----------
+       Der Ton läuft über Web Audio mit einer Verzögerung. Das geht nur, wenn der Stream über MSE läuft (hls.js, mpegts.js) –
+       bei direkt geladenen fremden Adressen wäre der Ton sonst stumm. Darum nur dort anbieten. Ein umgeleitetes <video>
+       lässt sich nicht zurückstellen: Beim Ausschalten und beim nächsten Sender wird es durch ein frisches ersetzt. */
+    delayOk: function () {
+      var v = this.video, src = v ? String(v.currentSrc || v.src || '') : '';
+      return !!(v && (window.AudioContext || window.webkitAudioContext) && !Platform.lite && !Platform.tizen && !Platform.webos && src.indexOf('blob:') === 0);
+    },
+    setDelay: function (ms, quiet) {
+      var self = this;
+      self.audioDelay = ms;
+      if (!ms) { self.dropAudio(true); return; }
+      if (!self.delayOk() && !self.actx) return;
+      try {
+        if (!self.actx) {
+          var AC = window.AudioContext || window.webkitAudioContext, ctx = new AC();
+          var src = ctx.createMediaElementSource(self.video), d = ctx.createDelay(2);
+          src.connect(d); d.connect(ctx.destination);
+          self.actx = ctx; self.adelay = d;
+        }
+        if (self.actx.state !== 'running' && self.actx.resume) self.actx.resume();
+        self.adelay.delayTime.value = ms / 1000;
+        // läuft der Ton nicht an (Gerät erlaubt es nicht), sofort zurück zum normalen Ton
+        setTimeout(function () {
+          if (self.actx && self.actx.state !== 'running') { self.audioDelay = 0; self.dropAudio(true); if (!quiet) toast(T('Ton-Verzögerung ist auf diesem Gerät gerade nicht möglich.'), 3500); }
+        }, 700);
+      } catch (e) { self.audioDelay = 0; self.dropAudio(true); if (!quiet) toast(T('Ton-Verzögerung ist auf diesem Gerät gerade nicht möglich.'), 3500); }
+    },
+    // Ton wieder direkt ausgeben. reload: den laufenden Stream im frischen Element neu starten.
+    dropAudio: function (reload) {
+      if (!this.actx) return;
+      try { this.actx.close(); } catch (e) {}
+      this.actx = null; this.adelay = null;
+      this.swapVideo();
+      if (reload && this.item) { this.saveResume(); this.load(this.item); }
+    },
+    swapVideo: function () {
+      var old = this.video;
+      if (!old || !old.parentNode) return;
+      this.destroyHls();
+      var v = h('video', { playsinline: true, 'webkit-playsinline': true, autoplay: true, preload: 'auto', poster: old.getAttribute('poster') });
+      v.volume = old.volume; v.muted = old.muted;
+      try { old.pause(); old.removeAttribute('src'); old.load(); } catch (e) {}
+      old.parentNode.replaceChild(v, old);
+      this.video = v;
+      this.bindVideo(v);
+      this.applyAspect();
+    },
+    /* Nächste Folge sofort (Knopf im Player) */
+    nextEpisode: function () {
+      var c = this.ctx;
+      if (!c || !c.list || c.index >= c.list.length - 1) return;
+      this.saveResume();
+      if (this.nextCancel) this.nextCancel();
+      c.index++;
+      this.load(c.list[c.index]);
     },
     openSleep: function () {
       var self = this;
@@ -7220,10 +7327,28 @@
     },
     openFormat: function () {
       var self = this, cur = Settings.get('aspect') || 'fit';
-      var aspects = [['fit', T('Original')], ['fill', T('Bild füllen (Zoom)')], ['stretch', T('Strecken')], ['16:9', '16:9'], ['4:3', '4:3']].map(function (a) {
+      var aspects = [['fit', T('Original')], ['16:9', '16:9'], ['4:3', '4:3'], ['stretch', T('Vollbild (strecken)')], ['fill', T('Zoom (Bild füllen)')]].map(function (a) {
         return { label: a[1], on: cur === a[0], pick: function () { Settings.set('aspect', a[0]); self.applyAspect(); } };
       });
       var sections = [[T('Bildformat'), aspects]];
+      // Geschwindigkeit: nur bei Filmen und Folgen (Live läuft immer in Echtzeit)
+      if (self.isVod()) sections.push([T('Geschwindigkeit'), [0.5, 0.75, 1, 1.25, 1.5, 2].map(function (r) {
+        return { label: r === 1 ? T('Normal') : String(r).replace('.', Lang.cur === 'en' ? '.' : ',') + '×', on: self.rate === r, pick: function () { self.rate = r; self.applyRate(); } };
+      })]);
+      // Qualität: nur wenn der Stream mehrere Stufen anbietet (HLS mit hls.js)
+      var lv = self.levels();
+      if (lv.length) sections.push([T('Qualität'), lv]);
+      // Ton-Verzögerung: nur wo es technisch geht (Stream über MSE, Web Audio vorhanden)
+      if (self.delayOk() || self.actx) sections.push([T('Ton verzögern (wenn der Ton zu früh kommt)'), [0, 100, 200, 300, 500, 800].map(function (ms) {
+        return { label: ms ? T('{0} ms später', ms) : T('Aus'), on: (self.audioDelay || 0) === ms, pick: function () { self.setDelay(ms); } };
+      })]);
+      // Nächste Folge automatisch (nur bei Serien)
+      if (self.item && self.item.kind === 'episode') {
+        var an = Settings.get('autoNext') !== false;
+        sections.push([T('Nächste Folge automatisch'), [[true, T('An')], [false, T('Aus')]].map(function (o) {
+          return { label: o[1], on: an === o[0], pick: function () { Settings.set('autoNext', o[0]); } };
+        })]);
+      }
       if (self.item && self.item.kind === 'live' && App.provider && App.provider.type === 'xtream') {
         var lf = Settings.get('liveFormat') === 'ts' ? 'ts' : 'm3u8';
         sections.push([T('Stream-Format'), [['m3u8', 'HLS (.m3u8)'], ['ts', 'MPEG-TS (.ts)']].map(function (f) {
@@ -7337,25 +7462,58 @@
         self.ctrls.appendChild(playBtn);
         self.ctrls.appendChild(cbtn('next', 'down', T('Nächster Sender'), function () { self.zapBy(1); }));
       }
+      var cx = self.ctx;
+      if (self.item && self.item.kind === 'episode' && cx && cx.list && cx.index < cx.list.length - 1) {
+        var nx = cx.list[cx.index + 1];
+        self.ctrlLeft.appendChild(h('button', { class: 'btn f', 'data-c': 'nextep', title: T('Nächste Folge') + ': S' + nx.season + ' E' + nx.num, 'aria-label': T('Nächste Folge'), onclick: function () { self.nextEpisode(); } },
+          icon('skipNext'), h('span', { text: T('Nächste Folge') })));
+      }
       if (self.item && self.item.kind === 'live' && self.ctx && self.ctx.list && self.ctx.list.length > 1) {
-        self.ctrlLeft.appendChild(h('button', { class: 'btn f', 'data-c': 'list', title: T('Senderliste (Pfeil links)'), onclick: function () { self.openChannels(); } },
+        self.ctrlLeft.appendChild(h('button', { class: 'btn f', 'data-c': 'list', title: T('Senderliste (Pfeil links)'), 'aria-label': T('Senderliste'), onclick: function () { self.openChannels(); } },
           icon('playlist'), h('span', { text: T('Senderliste') })));
       }
       if (self.item && self.item.kind === 'live' && (self.prevLive || prevRecent(self.item))) {
-        self.ctrlLeft.appendChild(h('button', { class: 'btn f', 'data-c': 'last', title: T('Zurück zum letzten Sender'), onclick: function () { self.lastChannel(); } },
-          icon('history'), h('span', { text: T('Letzter Sender') })));
+        self.ctrlLeft.appendChild(h('button', { class: 'btn f', 'data-c': 'last', title: T('Zurück zum letzten Sender'), 'aria-label': T('Letzter Sender'), onclick: function () { self.lastChannel(); } },
+          icon('swap'), h('span', { text: T('Letzter Sender') })));
       }
       if (self.item && self.item.kind === 'live' && self.item.archive && App.provider && App.provider.archive) {
-        self.ctrlLeft.appendChild(h('button', { class: 'btn f', 'data-c': 'arch', onclick: function () { self.openArchive(); } },
+        self.ctrlLeft.appendChild(h('button', { class: 'btn f', 'data-c': 'arch', 'aria-label': T('Verpasste Sendungen'), onclick: function () { self.openArchive(); } },
           icon('archive'), h('span', { text: T('Verpasste Sendungen') })));
       }
       if (self.item && self.item.kind !== 'episode' && self.item.kind !== 'catchup') {
         var on = Favs.has(self.item);
-        self.ctrlLeft.appendChild(h('button', { class: 'btn f', 'data-c': 'fav', onclick: function () { Favs.toggle(self.item); self.paintCtrls(); } },
+        self.ctrlLeft.appendChild(h('button', { class: 'btn f', 'data-c': 'fav', 'aria-label': on ? T('Gemerkt') : T('Merken'), onclick: function () { Favs.toggle(self.item); self.paintCtrls(); } },
           icon(on ? 'heartFill' : 'heart'), h('span', { text: on ? T('Gemerkt') : T('Merken') })));
       }
+      self.fitCtrls();
       var target = had ? ($('[data-c="' + had + '"]', self.ctrls) || $('[data-c="' + had + '"]', self.ctrlLeft)) : null;
       if (target) Nav.focus(target);
+    },
+    // Die Knopfleiste passt sich dem Platz an: erst nur Symbole (links) bzw. ohne Lautstärke-Regler (rechts),
+    // reicht es dann immer noch nicht, kommen die Werkzeuge in eine eigene Zeile unter Abspielen
+    fitCtrls: function () {
+      var l = this.ctrlLeft, row = l && l.parentNode, r = row && row.lastChild;
+      if (!l || this.mini || !row.clientWidth) return;
+      function need(el) {
+        var w = 0, c = el.children;
+        for (var i = 0; i < c.length; i++) {
+          if (c[i].offsetParent === null) continue;
+          var cs = window.getComputedStyle(c[i]);
+          w += c[i].getBoundingClientRect().width + (parseFloat(cs.marginLeft) || 0) + (parseFloat(cs.marginRight) || 0);
+        }
+        return w;
+      }
+      function over(el) { return el.offsetParent !== null && need(el) > el.clientWidth + 1; }
+      row.classList.remove('is-stacked'); l.classList.remove('is-compact'); r.classList.remove('is-compact');
+      if (this.el) this.el.classList.remove('ctrl-stacked');
+      if (over(l)) l.classList.add('is-compact');
+      if (over(r)) r.classList.add('is-compact');
+      if (over(l) || over(r)) {
+        row.classList.add('is-stacked');
+        if (this.el) this.el.classList.add('ctrl-stacked');
+        r.classList.remove('is-compact');
+        if (over(r)) r.classList.add('is-compact');
+      }
     },
 
     togglePlay: function () { if (this.video.paused) this.playSafe(); else this.video.pause(); this.showOsd(); },
@@ -7456,6 +7614,7 @@
       if (self.mini) return;
       var wasHidden = self.osd.classList.contains('is-hidden');
       self.osd.classList.remove('is-hidden');
+      if (wasHidden) self.fitCtrls();
       if (wasHidden || !self.osd.contains(document.activeElement)) {
         var pb = $('[data-c="play"]', self.ctrls);
         if (pb && self.err.style.display === 'none') Nav.focus(pb);
@@ -7598,6 +7757,8 @@
       this.saveResume();
       clearInterval(this.saveTimer); clearInterval(this.epgTimer); clearTimeout(this.hideTimer); clearTimeout(this.zapTimer);
       clearInterval(this.wdTimer); clearInterval(this.nextTimer); this.nextBox = null; this.nextCancel = null; this.trackPanel = null;
+      if (this.actx) { try { this.actx.close(); } catch (e) {} this.actx = null; this.adelay = null; }
+      this.pip = false;
       this.destroyHls();
       clearTimeout(this.scrubTimer); this.scrubT = null;
       try { this.video.pause(); this.video.removeAttribute('src'); this.video.load(); } catch (e) {}

@@ -48,6 +48,9 @@ public class NativePlayerPlugin extends Plugin {
         // Schlaf-Timer: Uhrzeit (ms seit 1970), zu der sich der Player schließt – 0 = aus
         Long sleepAt = call.getLong("sleepAt", 0L);
         intent.putExtra("sleepAt", sleepAt == null ? 0L : sleepAt.longValue());
+        // Serien: nächste Folge automatisch (aus = am Ende der Folge anhalten)
+        Boolean autoNext = call.getBoolean("autoNext", true);
+        intent.putExtra("autoNext", autoNext == null || autoNext.booleanValue());
         // Untertitel: Größe (Faktor), Schriftfarbe und Hintergrund aus den App-Einstellungen
         Float subScale = call.getFloat("subScale", 1f);
         intent.putExtra("subScale", subScale == null ? 1f : subScale.floatValue());

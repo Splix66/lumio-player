@@ -877,5 +877,18 @@ window.LUMIO_I18N["ar"] = {
   "Wer auf diesem Gerät schaut – jede Person hat eigene Favoriten und Listen.": "من يشاهد على هذا الجهاز – لكل شخص مفضلاته وقوائمه.",
   "Mit dem Handy scannen": "امسح بالهاتف",
   "Programmführer": "دليل البرامج",
-  "Woher die Programmdaten kommen und wann sie geladen wurden.": "مصدر بيانات البرامج ووقت تحميلها."
+  "Woher die Programmdaten kommen und wann sie geladen wurden.": "مصدر بيانات البرامج ووقت تحميلها.",
+  "Nächste Folge automatisch": "الحلقة التالية تلقائيًا",
+  "Nach einer Folge die nächste starten": "تشغيل الحلقة التالية بعد انتهاء الحلقة",
+  "Kurz vor dem Start erscheint ein Hinweis mit Countdown – „Schließen“ stoppt. Aus: Die App fragt nur.": "قبل البدء بقليل يظهر تنبيه مع عدّ تنازلي – «إغلاق» يوقفه. إيقاف: التطبيق يسأل فقط.",
+  "Bild & Wiedergabe": "الصورة والتشغيل",
+  "Bild-in-Bild": "صورة داخل صورة",
+  "Weiter mit der nächsten Folge?": "المتابعة مع الحلقة التالية؟",
+  "{0} kbit/s": "{0} كيلوبت/ث",
+  "Ton-Verzögerung ist auf diesem Gerät gerade nicht möglich.": "تأخير الصوت غير ممكن على هذا الجهاز حاليًا.",
+  "Vollbild (strecken)": "ملء الشاشة (تمديد)",
+  "Zoom (Bild füllen)": "تكبير (ملء الصورة)",
+  "Qualität": "الجودة",
+  "Ton verzögern (wenn der Ton zu früh kommt)": "تأخير الصوت (إذا جاء الصوت مبكرًا)",
+  "{0} ms später": "متأخر {0} مللي ثانية"
 };

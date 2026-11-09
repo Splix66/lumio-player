@@ -877,5 +877,18 @@ window.LUMIO_I18N["uk"] = {
   "Wer auf diesem Gerät schaut – jede Person hat eigene Favoriten und Listen.": "Хто дивиться на цьому пристрої — у кожного власні обрані та списки.",
   "Mit dem Handy scannen": "Скануйте телефоном",
   "Programmführer": "Телегід",
-  "Woher die Programmdaten kommen und wann sie geladen wurden.": "Звідки беруться дані програми і коли їх завантажено."
+  "Woher die Programmdaten kommen und wann sie geladen wurden.": "Звідки беруться дані програми і коли їх завантажено.",
+  "Nächste Folge automatisch": "Наступна серія автоматично",
+  "Nach einer Folge die nächste starten": "Запускати наступну серію після завершення",
+  "Kurz vor dem Start erscheint ein Hinweis mit Countdown – „Schließen“ stoppt. Aus: Die App fragt nur.": "Незадовго до запуску з'являється повідомлення зі зворотним відліком – «Закрити» зупиняє. Вимк.: застосунок лише запитує.",
+  "Bild & Wiedergabe": "Зображення та відтворення",
+  "Bild-in-Bild": "Картинка в картинці",
+  "Weiter mit der nächsten Folge?": "Продовжити наступною серією?",
+  "{0} kbit/s": "{0} кбіт/с",
+  "Ton-Verzögerung ist auf diesem Gerät gerade nicht möglich.": "Затримка звуку зараз неможлива на цьому пристрої.",
+  "Vollbild (strecken)": "На весь екран (розтягнути)",
+  "Zoom (Bild füllen)": "Масштаб (заповнити екран)",
+  "Qualität": "Якість",
+  "Ton verzögern (wenn der Ton zu früh kommt)": "Затримати звук (якщо звук випереджає)",
+  "{0} ms später": "на {0} мс пізніше"
 };

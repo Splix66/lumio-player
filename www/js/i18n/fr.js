@@ -877,5 +877,18 @@ window.LUMIO_I18N["fr"] = {
   "Wer auf diesem Gerät schaut – jede Person hat eigene Favoriten und Listen.": "Qui regarde sur cet appareil – chacun a ses favoris et ses listes.",
   "Mit dem Handy scannen": "Scanne avec ton téléphone",
   "Programmführer": "Guide des programmes",
-  "Woher die Programmdaten kommen und wann sie geladen wurden.": "D'où viennent les données du guide et quand elles ont été chargées."
+  "Woher die Programmdaten kommen und wann sie geladen wurden.": "D'où viennent les données du guide et quand elles ont été chargées.",
+  "Nächste Folge automatisch": "Épisode suivant automatiquement",
+  "Nach einer Folge die nächste starten": "Lancer l'épisode suivant à la fin",
+  "Kurz vor dem Start erscheint ein Hinweis mit Countdown – „Schließen“ stoppt. Aus: Die App fragt nur.": "Peu avant le lancement, un avis avec compte à rebours apparaît – « Fermer » l'arrête. Désactivé : l'app demande seulement.",
+  "Bild & Wiedergabe": "Image et lecture",
+  "Bild-in-Bild": "Image dans l'image",
+  "Weiter mit der nächsten Folge?": "Continuer avec l'épisode suivant ?",
+  "{0} kbit/s": "{0} kbit/s",
+  "Ton-Verzögerung ist auf diesem Gerät gerade nicht möglich.": "Le décalage audio n'est pas possible pour le moment sur cet appareil.",
+  "Vollbild (strecken)": "Plein écran (étirer)",
+  "Zoom (Bild füllen)": "Zoom (remplir l'image)",
+  "Qualität": "Qualité",
+  "Ton verzögern (wenn der Ton zu früh kommt)": "Retarder le son (si le son arrive trop tôt)",
+  "{0} ms später": "{0} ms plus tard"
 };

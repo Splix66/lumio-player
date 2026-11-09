@@ -877,5 +877,18 @@ window.LUMIO_I18N["el"] = {
   "Wer auf diesem Gerät schaut – jede Person hat eigene Favoriten und Listen.": "Ποιος βλέπει σε αυτή τη συσκευή – ο καθένας έχει δικά του αγαπημένα και λίστες.",
   "Mit dem Handy scannen": "Σάρωσε με το κινητό",
   "Programmführer": "Οδηγός προγράμματος",
-  "Woher die Programmdaten kommen und wann sie geladen wurden.": "Από πού προέρχονται τα δεδομένα προγράμματος και πότε φορτώθηκαν."
+  "Woher die Programmdaten kommen und wann sie geladen wurden.": "Από πού προέρχονται τα δεδομένα προγράμματος και πότε φορτώθηκαν.",
+  "Nächste Folge automatisch": "Αυτόματα το επόμενο επεισόδιο",
+  "Nach einer Folge die nächste starten": "Έναρξη του επόμενου επεισοδίου μετά το τέλος",
+  "Kurz vor dem Start erscheint ein Hinweis mit Countdown – „Schließen“ stoppt. Aus: Die App fragt nur.": "Λίγο πριν την έναρξη εμφανίζεται ειδοποίηση με αντίστροφη μέτρηση – το «Κλείσιμο» τη σταματά. Ανενεργό: η εφαρμογή απλώς ρωτά.",
+  "Bild & Wiedergabe": "Εικόνα & αναπαραγωγή",
+  "Bild-in-Bild": "Εικόνα σε εικόνα",
+  "Weiter mit der nächsten Folge?": "Συνέχεια με το επόμενο επεισόδιο;",
+  "{0} kbit/s": "{0} kbit/s",
+  "Ton-Verzögerung ist auf diesem Gerät gerade nicht möglich.": "Η καθυστέρηση ήχου δεν είναι δυνατή τώρα σε αυτή τη συσκευή.",
+  "Vollbild (strecken)": "Πλήρης οθόνη (τέντωμα)",
+  "Zoom (Bild füllen)": "Ζουμ (γέμισμα εικόνας)",
+  "Qualität": "Ποιότητα",
+  "Ton verzögern (wenn der Ton zu früh kommt)": "Καθυστέρηση ήχου (αν ο ήχος έρχεται νωρίς)",
+  "{0} ms später": "{0} ms αργότερα"
 };

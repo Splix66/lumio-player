@@ -877,5 +877,18 @@ window.LUMIO_I18N["hr"] = {
   "Wer auf diesem Gerät schaut – jede Person hat eigene Favoriten und Listen.": "Tko gleda na ovom uređaju – svatko ima vlastite favorite i popise.",
   "Mit dem Handy scannen": "Skeniraj mobitelom",
   "Programmführer": "TV vodič",
-  "Woher die Programmdaten kommen und wann sie geladen wurden.": "Odakle dolaze podaci o programu i kada su učitani."
+  "Woher die Programmdaten kommen und wann sie geladen wurden.": "Odakle dolaze podaci o programu i kada su učitani.",
+  "Nächste Folge automatisch": "Sljedeća epizoda automatski",
+  "Nach einer Folge die nächste starten": "Nakon epizode pokreni sljedeću",
+  "Kurz vor dem Start erscheint ein Hinweis mit Countdown – „Schließen“ stoppt. Aus: Die App fragt nur.": "Neposredno prije početka pojavi se obavijest s odbrojavanjem – „Zatvori” zaustavlja. Isključeno: aplikacija samo pita.",
+  "Bild & Wiedergabe": "Slika i reprodukcija",
+  "Bild-in-Bild": "Slika u slici",
+  "Weiter mit der nächsten Folge?": "Nastaviti sa sljedećom epizodom?",
+  "{0} kbit/s": "{0} kbit/s",
+  "Ton-Verzögerung ist auf diesem Gerät gerade nicht möglich.": "Odgoda zvuka trenutačno nije moguća na ovom uređaju.",
+  "Vollbild (strecken)": "Cijeli zaslon (rastegni)",
+  "Zoom (Bild füllen)": "Zum (ispuni sliku)",
+  "Qualität": "Kvaliteta",
+  "Ton verzögern (wenn der Ton zu früh kommt)": "Odgodi zvuk (ako zvuk dolazi prerano)",
+  "{0} ms später": "{0} ms kasnije"
 };

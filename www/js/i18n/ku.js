@@ -877,5 +877,18 @@ window.LUMIO_I18N["ku"] = {
   "Wer auf diesem Gerät schaut – jede Person hat eigene Favoriten und Listen.": "Kî li ser vê cîhazê temaşe dike – her kes xwedî bijarte û lîsteyên xwe ye.",
   "Mit dem Handy scannen": "Bi telefonê bişopîne",
   "Programmführer": "Rêbera bernameyan",
-  "Woher die Programmdaten kommen und wann sie geladen wurden.": "Daneyên bernameyê ji ku tên û kengê hatin barkirin."
+  "Woher die Programmdaten kommen und wann sie geladen wurden.": "Daneyên bernameyê ji ku tên û kengê hatin barkirin.",
+  "Nächste Folge automatisch": "Beşa din pey re bixweber",
+  "Nach einer Folge die nächste starten": "Piştî beşekê ya din dest pê bike",
+  "Kurz vor dem Start erscheint ein Hinweis mit Countdown – „Schließen“ stoppt. Aus: Die App fragt nur.": "Berî destpêkê agahdariyek bi hejmartina berevajî xuya dibe – “Bigire” disekinîne. Girtî: Sepan tenê dipirse.",
+  "Bild & Wiedergabe": "Wêne û lêdan",
+  "Bild-in-Bild": "Wêne di nav wêneyê de",
+  "Weiter mit der nächsten Folge?": "Bi beşa din pey re berdewam bike?",
+  "{0} kbit/s": "{0} kbit/s",
+  "Ton-Verzögerung ist auf diesem Gerät gerade nicht möglich.": "Derengxistina deng niha li ser vê cîhazê ne gengaz e.",
+  "Vollbild (strecken)": "Ekrana tije (dirêj bike)",
+  "Zoom (Bild füllen)": "Zoom (wêneyê tije bike)",
+  "Qualität": "Kalîte",
+  "Ton verzögern (wenn der Ton zu früh kommt)": "Deng dereng bike (heke deng zû tê)",
+  "{0} ms später": "{0} ms paşê"
 };

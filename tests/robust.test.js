@@ -485,4 +485,25 @@
     eq(D.trailerQuery('|EN| Moonlight [Multi-Sub] (2016)', '2016'), 'Moonlight (2016) Trailer', 'Jahr steht schon im Namen');
     eq(D.trailerQuery('Nacht & Sturm', ''), 'Nacht & Sturm Trailer', 'ohne Jahr');
   });
+  t('Player', 'Qualität, Tempo und Ton-Verzögerung erscheinen nur, wenn der Stream sie wirklich kann', function () {
+    var P = D.Player;
+    // Qualität: nur mit mehreren Stufen, gleiche Höhe einmal, die beste oben
+    var hls = { levels: [{ height: 360, bitrate: 8e5 }, { height: 720, bitrate: 3e6 }, { height: 720, bitrate: 2e6 }], autoLevelEnabled: true, currentLevel: -1 };
+    var lv = P.levels.call({ hls: hls });
+    eq(lv.length, 3, 'Automatisch + 720p + 360p');
+    eq(lv[1].label + ' ' + lv[2].label, '720p 360p', 'beste Stufe oben, doppelte 720p nur einmal');
+    ok(lv[0].on, 'Automatisch ist gewählt');
+    lv[2].pick(); eq(hls.currentLevel, 0, '360p wählen setzt die richtige Stufe');
+    eq(P.levels.call({ hls: { levels: [{ height: 720 }] } }).length, 0, 'eine Stufe: keine Auswahl');
+    eq(P.levels.call({ hls: null }).length, 0, 'ohne hls.js: keine Auswahl');
+    // Tempo nur bei Filmen und Folgen, nie bei Live
+    var v = {};
+    P.applyRate.call({ video: v, rate: 2, isVod: function () { return false; } });
+    eq(v.playbackRate, 1, 'Live bleibt bei normaler Geschwindigkeit');
+    P.applyRate.call({ video: v, rate: 2, isVod: function () { return true; } });
+    eq(v.playbackRate, 2, 'Film: doppelte Geschwindigkeit');
+    // Ton-Verzögerung nur, wenn das Bild aus einem eigenen Puffer kommt (sonst würde der Ton verstummen)
+    ok(!P.delayOk.call({ video: { currentSrc: 'http://anbieter.test/film.mp4' } }), 'direkte Adresse: keine Ton-Verzögerung');
+    ok(!P.delayOk.call({ video: null }), 'ohne Video: keine Ton-Verzögerung');
+  });
 })();

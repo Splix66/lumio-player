@@ -877,5 +877,18 @@ window.LUMIO_I18N["pl"] = {
   "Wer auf diesem Gerät schaut – jede Person hat eigene Favoriten und Listen.": "Kto ogląda na tym urządzeniu – każda osoba ma własne ulubione i listy.",
   "Mit dem Handy scannen": "Zeskanuj telefonem",
   "Programmführer": "Przewodnik TV",
-  "Woher die Programmdaten kommen und wann sie geladen wurden.": "Skąd pochodzą dane programu i kiedy je wczytano."
+  "Woher die Programmdaten kommen und wann sie geladen wurden.": "Skąd pochodzą dane programu i kiedy je wczytano.",
+  "Nächste Folge automatisch": "Automatycznie następny odcinek",
+  "Nach einer Folge die nächste starten": "Po zakończeniu odcinka uruchom następny",
+  "Kurz vor dem Start erscheint ein Hinweis mit Countdown – „Schließen“ stoppt. Aus: Die App fragt nur.": "Tuż przed startem pojawia się komunikat z odliczaniem – „Zamknij” zatrzymuje. Wył.: aplikacja tylko pyta.",
+  "Bild & Wiedergabe": "Obraz i odtwarzanie",
+  "Bild-in-Bild": "Obraz w obrazie",
+  "Weiter mit der nächsten Folge?": "Kontynuować następnym odcinkiem?",
+  "{0} kbit/s": "{0} kbit/s",
+  "Ton-Verzögerung ist auf diesem Gerät gerade nicht möglich.": "Opóźnienie dźwięku nie jest teraz możliwe na tym urządzeniu.",
+  "Vollbild (strecken)": "Pełny ekran (rozciągnij)",
+  "Zoom (Bild füllen)": "Powiększ (wypełnij obraz)",
+  "Qualität": "Jakość",
+  "Ton verzögern (wenn der Ton zu früh kommt)": "Opóźnij dźwięk (gdy dźwięk jest za wcześnie)",
+  "{0} ms später": "{0} ms później"
 };

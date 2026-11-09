@@ -902,12 +902,34 @@ body.kbd .bar.f:focus, body.is-tv .bar.f:focus { box-shadow: 0 0 0 .2rem var(--a
 .seek-time { position: absolute; bottom: 2rem; left: 0; transform: translateX(-50%); pointer-events: none; font-weight: 700; font-size: 1.05rem; font-variant-numeric: tabular-nums; background: rgba(11, 11, 15, .85); padding: .3rem .75rem; border-radius: .55rem; box-shadow: 0 0 0 1px var(--line-2); transition: opacity .12s ease; z-index: 2; }
 .seek-time.is-hidden { opacity: 0; visibility: hidden; }
 .times { display: flex; justify-content: space-between; color: var(--muted); font-size: .88rem; font-variant-numeric: tabular-nums; }
-.ctrl-row { display: flex; align-items: center; }
-.ctrl-side { width: 14rem; flex: none; display: flex; align-items: center; }
-.ctrl-side.right { justify-content: flex-end; }
+/* Drei Spalten: die Mitte (Abspielen) bleibt immer genau mittig, die Seiten teilen sich den Rest */
+.ctrl-row { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; column-gap: 1rem; }
+.ctrl-side { min-width: 0; display: flex; align-items: center; }
+.ctrl-side > * { flex: none; }
+.ctrl-side.left { grid-column: 1; }
+.ctrl-side.right { grid-column: 3; justify-content: flex-end; }
+.ctrl-side.left > * + * { margin-left: .5rem; }
 .ctrl-side .btn { background: rgba(255, 255, 255, .12); }
 .ctrl-side .btn:hover { background: rgba(255, 255, 255, .22); }
-.ctrls { display: flex; align-items: center; justify-content: center; flex: 1; }
+/* Zu viele Knöpfe links: nur noch Symbole, die Beschriftung erscheint als Hinweis beim Auswählen */
+.ctrl-side.left.is-compact .btn { position: relative; width: 3.4rem; height: 3.4rem; padding: 0; }
+.ctrl-side.left.is-compact .btn span { display: none; }
+.ctrl-side.left.is-compact .btn::after {
+  content: attr(aria-label); position: absolute; left: 50%; bottom: calc(100% + .7rem); transform: translateX(-50%);
+  padding: .35rem .7rem; border-radius: .55rem; background: rgba(20, 20, 26, .96); box-shadow: 0 0 0 1px rgba(255, 255, 255, .12);
+  color: #fff; font-size: .85rem; font-weight: 600; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .12s ease;
+}
+.ctrl-side.left.is-compact .btn:first-child::after { left: 0; transform: none; }
+.ctrl-side.left.is-compact .btn:hover::after, body.kbd .ctrl-side.left.is-compact .btn.f:focus::after, body.is-tv .ctrl-side.left.is-compact .btn.f:focus::after { opacity: 1; }
+.ctrls { grid-column: 2; display: flex; align-items: center; justify-content: center; }
+.ctrl-side.right.is-compact > * + * { margin-left: .3rem; }
+.ctrl-side.right.is-compact .vol-range { display: none; }
+/* Zu wenig Platz in einer Zeile: Abspielen oben, Werkzeuge darunter */
+.ctrl-row.is-stacked { grid-template-columns: auto minmax(0, 1fr); row-gap: .9rem; }
+.ctrl-row.is-stacked .ctrls { grid-column: 1 / -1; grid-row: 1; }
+.ctrl-row.is-stacked .ctrl-side.left { grid-column: 1; grid-row: 2; }
+.ctrl-row.is-stacked .ctrl-side.right { grid-column: 2; grid-row: 2; }
+.player.ctrl-stacked .track-panel:not(.chan-panel) { bottom: 13rem; }
 .ctrls > * + * { margin-left: 1.1rem; }
 .cbtn { width: 3.4rem; height: 3.4rem; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .12); color: #fff; position: relative; }
 .cbtn .i { width: 1.45rem; height: 1.45rem; }
@@ -1191,8 +1213,8 @@ body.lite .fh-title { text-shadow: none; }
   html:not(.tv) .osd-top { padding: calc(1rem + env(safe-area-inset-top)) 1rem 2.4rem; }
   html:not(.tv) .osd-top .btn span { display: none; }
   html:not(.tv) .osd-bottom { padding: 2.4rem 1rem calc(1rem + env(safe-area-inset-bottom)); }
-  html:not(.tv) .ctrl-side { width: auto; }
   html:not(.tv) .ctrl-side.left { display: none; }
+  html:not(.tv) .ctrl-row.is-stacked .ctrl-side.right { justify-content: center; }
   html:not(.tv) .ctrls > * + * { margin-left: .7rem; }
   html:not(.tv) .cbtn { width: 3rem; height: 3rem; }
   html:not(.tv) .cbtn.big { width: 3.9rem; height: 3.9rem; }
