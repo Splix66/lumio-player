@@ -1760,9 +1760,15 @@ body.kbd .tr-close.f:focus, body.is-tv .tr-close.f:focus { background: #fff; col
    Auf schmalen Bildschirmen wird die Liste zur Zeile, dort hilft die Zeile. */
 .mv2 .mv-head { padding: 0 0 .9rem; }
 .mv2 .mv-head .mv-title, .mv2 .mv-head .count { display: none; }
+/* „Sortieren“ steht in der Zeile „Weiterschauen“ – dann fällt die eigene Zeile weg */
+.mv2 .mv-head.no-sort { display: none; }
+.rail h2 .mv-sort { margin-left: auto; padding: .5rem .95rem; font-size: .88rem; font-weight: 600; letter-spacing: 0; color: var(--muted); }
+.rail h2 .mv-sort.is-on { color: var(--text); box-shadow: inset 0 0 0 1px var(--accent); }
+.rail h2 .mv-sort .i { width: 1.05rem; height: 1.05rem; margin-right: .45rem; color: inherit; }
 @media (max-width: 700px) {
   html:not(.tv) .mv2 .mv-head { padding: .2rem 0 .8rem; }
   html:not(.tv) .mv2 .mv-head .mv-title, html:not(.tv) .mv2 .mv-head .count { display: inline; }
+  html:not(.tv) .mv2 .mv-head.no-sort { display: flex; }
 }
 
 /* Playlist-Übersicht: „Webseite: an/aus“ (Zugangsdaten nur mit Zustimmung online) */

@@ -278,7 +278,7 @@
   /* Ein Knopf mit Flagge und aktueller Sprache (Flagge + „Deutsch“) – erst ein Druck darauf klappt die Auswahl auf */
   function langButton() {
     var name = (LANGS.filter(function (l) { return l[0] === Lang.cur; })[0] || LANGS[0])[1];
-    return h('button', { class: 'btn f lang-btn', title: 'Sprache / Language / Dil', 'aria-label': 'Sprache / Language / Dil: ' + name, onclick: pickLanguage },
+    return h('button', { class: 'btn f lang-btn', title: T('Sprache'), 'aria-label': T('Sprache') + ': ' + name, onclick: pickLanguage },
       flagFor(Lang.cur) || icon('globe'), h('span', { text: name }), icon('down'));
   }
   // Sprachliste mit Flaggen (Willkommensseite: klappt oben rechts unter dem Knopf auf; Einstellungen: normales Fenster)
@@ -289,7 +289,7 @@
     return list;
   }
   function pickLanguage() {
-    openSheet('Sprache / Language / Dil', 'globe', langChoice(), { cls: 'is-drop' });
+    openSheet(T('Sprache'), 'globe', langChoice(), { cls: 'is-drop' });
   }
 
   /* ---------------- Geräte-Kennung (MAC-Adresse) ----------------
@@ -2990,10 +2990,11 @@
     }
     paintSort();
     var resumeSlot = h('div', { class: 'mv-resume' });
+    var head = h('div', { class: 'mv-head' }, title, count, sortBtn);
     var grid = h('div', { class: 'poster-grid mv-grid' });
     var el = h('div', { class: 'page media mv2 media-' + kind + ' k-' + kind },
       topSlot,
-      h('div', { class: 'mv-body' }, h('aside', { class: 'mv-side' }, side), h('div', { class: 'mv-main' }, resumeSlot, h('div', { class: 'mv-head' }, title, count, sortBtn), grid)));
+      h('div', { class: 'mv-body' }, h('aside', { class: 'mv-side' }, side), h('div', { class: 'mv-main' }, resumeSlot, head, grid)));
     var flat = [], groups = null, curGroup = null, activeId = null, counts = null, req = 0, chunker = null, lastCatObj = null;
 
     function grpCat(g) { return { id: '__grp:' + g.key, name: T('Alle'), group: g }; }
@@ -3080,11 +3081,16 @@
     }
     function paintResume() {
       clear(resumeSlot);
-      if (activeId !== '__all' && activeId.indexOf('__grp:') !== 0) return;
+      if (activeId !== '__all' && activeId.indexOf('__grp:') !== 0) { head.appendChild(sortBtn); head.classList.remove('no-sort'); return; }
       var mine = Resume.recent().filter(function (r) { return isSeries ? r.item.kind === 'episode' : r.item.kind === 'movie'; });
       if (isSeries) mine = mine.concat(UpNext.entries()).sort(function (a, b) { return b.at - a.at; });
       mine = mine.slice(0, 12);
-      if (mine.length) resumeSlot.appendChild(railEl(T('Weiterschauen'), mine.map(continueCard), kind));
+      if (mine.length) {
+        var rail = railEl(T('Weiterschauen'), mine.map(continueCard), kind);
+        $('h2', rail).appendChild(sortBtn);
+        resumeSlot.appendChild(rail);
+      } else head.appendChild(sortBtn);
+      head.classList.toggle('no-sort', !!mine.length);
     }
     // Top 10 immer aus allen Titeln – so bleibt der obere Bereich gleich, egal welche Kategorie gewählt ist
     function paintTop() {
@@ -5977,7 +5983,7 @@
 
     // ---- Darstellung & Gerät ----
     var tLang = tile('globe', T('Sprache'), function () { return LANGS.filter(function (l) { return l[0] === Lang.cur; })[0][1]; }, function () {
-      openSheet('Sprache / Language / Dil', 'globe', langChoice(), { wide: true });
+      openSheet(T('Sprache'), 'globe', langChoice(), { wide: true });
     });
     var tTheme = tile('sun', T('Darstellung'), function () { return opt(THEMES, Settings.get('theme') || 'dark') + ' · ' + T('Cover {0}', opt(POSTERS, Settings.get('posterSize') || 'm')); }, function () {
       var s = Season.current();
@@ -6250,7 +6256,7 @@
     var f = detailFrame(item);
     var seasonsBar = h('div', { class: 'seasons' });
     var epBox = h('div', { class: 'episodes' }, loader());
-    var actions = h('div', { class: 'row' }, favButton(item), laterButton(item));
+    var favB = favButton(item), actions = h('div', { class: 'row' }, favB, laterButton(item));
     var metaBox = h('div'), plotBox = h('p', { class: 'plot', text: item.plot || '' });
     f.info.appendChild(metaBox); f.info.appendChild(actions); f.info.appendChild(plotBox);
     f.panel.appendChild(seasonsBar); f.panel.appendChild(epBox);
@@ -6336,7 +6342,7 @@
       if (d && d.plot) plotBox.textContent = d.plot;
       if (d && d.backdrop) { item.backdrop = d.backdrop; f.setBackdrop(d.backdrop); }
       var tb = d && trailerButton(item.name, d.trailer);
-      if (tb) actions.insertBefore(tb, actions.lastChild);   // vor „Merken“
+      if (tb) actions.insertBefore(tb, favB);   // vor „Merken“
       seasons = (d && d.seasons) || [];
       if (!seasons.length) { clear(epBox).appendChild(stateBox(T('Keine Folgen gefunden'), null)); return; }
       seasons.forEach(function (s) {

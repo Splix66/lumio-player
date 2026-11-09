@@ -77,6 +77,9 @@ Kindersicherung. Personen werden mitgesichert (Datenschutzerklärung ergänzt), 
   SD/HD/Full HD/4K. Das letzte Ergebnis steht in „Problem melden“.
 - **Bildschirmschoner** (Aus/5/10/15/30 Min., voreingestellt 10): Uhr und wechselnde Poster, die Uhr wandert (OLED).
   Die erste Taste beendet ihn nur.
+- Sprachauswahl: Überschrift nur noch in der eingestellten Sprache („Sprache“ statt „Sprache / Language / Dil“).
+- Filme/Serien: „Sortieren“ steht in der Zeile „Weiterschauen“ – keine leere Zeile mehr über den Covern.
+- Serien: Knopf „Trailer“ steht jetzt direkt hinter „Weiter“ (vor „Merken“).
 - „Alle …“ zählt nur noch sichtbare Kategorien (ausgeblendete und im Kinderprofil gesperrte nicht mehr).
 
 **Live TV:**
