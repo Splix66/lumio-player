@@ -863,5 +863,12 @@ window.LUMIO_I18N["uk"] = {
   "Die Wiedergabe stoppt nach der gewählten Zeit – auch im TV-Player.": "Відтворення зупиниться через вибраний час — і в ТВ-плеєрі.",
   "Trailer suchen": "Знайти трейлер",
   "Trailer auf YouTube suchen": "Шукати трейлер на YouTube",
-  "YouTube lässt sich auf diesem Gerät nicht öffnen.": "YouTube не вдається відкрити на цьому пристрої."
+  "YouTube lässt sich auf diesem Gerät nicht öffnen.": "YouTube не вдається відкрити на цьому пристрої.",
+  "Playlists hinzufügen, wechseln und aktuell halten.": "Додавайте, перемикайте та оновлюйте плейлисти.",
+  "Personen & Kindersicherung": "Люди та батьківський контроль",
+  "Wer schaut, was gesperrt ist und welche Kategorien und Sender du siehst.": "Хто дивиться, що заблоковано та які категорії й канали ви бачите.",
+  "Player, Stream-Format, Untertitel und Zeitschaltungen.": "Плеєр, формат потоку, субтитри й таймери.",
+  "Sprache, Farben, Uhrzeit und Bildschirmschoner.": "Мова, кольори, годинник і заставка.",
+  "Gerät & Hilfe": "Пристрій і допомога",
+  "Sichern, Updates, Verbindungstest und Kontakt zum Support.": "Резервна копія, оновлення, перевірка з’єднання та зв’язок із підтримкою."
 };

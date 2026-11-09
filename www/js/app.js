@@ -5533,6 +5533,7 @@
   function flagFor(lang) { return FLAGS[LANG_FLAG[lang]] ? langBadge({ key: LANG_FLAG[lang], name: lang }) : null; }
 
   /* Die Kachel-Seite. paintSettings() frischt die kleinen Werte unter den Kacheln auf. */
+  var stLastSec = null;   // zuletzt geöffneter Bereich der Einstellungen
   var settingsPaint = null;
   function paintSettings() { if (settingsPaint) settingsPaint(); }
 
@@ -5804,14 +5805,10 @@
     function tile(ic, label, value, onClick, cls) {
       var val = h('small', { class: 'st-val' });
       var b = h('button', { class: 'st-tile f' + (cls ? ' ' + cls : ''), onclick: onClick },
-        h('span', { class: 'st-ic' }, icon(ic)), h('span', { class: 'st-txt' }, h('b', { text: label }), val));
+        h('span', { class: 'st-ic' }, icon(ic)), h('span', { class: 'st-txt' }, h('b', { text: label }), val), h('span', { class: 'st-go', 'aria-hidden': 'true' }, icon('next')));
       b._val = function () { var v = typeof value === 'function' ? value() : value; val.textContent = v || ''; val.hidden = !v; };
       tiles.push(b);
       return b;
-    }
-    function group(title, kids) {
-      kids = kids.filter(Boolean);
-      return kids.length ? h('section', { class: 'st-group' }, h('h2', { text: title }), h('div', { class: 'st-grid' }, kids)) : null;
     }
 
     // Auswahl-Listen
@@ -6050,17 +6047,47 @@
 
     function paint() { tiles.forEach(function (t) { t._val(); }); }
     paint();
-    var el = h('div', { class: 'page settings st-page' },
-      h('div', { class: 'page-head' }, h('h1', { text: T('Einstellungen') })),
-      group(T('Playlist'), [tAdd, tPl, tUpd, tAuto, tShift]),
-      group(T('Kindersicherung & Kategorien'), [tPersons, tPar, tHideL, tHideM, tHideS, tHideCh, tHisL, tHisM, tHisS]),
-      group(T('Wiedergabe'), [tSort, tFmt, tQual, tEng, tExt, tSub, tLast, tSleep, tIdle]),
-      group(T('Darstellung & Gerät'), [tLang, tTheme, tClock, tSaver, tDev, tBackup, tAbout, tSpeed, tFeedback, tReport]),
-      h('div', { class: 'st-foot' }, macTag(profileUser(p), true)));
-    tAdd.setAttribute('data-autofocus', '');
+    /* Aufbau wie Filme, Serien und Live TV: links die Bereiche (je eine Farbe), rechts die Kacheln des Bereichs.
+       Auf einem Bereich stehen bleiben genügt – die Kacheln wechseln sofort mit. */
+    var SECTIONS = [
+      { id: 'playlist', ic: 'playlist', c: 'violet', name: T('Playlist'), hint: T('Playlists hinzufügen, wechseln und aktuell halten.'), tiles: [tAdd, tPl, tUpd, tAuto, tShift] },
+      { id: 'family', ic: 'lock', c: 'pink', name: T('Personen & Kindersicherung'), hint: T('Wer schaut, was gesperrt ist und welche Kategorien und Sender du siehst.'), tiles: [tPersons, tPar, tHideL, tHideM, tHideS, tHideCh, tHisL, tHisM, tHisS] },
+      { id: 'play', ic: 'play', c: 'blue', name: T('Wiedergabe'), hint: T('Player, Stream-Format, Untertitel und Zeitschaltungen.'), tiles: [tSort, tFmt, tQual, tEng, tExt, tSub, tLast, tSleep, tIdle] },
+      { id: 'look', ic: 'sun', c: 'amber', name: T('Darstellung'), hint: T('Sprache, Farben, Uhrzeit und Bildschirmschoner.'), tiles: [tLang, tTheme, tClock, tSaver, tDev] },
+      { id: 'help', ic: 'help', c: 'green', name: T('Gerät & Hilfe'), hint: T('Sichern, Updates, Verbindungstest und Kontakt zum Support.'), tiles: [tBackup, tAbout, tSpeed, tFeedback, tReport] }
+    ];
+    SECTIONS.forEach(function (sec) { sec.tiles = sec.tiles.filter(Boolean); });
+    var side = h('div', { class: 'st-secs' }), main = h('div', { class: 'st-main' }), cur = null, swTimer = null;
+    var head = h('div', { class: 'st-head' }), grid = h('div', { class: 'st-grid' });
+    main.appendChild(head); main.appendChild(grid);
+    function show(sec) {
+      if (cur === sec) return;
+      cur = sec; stLastSec = sec.id;
+      $all('.st-sec', side).forEach(function (b) { b.classList.toggle('is-on', b._sec === sec); });
+      main.className = 'st-main c-' + sec.c;
+      clear(head).appendChild(h('span', { class: 'st-hic' }, icon(sec.ic)));
+      head.appendChild(h('div', { class: 'st-htxt' }, h('h2', { text: sec.name }), h('p', { text: sec.hint })));
+      clear(grid);
+      sec.tiles.forEach(function (t) { grid.appendChild(t); });
+    }
+    SECTIONS.forEach(function (sec) {
+      var b = h('button', { class: 'cat f st-sec c-' + sec.c, onclick: function () { clearTimeout(swTimer); show(sec); var f = $('.st-tile', grid); if (f) Nav.focus(f); } },
+        h('span', { class: 'st-sic' }, icon(sec.ic)), h('span', { class: 'cat-name', text: sec.name }));
+      b._sec = sec;
+      // Fernbedienung/Tastatur: auf dem Bereich stehen = Kacheln zeigen (kurz verzögert, damit schnelles Durchblättern nicht flackert)
+      b.addEventListener('focus', function () { clearTimeout(swTimer); swTimer = setTimeout(function () { show(sec); }, 120); });
+      side.appendChild(b);
+    });
+    var start = SECTIONS.filter(function (x) { return x.id === stLastSec; })[0] || SECTIONS[0];
+    show(start);
+    $all('.st-sec', side).forEach(function (b) { if (b._sec === start) b.setAttribute('data-autofocus', ''); });
+    var el = h('div', { class: 'page settings st-page st2' },
+      h('div', { class: 'st-body' },
+        h('aside', { class: 'st-side' }, h('h1', { class: 'st-title' }, icon('settings'), h('span', { text: T('Einstellungen') })), side),
+        main));
     settingsPaint = paint;
     el._refresh = paint;
-    el._dispose = function () { if (settingsPaint === paint) settingsPaint = null; };
+    el._dispose = function () { clearTimeout(swTimer); if (settingsPaint === paint) settingsPaint = null; };
     return el;
   }
 

@@ -863,5 +863,12 @@ window.LUMIO_I18N["ar"] = {
   "Die Wiedergabe stoppt nach der gewählten Zeit – auch im TV-Player.": "يتوقف التشغيل بعد الوقت المختار – في مشغل التلفاز أيضًا.",
   "Trailer suchen": "ابحث عن الإعلان",
   "Trailer auf YouTube suchen": "ابحث عن الإعلان في يوتيوب",
-  "YouTube lässt sich auf diesem Gerät nicht öffnen.": "لا يمكن فتح يوتيوب على هذا الجهاز."
+  "YouTube lässt sich auf diesem Gerät nicht öffnen.": "لا يمكن فتح يوتيوب على هذا الجهاز.",
+  "Playlists hinzufügen, wechseln und aktuell halten.": "أضف قوائم التشغيل وبدّل بينها وحدّثها.",
+  "Personen & Kindersicherung": "الأشخاص والرقابة الأبوية",
+  "Wer schaut, was gesperrt ist und welche Kategorien und Sender du siehst.": "من يشاهد، وما المقفل، وأي الفئات والقنوات تراها.",
+  "Player, Stream-Format, Untertitel und Zeitschaltungen.": "المشغل وصيغة البث والترجمة والمؤقتات.",
+  "Sprache, Farben, Uhrzeit und Bildschirmschoner.": "اللغة والألوان والساعة وشاشة التوقف.",
+  "Gerät & Hilfe": "الجهاز والمساعدة",
+  "Sichern, Updates, Verbindungstest und Kontakt zum Support.": "النسخ الاحتياطي والتحديثات واختبار الاتصال والتواصل مع الدعم."
 };

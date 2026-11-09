@@ -1290,32 +1290,6 @@ body.lite .fh-title { text-shadow: none; }
   html:not(.tv) .shell.is-launcher .sb-clock { display: none; }
 }
 
-/* ==========================================================
-   Einstellungen: Kacheln (wie bei TV-Boxen), darunter Fenster mit den Möglichkeiten
-   ========================================================== */
-.st-page .page-head { margin-bottom: .4rem; }
-.st-group { max-width: 82rem; margin-top: 1.5rem; }
-.st-group > h2 { font-size: .95rem; font-weight: 700; color: var(--muted); margin-bottom: .7rem; }
-.st-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-gap: .8rem; gap: .8rem; }
-.st-tile {
-  position: relative; min-width: 0; min-height: 4.7rem; display: flex; align-items: center; padding: .8rem 1rem; text-align: left;
-  border-radius: var(--radius-lg); color: var(--text);
-  background: linear-gradient(150deg, rgba(139, 92, 246, .26), rgba(139, 92, 246, .09) 70%);
-  box-shadow: inset 0 0 0 1px rgba(167, 139, 250, .26);
-}
-.st-tile:hover { background: linear-gradient(150deg, rgba(139, 92, 246, .38), rgba(139, 92, 246, .14) 70%); }
-.st-ic { flex: none; width: 2.7rem; height: 2.7rem; margin-right: .85rem; display: grid; place-items: center; border-radius: .85rem; background: linear-gradient(150deg, var(--accent-2), var(--accent)); color: #fff; box-shadow: 0 .4rem .9rem -.4rem rgba(139, 92, 246, .8); }
-.st-ic .i { width: 1.45rem; height: 1.45rem; }
-.st-txt { display: flex; flex-direction: column; min-width: 0; }
-.st-txt b { font-size: 1rem; font-weight: 700; line-height: 1.25; }
-.st-val { margin-top: .2rem; color: var(--muted); font-size: .8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.st-tile.is-busy .st-ic .i { animation: spin 1s linear infinite; }
-body.kbd .st-tile.f:focus, body.is-tv .st-tile.f:focus { transform: scale(1.04); background: linear-gradient(150deg, var(--accent-2), var(--accent)); color: #fff; box-shadow: 0 0 0 .2rem var(--bg), 0 0 0 .38rem #fff; }
-body.kbd .st-tile.f:focus .st-val, body.is-tv .st-tile.f:focus .st-val { color: rgba(255, 255, 255, .88); }
-body.kbd .st-tile.f:focus .st-ic, body.is-tv .st-tile.f:focus .st-ic { background: rgba(255, 255, 255, .22); box-shadow: none; }
-:root[data-theme="light"] .st-tile { background: var(--surface); box-shadow: inset 0 0 0 1px var(--line), 0 .3rem .8rem -.5rem rgba(20, 20, 40, .2); }
-:root[data-theme="light"] .st-tile:hover { background: #f6f6f9; }
-.st-foot { max-width: 82rem; margin-top: 1.8rem; padding-top: 1.2rem; border-top: 1px solid var(--line); }
 
 .screen.set-modal { padding: 4vh 2rem; }
 .set-sheet { max-width: 40rem; display: flex; flex-direction: column; overflow: hidden; }
@@ -1411,21 +1385,12 @@ html[data-poster="l"] .mv-grid { grid-template-columns: repeat(auto-fill, minmax
 html[data-poster="s"] .poster-grid { grid-template-columns: repeat(auto-fill, minmax(8.2rem, 1fr)); }
 html[data-poster="l"] .poster-grid { grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr)); }
 
-@media (max-width: 1100px) {
-  html:not(.tv) .st-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
 @media (max-width: 760px) {
-  html:not(.tv) .st-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  html:not(.tv) .st-tile { min-height: 4rem; padding: .7rem .75rem; }
-  html:not(.tv) .st-ic { width: 2.2rem; height: 2.2rem; margin-right: .65rem; }
-  html:not(.tv) .st-txt b { font-size: .9rem; }
   html:not(.tv) .screen.set-modal { padding: 0; }
   html:not(.tv) .set-sheet, html:not(.tv) .pin-panel { max-width: none; height: 100%; border-radius: 0; }
 }
 @media (orientation: landscape) and (max-height: 540px) {
   html:not(.tv) .screen.set-modal { padding: .6rem 1rem; }
-  html:not(.tv) .st-tile { min-height: 3.9rem; padding: .6rem .8rem; }
-  html:not(.tv) .st-ic { width: 2.2rem; height: 2.2rem; margin-right: .65rem; }
   html:not(.tv) .pin-key { height: 2.6rem; font-size: 1.2rem; }
   html:not(.tv) .pin-pad { margin-top: .6rem; }
 }
@@ -2374,4 +2339,90 @@ body.kbd .who-p.f:focus .avatar.av-big, body.is-tv .who-p.f:focus .avatar.av-big
   html:not(.tv) .who-grid { margin-top: 1rem; }
   html:not(.tv) .avatar.av-big { width: 4.5rem; height: 4.5rem; font-size: 2rem; }
   html:not(.tv) .who-p { width: 7rem; margin: 0 .4rem .6rem; padding: .5rem .3rem; }
+}
+
+/* ==========================================================
+   Einstellungen (wie Filme, Serien und Live TV): links die Bereiche, rechts Glas-Kacheln
+   in der Farbe des Bereichs. Farben als RGB (--cr), hell (--c1) und kräftig (--c2).
+   ========================================================== */
+.c-violet { --cr: 168, 85, 247; --c1: #c084fc; --c2: #9333ea; }
+.c-pink { --cr: 236, 72, 153; --c1: #f9a8d4; --c2: #db2777; }
+.c-blue { --cr: 56, 160, 248; --c1: #7dd3fc; --c2: #2563eb; }
+.c-amber { --cr: 245, 158, 11; --c1: #fcd34d; --c2: #d97706; }
+.c-green { --cr: 34, 197, 94; --c1: #86efac; --c2: #16a34a; }
+:root[data-theme="light"] .c-violet { --c1: #7c3aed; }
+:root[data-theme="light"] .c-pink { --c1: #db2777; }
+:root[data-theme="light"] .c-blue { --c1: #2563eb; }
+:root[data-theme="light"] .c-amber { --c1: #b45309; }
+:root[data-theme="light"] .c-green { --c1: #15803d; }
+:root[data-theme="dark"] .st2 { background: radial-gradient(55% 45% at 100% 0%, rgba(124, 58, 237, .14), transparent 70%), radial-gradient(45% 55% at 0% 100%, rgba(124, 58, 237, .07), transparent 70%); }
+.st2 { padding-top: 1.4rem; }
+.st-body { display: flex; align-items: flex-start; }
+.st-side { position: sticky; top: 0; z-index: 2; flex: none; width: 20.5rem; padding-right: 1.8rem; }
+.st-title { display: flex; align-items: center; margin: .1rem 0 1.3rem .35rem; font-size: 1.7rem; font-weight: 800; letter-spacing: -.03em; }
+.st-title .i { width: 1.6rem; height: 1.6rem; margin-right: .7rem; color: #c084fc; }
+:root[data-theme="light"] .st-title .i { color: #7c3aed; }
+.st-secs { display: flex; flex-direction: column; }
+.st-sec { display: flex; align-items: center; padding: .55rem .8rem; }
+.st-sec .cat-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.st-sic { flex: none; display: grid; place-items: center; width: 2.1rem; height: 2.1rem; margin-right: .8rem; border-radius: .65rem; background: rgba(var(--cr), .16); color: var(--c1); }
+.st-sic .i { width: 1.15rem; height: 1.15rem; }
+.st-sec.is-on { background: rgba(var(--cr), .14); color: var(--text); font-weight: 700; box-shadow: inset .2rem 0 0 var(--c1); }
+body.kbd .st-sec.f:focus, body.is-tv .st-sec.f:focus { background: var(--text); color: var(--bg); box-shadow: none; }
+.st-main { flex: 1; min-width: 0; }
+.st-head { display: flex; align-items: center; margin: .1rem 0 1.4rem; }
+.st-hic { flex: none; display: grid; place-items: center; width: 3.6rem; height: 3.6rem; margin-right: 1.1rem; border-radius: 1.1rem; background: linear-gradient(160deg, rgba(var(--cr), .32), rgba(var(--cr), .1)); box-shadow: inset 0 0 0 1px rgba(var(--cr), .4); color: var(--c1); }
+.st-hic .i { width: 1.8rem; height: 1.8rem; }
+.st-htxt h2 { font-size: 1.6rem; font-weight: 800; letter-spacing: -.02em; }
+.st-htxt p { margin-top: .25rem; color: var(--muted); font-size: .95rem; }
+.st2 .st-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-gap: 1rem; gap: 1rem; }
+.st2 .st-tile {
+  position: relative; min-width: 0; min-height: 5.6rem; display: flex; align-items: center; padding: 1rem 2.6rem 1rem 1.1rem; text-align: left;
+  border-radius: 1.2rem; color: var(--text);
+  background: radial-gradient(120% 90% at 0% 0%, rgba(var(--cr), .16), transparent 60%), rgba(255, 255, 255, .035);
+  box-shadow: inset 0 0 0 1px rgba(var(--cr), .24);
+}
+.st2 .st-ic { flex: none; width: 2.8rem; height: 2.8rem; margin-right: .95rem; display: grid; place-items: center; border-radius: .9rem; background: rgba(var(--cr), .16); color: var(--c1); }
+.st2 .st-ic .i { width: 1.45rem; height: 1.45rem; }
+.st2 .st-txt { display: flex; flex-direction: column; min-width: 0; }
+.st2 .st-txt b { font-size: 1.02rem; font-weight: 700; line-height: 1.25; }
+.st2 .st-val { margin-top: .22rem; color: var(--muted); font-size: .82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.st2 .st-go { position: absolute; top: 50%; right: .9rem; margin-top: -.55rem; color: var(--dim); }
+.st2 .st-go .i { display: block; width: 1.1rem; height: 1.1rem; stroke-width: 2.4; }
+.st2 .st-tile.is-busy .st-ic .i { animation: spin 1s linear infinite; }
+.st2 .st-tile:hover { box-shadow: inset 0 0 0 1px rgba(var(--cr), .55); }
+body.kbd .st2 .st-tile.f:focus, body.is-tv .st2 .st-tile.f:focus {
+  transform: scale(1.03);
+  background: radial-gradient(120% 90% at 0% 0%, rgba(var(--cr), .32), transparent 65%), rgba(255, 255, 255, .06);
+  box-shadow: inset 0 0 0 2px var(--c1), 0 0 0 .22rem rgba(var(--cr), .28), 0 0 1.8rem rgba(var(--cr), .45);
+}
+body.kbd .st2 .st-tile.f:focus .st-ic, body.is-tv .st2 .st-tile.f:focus .st-ic { background: var(--c1); color: #120f1a; }
+body.kbd .st2 .st-tile.f:focus .st-val, body.is-tv .st2 .st-tile.f:focus .st-val { color: var(--text-2); }
+body.kbd .st2 .st-tile.f:focus .st-go, body.is-tv .st2 .st-tile.f:focus .st-go { color: var(--c1); }
+:root[data-theme="light"] .st2 .st-tile { background: radial-gradient(120% 90% at 0% 0%, rgba(var(--cr), .12), transparent 60%), var(--surface); }
+:root[data-theme="light"] body.kbd .st2 .st-tile.f:focus, :root[data-theme="light"] body.is-tv .st2 .st-tile.f:focus { background: radial-gradient(120% 90% at 0% 0%, rgba(var(--cr), .22), transparent 65%), var(--surface); }
+:root[data-theme="light"] body.kbd .st2 .st-tile.f:focus .st-ic, :root[data-theme="light"] body.is-tv .st2 .st-tile.f:focus .st-ic { color: #fff; }
+body.lite .st2 .st-tile.f:focus { box-shadow: inset 0 0 0 2px var(--c1); }
+@media (orientation: landscape) and (max-height: 540px) {
+  html:not(.tv) .st2 { padding-top: .8rem; }
+  html:not(.tv) .st-side { width: 12.5rem; padding-right: 1rem; }
+  html:not(.tv) .st-title { font-size: 1.2rem; margin-bottom: .7rem; }
+  html:not(.tv) .st-sic { width: 1.7rem; height: 1.7rem; margin-right: .55rem; }
+  html:not(.tv) .st-sec { padding: .45rem .55rem; font-size: .85rem; }
+  html:not(.tv) .st-head { margin-bottom: .8rem; }
+  html:not(.tv) .st-hic { width: 2.6rem; height: 2.6rem; margin-right: .8rem; }
+  html:not(.tv) .st-htxt h2 { font-size: 1.2rem; }
+  html:not(.tv) .st-htxt p { font-size: .8rem; }
+  html:not(.tv) .st2 .st-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-gap: .6rem; gap: .6rem; }
+  html:not(.tv) .st2 .st-tile { min-height: 3.9rem; padding: .6rem 2rem .6rem .7rem; }
+  html:not(.tv) .st2 .st-ic { width: 2.1rem; height: 2.1rem; margin-right: .6rem; }
+  html:not(.tv) .st2 .st-txt b { font-size: .88rem; }
+}
+@media (max-width: 760px) and (orientation: portrait) {
+  html:not(.tv) .st-body { display: block; }
+  html:not(.tv) .st-side { position: static; width: auto; padding: 0; }
+  html:not(.tv) .st-secs { flex-direction: row; overflow-x: auto; margin: 0 calc(-1 * var(--pad)); padding: 0 var(--pad) .6rem; scrollbar-width: none; }
+  html:not(.tv) .st-sec { flex: none; margin-right: .4rem; }
+  html:not(.tv) .st-head { margin-top: .8rem; }
+  html:not(.tv) .st2 .st-grid { grid-template-columns: minmax(0, 1fr); }
 }

@@ -863,5 +863,12 @@ window.LUMIO_I18N["ro"] = {
   "Die Wiedergabe stoppt nach der gewählten Zeit – auch im TV-Player.": "Redarea se oprește după timpul ales – și în playerul TV.",
   "Trailer suchen": "Caută trailer",
   "Trailer auf YouTube suchen": "Caută trailerul pe YouTube",
-  "YouTube lässt sich auf diesem Gerät nicht öffnen.": "YouTube nu poate fi deschis pe acest dispozitiv."
+  "YouTube lässt sich auf diesem Gerät nicht öffnen.": "YouTube nu poate fi deschis pe acest dispozitiv.",
+  "Playlists hinzufügen, wechseln und aktuell halten.": "Adaugă, schimbă și actualizează playlisturi.",
+  "Personen & Kindersicherung": "Persoane și control parental",
+  "Wer schaut, was gesperrt ist und welche Kategorien und Sender du siehst.": "Cine se uită, ce e blocat și ce categorii și canale vezi.",
+  "Player, Stream-Format, Untertitel und Zeitschaltungen.": "Player, format stream, subtitrări și temporizatoare.",
+  "Sprache, Farben, Uhrzeit und Bildschirmschoner.": "Limbă, culori, ceas și economizor de ecran.",
+  "Gerät & Hilfe": "Dispozitiv și ajutor",
+  "Sichern, Updates, Verbindungstest und Kontakt zum Support.": "Copie de rezervă, actualizări, test de conexiune și contact cu suportul."
 };

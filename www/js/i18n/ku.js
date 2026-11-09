@@ -863,5 +863,12 @@ window.LUMIO_I18N["ku"] = {
   "Die Wiedergabe stoppt nach der gewählten Zeit – auch im TV-Player.": "Lîstin piştî dema hilbijartî disekine – di lîstikvana TV de jî.",
   "Trailer suchen": "Fragmanê bigere",
   "Trailer auf YouTube suchen": "Fragmanê li YouTube bigere",
-  "YouTube lässt sich auf diesem Gerät nicht öffnen.": "YouTube li ser vê cîhazê venabe."
+  "YouTube lässt sich auf diesem Gerät nicht öffnen.": "YouTube li ser vê cîhazê venabe.",
+  "Playlists hinzufügen, wechseln und aktuell halten.": "Lîsteyan zêde bike, biguherîne û nû bike.",
+  "Personen & Kindersicherung": "Kes û kontrola dêûbavan",
+  "Wer schaut, was gesperrt ist und welche Kategorien und Sender du siehst.": "Kî temaşe dike, çi kilît e û tu kîjan kategorî û kanalan dibînî.",
+  "Player, Stream-Format, Untertitel und Zeitschaltungen.": "Lîstikvan, formata stream, binnivîs û demjimêr.",
+  "Sprache, Farben, Uhrzeit und Bildschirmschoner.": "Ziman, reng, saet û parastina dîmenderê.",
+  "Gerät & Hilfe": "Cîhaz û alîkarî",
+  "Sichern, Updates, Verbindungstest und Kontakt zum Support.": "Paşvekêşan, nûkirin, ceribandina girêdanê û têkiliya bi piştgiriyê re."
 };

@@ -863,5 +863,12 @@ window.LUMIO_I18N["it"] = {
   "Die Wiedergabe stoppt nach der gewählten Zeit – auch im TV-Player.": "La riproduzione si ferma dopo il tempo scelto, anche nel player TV.",
   "Trailer suchen": "Cerca trailer",
   "Trailer auf YouTube suchen": "Cerca il trailer su YouTube",
-  "YouTube lässt sich auf diesem Gerät nicht öffnen.": "Non è possibile aprire YouTube su questo dispositivo."
+  "YouTube lässt sich auf diesem Gerät nicht öffnen.": "Non è possibile aprire YouTube su questo dispositivo.",
+  "Playlists hinzufügen, wechseln und aktuell halten.": "Aggiungi, cambia e aggiorna le playlist.",
+  "Personen & Kindersicherung": "Persone e parental control",
+  "Wer schaut, was gesperrt ist und welche Kategorien und Sender du siehst.": "Chi guarda, cosa è bloccato e quali categorie e canali vedi.",
+  "Player, Stream-Format, Untertitel und Zeitschaltungen.": "Player, formato stream, sottotitoli e timer.",
+  "Sprache, Farben, Uhrzeit und Bildschirmschoner.": "Lingua, colori, orologio e salvaschermo.",
+  "Gerät & Hilfe": "Dispositivo e aiuto",
+  "Sichern, Updates, Verbindungstest und Kontakt zum Support.": "Backup, aggiornamenti, test di connessione e contatto con il supporto."
 };

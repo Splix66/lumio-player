@@ -863,5 +863,12 @@ window.LUMIO_I18N["hr"] = {
   "Die Wiedergabe stoppt nach der gewählten Zeit – auch im TV-Player.": "Reprodukcija se zaustavlja nakon odabranog vremena – i u TV playeru.",
   "Trailer suchen": "Traži trailer",
   "Trailer auf YouTube suchen": "Traži trailer na YouTubeu",
-  "YouTube lässt sich auf diesem Gerät nicht öffnen.": "YouTube se ne može otvoriti na ovom uređaju."
+  "YouTube lässt sich auf diesem Gerät nicht öffnen.": "YouTube se ne može otvoriti na ovom uređaju.",
+  "Playlists hinzufügen, wechseln und aktuell halten.": "Dodaj, mijenjaj i osvježavaj playliste.",
+  "Personen & Kindersicherung": "Osobe i roditeljska zaštita",
+  "Wer schaut, was gesperrt ist und welche Kategorien und Sender du siehst.": "Tko gleda, što je zaključano i koje kategorije i kanale vidiš.",
+  "Player, Stream-Format, Untertitel und Zeitschaltungen.": "Player, format streama, titlovi i tajmeri.",
+  "Sprache, Farben, Uhrzeit und Bildschirmschoner.": "Jezik, boje, sat i čuvar zaslona.",
+  "Gerät & Hilfe": "Uređaj i pomoć",
+  "Sichern, Updates, Verbindungstest und Kontakt zum Support.": "Sigurnosna kopija, ažuriranja, test veze i kontakt s podrškom."
 };

@@ -863,5 +863,12 @@ window.LUMIO_I18N["fr"] = {
   "Die Wiedergabe stoppt nach der gewählten Zeit – auch im TV-Player.": "La lecture s'arrête après la durée choisie – aussi dans le lecteur TV.",
   "Trailer suchen": "Chercher la bande-annonce",
   "Trailer auf YouTube suchen": "Chercher la bande-annonce sur YouTube",
-  "YouTube lässt sich auf diesem Gerät nicht öffnen.": "Impossible d'ouvrir YouTube sur cet appareil."
+  "YouTube lässt sich auf diesem Gerät nicht öffnen.": "Impossible d'ouvrir YouTube sur cet appareil.",
+  "Playlists hinzufügen, wechseln und aktuell halten.": "Ajoute, change et actualise les playlists.",
+  "Personen & Kindersicherung": "Personnes et contrôle parental",
+  "Wer schaut, was gesperrt ist und welche Kategorien und Sender du siehst.": "Qui regarde, ce qui est verrouillé et quelles catégories et chaînes tu vois.",
+  "Player, Stream-Format, Untertitel und Zeitschaltungen.": "Lecteur, format du flux, sous-titres et minuteries.",
+  "Sprache, Farben, Uhrzeit und Bildschirmschoner.": "Langue, couleurs, heure et écran de veille.",
+  "Gerät & Hilfe": "Appareil et aide",
+  "Sichern, Updates, Verbindungstest und Kontakt zum Support.": "Sauvegarde, mises à jour, test de connexion et contact avec le support."
 };

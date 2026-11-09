@@ -863,5 +863,12 @@ window.LUMIO_I18N["el"] = {
   "Die Wiedergabe stoppt nach der gewählten Zeit – auch im TV-Player.": "Η αναπαραγωγή σταματά μετά τον χρόνο που επέλεξες – και στο TV player.",
   "Trailer suchen": "Αναζήτηση τρέιλερ",
   "Trailer auf YouTube suchen": "Αναζήτηση τρέιλερ στο YouTube",
-  "YouTube lässt sich auf diesem Gerät nicht öffnen.": "Το YouTube δεν ανοίγει σε αυτή τη συσκευή."
+  "YouTube lässt sich auf diesem Gerät nicht öffnen.": "Το YouTube δεν ανοίγει σε αυτή τη συσκευή.",
+  "Playlists hinzufügen, wechseln und aktuell halten.": "Πρόσθεσε, άλλαξε και ανανέωσε λίστες.",
+  "Personen & Kindersicherung": "Άτομα και γονικός έλεγχος",
+  "Wer schaut, was gesperrt ist und welche Kategorien und Sender du siehst.": "Ποιος βλέπει, τι είναι κλειδωμένο και ποιες κατηγορίες και κανάλια βλέπεις.",
+  "Player, Stream-Format, Untertitel und Zeitschaltungen.": "Player, μορφή ροής, υπότιτλοι και χρονοδιακόπτες.",
+  "Sprache, Farben, Uhrzeit und Bildschirmschoner.": "Γλώσσα, χρώματα, ρολόι και προφύλαξη οθόνης.",
+  "Gerät & Hilfe": "Συσκευή και βοήθεια",
+  "Sichern, Updates, Verbindungstest und Kontakt zum Support.": "Αντίγραφα, ενημερώσεις, έλεγχος σύνδεσης και επικοινωνία με την υποστήριξη."
 };

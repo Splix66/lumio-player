@@ -62,6 +62,10 @@ und in `scripts/make-icons.py` (Android, Fire TV, Samsung, LG, Windows/Mac, TV-B
 
 Die neuen Daten gehören zum Profil, werden mitgesichert und von „Verlauf löschen“ entfernt.
 
+**Einstellungen neu aufgebaut** (wie Filme, Serien und Live TV): links fünf Bereiche – Playlist, Personen & Kindersicherung,
+Wiedergabe, Darstellung, Gerät & Hilfe – jeder mit eigener Farbe; rechts die Kacheln des Bereichs im Glas-Look.
+Mit der Fernbedienung genügt es, auf einem Bereich stehen zu bleiben; die App merkt sich den zuletzt offenen Bereich.
+
 **Neu: Personen (Familienprofile):** bis zu 6 Personen pro Gerät, jede mit eigenen Favoriten, Verlauf, „Weiterschauen“,
 „Später ansehen“ und Erinnerungen. Beim Start „Wer schaut?“, oben auf dem Startbildschirm der Personen-Knopf, verwalten
 unter Einstellungen → Personen. **Kinderprofil:** gesperrte Kategorien (Erwachsene und selbst gesperrte) sind ganz ausgeblendet
