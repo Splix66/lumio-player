@@ -860,5 +860,8 @@ window.LUMIO_I18N["uk"] = {
   "1 Std.": "1 год",
   "Schlaf-Timer: Wiedergabe endet in einer Minute": "Таймер сну: відтворення завершиться за хвилину",
   "Die Wiedergabe wurde beendet. Gute Nacht!": "Відтворення зупинено. На добраніч!",
-  "Die Wiedergabe stoppt nach der gewählten Zeit – auch im TV-Player.": "Відтворення зупиниться через вибраний час — і в ТВ-плеєрі."
+  "Die Wiedergabe stoppt nach der gewählten Zeit – auch im TV-Player.": "Відтворення зупиниться через вибраний час — і в ТВ-плеєрі.",
+  "Trailer suchen": "Знайти трейлер",
+  "Trailer auf YouTube suchen": "Шукати трейлер на YouTube",
+  "YouTube lässt sich auf diesem Gerät nicht öffnen.": "YouTube не вдається відкрити на цьому пристрої."
 };

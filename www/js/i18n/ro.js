@@ -860,5 +860,8 @@ window.LUMIO_I18N["ro"] = {
   "1 Std.": "1 oră",
   "Schlaf-Timer: Wiedergabe endet in einer Minute": "Temporizator: redarea se oprește într-un minut",
   "Die Wiedergabe wurde beendet. Gute Nacht!": "Redarea s-a oprit. Noapte bună!",
-  "Die Wiedergabe stoppt nach der gewählten Zeit – auch im TV-Player.": "Redarea se oprește după timpul ales – și în playerul TV."
+  "Die Wiedergabe stoppt nach der gewählten Zeit – auch im TV-Player.": "Redarea se oprește după timpul ales – și în playerul TV.",
+  "Trailer suchen": "Caută trailer",
+  "Trailer auf YouTube suchen": "Caută trailerul pe YouTube",
+  "YouTube lässt sich auf diesem Gerät nicht öffnen.": "YouTube nu poate fi deschis pe acest dispozitiv."
 };

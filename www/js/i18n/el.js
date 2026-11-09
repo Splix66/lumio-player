@@ -860,5 +860,8 @@ window.LUMIO_I18N["el"] = {
   "1 Std.": "1 ώρα",
   "Schlaf-Timer: Wiedergabe endet in einer Minute": "Χρονοδιακόπτης: η αναπαραγωγή σταματά σε ένα λεπτό",
   "Die Wiedergabe wurde beendet. Gute Nacht!": "Η αναπαραγωγή σταμάτησε. Καληνύχτα!",
-  "Die Wiedergabe stoppt nach der gewählten Zeit – auch im TV-Player.": "Η αναπαραγωγή σταματά μετά τον χρόνο που επέλεξες – και στο TV player."
+  "Die Wiedergabe stoppt nach der gewählten Zeit – auch im TV-Player.": "Η αναπαραγωγή σταματά μετά τον χρόνο που επέλεξες – και στο TV player.",
+  "Trailer suchen": "Αναζήτηση τρέιλερ",
+  "Trailer auf YouTube suchen": "Αναζήτηση τρέιλερ στο YouTube",
+  "YouTube lässt sich auf diesem Gerät nicht öffnen.": "Το YouTube δεν ανοίγει σε αυτή τη συσκευή."
 };

@@ -480,4 +480,9 @@
       D.App.profile = profBefore; D.Settings.data = JSON.parse(sBefore); D.Parental.unlocked = false;
     }
   });
+  t('Filme & Serien', 'Trailer suchen: Anbieter-Zusätze fallen weg, Jahr kommt dazu', function () {
+    eq(D.trailerQuery('DE - Die Feuer 4K', '2024'), 'Die Feuer 2024 Trailer', 'Sprache und Qualität entfernt, Jahr ergänzt');
+    eq(D.trailerQuery('|EN| Moonlight [Multi-Sub] (2016)', '2016'), 'Moonlight (2016) Trailer', 'Jahr steht schon im Namen');
+    eq(D.trailerQuery('Nacht & Sturm', ''), 'Nacht & Sturm Trailer', 'ohne Jahr');
+  });
 })();

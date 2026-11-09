@@ -860,5 +860,8 @@ window.LUMIO_I18N["es"] = {
   "1 Std.": "1 h",
   "Schlaf-Timer: Wiedergabe endet in einer Minute": "Temporizador: la reproducción termina en un minuto",
   "Die Wiedergabe wurde beendet. Gute Nacht!": "La reproducción se ha detenido. ¡Buenas noches!",
-  "Die Wiedergabe stoppt nach der gewählten Zeit – auch im TV-Player.": "La reproducción se detiene tras el tiempo elegido, también en el reproductor de TV."
+  "Die Wiedergabe stoppt nach der gewählten Zeit – auch im TV-Player.": "La reproducción se detiene tras el tiempo elegido, también en el reproductor de TV.",
+  "Trailer suchen": "Buscar tráiler",
+  "Trailer auf YouTube suchen": "Buscar el tráiler en YouTube",
+  "YouTube lässt sich auf diesem Gerät nicht öffnen.": "No se puede abrir YouTube en este dispositivo."
 };

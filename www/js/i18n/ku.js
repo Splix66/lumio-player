@@ -860,5 +860,8 @@ window.LUMIO_I18N["ku"] = {
   "1 Std.": "1 saet",
   "Schlaf-Timer: Wiedergabe endet in einer Minute": "Demjimêra xewê: lîstin di deqeyekê de diqede",
   "Die Wiedergabe wurde beendet. Gute Nacht!": "Lîstin hat rawestandin. Şev baş!",
-  "Die Wiedergabe stoppt nach der gewählten Zeit – auch im TV-Player.": "Lîstin piştî dema hilbijartî disekine – di lîstikvana TV de jî."
+  "Die Wiedergabe stoppt nach der gewählten Zeit – auch im TV-Player.": "Lîstin piştî dema hilbijartî disekine – di lîstikvana TV de jî.",
+  "Trailer suchen": "Fragmanê bigere",
+  "Trailer auf YouTube suchen": "Fragmanê li YouTube bigere",
+  "YouTube lässt sich auf diesem Gerät nicht öffnen.": "YouTube li ser vê cîhazê venabe."
 };

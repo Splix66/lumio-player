@@ -860,5 +860,8 @@ window.LUMIO_I18N["hr"] = {
   "1 Std.": "1 sat",
   "Schlaf-Timer: Wiedergabe endet in einer Minute": "Tajmer: reprodukcija završava za minutu",
   "Die Wiedergabe wurde beendet. Gute Nacht!": "Reprodukcija je zaustavljena. Laku noć!",
-  "Die Wiedergabe stoppt nach der gewählten Zeit – auch im TV-Player.": "Reprodukcija se zaustavlja nakon odabranog vremena – i u TV playeru."
+  "Die Wiedergabe stoppt nach der gewählten Zeit – auch im TV-Player.": "Reprodukcija se zaustavlja nakon odabranog vremena – i u TV playeru.",
+  "Trailer suchen": "Traži trailer",
+  "Trailer auf YouTube suchen": "Traži trailer na YouTubeu",
+  "YouTube lässt sich auf diesem Gerät nicht öffnen.": "YouTube se ne može otvoriti na ovom uređaju."
 };

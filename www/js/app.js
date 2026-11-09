@@ -6205,6 +6205,36 @@
     return h('button', { class: 'btn f', onclick: function () { showTrailer(name, id); } }, icon('play'), h('span', { text: T('Trailer') }));
   }
 
+  /* Kein Trailer vom Anbieter: YouTube-Suche „Titel Jahr Trailer“ öffnen – auf Android in der YouTube-App,
+     am PC im Browser. Auf Fernsehern ohne Browser (Samsung, LG) gibt es den Knopf nicht. */
+  function canSearchTrailer() {
+    if (Platform.capacitor) { var pl = NativePlayer.plugin(); return !!(pl && pl.openExternal); }
+    return !Platform.tv;
+  }
+  // Anbieter-Zusätze aus dem Titel entfernen: „DE - “, „|EN| “, „[4K]“, „(Multi-Sub)“, „HD“/„FHD“/„4K“ am Ende
+  function trailerQuery(name, year) {
+    var n = String(name || '')
+      .replace(/^\s*(\|[^|]{1,6}\||\[[^\]]{1,6}\]|[A-Z]{2,4}\s*[-:|])\s*/, '')
+      .replace(/\[[^\]]*\]|\((?:multi|sub|dub|ger|eng|tr)[^)]*\)/gi, ' ')
+      .replace(/\b(4K|UHD|FHD|HD|SD|HEVC)\b/g, ' ')
+      .replace(/\s+/g, ' ').trim();
+    if (year && n.indexOf(String(year)) < 0) n += ' ' + year;
+    return n + ' ' + T('Trailer');
+  }
+  function searchTrailer(name, year) {
+    var url = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(trailerQuery(name, year));
+    var pl = NativePlayer.plugin();
+    if (Platform.capacitor && pl && pl.openExternal) {
+      pl.openExternal({ url: url }).catch(function () { toast(T('YouTube lässt sich auf diesem Gerät nicht öffnen.'), 4000); });
+      return;
+    }
+    openExternal(url);
+  }
+  function trailerSearchButton(item) {
+    if (!canSearchTrailer()) return null;
+    return h('button', { class: 'btn f', title: T('Trailer auf YouTube suchen'), onclick: function () { searchTrailer(item.name, item.year); } }, icon('search'), h('span', { text: T('Trailer suchen') }));
+  }
+
   // Knopf „Gesehen“ (Film): von Hand als gesehen / nicht gesehen markieren
   function seenButton(item, done) {
     var on = Seen.has(item);
@@ -6214,7 +6244,7 @@
   }
   function showMovie(item) {
     var f = detailFrame(item);
-    var actions = h('div', { class: 'row' });
+    var actions = h('div', { class: 'row' }), infoDone = false;
     function paintActions() {
       clear(actions);
       var r = Resume.get(item);
@@ -6224,7 +6254,7 @@
       } else {
         actions.appendChild(h('button', { class: 'btn f primary', 'data-autofocus': true, onclick: function () { playItem(item, { list: [item], index: 0 }); } }, icon('play'), h('span', { text: T('Abspielen') })));
       }
-      var tb = trailerButton(item.name, item.trailer);
+      var tb = trailerButton(item.name, item.trailer) || (infoDone ? trailerSearchButton(item) : null);
       if (tb) actions.appendChild(tb);
       actions.appendChild(favButton(item));
       actions.appendChild(laterButton(item));
@@ -6233,20 +6263,23 @@
     paintActions();
     var metaBox = h('div'), plotBox = h('p', { class: 'plot', text: item.plot || '' });
     f.info.appendChild(metaBox); f.info.appendChild(actions); f.info.appendChild(plotBox);
+    function infoReady() {
+      infoDone = true;
+      var hadFocus = actions.contains(document.activeElement);
+      paintActions();
+      if (hadFocus) Nav.focusFirst(actions);
+    }
     App.provider.movieInfo(item).then(function (d) {
-      if (!d) return;
+      if (!d) { infoReady(); return; }
       if (d.ext) item.ext = d.ext;
+      if (d.year && !item.year) item.year = d.year;
       metaBox.appendChild(metaLine(d));
       if (d.plot) plotBox.textContent = d.plot;
-      if (d.trailer && trailerId(d.trailer) && canTrailer()) {
-        item.trailer = d.trailer;
-        var hadFocus = actions.contains(document.activeElement);
-        paintActions();
-        if (hadFocus) Nav.focusFirst(actions);
-      }
+      if (d.trailer && trailerId(d.trailer) && canTrailer()) item.trailer = d.trailer;
+      infoReady();
       if (d.director || d.cast) f.info.appendChild(h('p', { class: 'credits', text: [d.director ? T('Regie: {0}', d.director) : '', d.cast ? T('Mit: {0}', d.cast) : ''].filter(Boolean).join('. ') }));
       if (d.backdrop) { item.backdrop = d.backdrop; f.setBackdrop(d.backdrop); }
-    }).catch(function () {});
+    }).catch(function () { if (!infoDone) infoReady(); });
     similarRail(item, f.panel);
     Screens.push('movie', f.el, { overlay: true, onShow: function () { var had = document.activeElement; paintActions(); if (!document.body.contains(had)) Nav.focusFirst(actions); } });
   }
@@ -6341,7 +6374,7 @@
       metaBox.appendChild(metaLine(d || {}));
       if (d && d.plot) plotBox.textContent = d.plot;
       if (d && d.backdrop) { item.backdrop = d.backdrop; f.setBackdrop(d.backdrop); }
-      var tb = d && trailerButton(item.name, d.trailer);
+      var tb = (d && trailerButton(item.name, d.trailer)) || trailerSearchButton({ name: item.name, year: (d && d.year) || item.year });
       if (tb) actions.insertBefore(tb, favB);   // vor „Merken“
       seasons = (d && d.seasons) || [];
       if (!seasons.length) { clear(epBox).appendChild(stateBox(T('Keine Folgen gefunden'), null)); return; }
@@ -7795,7 +7828,7 @@
     CatPrefs: CatPrefs, visibleCats: visibleCats, Parental: Parental, ChanHide: ChanHide,
     Backup: Backup, profileFp: profileFp, Settings: Settings,
     Seen: Seen, Resume: Resume, UpNext: UpNext, SeriesWatch: SeriesWatch, sortVod: sortVod,
-    Reminders: Reminders, NumEntry: NumEntry, Sleep: Sleep, Later: Later, Saver: Saver, Persons: Persons, Favs: Favs, Recent: Recent, showGuide: showGuide, Player: Player, Dialog: Dialog,
+    Reminders: Reminders, NumEntry: NumEntry, Sleep: Sleep, Later: Later, Saver: Saver, trailerQuery: trailerQuery, Persons: Persons, Favs: Favs, Recent: Recent, showGuide: showGuide, Player: Player, Dialog: Dialog,
     config: CONFIG
   };
 

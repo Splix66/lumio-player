@@ -860,5 +860,8 @@ window.LUMIO_I18N["pl"] = {
   "1 Std.": "1 godz.",
   "Schlaf-Timer: Wiedergabe endet in einer Minute": "Wyłącznik czasowy: odtwarzanie skończy się za minutę",
   "Die Wiedergabe wurde beendet. Gute Nacht!": "Odtwarzanie zostało zatrzymane. Dobranoc!",
-  "Die Wiedergabe stoppt nach der gewählten Zeit – auch im TV-Player.": "Odtwarzanie zatrzyma się po wybranym czasie – także w odtwarzaczu TV."
+  "Die Wiedergabe stoppt nach der gewählten Zeit – auch im TV-Player.": "Odtwarzanie zatrzyma się po wybranym czasie – także w odtwarzaczu TV.",
+  "Trailer suchen": "Szukaj zwiastuna",
+  "Trailer auf YouTube suchen": "Szukaj zwiastuna na YouTube",
+  "YouTube lässt sich auf diesem Gerät nicht öffnen.": "Nie można otworzyć YouTube na tym urządzeniu."
 };

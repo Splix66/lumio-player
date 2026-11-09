@@ -860,5 +860,8 @@ window.LUMIO_I18N["ar"] = {
   "1 Std.": "ساعة",
   "Schlaf-Timer: Wiedergabe endet in einer Minute": "مؤقت النوم: ينتهي التشغيل خلال دقيقة",
   "Die Wiedergabe wurde beendet. Gute Nacht!": "تم إيقاف التشغيل. تصبح على خير!",
-  "Die Wiedergabe stoppt nach der gewählten Zeit – auch im TV-Player.": "يتوقف التشغيل بعد الوقت المختار – في مشغل التلفاز أيضًا."
+  "Die Wiedergabe stoppt nach der gewählten Zeit – auch im TV-Player.": "يتوقف التشغيل بعد الوقت المختار – في مشغل التلفاز أيضًا.",
+  "Trailer suchen": "ابحث عن الإعلان",
+  "Trailer auf YouTube suchen": "ابحث عن الإعلان في يوتيوب",
+  "YouTube lässt sich auf diesem Gerät nicht öffnen.": "لا يمكن فتح يوتيوب على هذا الجهاز."
 };

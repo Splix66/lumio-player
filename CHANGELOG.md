@@ -80,6 +80,8 @@ Kindersicherung. Personen werden mitgesichert (Datenschutzerklärung ergänzt), 
 - Sprachauswahl: Überschrift nur noch in der eingestellten Sprache („Sprache“ statt „Sprache / Language / Dil“).
 - Filme/Serien: „Sortieren“ steht in der Zeile „Weiterschauen“ – keine leere Zeile mehr über den Covern.
 - Serien: Knopf „Trailer“ steht jetzt direkt hinter „Weiter“ (vor „Merken“).
+- **„Trailer suchen“:** Liefert der Anbieter keinen Trailer, öffnet der Knopf die YouTube-Suche „Titel Jahr Trailer“
+  (Android: YouTube-App, PC: Browser; Anbieter-Zusätze wie „DE -“ oder „4K“ fallen weg). Auf Samsung/LG nicht verfügbar.
 - „Alle …“ zählt nur noch sichtbare Kategorien (ausgeblendete und im Kinderprofil gesperrte nicht mehr).
 
 **Live TV:**
