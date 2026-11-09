@@ -6725,6 +6725,8 @@
       self.el.addEventListener('click', function (e) {
         if (self.mini || (e.target !== self.video && e.target !== self.osd && !(e.target.parentNode === self.osd))) return;
         if (self.closeTracks()) { self.showOsd(); return; }
+        // Tippen auf den Pause-Bildschirm: das Handy meldet vorher eine Mausbewegung, die ihn schon geschlossen hat
+        if (Date.now() - (self.pauseHiddenAt || 0) < 700) { self.showOsd(true); return; }
         var now = Date.now();
         if (!Platform.tv && now - lastTap < 400 && now - (self.maxAt || 0) > 800) {
           lastTap = 0;
@@ -6758,6 +6760,7 @@
         onLeave: function () { self.teardown(); },
         // Zurück bei Live TV: Sender läuft klein weiter
         onBack: function () {
+          if (self.pauseEl) { self.showOsd(true); return true; }
           if (self.closeTracks()) { self.showOsd(); return true; }
           if (self.nextBox) { self.nextCancel(); return false; }
           if (self.scrubT != null) { self.cancelScrub(); return true; }
@@ -6775,6 +6778,7 @@
         self.spinner.style.display = 'none'; self.err.style.display = 'none'; self.reconnect = false;
         self.netRetries = 0; self.playedSince = Date.now();
         self.paintCtrls(); self.updateTracks();
+        if (!Store.get('phints')) { clearTimeout(self.hintTimer); self.hintTimer = setTimeout(function () { self.showHints(); }, 1500); }
       });
       video.addEventListener('progress', function () { self.paintBuffer(); });
       function paintQuality() {
@@ -6787,6 +6791,7 @@
       if (video.audioTracks && video.audioTracks.addEventListener) video.audioTracks.addEventListener('addtrack', function () { self.updateTracks(); });
       if (video.textTracks && video.textTracks.addEventListener) video.textTracks.addEventListener('addtrack', function () { self.updateTracks(); });
       video.addEventListener('pause', function () { self.paintCtrls(); self.showOsd(true); });
+      video.addEventListener('play', function () { self.hidePause(); });
       video.addEventListener('loadedmetadata', function () {
         if (self.isVod() && self.resumeAt) { try { video.currentTime = self.resumeAt; } catch (e) {} toast(T('Fortgesetzt bei {0}', fmtTime(self.resumeAt))); self.resumeAt = 0; }
       });
@@ -6804,6 +6809,7 @@
     minimize: function () {
       var self = this;
       if (!self.el || self.mini) return;
+      self.hidePause();
       var idx = -1;
       Screens.stack.forEach(function (s, i) { if (s.el === self.el) idx = i; });
       if (idx < 0) return;
@@ -6909,7 +6915,8 @@
       self.err.style.display = 'none';
       self.spinner.style.display = '';
       self.loadTxt.textContent = item.kind === 'live' ? item.name : '';
-      self.epgNow = ''; self.epgNext = '';
+      self.epgNow = ''; self.epgNext = ''; self.epgCur = null;
+      self.hidePause();
       clearInterval(self.epgTimer);
       if (self.miniTitle) self.miniTitle.textContent = item.name;
       self.lastPlace = '';
@@ -7464,6 +7471,7 @@
           clear(self.info);
           var now = Date.now() / 1000;
           var cur = list.filter(function (e) { return e.start <= now && e.end > now; })[0] || list[0];
+          self.epgCur = cur || null;
           if (!cur) { self.epgNow = ''; self.epgNext = ''; self.bar.style.display = 'none'; return; }
           var next = list.filter(function (e) { return e.start >= cur.end - 1; })[0];
           self.info.appendChild(h('div', { class: 'now' }, h('span', { class: 'ep-t', text: fmtClock(cur.start) + ' – ' + fmtClock(cur.end) }), h('b', { text: cur.title })));
@@ -7532,6 +7540,93 @@
       self.fitCtrls();
       var target = had ? ($('[data-c="' + had + '"]', self.ctrls) || $('[data-c="' + had + '"]', self.ctrlLeft)) : null;
       if (target) Nav.focus(target);
+    },
+    /* ---------- Pause-Bildschirm ----------
+       Steht das Bild ein paar Sekunden auf Pause, erscheinen Titel, Infos und Beschreibung groß über dem
+       abgedunkelten Bild. Jede Taste, Maus oder Tippen blendet ihn aus; Abspielen spielt gleich weiter. */
+    armPause: function () {
+      var self = this;
+      clearTimeout(self.pauseTimer);
+      self.pauseTimer = setTimeout(function () { self.showPause(); }, 6000);
+    },
+    showPause: function () {
+      var self = this, it = self.item, v = self.video;
+      if (!self.el || self.mini || self.pauseEl || !it || !v || !v.paused || v.ended) return;
+      if (self.trackPanel || self.nextBox || Dialog.open || self.scrubT != null || self.err.style.display !== 'none' || self.spinner.style.display !== 'none') return;
+      if (!Screens.top() || Screens.top().el !== self.el) return;
+      var title = it.name, sub = '', plot = it.plot || '', meta = [];
+      if (it.kind === 'episode') {
+        title = it.seriesName || it.name;
+        sub = 'S' + it.season + ' E' + it.num + (it.seriesName && it.name ? ' · ' + it.name : '');
+      } else if (it.kind === 'live') {
+        var e = self.epgCur;
+        title = e ? e.title : it.name;
+        sub = it.name + (e ? ' · ' + fmtClock(e.start) + ' – ' + fmtClock(e.end) : '');
+        plot = (e && e.desc) || '';
+      }
+      var metaRow = h('div', { class: 'ps-meta' }), plotEl = h('p', { class: 'ps-plot', text: plot });
+      function paintMeta(d) {
+        clear(metaRow);
+        var y = String(d.year || '').slice(0, 4), r = parseFloat(d.rating);
+        if (y && /^\d{4}$/.test(y)) metaRow.appendChild(h('span', { text: y }));
+        if (r > 0) metaRow.appendChild(h('span', { class: 'ps-star' }, icon('starFill'), h('span', { text: String(Math.round(r * 10) / 10).replace('.', Lang.cur === 'en' ? '.' : ',') })));
+        if (d.genre) metaRow.appendChild(h('span', { text: String(d.genre).split(/[,/]/).slice(0, 2).join(', ') }));
+        if (self.isVod() && v.duration && isFinite(v.duration)) metaRow.appendChild(h('span', { text: T('Noch {0}', fmtLeft(v.duration - v.currentTime)) }));
+      }
+      paintMeta(it);
+      var box = h('div', { class: 'pause-scr' },
+        h('div', { class: 'ps-in' },
+          h('span', { class: 'ps-tag' }, icon('pause'), h('span', { text: T('Pausiert') })),
+          h('h1', { text: title }),
+          sub ? h('p', { class: 'ps-sub', text: sub }) : null,
+          metaRow, plotEl));
+      box.addEventListener('click', function () { self.showOsd(true); });
+      // Filme: Beschreibung, Jahr und Bewertung nachladen, wenn sie in der Liste fehlen
+      if (it.kind === 'movie' && (!plot || !it.year) && App.provider && App.provider.movieInfo) {
+        App.provider.movieInfo(it).then(function (d) {
+          if (!d || self.pauseEl !== box) return;
+          if (d.plot && !plotEl.textContent) plotEl.textContent = d.plot;
+          paintMeta({ year: it.year || d.year, rating: it.rating || d.rating, genre: it.genre || d.genre });
+        }, function () {});
+      }
+      self.pauseEl = box;
+      self.el.appendChild(box);
+      self.osd.classList.add('is-hidden');
+      if (self.osd.contains(document.activeElement)) document.activeElement.blur();
+    },
+    hidePause: function () {
+      clearTimeout(this.pauseTimer);
+      var b = this.pauseEl;
+      this.pauseEl = null;
+      if (b) this.pauseHiddenAt = Date.now();
+      if (b && b.parentNode) b.parentNode.removeChild(b);
+    },
+    /* ---------- Erst-Hinweis ----------
+       Beim ersten Mal im Player: eine Karte erklärt die Symbole (nur die Knöpfe, die gerade da sind). Einmal pro Gerät. */
+    showHints: function () {
+      var self = this;
+      if (Store.get('phints') || !self.el || self.mini || self.trackPanel || self.nextBox || Dialog.open) return;
+      if (!Screens.top() || Screens.top().el !== self.el) return;
+      self.showOsd(true);
+      var seen = {}, grid = h('div', { class: 'ph-grid' });
+      var btns = self.osd.querySelectorAll('.cbtn[aria-label]');
+      for (var i = 0; i < btns.length; i++) {
+        var b = btns[i], label = b.getAttribute('data-c') === 'fav' ? T('Merken') : b.getAttribute('aria-label'), svg = b.querySelector('svg');
+        if (b.offsetParent === null || b.classList.contains('big') || !svg || seen[label]) continue;
+        seen[label] = 1;
+        var ic = b.getAttribute('data-c') === 'fav' ? icon('heart') : svg.cloneNode(true);
+        grid.appendChild(h('div', { class: 'ph-item' }, h('span', { class: 'ph-ic' }, ic), h('span', { text: label })));
+      }
+      if (!grid.firstChild) return;
+      var box = h('div', { class: 'track-panel ph-card' },
+        h('h3', { class: 'ph-title' }, icon('info'), h('span', { text: T('Die Knöpfe im Player') })),
+        grid,
+        h('button', { class: 'btn primary f ph-ok', onclick: function () { self.closeTracks(); self.showOsd(); } }, h('span', { text: T('Verstanden') })));
+      box._dispose = function () { Store.set('phints', 1); };
+      self.trackPanel = box;
+      self.el.appendChild(box);
+      clearTimeout(self.hideTimer);
+      setTimeout(function () { Nav.focus($('.ph-ok', box)); }, 30);
     },
     paintClock: function () {
       if (!this.clock) return;
@@ -7626,14 +7721,22 @@
       this.load(it);
     },
     // Kurz einblenden, welcher Sender gerade kommt (Nummer und Name)
+    /* Senderwechsel: Logo groß in der Mitte, darunter Nummer, Name und laufende Sendung */
     showZap: function (it, index) {
-      clear(this.zap);
-      this.zap.appendChild(h('span', { class: 'num', text: String(it.num || index + 1) }));
-      this.zap.appendChild(h('span', { text: it.name }));
-      this.zap.classList.remove('is-hidden');
-      var z = this.zap;
-      clearTimeout(this.zapTimer);
-      this.zapTimer = setTimeout(function () { z.classList.add('is-hidden'); }, 2500);
+      var self = this, z = self.zap;
+      if (self.mini) return;
+      clear(z);
+      var box = h('div', { class: 'zp-logo' }, h('span', { class: 'zp-ini', text: initials(it.name) }));
+      var lg = it.logo ? img(it.logo, '', function (i) { i.style.display = 'none'; box.classList.remove('has-img'); }) : null;
+      if (lg) { box.classList.add('has-img'); box.appendChild(lg); }
+      var now = epgNowOf(it);
+      z.appendChild(box);
+      z.appendChild(h('div', { class: 'zp-name' }, h('span', { class: 'num', text: String(it.num || index + 1) }), h('b', { text: it.name })));
+      if (now && now.title) z.appendChild(h('div', { class: 'zp-now', text: now.title }));
+      z.classList.remove('is-hidden');
+      self.el.classList.add('is-zapping');
+      clearTimeout(self.zapTimer);
+      self.zapTimer = setTimeout(function () { z.classList.add('is-hidden'); if (self.el) self.el.classList.remove('is-zapping'); }, 3000);
     },
     /* Direkt zu einem Sender (Nummer eingetippt, letzter Sender): in der aktuellen Liste, sonst in allen Sendern */
     zapTo: function (it) {
@@ -7660,6 +7763,8 @@
     showOsd: function (stay) {
       var self = this;
       if (self.mini) return;
+      self.hidePause();
+      if (self.video && self.video.paused && !self.video.ended) self.armPause(); else clearTimeout(self.pauseTimer);
       var wasHidden = self.osd.classList.contains('is-hidden');
       self.osd.classList.remove('is-hidden');
       if (wasHidden) { self.fitCtrls(); self.paintClock(); }
@@ -7681,6 +7786,12 @@
     handleKey: function (k) {
       var self = this;
       if (Dialog.open || self.trackPanel || self.nextBox) return false;
+      if (self.pauseEl) {
+        if (k === KEY.PLAYPAUSE || k === KEY.PLAY || k === KEY.SPACE || k === KEY.K_K) { self.hidePause(); self.playSafe(); return true; }
+        if (k === KEY.STOP) { self.close(); return true; }
+        self.showOsd(true);
+        return true;
+      }
       var hidden = self.osd.classList.contains('is-hidden');
       var errOpen = self.err.style.display !== 'none';
       var ae = document.activeElement, onButton = !hidden && ae && ae.tagName === 'BUTTON';
@@ -7802,8 +7913,9 @@
     },
 
     teardown: function () {
+      this.hidePause();
       this.saveResume();
-      clearInterval(this.saveTimer); clearInterval(this.epgTimer); clearTimeout(this.hideTimer); clearTimeout(this.zapTimer);
+      clearInterval(this.saveTimer); clearInterval(this.epgTimer); clearTimeout(this.hideTimer); clearTimeout(this.zapTimer); clearTimeout(this.hintTimer);
       clearInterval(this.wdTimer); clearInterval(this.nextTimer); this.nextBox = null; this.nextCancel = null; this.trackPanel = null;
       if (this.actx) { try { this.actx.close(); } catch (e) {} this.actx = null; this.adelay = null; }
       this.pip = false;

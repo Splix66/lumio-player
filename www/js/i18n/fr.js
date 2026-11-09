@@ -893,5 +893,7 @@ window.LUMIO_I18N["fr"] = {
   "{0} ms später": "{0} ms plus tard",
   "Auto": "Auto",
   "Zoom": "Zoom",
-  "Ton-Verzögerung": "Décalage audio"
+  "Ton-Verzögerung": "Décalage audio",
+  "Pausiert": "En pause",
+  "Die Knöpfe im Player": "Les boutons du lecteur"
 };

@@ -893,5 +893,7 @@ window.LUMIO_I18N["hr"] = {
   "{0} ms später": "{0} ms kasnije",
   "Auto": "Auto",
   "Zoom": "Zum",
-  "Ton-Verzögerung": "Odgoda zvuka"
+  "Ton-Verzögerung": "Odgoda zvuka",
+  "Pausiert": "Pauzirano",
+  "Die Knöpfe im Player": "Gumbi playera"
 };

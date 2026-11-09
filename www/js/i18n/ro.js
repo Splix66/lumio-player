@@ -893,5 +893,7 @@ window.LUMIO_I18N["ro"] = {
   "{0} ms später": "cu {0} ms mai târziu",
   "Auto": "Auto",
   "Zoom": "Zoom",
-  "Ton-Verzögerung": "Întârziere sunet"
+  "Ton-Verzögerung": "Întârziere sunet",
+  "Pausiert": "Pauză",
+  "Die Knöpfe im Player": "Butoanele playerului"
 };

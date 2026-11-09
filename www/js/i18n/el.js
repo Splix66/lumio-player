@@ -893,5 +893,7 @@ window.LUMIO_I18N["el"] = {
   "{0} ms später": "{0} ms αργότερα",
   "Auto": "Αυτόματα",
   "Zoom": "Ζουμ",
-  "Ton-Verzögerung": "Καθυστέρηση ήχου"
+  "Ton-Verzögerung": "Καθυστέρηση ήχου",
+  "Pausiert": "Σε παύση",
+  "Die Knöpfe im Player": "Τα κουμπιά του player"
 };

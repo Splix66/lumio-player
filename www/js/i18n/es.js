@@ -893,5 +893,7 @@ window.LUMIO_I18N["es"] = {
   "{0} ms später": "{0} ms después",
   "Auto": "Auto",
   "Zoom": "Zoom",
-  "Ton-Verzögerung": "Retraso de audio"
+  "Ton-Verzögerung": "Retraso de audio",
+  "Pausiert": "En pausa",
+  "Die Knöpfe im Player": "Los botones del reproductor"
 };

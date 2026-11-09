@@ -893,5 +893,7 @@ window.LUMIO_I18N["ar"] = {
   "{0} ms später": "متأخر {0} مللي ثانية",
   "Auto": "تلقائي",
   "Zoom": "تكبير",
-  "Ton-Verzögerung": "تأخير الصوت"
+  "Ton-Verzögerung": "تأخير الصوت",
+  "Pausiert": "متوقف مؤقتًا",
+  "Die Knöpfe im Player": "أزرار المشغّل"
 };

@@ -62,6 +62,16 @@ und in `scripts/make-icons.py` (Android, Fire TV, Samsung, LG, Windows/Mac, TV-B
 
 Die neuen Daten gehören zum Profil, werden mitgesichert und von „Verlauf löschen“ entfernt.
 
+**Player – drei neue Feinheiten:**
+- **Knopf-Hinweis beim ersten Mal:** Eine Glas-Karte zeigt einmal alle Symbole mit ihrem Namen (nur die Knöpfe, die
+  gerade da sind). „Verstanden“, Zurück oder Tippen aufs Bild schließt sie; danach erscheint sie auf dem Gerät nicht mehr.
+- **Großes Senderlogo beim Umschalten:** Logo groß in der Mitte, darunter Nummer, Name und laufende Sendung – drei
+  Sekunden lang; ohne Logo die Anfangsbuchstaben. Der Lade-Kreis rückt so lange darunter.
+- **Pause-Bildschirm:** Steht das Bild 6 Sekunden auf Pause, erscheinen über dem abgedunkelten Bild Titel, Jahr,
+  Bewertung, Genre, Restzeit und Beschreibung (Filme laden fehlende Angaben nach; Folgen mit Serie und Folgenname; Live
+  mit Sendung, Uhrzeit und Beschreibung aus dem Programm). Jede Taste, Maus oder Tippen blendet ihn aus, Abspielen spielt
+  gleich weiter.
+
 **Player im Glas-Stil** (wie Menüleiste, Einstellungen und Live TV), mit deutlich weniger Text:
 - **Oben:** rundes Zurück, Senderlogo, Titel (bei Serien: Serie groß, darunter „S1 E1 · Folgenname“), kleine Chips für
   LIVE (mit pulsierendem Punkt) und Bildqualität (720p, 1080p, 4K), rechts die Uhrzeit.

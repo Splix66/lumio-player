@@ -893,5 +893,7 @@ window.LUMIO_I18N["ku"] = {
   "{0} ms später": "{0} ms paşê",
   "Auto": "Bixweber",
   "Zoom": "Zoom",
-  "Ton-Verzögerung": "Derengiya deng"
+  "Ton-Verzögerung": "Derengiya deng",
+  "Pausiert": "Rawestiyayî",
+  "Die Knöpfe im Player": "Bişkokên lîstikvanê"
 };

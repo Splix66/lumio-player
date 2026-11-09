@@ -893,5 +893,7 @@ window.LUMIO_I18N["uk"] = {
   "{0} ms später": "на {0} мс пізніше",
   "Auto": "Авто",
   "Zoom": "Масштаб",
-  "Ton-Verzögerung": "Затримка звуку"
+  "Ton-Verzögerung": "Затримка звуку",
+  "Pausiert": "Пауза",
+  "Die Knöpfe im Player": "Кнопки плеєра"
 };

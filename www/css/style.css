@@ -919,7 +919,7 @@ body.kbd .bar.f:focus, body.is-tv .bar.f:focus { box-shadow: 0 0 0 .2rem var(--a
 .ctrl-row.is-stacked .ctrls { grid-column: 1 / -1; grid-row: 1; }
 .ctrl-row.is-stacked .ctrl-side.left { grid-column: 1; grid-row: 2; }
 .ctrl-row.is-stacked .ctrl-side.right { grid-column: 2; grid-row: 2; }
-.player.ctrl-stacked .track-panel:not(.chan-panel) { bottom: 13rem; }
+.player.ctrl-stacked .track-panel:not(.chan-panel):not(.ph-card) { bottom: 13rem; }
 .ctrls > * + * { margin-left: 1.1rem; }
 .cbtn { width: 3.4rem; height: 3.4rem; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .12); color: #fff; position: relative; }
 .cbtn .i { width: 1.45rem; height: 1.45rem; }
@@ -2622,8 +2622,64 @@ body.kbd .is-chips .tp-opt.f:focus, body.is-tv .is-chips .tp-opt.f:focus { backg
 body.kbd .is-chips .tp-opt.is-on.f:focus, body.is-tv .is-chips .tp-opt.is-on.f:focus { box-shadow: 0 0 0 .2rem rgba(167, 139, 250, .7); }
 
 /* Senderwechsel, nächste Folge, Senderliste: gleiche Glas-Flächen */
-.zap { top: 6.4rem; right: 2.2rem; padding: .45rem 1.15rem .45rem .45rem; border-radius: 999px; background: rgba(16, 16, 22, .82); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12), 0 1rem 2.4rem -1rem rgba(0, 0, 0, .8); font-size: 1.05rem; }
-.zap .num { min-width: 2.5rem; padding: .3rem .7rem; border-radius: 999px; text-align: center; font-size: 1.05rem; color: #ece6ff; background: rgba(167, 139, 250, .3); box-shadow: inset 0 0 0 1px rgba(167, 139, 250, .6); }
+/* Senderwechsel: Logo groß in der Mitte, darunter Nummer + Name und die laufende Sendung */
+.zap {
+  top: 50%; left: 50%; right: auto; z-index: 4; transform: translate(-50%, -58%); flex-direction: column; text-align: center;
+  min-width: 17rem; max-width: 28rem; padding: 1.6rem 2rem 1.4rem; border-radius: 1.7rem; font-size: 1rem; pointer-events: none;
+  background: rgba(16, 16, 22, .8); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12), 0 1.8rem 4.4rem -1rem rgba(0, 0, 0, .85);
+  transition: opacity .3s ease, transform .3s ease;
+}
+.zap.is-hidden { transform: translate(-50%, -54%) scale(.97); }
+.zap > * + * { margin-left: 0; margin-top: .85rem; }
+.zp-logo { position: relative; width: 8.5rem; height: 8.5rem; border-radius: 1.6rem; display: grid; place-items: center; overflow: hidden; background: rgba(255, 255, 255, .08); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12); }
+.zp-logo img { position: absolute; top: 1rem; left: 1rem; width: calc(100% - 2rem); height: calc(100% - 2rem); object-fit: contain; }
+.zp-ini { font-size: 2.6rem; font-weight: 800; color: #e4dcff; }
+.zp-logo.has-img .zp-ini { display: none; }
+.zp-name { display: flex; align-items: center; justify-content: center; max-width: 100%; min-width: 0; }
+.zp-name b { font-size: 1.35rem; font-weight: 750; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.zap .num { flex: none; min-width: 2.4rem; margin-right: .65rem; padding: .25rem .65rem; border-radius: 999px; text-align: center; font-size: 1rem; color: #ece6ff; background: rgba(167, 139, 250, .3); box-shadow: inset 0 0 0 1px rgba(167, 139, 250, .6); }
+.zap > .zp-now { margin-top: .4rem; max-width: 100%; color: rgba(255, 255, 255, .6); font-weight: 600; font-size: .95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.player.is-zapping .load-txt { display: none; }
+.player.is-zapping .loading { padding-top: 24rem; }
+body.lite .zap { transition: opacity .2s; }
+
+/* Pause-Bildschirm: Titel, Infos und Beschreibung groß über dem abgedunkelten Bild */
+.pause-scr {
+  position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 5; display: flex; align-items: flex-end; padding: 0 4.5rem 5.5rem; cursor: pointer;
+  background: linear-gradient(90deg, rgba(5, 5, 9, .92) 0%, rgba(5, 5, 9, .72) 40%, rgba(5, 5, 9, .15) 78%), linear-gradient(0deg, rgba(5, 5, 9, .6), rgba(5, 5, 9, 0) 55%);
+  animation: psFade .6s ease;
+}
+.ps-in { max-width: 46rem; display: flex; flex-direction: column; align-items: flex-start; animation: psUp .7s cubic-bezier(.2, .9, .25, 1); }
+@keyframes psFade { from { opacity: 0; } }
+@keyframes psUp { from { opacity: 0; transform: translateY(1.2rem); } }
+.ps-tag { display: inline-flex; align-items: center; padding: .35rem .85rem .35rem .65rem; border-radius: 999px; font-size: .8rem; font-weight: 750; letter-spacing: .04em; color: #e4dcff; background: rgba(167, 139, 250, .2); box-shadow: inset 0 0 0 1px rgba(167, 139, 250, .5); }
+.ps-tag .i { width: .95rem; height: .95rem; margin-right: .4rem; }
+.pause-scr h1 { margin-top: 1.1rem; font-size: 3.2rem; line-height: 1.08; font-weight: 800; letter-spacing: -.03em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ps-sub { margin-top: .6rem; font-size: 1.2rem; font-weight: 650; color: rgba(255, 255, 255, .82); }
+.ps-meta { display: flex; flex-wrap: wrap; margin-top: 1rem; }
+.ps-meta:empty { display: none; }
+.ps-meta > span { display: inline-flex; align-items: center; margin: 0 .5rem .4rem 0; padding: .28rem .75rem; border-radius: 999px; font-size: .85rem; font-weight: 650; color: rgba(255, 255, 255, .86); background: rgba(255, 255, 255, .09); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12); }
+.ps-star .i { width: .85rem; height: .85rem; margin-right: .3rem; color: #ecd4a6; }
+.ps-plot { margin-top: .8rem; font-size: 1.05rem; line-height: 1.5; color: rgba(255, 255, 255, .72); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.ps-plot:empty { display: none; }
+body.lite .pause-scr, body.lite .ps-in { animation: none; }
+
+/* Erst-Hinweis: Karte mit allen Knöpfen und ihren Namen */
+.track-panel.ph-card {
+  top: 50%; left: 50%; right: auto; bottom: auto; transform: translate(-50%, -50%); width: 36rem; min-width: 0; max-width: calc(100% - 2rem); max-height: 84%;
+  padding: 1.4rem 1.5rem 1.3rem; border-radius: 1.6rem; background: rgba(18, 18, 24, .96); box-shadow: 0 1.6rem 4rem rgba(0, 0, 0, .7), inset 0 0 0 1px rgba(255, 255, 255, .1);
+  animation: phIn .3s ease;
+}
+@keyframes phIn { from { opacity: 0; transform: translate(-50%, -46%); } }
+.ph-title { display: flex; align-items: center; margin-bottom: 1.1rem; font-size: 1.15rem; font-weight: 750; }
+.ph-title .i { width: 1.25rem; height: 1.25rem; margin-right: .55rem; color: #c9b8fb; }
+.ph-grid { display: grid; grid-template-columns: 1fr 1fr; grid-gap: .5rem 1rem; }
+.ph-item { display: flex; align-items: center; min-width: 0; font-size: .95rem; font-weight: 600; color: rgba(255, 255, 255, .88); }
+.ph-item > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ph-ic { flex: none; width: 2.4rem; height: 2.4rem; margin-right: .7rem; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .08); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1); }
+.ph-ic svg { width: 1.15rem; height: 1.15rem; }
+.ph-ok { width: 100%; margin-top: 1.3rem; }
+body.lite .track-panel.ph-card { animation: none; }
 .next-ep, .track-panel.chan-panel, .track-panel.arch-panel { border-radius: 1.4rem; background: rgba(18, 18, 24, .95); box-shadow: 0 1.4rem 3.4rem rgba(0, 0, 0, .6), inset 0 0 0 1px rgba(255, 255, 255, .1); }
 .nx-thumb { border-radius: .9rem; }
 .load-txt { font-size: 1.05rem; color: rgba(255, 255, 255, .75); }
@@ -2643,5 +2699,13 @@ body.kbd .is-chips .tp-opt.is-on.f:focus, body.is-tv .is-chips .tp-opt.is-on.f:f
   html:not(.tv) .ctrls .cbtn.big { width: 4rem; height: 4rem; }
   html:not(.tv) .ctrl-row.is-stacked .ctrl-side.right { justify-self: center; }
   html:not(.tv) .track-panel.is-chips { right: 1rem; left: 1rem; width: auto; max-width: none; }
-  html:not(.tv) .zap { top: calc(4.6rem + env(safe-area-inset-top)); right: 1rem; }
+  html:not(.tv) .zap { min-width: 13rem; padding: 1.2rem 1.4rem 1.1rem; }
+  html:not(.tv) .zp-logo { width: 6rem; height: 6rem; border-radius: 1.2rem; }
+  html:not(.tv) .player.is-zapping .loading { padding-top: 18rem; }
+  html:not(.tv) .pause-scr { padding: 0 1.2rem calc(2rem + env(safe-area-inset-bottom)); background: linear-gradient(0deg, rgba(5, 5, 9, .92), rgba(5, 5, 9, .55) 55%, rgba(5, 5, 9, .2)); }
+  html:not(.tv) .pause-scr h1 { font-size: 2rem; }
+  html:not(.tv) .ps-sub { font-size: 1rem; }
+  html:not(.tv) .ps-plot { font-size: .92rem; -webkit-line-clamp: 4; }
+  html:not(.tv) .track-panel.ph-card { width: auto; left: 1rem; right: 1rem; transform: translateY(-50%); animation: none; padding: 1.2rem; }
+  html:not(.tv) .ph-grid { grid-template-columns: 1fr; }
 }
