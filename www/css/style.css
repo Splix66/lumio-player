@@ -2262,3 +2262,45 @@ body.kbd .gd-ch.f:focus, body.is-tv .gd-ch.f:focus { z-index: 4; }
   html:not(.tv) .gd-wait, html:not(.tv) .gd-empty { left: 11.5rem; }
   html:not(.tv) .num-entry { top: 1rem; right: 1rem; }
 }
+
+/* Schlaf-Timer im Player: Knopf zeigt die restlichen Minuten */
+.cbtn[data-c="sleep"] { position: relative; }
+.cbtn[data-c="sleep"].is-on { color: #c084fc; }
+.cbtn .sleep-n { position: absolute; left: auto; right: -.15rem; bottom: -.15rem; text-align: center; min-width: 1.35rem; padding: .05rem .3rem; border-radius: 999px; background: #7c3aed; color: #fff; font-size: .62rem; font-weight: 800; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.cbtn .sleep-n:empty { display: none; }
+/* Senderliste im Player: links, ganze Höhe */
+.track-panel.chan-panel { top: 2rem; bottom: 2rem; left: 2.2rem; right: auto; width: 27rem; max-width: calc(100% - 4.4rem); max-height: none; display: flex; flex-direction: column; overflow: hidden; padding: .6rem; }
+.cp-head { flex: none; display: flex; align-items: center; padding: .45rem .7rem .75rem; }
+.cp-head .i { width: 1.2rem; height: 1.2rem; margin-right: .6rem; color: #c084fc; }
+.cp-head b { font-size: 1rem; }
+.cp-head small { margin-left: auto; color: rgba(255, 255, 255, .55); font-size: .8rem; font-variant-numeric: tabular-nums; }
+.cp-scroll { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; }
+.cp-scroll::-webkit-scrollbar { display: none; }
+.chan-panel .chan { color: #fff; background: transparent; }
+.chan-panel .chan .num, .chan-panel .chan .now { color: rgba(255, 255, 255, .6); }
+.chan-panel .chan .logo-box { background: rgba(255, 255, 255, .08); }
+.chan-panel .chan.is-playing { background: rgba(168, 85, 247, .18); box-shadow: inset .22rem 0 0 #c084fc; }
+.chan-panel .chan.is-playing .name { color: #d8b4fe; }
+.chan-panel .chan:hover { background: rgba(255, 255, 255, .08); }
+body.kbd .chan-panel .chan.f:focus, body.is-tv .chan-panel .chan.f:focus { background: #fff; color: #0b0b0f; box-shadow: none; }
+body.kbd .chan-panel .chan.f:focus .name, body.is-tv .chan-panel .chan.f:focus .name { color: #0b0b0f; }
+body.kbd .chan-panel .chan.f:focus .num, body.is-tv .chan-panel .chan.f:focus .num, body.kbd .chan-panel .chan.f:focus .now, body.is-tv .chan-panel .chan.f:focus .now { color: rgba(0, 0, 0, .6); }
+body.kbd .chan-panel .chan.f:focus .now-bar, body.is-tv .chan-panel .chan.f:focus .now-bar { background: rgba(0, 0, 0, .12); }
+.chan-panel .chan .now-bar i { background: #c084fc; }
+@media (orientation: landscape) and (max-height: 540px) {
+  html:not(.tv) .track-panel.chan-panel { top: .8rem; bottom: .8rem; left: .8rem; width: 20rem; }
+}
+
+/* Verbindungstest */
+.nt-box { margin-top: 1rem; border-radius: var(--radius); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); }
+.nt-row { display: flex; align-items: center; padding: .85rem 1.1rem; }
+.nt-row + .nt-row { border-top: 1px solid var(--line); }
+.nt-row span { color: var(--muted); }
+.nt-row b { margin-left: auto; padding-left: 1rem; font-variant-numeric: tabular-nums; text-align: right; }
+.nt-row .nt-big { font-size: 1.6rem; font-weight: 800; color: #c084fc; }
+:root[data-theme="light"] .nt-row .nt-big { color: #7c3aed; }
+.nt-verdict { min-height: 1.4em; margin-top: .9rem; font-weight: 650; }
+.nt-verdict.is-good { color: var(--ok); }
+.nt-verdict.is-ok { color: var(--warn); }
+.nt-verdict.is-bad { color: var(--live); }
+.nt-act { margin-top: 1rem; }

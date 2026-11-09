@@ -45,6 +45,9 @@ public class NativePlayerPlugin extends Plugin {
         intent.putExtra("txtReconnect", call.getString("txtReconnect", "Verbindung wird wiederhergestellt …"));
         intent.putExtra("txtFailed", call.getString("txtFailed", "Wiedergabe nicht möglich."));
         intent.putExtra("txtNoChannel", call.getString("txtNoChannel", "Sender {0} nicht gefunden"));
+        // Schlaf-Timer: Uhrzeit (ms seit 1970), zu der sich der Player schließt – 0 = aus
+        Long sleepAt = call.getLong("sleepAt", 0L);
+        intent.putExtra("sleepAt", sleepAt == null ? 0L : sleepAt.longValue());
         // Untertitel: Größe (Faktor), Schriftfarbe und Hintergrund aus den App-Einstellungen
         Float subScale = call.getFloat("subScale", 1f);
         intent.putExtra("subScale", subScale == null ? 1f : subScale.floatValue());
@@ -110,6 +113,7 @@ public class NativePlayerPlugin extends Plugin {
             r.put("positionMs", data.getLongExtra("positionMs", 0L));
             r.put("durationMs", data.getLongExtra("durationMs", 0L));
             r.put("ended", data.getBooleanExtra("ended", false));
+            r.put("sleep", data.getBooleanExtra("sleep", false));
             String err = data.getStringExtra("error");
             if (err != null) r.put("error", err);
         }

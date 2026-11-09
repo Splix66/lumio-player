@@ -68,6 +68,15 @@ public class PlayerActivity extends Activity {
     private String txtNoChannel = "Sender {0} nicht gefunden";
     private String digits = "";      // eingetippte Sendernummer
     private int lastIdx = -1;        // vorher geschauter Sender
+    private boolean bySleep;         // vom Schlaf-Timer beendet
+
+    private final Runnable sleepEnd = new Runnable() {
+        @Override
+        public void run() {
+            bySleep = true;
+            finishWith();
+        }
+    };
 
     private final Runnable commitDigits = new Runnable() {
         @Override
@@ -150,6 +159,8 @@ public class PlayerActivity extends Activity {
         if (t2 != null) txtFailed = t2;
         String t3 = in.getStringExtra("txtNoChannel");
         if (t3 != null) txtNoChannel = t3;
+        long sleepAt = in.getLongExtra("sleepAt", 0L);
+        if (sleepAt > System.currentTimeMillis()) handler.postDelayed(sleepEnd, sleepAt - System.currentTimeMillis());
         try {
             JSONArray arr = new JSONArray(in.getStringExtra("items"));
             for (int i = 0; i < arr.length(); i++) {
@@ -460,6 +471,7 @@ public class PlayerActivity extends Activity {
             data.putExtra("durationMs", d == C.TIME_UNSET ? 0L : d);
         }
         data.putExtra("ended", ended);
+        data.putExtra("sleep", bySleep);
         if (lastError != null) data.putExtra("error", lastError);
         setResult(RESULT_OK, data);
         finish();
