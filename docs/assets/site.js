@@ -4,7 +4,7 @@
   var API = 'https://oofzhklrbrpxjoicwbsf.supabase.co/rest/v1/rpc/';
   var KEY = 'sb_publishable_cx6n8buREFat_yE7kKW6FA_SnMsOQX7';
   // Support-Adresse für Besucher ohne App (z. B. 'support@lumio-player.de'). Leer = Kontakt-Kasten bleibt ausgeblendet.
-  var CONTACT_EMAIL = '';
+  var CONTACT_EMAIL = 'telvo.support@gmail.com';
   var $ = function (id) { return document.getElementById(id); };
 
   /* ---------- Häufige Fragen (Deutsch ist die Grundsprache, Übersetzungen unten) ---------- */
