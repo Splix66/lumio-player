@@ -217,5 +217,8 @@ window.LUMIO_I18N["ro"] = {
   "Nach dem Download auf <b>Installieren</b> drücken.": "După descărcare, apasă <b>Instalați</b>.",
   "Fragt das Gerät nach einer Erlaubnis: „Apps unbekannter Herkunft“ für Downloader einschalten.": "Dacă dispozitivul cere permisiune: activează „Instalați aplicații necunoscute” pentru Downloader.",
   "Danach <b>Öffnen</b> wählen – fertig. Die Datei kann anschließend gelöscht werden.": "Apoi alege <b>Deschideți</b> – gata. Ulterior poți șterge fișierul.",
-  "Für Fire TV, Android-TV-Boxen, Android-Handys und Tablets. Es wird immer die neueste Version geladen.": "Pentru Fire TV, boxe Android TV, telefoane și tablete Android. Se descarcă mereu cea mai nouă versiune."
+  "Für Fire TV, Android-TV-Boxen, Android-Handys und Tablets. Es wird immer die neueste Version geladen.": "Pentru Fire TV, boxe Android TV, telefoane și tablete Android. Se descarcă mereu cea mai nouă versiune.",
+  "Noch keine App installiert?": "Încă nu ai instalat aplicația?",
+  "Schreib uns eine E-Mail – wir antworten so schnell wie möglich.": "Scrie-ne un e-mail – îți răspundem cât mai repede.",
+  "E-Mail schreiben": "Scrie un e-mail"
 };

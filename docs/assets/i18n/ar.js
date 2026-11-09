@@ -217,5 +217,8 @@ window.LUMIO_I18N["ar"] = {
   "Nach dem Download auf <b>Installieren</b> drücken.": "بعد التنزيل اضغط <b>تثبيت</b>.",
   "Fragt das Gerät nach einer Erlaubnis: „Apps unbekannter Herkunft“ für Downloader einschalten.": "إذا طلب الجهاز إذنًا: فعّل “التطبيقات غير المعروفة” لـ Downloader.",
   "Danach <b>Öffnen</b> wählen – fertig. Die Datei kann anschließend gelöscht werden.": "ثم اختر <b>فتح</b> – انتهى. يمكنك حذف الملف بعد ذلك.",
-  "Für Fire TV, Android-TV-Boxen, Android-Handys und Tablets. Es wird immer die neueste Version geladen.": "لأجهزة Fire TV وAndroid TV وهواتف Android وأجهزته اللوحية. يتم دائمًا تنزيل أحدث إصدار."
+  "Für Fire TV, Android-TV-Boxen, Android-Handys und Tablets. Es wird immer die neueste Version geladen.": "لأجهزة Fire TV وAndroid TV وهواتف Android وأجهزته اللوحية. يتم دائمًا تنزيل أحدث إصدار.",
+  "Noch keine App installiert?": "لم تثبّت التطبيق بعد؟",
+  "Schreib uns eine E-Mail – wir antworten so schnell wie möglich.": "راسلنا عبر البريد الإلكتروني – سنرد في أقرب وقت ممكن.",
+  "E-Mail schreiben": "اكتب بريدًا إلكترونيًا"
 };

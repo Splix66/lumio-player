@@ -217,5 +217,8 @@ window.LUMIO_I18N["ku"] = {
   "Nach dem Download auf <b>Installieren</b> drücken.": "Piştî daxistinê li <b>Saz bike</b> (Install) bixe.",
   "Fragt das Gerät nach einer Erlaubnis: „Apps unbekannter Herkunft“ für Downloader einschalten.": "Eger cîhaz destûr bixwaze: ji bo Downloader „Sepanên nenas“ (Unknown apps) çalak bike.",
   "Danach <b>Öffnen</b> wählen – fertig. Die Datei kann anschließend gelöscht werden.": "Paşê <b>Veke</b> (Open) hilbijêre – qediya. Dûre tu dikarî pelê jê bibî.",
-  "Für Fire TV, Android-TV-Boxen, Android-Handys und Tablets. Es wird immer die neueste Version geladen.": "Ji bo Fire TV, qutiyên Android TV, têlefon û tabletên Android. Her tim guhertoya herî nû tê daxistin."
+  "Für Fire TV, Android-TV-Boxen, Android-Handys und Tablets. Es wird immer die neueste Version geladen.": "Ji bo Fire TV, qutiyên Android TV, têlefon û tabletên Android. Her tim guhertoya herî nû tê daxistin.",
+  "Noch keine App installiert?": "Hê sepan saz nekiriye?",
+  "Schreib uns eine E-Mail – wir antworten so schnell wie möglich.": "Ji me re e-nameyek bişîne – em ê di zûtirîn demê de bersiv bidin.",
+  "E-Mail schreiben": "E-name binivîse"
 };

@@ -217,5 +217,8 @@ window.LUMIO_I18N["tr"] = {
   "Nach dem Download auf <b>Installieren</b> drücken.": "İndirmeden sonra <b>Yükle</b>’ye bas.",
   "Fragt das Gerät nach einer Erlaubnis: „Apps unbekannter Herkunft“ für Downloader einschalten.": "Cihaz izin isterse: Downloader için “bilinmeyen uygulamalar” iznini aç.",
   "Danach <b>Öffnen</b> wählen – fertig. Die Datei kann anschließend gelöscht werden.": "Sonra <b>Aç</b>’ı seç – bitti. Dosyayı ardından silebilirsin.",
-  "Für Fire TV, Android-TV-Boxen, Android-Handys und Tablets. Es wird immer die neueste Version geladen.": "Fire TV, Android TV kutuları, Android telefon ve tabletler için. Her zaman en yeni sürüm indirilir."
+  "Für Fire TV, Android-TV-Boxen, Android-Handys und Tablets. Es wird immer die neueste Version geladen.": "Fire TV, Android TV kutuları, Android telefon ve tabletler için. Her zaman en yeni sürüm indirilir.",
+  "Noch keine App installiert?": "Henüz uygulama yüklü değil mi?",
+  "Schreib uns eine E-Mail – wir antworten so schnell wie möglich.": "Bize e-posta gönder – en kısa sürede yanıt veririz.",
+  "E-Mail schreiben": "E-posta yaz"
 };

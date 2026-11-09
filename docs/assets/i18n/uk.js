@@ -217,5 +217,8 @@ window.LUMIO_I18N["uk"] = {
   "Nach dem Download auf <b>Installieren</b> drücken.": "Після завантаження натисніть <b>Встановити</b>.",
   "Fragt das Gerät nach einer Erlaubnis: „Apps unbekannter Herkunft“ für Downloader einschalten.": "Якщо пристрій попросить дозвіл: увімкніть «Встановлення невідомих застосунків» для Downloader.",
   "Danach <b>Öffnen</b> wählen – fertig. Die Datei kann anschließend gelöscht werden.": "Потім виберіть <b>Відкрити</b> – готово. Після цього файл можна видалити.",
-  "Für Fire TV, Android-TV-Boxen, Android-Handys und Tablets. Es wird immer die neueste Version geladen.": "Для Fire TV, приставок Android TV, Android-телефонів і планшетів. Завжди завантажується остання версія."
+  "Für Fire TV, Android-TV-Boxen, Android-Handys und Tablets. Es wird immer die neueste Version geladen.": "Для Fire TV, приставок Android TV, Android-телефонів і планшетів. Завжди завантажується остання версія.",
+  "Noch keine App installiert?": "Ще не встановили застосунок?",
+  "Schreib uns eine E-Mail – wir antworten so schnell wie möglich.": "Напишіть нам листа – ми відповімо якнайшвидше.",
+  "E-Mail schreiben": "Написати листа"
 };

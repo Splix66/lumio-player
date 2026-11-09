@@ -217,5 +217,8 @@ window.LUMIO_I18N["it"] = {
   "Nach dem Download auf <b>Installieren</b> drücken.": "Dopo il download premi <b>Installa</b>.",
   "Fragt das Gerät nach einer Erlaubnis: „Apps unbekannter Herkunft“ für Downloader einschalten.": "Se il dispositivo chiede un’autorizzazione: attiva “App da origini sconosciute” per Downloader.",
   "Danach <b>Öffnen</b> wählen – fertig. Die Datei kann anschließend gelöscht werden.": "Poi scegli <b>Apri</b> – fatto. Dopo puoi eliminare il file.",
-  "Für Fire TV, Android-TV-Boxen, Android-Handys und Tablets. Es wird immer die neueste Version geladen.": "Per Fire TV, box Android TV, smartphone e tablet Android. Viene sempre scaricata l’ultima versione."
+  "Für Fire TV, Android-TV-Boxen, Android-Handys und Tablets. Es wird immer die neueste Version geladen.": "Per Fire TV, box Android TV, smartphone e tablet Android. Viene sempre scaricata l’ultima versione.",
+  "Noch keine App installiert?": "Non hai ancora installato l’app?",
+  "Schreib uns eine E-Mail – wir antworten so schnell wie möglich.": "Scrivici un’e-mail – ti risponderemo il prima possibile.",
+  "E-Mail schreiben": "Scrivi un’e-mail"
 };

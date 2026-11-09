@@ -126,8 +126,9 @@ async function newPage(browser, opts, backend) {
       const { ctx, page, errors } = await newPage(browser);
       await page.goto('about:blank'); await page.goto(base);
       const cur = () => page.evaluate(() => [['viewHome', 'viewMain', 'viewDl', 'viewHelp'].filter(i => !document.getElementById(i).hidden)[0], document.querySelector('.nav [aria-current=page]').id]);
-      await page.click('#tabDl'); await page.click('#tabHelp');
-      check('Menü wechselt Bereich und markiert ihn', JSON.stringify(await cur()) === '["viewHelp","tabHelp"]');
+      await page.click('#tabDl'); await page.waitForFunction(() => !document.getElementById('viewDl').hidden);
+      await page.click('#tabHelp'); await page.waitForFunction(() => !document.getElementById('viewHelp').hidden, null, { timeout: 3000 }).catch(() => {});
+      check('Menü wechselt Bereich und markiert ihn', JSON.stringify(await cur()) === '["viewHelp","tabHelp"]', JSON.stringify(await cur()));
       await page.goBack(); await page.waitForTimeout(150);
       check('Zurück-Knopf führt zum vorherigen Bereich', JSON.stringify(await cur()) === '["viewDl","tabDl"]', page.url());
       await page.goBack(); await page.waitForTimeout(150);
@@ -228,6 +229,27 @@ async function newPage(browser, opts, backend) {
       check('QR-Code-Link aus der App verbindet automatisch (und in App-Sprache)', await q.page.isVisible('#dash') && await q.page.evaluate(() => document.documentElement.lang) === 'en');
       check('QR-Code-Link: KEY verschwindet aus der Adresszeile', !/key=/i.test(q.page.url()), q.page.url());
       await q.ctx.close();
+    }
+
+    /* ---------- 7. Kontakt per E-Mail ---------- */
+    group('Kontakt per E-Mail');
+    {
+      const { ctx, page, errors } = await newPage(browser);
+      await page.goto(base + '#hilfe'); await page.waitForTimeout(200);
+      const conf = /var CONTACT_EMAIL = '([^']*)'/.exec(fs.readFileSync(path.join(ROOT, 'assets', 'site.js'), 'utf8'))[1];
+      check(conf ? 'Kontakt-Kasten sichtbar (' + conf + ')' : 'ohne eingetragene Adresse bleibt der Kontakt-Kasten ausgeblendet', await page.isVisible('#contactMail') === !!conf);
+      await ctx.close();
+      // mit Test-Adresse: Kasten erscheint, Link ist korrekt, auch auf Englisch
+      const t = await newPage(browser);
+      await t.ctx.route('**/assets/site.js', async r => {
+        const body = fs.readFileSync(path.join(ROOT, 'assets', 'site.js'), 'utf8').replace(/var CONTACT_EMAIL = '[^']*'/, "var CONTACT_EMAIL = 'support@beispiel.test'");
+        r.fulfill({ status: 200, contentType: 'text/javascript; charset=utf-8', body });
+      });
+      await t.page.goto(base + '?lang=en#hilfe'); await t.page.waitForTimeout(300);
+      const href = await t.page.getAttribute('#contactMailLink', 'href');
+      check('Mit Adresse: Kasten sichtbar, mailto-Link korrekt, übersetzt', await t.page.isVisible('#contactMail') && href.startsWith('mailto:support@beispiel.test') && /No app installed yet/.test(await t.page.textContent('#contactMail')), href);
+      check('keine Fehler', !errors.length && !t.errors.length, errors[0] || t.errors[0]);
+      await t.ctx.close();
     }
   } catch (e) {
     check('Test lief ohne Absturz', false, e.message.split('\n')[0]);

@@ -217,5 +217,8 @@ window.LUMIO_I18N["el"] = {
   "Nach dem Download auf <b>Installieren</b> drücken.": "Μετά τη λήψη πάτησε <b>Εγκατάσταση</b>.",
   "Fragt das Gerät nach einer Erlaubnis: „Apps unbekannter Herkunft“ für Downloader einschalten.": "Αν η συσκευή ζητήσει άδεια: ενεργοποίησε τις «Άγνωστες εφαρμογές» για το Downloader.",
   "Danach <b>Öffnen</b> wählen – fertig. Die Datei kann anschließend gelöscht werden.": "Μετά επίλεξε <b>Άνοιγμα</b> – έτοιμο. Το αρχείο μπορείς έπειτα να το διαγράψεις.",
-  "Für Fire TV, Android-TV-Boxen, Android-Handys und Tablets. Es wird immer die neueste Version geladen.": "Για Fire TV, Android TV box, κινητά και tablet Android. Κατεβαίνει πάντα η πιο πρόσφατη έκδοση."
+  "Für Fire TV, Android-TV-Boxen, Android-Handys und Tablets. Es wird immer die neueste Version geladen.": "Για Fire TV, Android TV box, κινητά και tablet Android. Κατεβαίνει πάντα η πιο πρόσφατη έκδοση.",
+  "Noch keine App installiert?": "Δεν έχεις εγκαταστήσει ακόμα την εφαρμογή;",
+  "Schreib uns eine E-Mail – wir antworten so schnell wie möglich.": "Στείλε μας email – θα απαντήσουμε το συντομότερο δυνατό.",
+  "E-Mail schreiben": "Γράψε email"
 };

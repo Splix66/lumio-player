@@ -217,5 +217,8 @@ window.LUMIO_I18N["hr"] = {
   "Nach dem Download auf <b>Installieren</b> drücken.": "Nakon preuzimanja pritisni <b>Instaliraj</b>.",
   "Fragt das Gerät nach einer Erlaubnis: „Apps unbekannter Herkunft“ für Downloader einschalten.": "Ako uređaj traži dopuštenje: uključi „Instaliraj nepoznate aplikacije“ za Downloader.",
   "Danach <b>Öffnen</b> wählen – fertig. Die Datei kann anschließend gelöscht werden.": "Zatim odaberi <b>Otvori</b> – gotovo. Datoteku nakon toga možeš izbrisati.",
-  "Für Fire TV, Android-TV-Boxen, Android-Handys und Tablets. Es wird immer die neueste Version geladen.": "Za Fire TV, Android TV boxove, Android mobitele i tablete. Uvijek se preuzima najnovija verzija."
+  "Für Fire TV, Android-TV-Boxen, Android-Handys und Tablets. Es wird immer die neueste Version geladen.": "Za Fire TV, Android TV boxove, Android mobitele i tablete. Uvijek se preuzima najnovija verzija.",
+  "Noch keine App installiert?": "Još nemaš instaliranu aplikaciju?",
+  "Schreib uns eine E-Mail – wir antworten so schnell wie möglich.": "Pošalji nam e-poštu – odgovorit ćemo što je prije moguće.",
+  "E-Mail schreiben": "Napiši e-poštu"
 };

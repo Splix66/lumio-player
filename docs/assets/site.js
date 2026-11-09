@@ -3,6 +3,8 @@
   'use strict';
   var API = 'https://oofzhklrbrpxjoicwbsf.supabase.co/rest/v1/rpc/';
   var KEY = 'sb_publishable_cx6n8buREFat_yE7kKW6FA_SnMsOQX7';
+  // Support-Adresse für Besucher ohne App (z. B. 'support@lumio-player.de'). Leer = Kontakt-Kasten bleibt ausgeblendet.
+  var CONTACT_EMAIL = '';
   var $ = function (id) { return document.getElementById(id); };
 
   /* ---------- Häufige Fragen (Deutsch ist die Grundsprache, Übersetzungen unten) ---------- */
@@ -510,6 +512,13 @@
       refresh();
     });
   });
+
+  /* ---------- Kontakt per E-Mail (für alle ohne App) ---------- */
+  if (/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(CONTACT_EMAIL)) {
+    $('contactMail').hidden = false;
+    $('contactMailLink').href = 'mailto:' + CONTACT_EMAIL + '?subject=' + encodeURIComponent('Lumio Player');
+    $('contactMailLink').appendChild(el('span', 'addr', ' · ' + CONTACT_EMAIL));
+  }
 
   /* ---------- Support-Nachricht ---------- */
   $('supMsg').addEventListener('input', function () { $('supCount').textContent = this.value.length + ' / 2000'; });
