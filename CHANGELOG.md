@@ -24,6 +24,9 @@ beim ersten Start der App („Bevor es losgeht“ → „Verstanden“). Erschei
 in der Senderliste markiert. Rechts neben der Liste und im Player öffnet „Verpasste Sendungen“ die vergangenen Sendungen
 nach Tagen (Heute, Gestern …), die laufende Sendung lässt sich von Anfang an schauen. Startzeit in Serverzeit, Ersatz-
 Adresse als HLS. Vergangene Sendungen landen nicht unter „Weiterschauen“. Im Demo-Modus zum Ausprobieren. Neuer Test.
+Auch für **M3U-Playlists** mit Catch-up-Angaben (catchup, catchup-days, catchup-source – Formate default, append, shift,
+flussonic, xc; auch als Vorgabe in der Kopfzeile). Der Programmführer behält dafür die vergangenen Tage nur bei diesen
+Sendern (Speicher auf schwachen Boxen); ohne Programmdaten erscheinen Stundenblöcke.
 
 **Neu: Programmführer-Zeit** (Einstellungen → Playlist): Zeigt der Anbieter das Programm zu früh oder zu spät, lässt es
 sich je Playlist um bis zu ±5 Stunden verschieben – gilt für Senderliste, Vorschau, Player und „Verpasste Sendungen“.

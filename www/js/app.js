@@ -762,7 +762,7 @@
   /* ----- M3U ----- */
   function parseM3U(text) {
     var lines = String(text || '').split(/\r?\n/);
-    var out = [], cur = null;
+    var out = [], cur = null, head = {};
     out.epgUrls = [];
     for (var i = 0; i < lines.length; i++) {
       var line = lines[i].trim();
@@ -771,6 +771,9 @@
         // Programmführer-Adresse(n) aus der Kopfzeile: url-tvg="…", x-tvg-url="…" (auch mehrere, mit Komma getrennt)
         var hm, hre = /(url-tvg|x-tvg-url|tvg-url)="([^"]*)"/gi;
         while ((hm = hre.exec(line))) hm[2].split(/[,\s]+/).forEach(function (u) { if (/^https?:\/\//i.test(u) && out.epgUrls.indexOf(u) < 0) out.epgUrls.push(u); });
+        // Catch-up-Vorgaben für alle Sender (catchup="…" catchup-days="…" catchup-source="…")
+        var cm, cre = /(catchup|catchup-type|catchup-days|catchup-source|timeshift|tvg-rec)="([^"]*)"/gi;
+        while ((cm = cre.exec(line))) head[cm[1].toLowerCase()] = cm[2];
         continue;
       }
       if (line.indexOf('#EXTINF') === 0) {
@@ -794,12 +797,60 @@
           group: cur.attrs['group-title'] || T('Ohne Kategorie'),
           url: line,
           tvgId: cur.attrs['tvg-id'] || '',
-          tvgName: cur.attrs['tvg-name'] || ''
+          tvgName: cur.attrs['tvg-name'] || '',
+          cu: catchupOf(cur.attrs, head)
         });
         cur = null;
       }
     }
     return out;
+  }
+
+  /* Catch-up-Angaben eines M3U-Senders (wie Kodi „IPTV Simple“ und TiviMate sie lesen):
+     catchup = default | append | shift | flussonic | xc, catchup-days = Tage, catchup-source = Adress-Vorlage.
+     Ältere Form: timeshift="3" oder tvg-rec="3" (= shift). Ergebnis: { t: Art, d: Tage, s: Vorlage } oder null. */
+  function catchupOf(a, head) {
+    // Angaben am Sender haben Vorrang vor den Vorgaben aus der Kopfzeile
+    function one(o) {
+      var legacy = Number(o.timeshift || o['tvg-rec']) || 0;
+      return { t: String(o.catchup || o['catchup-type'] || (legacy ? 'shift' : '')).toLowerCase(), d: Number(o['catchup-days']) || legacy, s: o['catchup-source'] || '' };
+    }
+    var own = one(a), def = one(head || {});
+    var t = own.t || def.t, d = own.d || def.d, src = own.s || def.s;
+    if (!t || t === 'vod' || t === 'none' || t === '0') return null;
+    if (t === 'fs' || t.indexOf('flussonic') === 0) t = 'flussonic';
+    if (t === 'timeshift') t = 'shift';
+    if (['default', 'append', 'shift', 'flussonic', 'xc'].indexOf(t) < 0) return null;
+    if (t === 'append' && !src) return null;
+    return { t: t, d: Math.max(1, Math.min(14, d || 1)), s: src };
+  }
+  /* Adresse einer vergangenen Sendung bauen. start/end in Sekunden (UTC). Vorlagen-Platzhalter wie bei Kodi/TiviMate:
+     {utc} {start} ${start} {utcend} {end} ${end} {lutc} {now} ${now} ${timestamp} {duration} ${duration} {offset} ${offset}
+     und {Y} {m} {d} {H} {M} {S} (Startzeit, UTC). */
+  function catchupUrl(item, start, end) {
+    var c = item.cu, url = item.url, now = Math.floor(Date.now() / 1000), dur = Math.max(60, end - start);
+    if (!c) return null;
+    var dt = new Date(start * 1000), two = function (n) { return n < 10 ? '0' + n : '' + n; };
+    function fill(tpl) {
+      var v = { utc: start, start: start, utcend: end, end: end, lutc: now, now: now, timestamp: now, duration: dur, offset: now - start,
+        Y: dt.getUTCFullYear(), m: two(dt.getUTCMonth() + 1), d: two(dt.getUTCDate()), H: two(dt.getUTCHours()), M: two(dt.getUTCMinutes()), S: two(dt.getUTCSeconds()) };
+      return String(tpl).replace(/\$?\{(utc|start|utcend|end|lutc|now|timestamp|duration|offset|Y|m|d|H|M|S)\}/g, function (all, k) { return String(v[k]); });
+    }
+    if (c.t === 'append') return url + fill(c.s);
+    if (c.t === 'default' && c.s) return /^https?:\/\//i.test(c.s) ? fill(c.s) : url + fill(c.s);
+    if (c.t === 'shift' || c.t === 'default') return url + (url.indexOf('?') >= 0 ? '&' : '?') + 'utc=' + start + '&lutc=' + now;
+    if (c.t === 'flussonic') {
+      var m = /^(.*\/)(index|video|mono|playlist)\.m3u8(\?.*)?$/.exec(url);
+      if (m) return m[1] + m[2] + '-' + start + '-' + dur + '.m3u8' + (m[3] || '');
+      var m2 = /^(.*\/)mpegts(\?.*)?$/.exec(url);
+      if (m2) return m2[1] + 'timeshift_abs-' + start + '.ts' + (m2[2] || '');
+      return null;
+    }
+    if (c.t === 'xc') {
+      var x = /^(https?:\/\/[^/]+)\/(?:live\/)?([^/]+)\/([^/]+)\/(\d+)(?:\.\w+)?(\?.*)?$/.exec(url);
+      if (x) return x[1] + '/timeshift/' + x[2] + '/' + x[3] + '/' + Math.ceil(dur / 60) + '/' + dt.getUTCFullYear() + '-' + two(dt.getUTCMonth() + 1) + '-' + two(dt.getUTCDate()) + ':' + two(dt.getUTCHours()) + '-' + two(dt.getUTCMinutes()) + '/' + x[4] + '.ts';
+    }
+    return null;
   }
 
   /* ----- Programmführer (EPG) für M3U-Playlists: XMLTV-Dateien -----
@@ -852,8 +903,10 @@
     },
     // Sammelt Sender und Sendungen aus beliebig zerteilten Textstücken
     parser: function (want, win) {
-      var st = { lc: {}, names: {}, progs: {}, channels: 0, count: 0 };
-      var keep = {}, buf = '';
+      var st = { lc: {}, names: {}, progs: {}, channels: 0, count: 0, past: {} };
+      var keep = {}, buf = '', past = want.past || { ids: {}, names: {} };
+      // ab wann Sendungen eines Senders behalten werden
+      function fromOf(ch) { var d = st.past[ch]; return d ? win.now - d * 86400 - 3600 : win.from; }
       var re = /<(channel|programme)\b([^>]*)>([\s\S]*?)<\/\1\s*>/g;
       function handle(tag, attrStr, inner) {
         var a = Xmltv.attrs(attrStr);
@@ -867,6 +920,9 @@
           }
           if (!hit) return;
           keep[id] = true; st.lc[id.toLowerCase()] = id; st.channels++;
+          var pd = past.ids[id.toLowerCase()] || 0;
+          keys.forEach(function (k) { pd = Math.max(pd, past.names[k] || 0); });
+          if (pd) st.past[id] = pd;
           keys.forEach(function (k) { if (!st.names[k]) st.names[k] = id; });
           return;
         }
@@ -876,9 +932,10 @@
           // Sendung ohne vorherigen <channel>-Eintrag: nur über die tvg-id zuordnen
           if (!want.ids[ch.toLowerCase()]) return;
           keep[ch] = true; st.lc[ch.toLowerCase()] = ch; st.channels++;
+          if (past.ids[ch.toLowerCase()]) st.past[ch] = past.ids[ch.toLowerCase()];
         }
         var s = Xmltv.time(a.start), e = Xmltv.time(a.stop);
-        if (!s || s >= win.to || (e && e <= win.from)) return;
+        if (!s || s >= win.to || (e && e <= fromOf(ch))) return;
         var title = Xmltv.pick(inner, 'title');
         if (!title) return;
         var desc = Xmltv.pick(inner, 'desc');
@@ -906,7 +963,8 @@
             });
             // fehlende Endzeit = Beginn der nächsten Sendung
             for (var i = 0; i < l.length; i++) if (!l[i][1]) l[i][1] = l[i + 1] ? l[i + 1][0] : l[i][0] + 3600;
-            st.progs[ch] = l.filter(function (x) { return x[1] > win.from; });
+            var from = fromOf(ch);
+            st.progs[ch] = l.filter(function (x) { return x[1] > from; });
           });
           return st;
         }
@@ -956,7 +1014,7 @@
     },
     // Alle Quellen nacheinander laden; eine kaputte Quelle stoppt die anderen nicht
     load: function (urls, want) {
-      var now = Date.now() / 1000, win = { from: now - 3 * 3600, to: now + 36 * 3600 };
+      var now = Date.now() / 1000, win = { now: now, from: now - 3 * 3600, to: now + 36 * 3600 };
       var ps = Xmltv.parser(want, win), ok = 0, errors = [];
       return urls.reduce(function (chain, url) {
         return chain.then(function () {
@@ -1031,15 +1089,22 @@
         var src = urls.join(' '), key = 'epg.' + (p.id || 'neu'), fresh = epgFresh;
         epgFresh = false;
         return (fresh ? Promise.resolve(null) : EpgStore.get(key)).then(function (c) {
-          if (c && c.src === src && Date.now() - c.at < EPG_TTL) return c;
-          var want = { ids: {}, names: {} };
+          // v2: Sender mit Catch-up behalten die vergangenen Tage (ältere Zwischenspeicher haben nur 3 Stunden)
+          if (c && c.src === src && c.v === 2 && Date.now() - c.at < EPG_TTL) return c;
+          var want = { ids: {}, names: {}, past: { ids: {}, names: {} } };
           d.live.forEach(function (x) {
+            var k = chanKey(x.name), k2 = x.epgName ? chanKey(x.epgName) : '';
             if (x.epgId) want.ids[String(x.epgId).toLowerCase()] = true;
-            var k = chanKey(x.name); if (k) want.names[k] = true;
-            if (x.epgName) { k = chanKey(x.epgName); if (k) want.names[k] = true; }
+            if (k) want.names[k] = true;
+            if (k2) want.names[k2] = true;
+            if (x.archive) {
+              if (x.epgId) want.past.ids[String(x.epgId).toLowerCase()] = x.archive;
+              if (k) want.past.names[k] = x.archive;
+              if (k2) want.past.names[k2] = x.archive;
+            }
           });
           return Xmltv.load(urls, want).then(function (r) {
-            r.src = src; r.at = Date.now();
+            r.src = src; r.at = Date.now(); r.v = 2;
             if (p.id) EpgStore.set(key, r);
             return r;
           });
@@ -1101,6 +1166,8 @@
           var li = { kind: 'live', id: lid, name: e.name, logo: e.logo, url: e.url, catId: e.group, num: n };
           if (e.tvgId) li.epgId = e.tvgId;
           if (e.tvgName && e.tvgName !== e.name) li.epgName = e.tvgName;
+          // Catch-up nur anbieten, wenn sich aus der Senderadresse wirklich eine Archiv-Adresse bauen lässt
+          if (e.cu) { li.cu = e.cu; if (catchupUrl(li, 1700000000, 1700003600)) li.archive = e.cu.d; else delete li.cu; }
           d.live.push(li);
           d.liveById[li.id] = li;
           cat('live', e.group);
@@ -1157,6 +1224,28 @@
           return list.filter(function (x) { return x[1] > t; }).slice(0, limit || 8)
             .map(function (x) { return { title: x[2], desc: x[3], start: x[0] + sh, end: x[1] + sh }; });
         }).catch(function () { return []; });
+      },
+      /* Catch-up (M3U): vergangene Sendungen aus dem Programmführer. Ohne Programmdaten: Stundenblöcke.
+         Die Programmführer-Zeit (Verschiebung) korrigiert falsche EPG-Zeiten – darum gilt sie auch für die Adresse. */
+      archive: function (item) {
+        return load().then(function () {
+          var it = epgItem(item), days = it.archive || item.archive || 0, sh = epgShiftOf(p);
+          var now = Date.now() / 1000, from = now - days * 86400 - 3600;
+          return loadEpg().then(function (E) { return Xmltv.find(E, it) || []; }, function () { return []; }).then(function (list) {
+            var out = list.map(function (x) { return { title: x[2], desc: x[3], start: x[0] + sh, end: x[1] + sh }; })
+              .filter(function (e) { return e.end > e.start && e.start <= now && e.start >= from; });
+            if (!out.length && days) {
+              var h0 = Math.floor(now / 3600) * 3600;
+              for (var t = h0; t >= from; t -= 3600) out.push({ title: T('Ohne Programmdaten'), desc: '', start: t, end: t + 3600 });
+            }
+            return out.sort(function (a, b) { return b.start - a.start; });
+          });
+        });
+      },
+      catchup: function (item, e) {
+        var it = epgItem(item), url = catchupUrl(it.cu ? it : item, Math.floor(e.start), Math.floor(e.end));
+        return { kind: 'catchup', id: item.id + '@' + e.start, name: item.name + ' · ' + (e.title || T('Ohne Titel')), logo: item.logo, catId: item.catId,
+          plot: e.desc, url: url || it.url };
       },
       // Sofort (ohne Laden): was läuft gerade? Für die Titel in der Senderliste.
       epgNow: function (item) {
@@ -6361,7 +6450,7 @@
 
   // Für automatische Tests von außen erreichbar
   window.LumioDebug = {
-    parseM3U: parseM3U, parseXtreamLink: parseXtreamLink, normalizeServer: normalizeServer, Nav: Nav, Screens: Screens, StillWatching: StillWatching,
+    parseM3U: parseM3U, catchupUrl: catchupUrl, parseXtreamLink: parseXtreamLink, normalizeServer: normalizeServer, Nav: Nav, Screens: Screens, StillWatching: StillWatching,
     Xmltv: Xmltv, chanKey: chanKey, EpgStore: EpgStore, makeProvider: makeProvider, Profiles: Profiles, PinGuard: PinGuard, Store: Store, Cloud: Cloud,
     decodeBytes: decodeBytes, readText: readText, fetchText: fetchText, sameConnection: sameConnection, NativePlayer: NativePlayer, App: App, ensureTs: ensureTs, migrateM3uIds: migrateM3uIds,
     ErrLog: ErrLog, techInfo: techInfo,

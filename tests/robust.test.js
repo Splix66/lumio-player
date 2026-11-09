@@ -284,4 +284,28 @@
       if (sBefore !== null) localStorage.setItem('lumio.settings', sBefore);
     }
   });
+
+  t('Catch-up', 'M3U: Catch-up-Angaben lesen und Archiv-Adressen bauen (default, append, shift, flussonic, xc)', function () {
+    var m3u = '#EXTM3U url-tvg="http://epg.invalid/e.xml" catchup="shift" catchup-days="2"\n' +
+      '#EXTINF:-1 tvg-id="a" catchup="default" catchup-days="7" catchup-source="http://cdn.invalid/a/{utc}/{utcend}/{Y}-{m}-{d}:{H}-{M}.m3u8",A\nhttp://cdn.invalid/a/live.m3u8\n' +
+      '#EXTINF:-1 catchup="append" catchup-days="3" catchup-source="?start=${start}&dur=${duration}",B\nhttp://cdn.invalid/b.m3u8?token=1\n' +
+      '#EXTINF:-1,C (Vorgabe aus Kopfzeile)\nhttp://cdn.invalid/c.m3u8\n' +
+      '#EXTINF:-1 catchup="flussonic" catchup-days="1",D\nhttp://fs.invalid/kanal/index.m3u8?token=x\n' +
+      '#EXTINF:-1 catchup="xc" catchup-days="4",E\nhttp://xc.invalid:8080/user/pass/123.ts\n' +
+      '#EXTINF:-1 timeshift="5",F\nhttp://old.invalid/f.m3u8\n' +
+      '#EXTINF:-1 catchup="flussonic",G (unbekannte Form)\nhttp://fs.invalid/kanal/live.php\n';
+    var e = D.parseM3U(m3u), byName = {};
+    e.forEach(function (x) { byName[x.name.charAt(0)] = x; });
+    var st = Date.UTC(2026, 10, 9, 18, 0, 0) / 1000, en = st + 3600;
+    function url(n) { var x = byName[n]; return D.catchupUrl({ url: x.url, cu: x.cu }, st, en); }
+    eq(byName.A.cu.d, 7, 'catchup-days');
+    eq(url('A'), 'http://cdn.invalid/a/' + st + '/' + en + '/2026-11-09:18-00.m3u8', 'default mit Vorlage');
+    eq(url('B'), 'http://cdn.invalid/b.m3u8?token=1?start=' + st + '&dur=3600', 'append hängt die Vorlage an');
+    ok(/^http:\/\/cdn\.invalid\/c\.m3u8\?utc=\d+&lutc=\d+$/.test(url('C')) && url('C').indexOf('utc=' + st) > 0, 'Vorgabe aus der Kopfzeile: shift → ' + url('C'));
+    eq(byName.C.cu.d, 2, 'Tage aus der Kopfzeile');
+    eq(url('D'), 'http://fs.invalid/kanal/index-' + st + '-3600.m3u8?token=x', 'flussonic');
+    eq(url('E'), 'http://xc.invalid:8080/timeshift/user/pass/60/2026-11-09:18-00/123.ts', 'xc');
+    ok(/f\.m3u8\?utc=/.test(url('F')) && byName.F.cu.d === 5, 'alte Form timeshift="5"');
+    eq(url('G'), null, 'unbekannte Form → kein Catch-up');
+  });
 })();
