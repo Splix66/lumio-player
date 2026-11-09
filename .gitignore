@@ -7,3 +7,13 @@ ios/App/Pods/
 *.ipk
 *.wgt
 .DS_Store
+
+# Local environment and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
