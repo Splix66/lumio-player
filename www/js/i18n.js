@@ -7,6 +7,14 @@
 window.LUMIO_I18N = {
   /* ---------------- English ---------------- */
   en: {
+    "Auch auf der Webseite verwalten": "Also manage on the website",
+    "Speichert die Zugangsdaten online, damit du die Playlist im Browser bearbeiten kannst. Ohne diese Option bleiben sie nur auf diesem Gerät.": "Stores your login details online so you can edit the playlist in a browser. Without this option they stay on this device only.",
+    "Webseite: an": "Website: on",
+    "Webseite: aus": "Website: off",
+    "„{0}“ ist jetzt auf der Webseite verfügbar.": "“{0}” is now available on the website.",
+    "Von der Webseite entfernen?": "Remove from the website?",
+    "„{0}“ bleibt auf diesem Gerät, die Online-Kopie samt Zugangsdaten wird gelöscht.": "“{0}” stays on this device; the online copy including login details will be deleted.",
+    "Entfernen": "Remove",
     'Dein Zugang ist abgelaufen': 'Your subscription has expired',
     'Dein Zugang läuft bald ab': 'Your subscription expires soon',
     '„{0}“ ist am {1} abgelaufen. Bitte melde dich bei deinem Anbieter, um den Zugang zu verlängern.': '“{0}” expired on {1}. Please contact your provider to renew your subscription.',
@@ -596,6 +604,14 @@ window.LUMIO_I18N = {
 
   /* ---------------- Türkçe ---------------- */
   tr: {
+    "Auch auf der Webseite verwalten": "Web sitesinde de yönet",
+    "Speichert die Zugangsdaten online, damit du die Playlist im Browser bearbeiten kannst. Ohne diese Option bleiben sie nur auf diesem Gerät.": "Listeyi tarayıcıda düzenleyebilmen için giriş bilgilerini çevrimiçi kaydeder. Bu seçenek kapalıyken bilgiler yalnızca bu cihazda kalır.",
+    "Webseite: an": "Web sitesi: açık",
+    "Webseite: aus": "Web sitesi: kapalı",
+    "„{0}“ ist jetzt auf der Webseite verfügbar.": "“{0}” artık web sitesinde kullanılabilir.",
+    "Von der Webseite entfernen?": "Web sitesinden kaldırılsın mı?",
+    "„{0}“ bleibt auf diesem Gerät, die Online-Kopie samt Zugangsdaten wird gelöscht.": "“{0}” bu cihazda kalır; giriş bilgileri dahil çevrimiçi kopya silinir.",
+    "Entfernen": "Kaldır",
     'Dein Zugang ist abgelaufen': 'Aboneliğinin süresi doldu',
     'Dein Zugang läuft bald ab': 'Aboneliğin yakında sona eriyor',
     '„{0}“ ist am {1} abgelaufen. Bitte melde dich bei deinem Anbieter, um den Zugang zu verlängern.': '“{0}” {1} tarihinde sona erdi. Aboneliğini uzatmak için lütfen sağlayıcınla iletişime geç.',

@@ -32,16 +32,29 @@
       Diese Erklärung beschreibt, welche Daten dabei verarbeitet werden.</p>
 
     <h2>3. Daten in der App</h2>
-    <p>Die App speichert deine Playlists, Favoriten, den Wiedergabe-Verlauf und Einstellungen <strong>nur lokal auf deinem Gerät</strong>.
-      Beim ersten Start erzeugt die App zufällig eine Geräte-Kennung im Format einer MAC-Adresse und einen Geräteschlüssel (Key).
-      Das ist nicht die echte Hardware-Adresse deines Geräts.</p>
+    <p>Die App speichert deine Playlists, Favoriten, den Wiedergabe-Verlauf und Einstellungen <strong>auf deinem Gerät</strong>.
+      Zugangsdaten einer Playlist werden nur dann online gespeichert, wenn du die Playlist über diese Webseite sendest
+      oder in der App ausdrücklich „Auch auf der Webseite verwalten“ einschaltest (siehe Abschnitt 4). Diese Option ist
+      beim Anlegen einer Playlist ausgeschaltet.</p>
+    <p>Beim ersten Start erzeugt die App zufällig eine Geräte-Kennung im Format einer MAC-Adresse und einen Geräteschlüssel (Key).
+      Das ist nicht die echte Hardware-Adresse deines Geräts. Damit du Playlists per Handy senden kannst, meldet sich die App
+      beim Start mit dieser Kennung bei unserem Online-Dienst an und fragt etwa alle 30 Sekunden nach neuen Playlists
+      (dabei werden keine Playlist-Daten aus der App übertragen).</p>
     <p>Beim Abspielen verbindet sich die App direkt mit den Servern des IPTV-Anbieters, den du selbst eingetragen hast.
       Auf die Datenverarbeitung dieses Anbieters haben wir keinen Einfluss; es gelten dessen Datenschutzbestimmungen.</p>
     <p>Falls Programmbibliotheken nicht in der App enthalten sind, lädt die App sie vom Dienst jsDelivr nach
       (Videowiedergabe, QR-Code). Dabei wird deine IP-Adresse an jsDelivr übermittelt.</p>
+    <p><strong>Update-Prüfung:</strong> Einmal täglich fragt die App bei GitHub (api.github.com) nach, ob es eine neue Version gibt.
+      Dabei wird deine IP-Adresse an GitHub übermittelt; es werden keine Playlist- oder Nutzungsdaten gesendet.</p>
+    <p><strong>Trailer:</strong> Startest du bei einem Film oder einer Serie einen Trailer, wird er von YouTube im erweiterten
+      Datenschutzmodus (youtube-nocookie.com, Google Ireland Limited) geladen. Dabei werden u. a. deine IP-Adresse und technische
+      Daten an Google übermittelt, möglicherweise auch in die USA (EU-US Data Privacy Framework). Ohne Klick auf „Trailer“
+      wird keine Verbindung zu YouTube aufgebaut.</p>
 
-    <h2>4. Playlist per Handy senden</h2>
-    <p>Wenn du diese Funktion nutzt, verarbeiten wir:</p>
+    <h2>4. Playlist per Handy senden und auf der Webseite verwalten</h2>
+    <p>Für jedes Gerät speichern wir beim ersten Start der App die Geräte-Kennung, den Prüfwert des Schlüssels und Zeitpunkte –
+      ohne Playlist-Daten. Sendest du eine Playlist über diese Webseite oder schaltest du in der App „Auch auf der Webseite
+      verwalten“ ein, verarbeiten wir zusätzlich:</p>
     <ul>
       <li>die Geräte-Kennung (MAC-Format) und den Geräteschlüssel – der Schlüssel wird nur als Prüfwert (Hash) gespeichert,</li>
       <li>den Namen der Playlist,</li>
@@ -53,6 +66,9 @@
     <p><strong>Wichtig:</strong> Zugangsdaten (z. B. das Passwort deines Xtream-Zugangs) müssen an dein Gerät übergeben werden
       und liegen deshalb lesbar in der Datenbank. Abrufen kann sie nur, wer Geräte-Kennung <em>und</em> Schlüssel kennt.
       Nach 20 falschen Schlüsseln wird ein Gerät für eine Stunde gesperrt. Alle Verbindungen sind verschlüsselt (HTTPS).</p>
+    <p><strong>Online-Kopie löschen:</strong> In der App unter Playlists bei der jeweiligen Playlist „Webseite: aus“ wählen –
+      die Online-Kopie samt Zugangsdaten wird gelöscht, die Playlist bleibt auf deinem Gerät. Auf dieser Webseite kannst du
+      Playlists ebenfalls löschen.</p>
 
     <h3>Support-Nachrichten</h3>
     <p>Schreibst du uns über die Webseite eine Support-Nachricht, speichern wir das gewählte Thema, deinen Text,

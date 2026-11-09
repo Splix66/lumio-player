@@ -1254,12 +1254,14 @@
       else if (top && top.name === 'profiles') showProfiles();
       return { changed: true, added: added, removed: removed, edited: edited };
     },
-    /* Playlists, die direkt in der App eingetragen wurden, auch online speichern (damit sie auf der Webseite erscheinen) */
+    /* Playlists, die direkt in der App eingetragen wurden, online speichern (damit sie auf der Webseite erscheinen) –
+       nur wenn man das beim Anlegen oder in der Playlist-Übersicht ausdrücklich eingeschaltet hat. */
     upload: function () {
       var self = this;
       if (!self.registered) return;
       Profiles.list().forEach(function (p) {
-        if (p.remoteId || (p.type !== 'm3u' && p.type !== 'xtream') || self.uploading[p.id]) return;
+        // nur Playlists, bei denen „Auch auf der Webseite verwalten“ eingeschaltet wurde
+        if (p.remoteId || p.cloud !== true || (p.type !== 'm3u' && p.type !== 'xtream') || self.uploading[p.id]) return;
         self.uploading[p.id] = true;
         var body = { p_mac: Device.mac(), p_key: Device.key(), p_name: p.name || T('Playlist'), p_type: p.type };
         if (p.type === 'm3u') body.p_url = p.url;
@@ -2316,6 +2318,27 @@
   /* ==========================================================
      Startbildschirm: Profile / Playlists
      ========================================================== */
+  /* „Auch auf der Webseite verwalten“: an = Playlist liegt online (von der Webseite gesendet oder freigegeben) */
+  function onWeb(p) { return !!p.remoteId || p.cloud === true; }
+  function toggleWeb(p) {
+    var list = Profiles.list(), x = list.filter(function (q) { return q.id === p.id; })[0];
+    if (!x) return;
+    if (!onWeb(x)) {
+      x.cloud = true; Profiles.save(list);
+      Cloud.upload();
+      toast(T('„{0}“ ist jetzt auf der Webseite verfügbar.', x.name), 3000);
+      showProfiles();
+      return;
+    }
+    confirmBox(T('Von der Webseite entfernen?'), T('„{0}“ bleibt auf diesem Gerät, die Online-Kopie samt Zugangsdaten wird gelöscht.', x.name), T('Entfernen'), function () {
+      var l2 = Profiles.list(), y = l2.filter(function (q) { return q.id === p.id; })[0];
+      if (!y) return;
+      if (y.remoteId) { Cloud.markDeleted(y.remoteId); Cloud.flushDeletes(); }
+      delete y.remoteId; y.cloud = false; Profiles.save(l2);
+      if (App.profile && App.profile.id === y.id) { delete App.profile.remoteId; App.profile.cloud = false; }
+      showProfiles();
+    });
+  }
   function showProfiles() {
     var list = Profiles.list();
     if (!list.length) {
@@ -2346,6 +2369,10 @@
           h('span', { class: 'avatar', style: 'background:' + colorFor(p.name), text: initials(p.name) }),
           h('span', { class: 'label', text: p.name }),
           h('span', { class: 'sub', text: sub })),
+        p.type === 'demo' ? null : h('button', {
+          class: 'btn small ghost f web-toggle' + (onWeb(p) ? ' is-on' : ''),
+          title: T('Auch auf der Webseite verwalten'), onclick: function () { toggleWeb(p); }
+        }, icon('globe'), h('span', { text: onWeb(p) ? T('Webseite: an') : T('Webseite: aus') })),
         h('button', {
           class: 'btn small ghost f danger', onclick: function () {
             confirmBox(T('„{0}“ löschen?', p.name), T('Favoriten und Verlauf dieses Profils werden ebenfalls entfernt.'), T('Löschen'), function () { Profiles.remove(p.id); showProfiles(); });
@@ -2413,6 +2440,11 @@
       err.textContent = '';
     }
     var saveBtn = h('button', { class: 'btn f primary', onclick: save }, T('Speichern & verbinden'));
+    // Datenschutz: Zugangsdaten verlassen das Gerät nur, wenn man das ausdrücklich einschaltet (Voreinstellung: aus)
+    var toWeb = false;
+    var webRow = toggleRow(T('Auch auf der Webseite verwalten'),
+      T('Speichert die Zugangsdaten online, damit du die Playlist im Browser bearbeiten kannst. Ohne diese Option bleiben sie nur auf diesem Gerät.'),
+      function () { return toWeb; }, function (v) { toWeb = v; });
 
     function save() {
       err.textContent = '';
@@ -2433,6 +2465,7 @@
         else { p = { type: 'm3u', url: u }; if (eu) p.epgUrl = eu; }
       }
       p.name = name || (p.type === 'xtream' ? p.username : T('Meine Playlist'));
+      if (toWeb) p.cloud = true;
       saveBtn.disabled = true; saveBtn.textContent = T('Verbinde …');
       makeProvider(p).login().then(function () {
         var saved = Profiles.add(p);
@@ -2449,7 +2482,7 @@
         h('h1', { text: T('Playlist hinzufügen') }),
         h('div', null, macTag()),
         h('div', { class: 'tabs' }, tX, tM),
-        fName.wrap, xBox, mBox, err,
+        fName.wrap, xBox, mBox, webRow, err,
         h('div', { class: 'row' }, saveBtn, h('button', { class: 'btn f ghost', onclick: goBack }, T('Abbrechen'))),
         h('p', { class: 'hint', text: T('Diese App enthält keine Sender oder Inhalte. Du benötigst einen eigenen Zugang von deinem Anbieter.') })));
     Screens.push('add', el);

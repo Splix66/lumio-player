@@ -81,6 +81,24 @@
     } finally { D.Store.set('profiles', before); }
   });
 
+  t(G, 'Datenschutz: Zugangsdaten werden nur mit Zustimmung („Auch auf der Webseite verwalten“) hochgeladen', function () {
+    var before = D.Store.get('profiles', []), realRpc = D.Cloud.rpc, wasReg = D.Cloud.registered, sent = [];
+    try {
+      D.Store.set('profiles', [
+        { id: 'ohne', type: 'xtream', name: 'Ohne Zustimmung', server: 'http://s', username: 'u', password: 'geheim' },
+        { id: 'mit', type: 'm3u', name: 'Mit Zustimmung', url: 'http://x/a.m3u', cloud: true }
+      ]);
+      D.Cloud.registered = true;
+      D.Cloud.rpc = function (fn, body) { sent.push(fn + ':' + body.p_name); return Promise.resolve({ ok: true, id: 'r-' + sent.length }); };
+      D.Cloud.upload();
+      return Test.wait(50).then(function () {
+        eq(sent, ['add_playlist:Mit Zustimmung'], 'nur die freigegebene Playlist');
+      });
+    } finally {
+      setTimeout(function () { D.Cloud.rpc = realRpc; D.Cloud.registered = wasReg; D.Store.set('profiles', before); }, 100);
+    }
+  });
+
   t(G, 'Xtream: abgelaufener Zugang wird als Fehler gemeldet, nicht als leere Liste', function () {
     var realFetch = window.fetch;
     window.fetch = function (url) {

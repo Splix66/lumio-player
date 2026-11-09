@@ -586,4 +586,12 @@ window.LUMIO_I18N["ku"] = {
   "Trailer": "Trailer",
   "Trailer: {0}": "Trailer: {0}",
   "Solche Sender heißen beim Anbieter oft „RAW“. Sie werden unverändert durchgeleitet. Auf einer Android-TV-Box oder einem Fire TV Stick laufen sie meist – notfalls über einen externen Player wie VLC (Einstellungen → Wiedergabe).": "Dabînker pir caran ji van kanalan re dibêjin „RAW” – ew bêguhertin têne şandin. Bi gelemperî li ser qutiya Android TV an Fire TV Stick dixebitin, wekî din bi lêdanerek derve wekî VLC (Mîheng → Lêdan).",
+  "Auch auf der Webseite verwalten": "Li malperê jî birêve bibe",
+  "Speichert die Zugangsdaten online, damit du die Playlist im Browser bearbeiten kannst. Ohne diese Option bleiben sie nur auf diesem Gerät.": "Agahiyên têketinê online tomar dike da ku tu lîsteyê di gerokê de biguherînî. Bêyî vê vebijarkê ew tenê li ser vê cîhazê dimînin.",
+  "Webseite: an": "Malper: vekirî",
+  "Webseite: aus": "Malper: girtî",
+  "„{0}“ ist jetzt auf der Webseite verfügbar.": "„{0}“ êdî li ser malperê heye.",
+  "Von der Webseite entfernen?": "Ji malperê were rakirin?",
+  "„{0}“ bleibt auf diesem Gerät, die Online-Kopie samt Zugangsdaten wird gelöscht.": "„{0}“ li ser vê cîhazê dimîne; kopiya online bi agahiyên têketinê re tê jêbirin.",
+  "Entfernen": "Rake"
 };

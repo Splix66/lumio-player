@@ -586,4 +586,12 @@ window.LUMIO_I18N["ar"] = {
   "Trailer": "الإعلان الترويجي",
   "Trailer: {0}": "الإعلان الترويجي: {0}",
   "Solche Sender heißen beim Anbieter oft „RAW“. Sie werden unverändert durchgeleitet. Auf einer Android-TV-Box oder einem Fire TV Stick laufen sie meist – notfalls über einen externen Player wie VLC (Einstellungen → Wiedergabe).": "غالبًا ما يسمّي المزوّد هذه القنوات «RAW»، إذ تُمرَّر كما هي دون تحويل. عادةً ما تعمل على جهاز Android TV أو Fire TV Stick، وإن لم تعمل فعبر مشغّل خارجي مثل VLC (الإعدادات ← التشغيل).",
+  "Auch auf der Webseite verwalten": "الإدارة عبر الموقع أيضًا",
+  "Speichert die Zugangsdaten online, damit du die Playlist im Browser bearbeiten kannst. Ohne diese Option bleiben sie nur auf diesem Gerät.": "يحفظ بيانات الدخول عبر الإنترنت لتتمكن من تعديل قائمة التشغيل في المتصفح. بدون هذا الخيار تبقى على هذا الجهاز فقط.",
+  "Webseite: an": "الموقع: مفعّل",
+  "Webseite: aus": "الموقع: معطّل",
+  "„{0}“ ist jetzt auf der Webseite verfügbar.": "“{0}” متاحة الآن على الموقع.",
+  "Von der Webseite entfernen?": "إزالتها من الموقع؟",
+  "„{0}“ bleibt auf diesem Gerät, die Online-Kopie samt Zugangsdaten wird gelöscht.": "تبقى “{0}” على هذا الجهاز، وستُحذف النسخة عبر الإنترنت مع بيانات الدخول.",
+  "Entfernen": "إزالة"
 };

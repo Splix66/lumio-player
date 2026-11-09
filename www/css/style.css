@@ -1815,3 +1815,7 @@ body.kbd .tr-close.f:focus, body.is-tv .tr-close.f:focus { background: #fff; col
 @media (max-width: 700px) {
   html:not(.tv) .mv2 .mv-head { display: flex; padding: .2rem 0 .8rem; }
 }
+
+/* Playlist-Übersicht: „Webseite: an/aus“ (Zugangsdaten nur mit Zustimmung online) */
+.web-toggle .i { color: var(--muted); }
+.web-toggle.is-on .i { color: var(--ok); }

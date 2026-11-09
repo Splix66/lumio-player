@@ -586,4 +586,12 @@ window.LUMIO_I18N["ro"] = {
   "Trailer": "Trailer",
   "Trailer: {0}": "Trailer: {0}",
   "Solche Sender heißen beim Anbieter oft „RAW“. Sie werden unverändert durchgeleitet. Auf einer Android-TV-Box oder einem Fire TV Stick laufen sie meist – notfalls über einen externen Player wie VLC (Einstellungen → Wiedergabe).": "Furnizorii numesc adesea aceste canale „RAW” – sunt transmise nemodificate. De obicei funcționează pe un Android TV box sau pe un Fire TV Stick, iar la nevoie printr-un player extern precum VLC (Setări → Redare).",
+  "Auch auf der Webseite verwalten": "Gestionează și pe site",
+  "Speichert die Zugangsdaten online, damit du die Playlist im Browser bearbeiten kannst. Ohne diese Option bleiben sie nur auf diesem Gerät.": "Salvează datele de autentificare online, ca să poți edita lista în browser. Fără această opțiune rămân doar pe acest dispozitiv.",
+  "Webseite: an": "Site: pornit",
+  "Webseite: aus": "Site: oprit",
+  "„{0}“ ist jetzt auf der Webseite verfügbar.": "„{0}” este acum disponibilă pe site.",
+  "Von der Webseite entfernen?": "Elimini de pe site?",
+  "„{0}“ bleibt auf diesem Gerät, die Online-Kopie samt Zugangsdaten wird gelöscht.": "„{0}” rămâne pe acest dispozitiv, copia online împreună cu datele de autentificare va fi ștearsă.",
+  "Entfernen": "Elimină"
 };

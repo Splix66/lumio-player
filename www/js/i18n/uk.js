@@ -586,4 +586,12 @@ window.LUMIO_I18N["uk"] = {
   "Trailer": "Трейлер",
   "Trailer: {0}": "Трейлер: {0}",
   "Solche Sender heißen beim Anbieter oft „RAW“. Sie werden unverändert durchgeleitet. Auf einer Android-TV-Box oder einem Fire TV Stick laufen sie meist – notfalls über einen externen Player wie VLC (Einstellungen → Wiedergabe).": "Провайдери часто називають такі канали «RAW» — вони передаються без змін. Зазвичай вони працюють на приставці Android TV або Fire TV Stick, а за потреби — через зовнішній програвач, наприклад VLC (Налаштування → Відтворення).",
+  "Auch auf der Webseite verwalten": "Керувати також на сайті",
+  "Speichert die Zugangsdaten online, damit du die Playlist im Browser bearbeiten kannst. Ohne diese Option bleiben sie nur auf diesem Gerät.": "Зберігає дані для входу онлайн, щоб ви могли редагувати плейлист у браузері. Без цієї опції вони залишаються лише на цьому пристрої.",
+  "Webseite: an": "Сайт: увімк.",
+  "Webseite: aus": "Сайт: вимк.",
+  "„{0}“ ist jetzt auf der Webseite verfügbar.": "«{0}» тепер доступний на сайті.",
+  "Von der Webseite entfernen?": "Видалити із сайту?",
+  "„{0}“ bleibt auf diesem Gerät, die Online-Kopie samt Zugangsdaten wird gelöscht.": "«{0}» залишиться на цьому пристрої, а онлайн-копію разом із даними для входу буде видалено.",
+  "Entfernen": "Видалити"
 };
