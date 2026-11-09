@@ -2089,17 +2089,18 @@ body.kbd .lr-all.f:focus, body.is-tv .lr-all.f:focus { background: #c084fc; colo
 .lr-bar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #a855f7, #c084fc); }
 .lr-card:hover { box-shadow: inset 0 0 0 1px rgba(192, 132, 252, .6); }
 body.kbd .lr-card.f:focus, body.is-tv .lr-card.f:focus { transform: scale(1.03); box-shadow: 0 0 0 .2rem var(--bg), 0 0 0 .42rem #c084fc, 0 0 2rem rgba(168, 85, 247, .5); }
-/* Nichts angefangen: „Zuletzt angesehen“ fehlt, die Kacheln füllen die ganze Höhe und werden größer */
-.launcher.no-recent .ln-grid { max-height: none; margin-bottom: .6rem; }
-.launcher.no-recent .lt-wave { height: 22%; }
-.launcher.no-recent .ln-card .lt-wave { height: 24%; }
-.launcher.no-recent .lt-ic .i { width: 6.2rem; height: 6.2rem; }
-.launcher.no-recent .lt-label { margin-top: 1.4rem; font-size: 2.7rem; }
-.launcher.no-recent .lt-sub { font-size: 1.25rem; }
-.launcher.no-recent .lt-go { width: 2.7rem; height: 2.7rem; margin-top: 1.8rem; }
-.launcher.no-recent .ln-card .lc-ic .i { width: 3.4rem; height: 3.4rem; }
-.launcher.no-recent .ln-card .lc-txt b { font-size: 1.8rem; }
-.launcher.no-recent .ln-card .lc-txt small { font-size: 1.1rem; }
+/* Nichts angefangen: „Zuletzt angesehen“ fehlt – die Kacheln werden etwas höher (nicht ganz so hoch wie der Bildschirm)
+   und stehen mittig im freien Platz */
+.launcher.no-recent .ln-grid { max-height: 24rem; margin-top: auto; margin-bottom: auto; }
+.launcher.no-recent .lt-wave { height: 27%; }
+.launcher.no-recent .ln-card .lt-wave { height: 28%; }
+.launcher.no-recent .lt-ic .i { width: 5.2rem; height: 5.2rem; }
+.launcher.no-recent .lt-label { margin-top: 1.2rem; font-size: 2.35rem; }
+.launcher.no-recent .lt-sub { font-size: 1.12rem; }
+.launcher.no-recent .lt-go { width: 2.5rem; height: 2.5rem; margin-top: 1.5rem; }
+.launcher.no-recent .ln-card .lc-ic .i { width: 3rem; height: 3rem; }
+.launcher.no-recent .ln-card .lc-txt b { font-size: 1.6rem; }
+.launcher.no-recent .ln-card .lc-txt small { font-size: 1.02rem; }
 /* „Alle anzeigen“: alle Einträge als Raster */
 .lr-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-gap: 1rem; gap: 1rem; }
 .lr-grid .lr-card { width: auto; }
@@ -2141,14 +2142,14 @@ body.kbd .lr-card.f:focus, body.is-tv .lr-card.f:focus { transform: scale(1.03);
   html:not(.tv) .lr-title { font-size: 1rem; }
   html:not(.tv) .lr-title .i { width: 1.2rem; height: 1.2rem; margin-right: .5rem; }
   html:not(.tv) .lr-card { width: 15rem; height: 7rem; }
-  html:not(.tv) .launcher.no-recent .ln-grid { flex: 1 1 auto; height: auto; min-height: 13rem; }
-  html:not(.tv) .launcher.no-recent .lt-ic .i { width: 3.6rem; height: 3.6rem; }
-  html:not(.tv) .launcher.no-recent .lt-label { margin-top: .8rem; font-size: 1.7rem; }
-  html:not(.tv) .launcher.no-recent .lt-sub { font-size: .95rem; }
-  html:not(.tv) .launcher.no-recent .lt-go { width: 2rem; height: 2rem; margin-top: 1rem; }
-  html:not(.tv) .launcher.no-recent .ln-card .lc-ic .i { width: 2.2rem; height: 2.2rem; }
-  html:not(.tv) .launcher.no-recent .ln-card .lc-txt b { font-size: 1.25rem; }
-  html:not(.tv) .launcher.no-recent .ln-card .lc-txt small { font-size: .85rem; }
+  html:not(.tv) .launcher.no-recent .ln-grid { height: 16rem; max-height: none; }
+  html:not(.tv) .launcher.no-recent .lt-ic .i { width: 3.2rem; height: 3.2rem; }
+  html:not(.tv) .launcher.no-recent .lt-label { margin-top: .6rem; font-size: 1.5rem; }
+  html:not(.tv) .launcher.no-recent .lt-sub { font-size: .85rem; }
+  html:not(.tv) .launcher.no-recent .lt-go { width: 1.8rem; height: 1.8rem; margin-top: .8rem; }
+  html:not(.tv) .launcher.no-recent .ln-card .lc-ic .i { width: 1.9rem; height: 1.9rem; }
+  html:not(.tv) .launcher.no-recent .ln-card .lc-txt b { font-size: 1.12rem; }
+  html:not(.tv) .launcher.no-recent .ln-card .lc-txt small { font-size: .78rem; }
 }
 /* Handy hochkant (Webseite im Browser): Kacheln nebeneinander, Radio und Favoriten darunter */
 @media (max-width: 700px) and (orientation: portrait) {
