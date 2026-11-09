@@ -775,5 +775,14 @@ window.LUMIO_I18N["fr"] = {
   "Gesehene Filme ausblenden": "Masquer les films vus",
   "Gesehene Serien ausblenden": "Masquer les séries vues",
   "Serien, bei denen du alle Folgen gesehen hast.": "Séries dont tu as vu tous les épisodes.",
-  "Filme, die du zu Ende geschaut oder als gesehen markiert hast.": "Films regardés jusqu’au bout ou marqués comme vus."
+  "Filme, die du zu Ende geschaut oder als gesehen markiert hast.": "Films regardés jusqu’au bout ou marqués comme vus.",
+  "Playlist aktiv": "Playlist active",
+  "{0} Titel": "{0} titres",
+  "Meine Liste": "Ma liste",
+  "Zuletzt angesehen": "Vus récemment",
+  "Alle anzeigen": "Tout afficher",
+  "S{0}: F{1}": "S{0} : É{1}",
+  "Keine Sender": "Aucune station",
+  "Keine Radiosender": "Aucune station de radio",
+  "In deiner Playlist sind keine Radiosender.": "Ta playlist ne contient aucune station de radio."
 };

@@ -775,5 +775,14 @@ window.LUMIO_I18N["pl"] = {
   "Gesehene Filme ausblenden": "Ukryj obejrzane filmy",
   "Gesehene Serien ausblenden": "Ukryj obejrzane seriale",
   "Serien, bei denen du alle Folgen gesehen hast.": "Seriale, których wszystkie odcinki obejrzałeś.",
-  "Filme, die du zu Ende geschaut oder als gesehen markiert hast.": "Filmy obejrzane do końca lub oznaczone jako obejrzane."
+  "Filme, die du zu Ende geschaut oder als gesehen markiert hast.": "Filmy obejrzane do końca lub oznaczone jako obejrzane.",
+  "Playlist aktiv": "Playlista aktywna",
+  "{0} Titel": "{0} tytułów",
+  "Meine Liste": "Moja lista",
+  "Zuletzt angesehen": "Ostatnio oglądane",
+  "Alle anzeigen": "Pokaż wszystko",
+  "S{0}: F{1}": "S{0}: O{1}",
+  "Keine Sender": "Brak stacji",
+  "Keine Radiosender": "Brak stacji radiowych",
+  "In deiner Playlist sind keine Radiosender.": "Twoja playlista nie zawiera stacji radiowych."
 };

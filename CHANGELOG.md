@@ -62,6 +62,13 @@ und in `scripts/make-icons.py` (Android, Fire TV, Samsung, LG, Windows/Mac, TV-B
 
 Die neuen Daten gehören zum Profil, werden mitgesichert und von „Verlauf löschen“ entfernt.
 
+**Neuer Startbildschirm** (nach Vorlage): oben Logo, Status (Internet, Player, „Playlist aktiv“) und Knöpfe für Suche,
+Aktualisieren, Einstellungen, Hilfe und Sprache. Live TV (lila), Filme (orange) und Serien (blau) als große Glas-Kacheln mit
+Leuchtwelle, rechts **Radio** (neu) und Favoriten. Unten „Zuletzt angesehen“ als breite Bildkarten mit Restzeit bzw. Staffel/Folge
+und Fortschritt, dazu „Alle anzeigen“. Laufzeit der Playlist steht unten in der Fußleiste.
+**Neu: Radio** – sammelt alle Sender aus Radio-Kategorien (Radio, Radyo …) in einer eigenen Liste unter Live TV.
+Folgen bekommen das Hintergrundbild ihrer Serie (für die breiten Karten).
+
 **Status immer sichtbar:** Internet, Player und Playlist stehen nach dem Einrichten klein unten in der Fußleiste neben
 MAC und KEY (grün = in Ordnung, rot = kein Internet) – vorher nur auf der Willkommensseite.
 

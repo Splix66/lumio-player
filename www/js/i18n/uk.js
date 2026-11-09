@@ -775,5 +775,14 @@ window.LUMIO_I18N["uk"] = {
   "Gesehene Filme ausblenden": "Сховати переглянуті фільми",
   "Gesehene Serien ausblenden": "Сховати переглянуті серіали",
   "Serien, bei denen du alle Folgen gesehen hast.": "Серіали, усі серії яких ви переглянули.",
-  "Filme, die du zu Ende geschaut oder als gesehen markiert hast.": "Фільми, які ви додивилися або позначили як переглянуті."
+  "Filme, die du zu Ende geschaut oder als gesehen markiert hast.": "Фільми, які ви додивилися або позначили як переглянуті.",
+  "Playlist aktiv": "Плейлист активний",
+  "{0} Titel": "{0} фільмів",
+  "Meine Liste": "Мій список",
+  "Zuletzt angesehen": "Нещодавно переглянуте",
+  "Alle anzeigen": "Показати все",
+  "S{0}: F{1}": "С{0}: Е{1}",
+  "Keine Sender": "Немає станцій",
+  "Keine Radiosender": "Немає радіостанцій",
+  "In deiner Playlist sind keine Radiosender.": "У вашому плейлисті немає радіостанцій."
 };

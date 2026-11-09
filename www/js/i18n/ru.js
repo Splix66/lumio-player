@@ -775,5 +775,14 @@ window.LUMIO_I18N["ru"] = {
   "Gesehene Filme ausblenden": "Скрыть просмотренные фильмы",
   "Gesehene Serien ausblenden": "Скрыть просмотренные сериалы",
   "Serien, bei denen du alle Folgen gesehen hast.": "Сериалы, все серии которых вы посмотрели.",
-  "Filme, die du zu Ende geschaut oder als gesehen markiert hast.": "Фильмы, которые вы досмотрели или отметили как просмотренные."
+  "Filme, die du zu Ende geschaut oder als gesehen markiert hast.": "Фильмы, которые вы досмотрели или отметили как просмотренные.",
+  "Playlist aktiv": "Плейлист активен",
+  "{0} Titel": "{0} фильмов",
+  "Meine Liste": "Мой список",
+  "Zuletzt angesehen": "Недавно просмотренное",
+  "Alle anzeigen": "Показать все",
+  "S{0}: F{1}": "С{0}: Э{1}",
+  "Keine Sender": "Нет станций",
+  "Keine Radiosender": "Нет радиостанций",
+  "In deiner Playlist sind keine Radiosender.": "В вашем плейлисте нет радиостанций."
 };

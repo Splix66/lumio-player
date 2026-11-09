@@ -775,5 +775,14 @@ window.LUMIO_I18N["ro"] = {
   "Gesehene Filme ausblenden": "Ascunde filmele vizionate",
   "Gesehene Serien ausblenden": "Ascunde serialele vizionate",
   "Serien, bei denen du alle Folgen gesehen hast.": "Seriale la care ai văzut toate episoadele.",
-  "Filme, die du zu Ende geschaut oder als gesehen markiert hast.": "Filme văzute până la capăt sau marcate ca vizionate."
+  "Filme, die du zu Ende geschaut oder als gesehen markiert hast.": "Filme văzute până la capăt sau marcate ca vizionate.",
+  "Playlist aktiv": "Playlist activ",
+  "{0} Titel": "{0} titluri",
+  "Meine Liste": "Lista mea",
+  "Zuletzt angesehen": "Vizionate recent",
+  "Alle anzeigen": "Arată tot",
+  "S{0}: F{1}": "S{0}: E{1}",
+  "Keine Sender": "Niciun post",
+  "Keine Radiosender": "Niciun post de radio",
+  "In deiner Playlist sind keine Radiosender.": "Playlistul tău nu conține posturi de radio."
 };

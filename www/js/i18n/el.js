@@ -775,5 +775,14 @@ window.LUMIO_I18N["el"] = {
   "Gesehene Filme ausblenden": "Απόκρυψη προβεβλημένων ταινιών",
   "Gesehene Serien ausblenden": "Απόκρυψη προβεβλημένων σειρών",
   "Serien, bei denen du alle Folgen gesehen hast.": "Σειρές που έχεις δει όλα τα επεισόδια.",
-  "Filme, die du zu Ende geschaut oder als gesehen markiert hast.": "Ταινίες που είδες ως το τέλος ή σημείωσες ως προβεβλημένες."
+  "Filme, die du zu Ende geschaut oder als gesehen markiert hast.": "Ταινίες που είδες ως το τέλος ή σημείωσες ως προβεβλημένες.",
+  "Playlist aktiv": "Λίστα ενεργή",
+  "{0} Titel": "{0} τίτλοι",
+  "Meine Liste": "Η λίστα μου",
+  "Zuletzt angesehen": "Είδατε πρόσφατα",
+  "Alle anzeigen": "Εμφάνιση όλων",
+  "S{0}: F{1}": "Σ{0}: Ε{1}",
+  "Keine Sender": "Κανένας σταθμός",
+  "Keine Radiosender": "Κανένας ραδιοφωνικός σταθμός",
+  "In deiner Playlist sind keine Radiosender.": "Η λίστα σου δεν έχει ραδιοφωνικούς σταθμούς."
 };

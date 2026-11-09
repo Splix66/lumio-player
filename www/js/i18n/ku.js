@@ -775,5 +775,14 @@ window.LUMIO_I18N["ku"] = {
   "Gesehene Filme ausblenden": "Fîlmên temaşekirî veşêre",
   "Gesehene Serien ausblenden": "Rêzefîlmên temaşekirî veşêre",
   "Serien, bei denen du alle Folgen gesehen hast.": "Rêzefîlmên ku te hemû beşên wan dîtine.",
-  "Filme, die du zu Ende geschaut oder als gesehen markiert hast.": "Fîlmên ku te heta dawiyê temaşe kirine an wekî temaşekirî nîşan kirine."
+  "Filme, die du zu Ende geschaut oder als gesehen markiert hast.": "Fîlmên ku te heta dawiyê temaşe kirine an wekî temaşekirî nîşan kirine.",
+  "Playlist aktiv": "Lîste çalak e",
+  "{0} Titel": "{0} sernav",
+  "Meine Liste": "Lîsteya min",
+  "Zuletzt angesehen": "Dawî temaşe kirî",
+  "Alle anzeigen": "Hemûyan nîşan bide",
+  "S{0}: F{1}": "W{0}: B{1}",
+  "Keine Sender": "Tu îstasyon tune",
+  "Keine Radiosender": "Tu îstasyona radyoyê tune",
+  "In deiner Playlist sind keine Radiosender.": "Di lîsteya te de îstasyonên radyoyê tune ne."
 };

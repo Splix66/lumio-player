@@ -1050,111 +1050,18 @@ body.lite .fh-title { text-shadow: none; }
    Startbildschirm: Live TV / Filme / Serien, Favoriten, Playlist, zuletzt geschaut
    ========================================================== */
 .shell.is-launcher .topnav { display: none; }
-.launcher { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 1.7rem var(--pad) .9rem; overflow: hidden; }
-.launcher > * { position: relative; }
-.launcher > .hero-art { position: absolute; }
-.ln-head { display: flex; align-items: center; flex: none; }
-.ln-head .brand { font-size: 1.6rem; }
-.ln-head .brand-mark { width: 2.5rem; height: 2.5rem; }
-.ln-tools { margin-left: auto; display: flex; align-items: center; }
-.ln-tools > * + * { margin-left: .7rem; }
-.ln-search { display: inline-flex; align-items: center; width: 17rem; height: 3.2rem; padding: 0 1.1rem; border-radius: 999px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line-2); color: var(--muted); font-size: .95rem; }
-.ln-search .i { width: 1.25rem; height: 1.25rem; margin-right: .7rem; }
-.ln-btn { display: inline-flex; align-items: center; height: 3.2rem; padding: 0 1.2rem; border-radius: 999px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line-2); color: var(--text-2); font-weight: 600; font-size: .95rem; }
-.ln-btn .i { width: 1.3rem; height: 1.3rem; margin-right: .6rem; }
-.ln-btn.is-busy .i { animation: spin 1s linear infinite; }
-.ln-round { width: 3.2rem; height: 3.2rem; border-radius: 50%; display: grid; place-items: center; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line-2); color: var(--text-2); }
-.ln-round .i { width: 1.35rem; height: 1.35rem; }
-.ln-search:hover, .ln-btn:hover, .ln-round:hover { background: var(--surface-2); color: var(--text); }
-body.kbd .ln-search.f:focus, body.is-tv .ln-search.f:focus, body.kbd .ln-btn.f:focus, body.is-tv .ln-btn.f:focus, body.kbd .ln-round.f:focus, body.is-tv .ln-round.f:focus { background: var(--text); color: var(--bg); box-shadow: none; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Kacheln + rechte Spalte */
-.ln-grid { flex: 1 1 auto; min-height: 13rem; max-height: 23.5rem; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 1.35fr); grid-gap: 1.1rem; gap: 1.1rem; margin-top: 1.6rem; }
-/* Die drei großen Kacheln sind kräftig eingefärbt – man sieht sofort: hier draufdrücken */
-.ln-tile {
-  position: relative; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  padding: 2.2rem 1rem 1.1rem; border-radius: var(--radius-lg);
-  background: linear-gradient(155deg, var(--k-a) 0%, var(--k-b) 100%);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .16), 0 1.1rem 2.4rem -1.2rem var(--k-b);
-  color: #fff; text-align: center; overflow: hidden; text-shadow: 0 1px 2px rgba(0, 0, 0, .22);
-}
-/* Lichtkante oben und großes Wasserzeichen-Symbol für Tiefe */
-.ln-tile::before { content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: radial-gradient(90% 55% at 50% 0%, rgba(255, 255, 255, .28), transparent 70%); pointer-events: none; }
-.ln-tile:hover { filter: brightness(1.07); }
-.lt-upd { position: absolute; top: .85rem; left: .6rem; right: .6rem; font-size: .74rem; font-weight: 600; color: rgba(255, 255, 255, .82); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ln-tile.is-busy .lt-upd { color: #fff; }
-.lt-ic { position: relative; width: 5.6rem; height: 5.6rem; display: grid; place-items: center; border-radius: 50%; background: rgba(255, 255, 255, .2); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .25); color: #fff; }
-.lt-ic .i { width: 58%; height: 58%; stroke-width: 1.8; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .25)); }
-.lt-label { position: relative; margin-top: .75rem; font-size: 1.95rem; font-weight: 800; letter-spacing: -.03em; line-height: 1.1; }
-.lt-sub { position: relative; margin-top: .3rem; max-width: 100%; color: rgba(255, 255, 255, .9); font-size: .92rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
-/* „Öffnen“-Knopf unten in der Kachel */
-.lt-go { position: relative; display: inline-flex; align-items: center; margin-top: .85rem; padding: .38rem .55rem .38rem .95rem; border-radius: 999px; background: rgba(255, 255, 255, .22); color: #fff; font-size: .86rem; font-weight: 700; text-shadow: none; }
-.lt-go .i { width: 1rem; height: 1rem; margin-left: .25rem; stroke-width: 2.6; }
-.ln-tile:hover .lt-go { background: #fff; color: var(--k-b); }
-body.kbd .ln-tile.f:focus, body.is-tv .ln-tile.f:focus { transform: scale(1.05); filter: brightness(1.08); box-shadow: 0 0 0 .22rem var(--bg), 0 0 0 .45rem #fff, 0 1.4rem 2.8rem -1rem var(--k-b); }
-body.kbd .ln-tile.f:focus .lt-go, body.is-tv .ln-tile.f:focus .lt-go { background: #fff; color: var(--k-b); }
-body.lite .ln-tile.f:focus { filter: none; }
-:root[data-theme="light"] .ln-tile { box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .06), 0 .9rem 1.8rem -1rem var(--k-b); }
 /* Startbildschirm im dunklen Modus etwas heller: violetter Lichtschein statt reinem Schwarz */
 :root[data-theme="dark"] .shell.is-launcher { background: radial-gradient(70% 90% at 0% 0%, rgba(139, 92, 246, .24), transparent 62%), radial-gradient(60% 80% at 100% 100%, rgba(79, 157, 255, .13), transparent 60%), #15141f; }
 :root[data-theme="dark"] .shell.is-launcher .statusbar { background: rgba(255, 255, 255, .03); }
-:root[data-theme="dark"] .launcher .ln-card, :root[data-theme="dark"] .launcher .lr-card { background: rgba(255, 255, 255, .07); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1); }
-:root[data-theme="dark"] .launcher .ln-search, :root[data-theme="dark"] .launcher .ln-btn, :root[data-theme="dark"] .launcher .ln-round { background: rgba(255, 255, 255, .08); }
-.ln-side { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
-.ln-side > * + * { margin-top: 1.1rem; }
-.ln-card { border-radius: var(--radius-lg); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); color: var(--text); }
-.lc-ic { width: 2.9rem; height: 2.9rem; flex: none; display: grid; place-items: center; border-radius: .9rem; background: var(--accent-soft); color: var(--accent-2); }
-.lc-ic .i { width: 1.55rem; height: 1.55rem; }
-.lc-txt { display: flex; flex-direction: column; min-width: 0; margin-left: .9rem; text-align: left; }
-.lc-txt b { font-size: 1.2rem; font-weight: 750; letter-spacing: -.02em; }
-.lc-txt small { color: var(--muted); font-size: .82rem; margin-top: .1rem; }
-.ln-fav { display: flex; align-items: center; padding: 1rem 1.2rem; flex: none; }
-.ln-fav .lc-ic { color: var(--c-live); }
-.ln-fav > .i { margin-left: auto; width: 1.2rem; height: 1.2rem; color: var(--dim); }
-body.kbd .ln-fav.f:focus, body.is-tv .ln-fav.f:focus { background: var(--surface-2); }
-.ln-pl { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: space-between; padding: 1rem 1.2rem 1.1rem; }
-.lp-top { display: flex; align-items: center; }
-.ln-mini { margin-left: auto; padding: .45rem .9rem; border-radius: 999px; background: var(--surface-2); color: var(--text-2); font-size: .82rem; font-weight: 650; }
-.ln-mini:hover { background: var(--surface-3); color: var(--text); }
-body.kbd .ln-mini.f:focus, body.is-tv .ln-mini.f:focus { background: var(--text); color: var(--bg); box-shadow: none; }
-.lp-row { display: flex; padding-top: .9rem; margin-top: .9rem; border-top: 1px solid var(--line); }
-.lp-cell { display: flex; flex-direction: column; min-width: 0; }
-.lp-cell small { color: var(--dim); font-size: .76rem; }
-.lp-cell b { font-size: 1.02rem; font-weight: 700; margin-top: .15rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.lp-exp { margin-left: auto; padding-left: 1rem; text-align: right; flex: none; }
-.lp-cell small.lp-left { margin-top: .15rem; color: var(--muted); }
-.ln-pl.is-warn .lp-exp b, .ln-pl.is-warn .lp-left { color: var(--warn); }
-.ln-pl.is-off .lp-exp b { color: var(--live); }
 
-/* Zuletzt geschaut – bewusst kompakt */
-.ln-recent { flex: none; margin-top: 1.5rem; }
-.lr-title { font-size: 1.1rem; font-weight: 750; letter-spacing: -.01em; padding-left: .7rem; box-shadow: inset .22rem 0 0 var(--accent-2); margin-bottom: .7rem; }
-.lr-track { display: flex; overflow-x: auto; overflow-y: hidden; padding: .3rem .4rem .5rem; margin: -.3rem -.4rem 0; scrollbar-width: none; }
-.lr-track::-webkit-scrollbar { display: none; }
-.lr-track > * + * { margin-left: .8rem; }
-.lr-card { --k: var(--accent-2); position: relative; flex: none; width: 12.5rem; display: flex; flex-direction: column; border-radius: var(--radius); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); overflow: hidden; text-align: left; color: var(--text); }
-.lr-card.k-movie { --k: var(--c-movie); }
-.lr-card.k-series { --k: var(--c-series); }
-.lr-thumb { position: relative; display: block; width: 100%; height: 7rem; overflow: hidden; background: var(--surface-2); }
-.lr-thumb .ph, .lr-thumb img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-.lr-thumb .lr-blur { object-fit: cover; transform: scale(1.25); filter: blur(14px) brightness(.55); }
-.lr-thumb .lr-cover { object-fit: contain; }
-/* Kennzeichnung: Film gelb, Serie blau */
-.lr-tag { position: absolute; top: .45rem; left: .45rem; padding: .12rem .45rem; border-radius: .35rem; background: var(--k); color: #111; font-size: .66rem; font-weight: 800; letter-spacing: .02em; box-shadow: 0 .2rem .6rem rgba(0, 0, 0, .35); }
-.lr-card.k-series .lr-tag { color: #fff; }
-.lr-bar { position: absolute; left: 0; right: 0; bottom: 0; height: .25rem; background: rgba(255, 255, 255, .18); }
-.lr-bar i { display: block; height: 100%; background: var(--k); }
-.lr-txt { display: flex; flex-direction: column; min-width: 0; padding: .55rem .75rem .65rem; }
-.lr-txt b { font-size: .92rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.lr-txt small { margin-top: .15rem; color: var(--muted); font-size: .78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.lr-card.k-series .lr-txt small { color: var(--c-series); }
-body.kbd .lr-card.f:focus, body.is-tv .lr-card.f:focus { transform: scale(1.05); box-shadow: 0 0 0 .18rem var(--bg), 0 0 0 .36rem var(--k); }
 
 /* Fußleiste auf dem Startbildschirm: MAC und KEY groß, Uhr und Datum rechts */
 .sb-clock { display: none; }
 .shell.is-launcher .statusbar { padding: .85rem var(--pad) 1.05rem; }
-.shell.is-launcher .sb-days { display: none; }
+.shell.is-launcher .statusbar .sb-status { display: none; }   /* Status steht auf dem Startbildschirm oben */
+.shell.is-launcher .sb-days:not(:empty) + .sb-clock { margin-left: 2.4rem; }
 .shell.is-launcher .sb-clock { display: flex; align-items: baseline; margin-left: auto; color: var(--muted); font-size: 1.05rem; }
 .shell.is-launcher .sb-clock b { color: var(--text); font-size: 1.3rem; font-weight: 700; font-variant-numeric: tabular-nums; margin-right: .7rem; }
 .shell.is-launcher .statusbar .mac-tag { font-size: 1.2rem; }
@@ -1365,33 +1272,6 @@ body.kbd .lr-card.f:focus, body.is-tv .lr-card.f:focus { transform: scale(1.05);
 
 /* Startbildschirm auf kleinen Bildschirmen */
 @media (orientation: landscape) and (max-height: 540px) {
-  html:not(.tv) .launcher { padding: calc(.7rem + env(safe-area-inset-top)) var(--pad) .4rem calc(var(--pad) + env(safe-area-inset-left)); }
-  html:not(.tv) .ln-head .brand { font-size: 1.25rem; }
-  html:not(.tv) .ln-head .brand-mark { width: 2rem; height: 2rem; }
-  html:not(.tv) .ln-search { width: 12rem; height: 2.5rem; }
-  html:not(.tv) .ln-btn { height: 2.5rem; padding: 0 .9rem; }
-  html:not(.tv) .ln-round { width: 2.5rem; height: 2.5rem; }
-  html:not(.tv) .ln-grid { margin-top: .9rem; min-height: 9.5rem; max-height: 12.5rem; grid-gap: .7rem; gap: .7rem; }
-  html:not(.tv) .ln-tile { padding: 1.6rem .6rem .8rem; }
-  html:not(.tv) .lt-upd { top: .55rem; font-size: .66rem; }
-  html:not(.tv) .lt-ic { width: 3.3rem; height: 3.3rem; }
-  html:not(.tv) .lt-label { font-size: 1.3rem; margin-top: .5rem; }
-  html:not(.tv) .lt-sub { font-size: .78rem; }
-  html:not(.tv) .lt-go { margin-top: .45rem; padding: .22rem .4rem .22rem .7rem; font-size: .72rem; }
-  html:not(.tv) .lt-go .i { width: .8rem; height: .8rem; }
-  html:not(.tv) .ln-side > * + * { margin-top: .7rem; }
-  html:not(.tv) .ln-fav { padding: .6rem .8rem; }
-  html:not(.tv) .ln-pl { padding: .6rem .8rem .7rem; }
-  html:not(.tv) .lc-ic { width: 2.2rem; height: 2.2rem; border-radius: .7rem; }
-  html:not(.tv) .lc-ic .i { width: 1.2rem; height: 1.2rem; }
-  html:not(.tv) .lc-txt b { font-size: 1rem; }
-  html:not(.tv) .lp-row { padding-top: .5rem; margin-top: .5rem; }
-  html:not(.tv) .lp-cell b { font-size: .9rem; }
-  html:not(.tv) .ln-recent { margin-top: .8rem; }
-  html:not(.tv) .lr-title { font-size: .95rem; margin-bottom: .5rem; }
-  html:not(.tv) .lr-card { width: 10rem; }
-  html:not(.tv) .lr-thumb { height: 5.6rem; }
-  html:not(.tv) .lr-txt { padding: .4rem .6rem .5rem; }
   html:not(.tv) .shell.is-launcher .statusbar { padding: .4rem var(--pad) calc(.45rem + env(safe-area-inset-bottom)); }
   html:not(.tv) .shell.is-launcher .statusbar .mac-tag { font-size: .95rem; }
   html:not(.tv) .shell.is-launcher .sb-clock { font-size: .85rem; }
@@ -1403,22 +1283,6 @@ body.kbd .lr-card.f:focus, body.is-tv .lr-card.f:focus { transform: scale(1.05);
   html:not(.tv) .shell.is-launcher .statusbar .mac-tag { font-size: .9rem; flex-wrap: wrap; justify-content: center; }
   html:not(.tv) .shell.is-launcher .statusbar .copy-btn { display: none; }
   html:not(.tv) .shell.is-launcher .sb-clock { display: none; }
-  html:not(.tv) .launcher { overflow-y: auto; padding-top: calc(1rem + env(safe-area-inset-top)); }
-  html:not(.tv) .ln-head { flex-wrap: wrap; }
-  html:not(.tv) .ln-tools { width: 100%; margin: .9rem 0 0; }
-  html:not(.tv) .ln-search { flex: 1; width: auto; }
-  html:not(.tv) .ln-btn span { display: none; }
-  html:not(.tv) .ln-btn { width: 3.2rem; padding: 0; justify-content: center; }
-  html:not(.tv) .ln-btn .i { margin: 0; }
-  html:not(.tv) .ln-grid { flex: none; max-height: none; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 1.1rem; grid-gap: .6rem; gap: .6rem; }
-  html:not(.tv) .ln-tile { padding: 1.7rem .4rem .8rem; min-height: 9.5rem; }
-  html:not(.tv) .lt-upd { font-size: .6rem; top: .5rem; }
-  html:not(.tv) .lt-ic { width: 2.8rem; height: 2.8rem; }
-  html:not(.tv) .lt-go { display: none; }
-  html:not(.tv) .lt-label { font-size: 1.1rem; }
-  html:not(.tv) .lt-sub { font-size: .72rem; }
-  html:not(.tv) .ln-side { grid-column: 1 / -1; }
-  html:not(.tv) .lr-card { width: 11rem; }
 }
 
 /* ==========================================================
@@ -1561,14 +1425,7 @@ html[data-poster="l"] .poster-grid { grid-template-columns: repeat(auto-fill, mi
   html:not(.tv) .pin-pad { margin-top: .6rem; }
 }
 
-/* „Zuletzt geschaut“ nur auf Fernseher, Tablet und PC – auf dem Handy wäre es zu klein */
-@media (orientation: landscape) and (max-height: 540px) {
-  html:not(.tv) .ln-recent { display: none; }
-  html:not(.tv) .ln-grid { max-height: 15rem; }
-  html:not(.tv) .ln-pl .lp-top small { display: none; }
-}
 @media (max-width: 700px) and (orientation: portrait) {
-  html:not(.tv) .ln-recent { display: none; }
 }
 
 /* ==========================================================
@@ -1806,17 +1663,8 @@ body.kbd .top-tools .icon-btn.f:focus, body.is-tv .top-tools .icon-btn.f:focus, 
   html:not(.tv) .top-tools .icon-btn { background: transparent; box-shadow: none; }
 }
 
-/* „NEU“ am Symbol der Kachel, wenn es neue Filme, Serien oder Folgen gibt */
-.lt-new { display: none; position: absolute; top: -.35rem; right: -1.1rem; padding: .22rem .55rem; border-radius: 999px; background: #fff; color: var(--k-b); font-size: .78rem; font-weight: 900; letter-spacing: .04em; text-shadow: none; box-shadow: 0 .3rem .9rem rgba(0, 0, 0, .3); }
-.ln-tile.has-new .lt-new { display: block; animation: newPulse 2.2s ease-in-out infinite; }
 @keyframes newPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
-body.lite .ln-tile.has-new .lt-new { animation: none; }
 
-/* Zuletzt geschaut: Kennzeichnung bündig in der Ecke, Serie kompakt mit Staffel/Folge und Restzeit */
-.lr-tag { top: 0; left: 0; border-radius: 0 0 .6rem 0; padding: .2rem .6rem .25rem .55rem; box-shadow: none; }
-.lr-txt small { display: flex; align-items: center; }
-.lr-ep { flex: none; margin-right: .45rem; padding: .05rem .4rem; border-radius: .3rem; background: rgba(69, 168, 255, .18); color: var(--c-series); font-weight: 800; font-size: .72rem; letter-spacing: .02em; }
-.lr-card.k-series .lr-txt small { color: var(--muted); }
 
 /* Uhr unten rechts: Uhrzeit groß, daneben Wochentag und Datum untereinander */
 .shell.is-launcher .sb-clock { align-items: center; }
@@ -1825,7 +1673,7 @@ body.lite .ln-tile.has-new .lt-new { animation: none; }
 .sb-date i { font-style: normal; color: var(--text); font-weight: 650; font-size: .95rem; }
 .sb-date small { color: var(--muted); font-size: .82rem; }
 /* Arabisch: Texte von rechts nach links lesen, Aufbau der App bleibt gleich */
-html[lang="ar"] h1, html[lang="ar"] h2, html[lang="ar"] h3, html[lang="ar"] p, html[lang="ar"] b, html[lang="ar"] small, html[lang="ar"] .lt-label, html[lang="ar"] .chip-name, html[lang="ar"] .cat-name, html[lang="ar"] .ch-txt, html[lang="ar"] .st-txt, html[lang="ar"] .toast, html[lang="ar"] .hint { unicode-bidi: plaintext; }
+html[lang="ar"] h1, html[lang="ar"] h2, html[lang="ar"] h3, html[lang="ar"] p, html[lang="ar"] b, html[lang="ar"] small, html[lang="ar"] .chip-name, html[lang="ar"] .cat-name, html[lang="ar"] .ch-txt, html[lang="ar"] .st-txt, html[lang="ar"] .toast, html[lang="ar"] .hint { unicode-bidi: plaintext; }
 
 /* ==========================================================
    1.9.1 – Die drei Reiter oben sind jetzt die Überschrift
@@ -1864,14 +1712,6 @@ body.kbd .main-tabs .tab.f:focus, body.is-tv .main-tabs .tab.f:focus { transform
 /* Seiten beginnen jetzt direkt mit dem Inhalt */
 .mv2 { padding-top: .9rem; }
 .section.no-head .section-body { padding-top: .5rem; }
-/* Startseite: nur noch ein Pfeil auf der Kachel, das Wort „Öffnen“ ist weg */
-.lt-go {
-  position: relative; display: grid; place-items: center; margin-top: .9rem;
-  width: 2.1rem; height: 2.1rem; padding: 0; border-radius: 50%;
-  background: rgba(255, 255, 255, .22); color: #fff;
-}
-.lt-go .i { width: 1.15rem; height: 1.15rem; margin: 0; stroke-width: 2.8; }
-.ln-tile:hover .lt-go, body.kbd .ln-tile.f:focus .lt-go, body.is-tv .ln-tile.f:focus .lt-go { background: #fff; color: var(--k-b); }
 
 /* Handy & kleines Tablet: Leiste sitzt unten, deshalb hebt sich der
    gewählte Reiter nach oben statt nach unten */
@@ -1924,18 +1764,6 @@ body.kbd .tr-close.f:focus, body.is-tv .tr-close.f:focus { background: #fff; col
 .web-toggle .i { color: var(--muted); }
 .web-toggle.is-on .i { color: var(--ok); }
 
-/* ==========================================================
-   Startseite, Kacheln ruhiger (Rückmeldung 09.11.2026): kein farbiges Leuchten,
-   kein Pfeil, Symbol ohne Kreis-Umrandung. Die ganze Kachel ist der Knopf.
-   ========================================================== */
-.ln-tile { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1), 0 .6rem 1.4rem -.9rem rgba(0, 0, 0, .55); }
-.ln-tile::before { background: radial-gradient(90% 55% at 50% 0%, rgba(255, 255, 255, .1), transparent 70%); }
-.ln-tile:hover { filter: brightness(1.04); }
-.lt-ic { width: auto; height: auto; background: none; box-shadow: none; border-radius: 0; }
-.lt-ic .i { width: 4.4rem; height: 4.4rem; stroke-width: 1.6; filter: none; }
-.lt-go { display: none; }
-body.kbd .ln-tile.f:focus, body.is-tv .ln-tile.f:focus { filter: none; box-shadow: 0 0 0 .22rem var(--bg), 0 0 0 .45rem #fff; }
-:root[data-theme="light"] .ln-tile { box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .06), 0 .5rem 1.2rem -.8rem rgba(0, 0, 0, .35); }
 
 /* ==========================================================
    Willkommensseite (noch keine Playlist) – Premium-Design
@@ -2158,3 +1986,169 @@ html.tv .wl-main { padding-top: 1.2rem; }
 /* Ruhe für alte Fernseher und „Bewegung reduzieren“ */
 body.lite .wl-card, body.lite .wl-head, body.lite .wl-chip i { animation: none; }
 @media (prefers-reduced-motion: reduce) { .wl-card, .wl-head, .wl-chip i { animation: none; } .wl-btn, .wl-link, .wl .qr.wl-qrcode { transition: none; } }
+
+/* ==========================================================
+   Startbildschirm (Vorlage 09.11.2026): oben Status und Knöpfe, Glas-Kacheln mit
+   Leuchtwelle (Live TV lila, Filme orange, Serien blau), rechts Radio und Favoriten,
+   unten „Zuletzt angesehen“ als breite Bildkarten.
+   ========================================================== */
+.launcher { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 1.4rem 3.4rem .8rem; overflow: hidden; }
+.ln-head { flex: none; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; }
+.ln-head .brand { justify-self: start; font-size: 1.55rem; }
+.ln-head .brand-mark { width: 2.4rem; height: 2.4rem; }
+.ln-status { display: flex; align-items: center; justify-content: center; }
+.ln-chip { display: inline-flex; align-items: center; height: 2.6rem; margin: 0 .3rem; padding: 0 1rem 0 .85rem; border-radius: 999px; background: rgba(255, 255, 255, .05); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1); color: var(--text-2); font-size: .8rem; font-weight: 650; white-space: nowrap; }
+.ln-chip i { width: .48rem; height: .48rem; flex: none; border-radius: 50%; background: var(--dim); }
+.ln-chip .i { width: 1rem; height: 1rem; margin: 0 .45rem 0 .5rem; opacity: .85; }
+.ln-chip.is-ok i { background: #4ade80; box-shadow: 0 0 .45rem rgba(74, 222, 128, .55); }
+.ln-chip.is-warn i { background: #fbbf24; }
+.ln-chip.is-off i { background: #f87171; }
+.ln-chip.is-off { color: #fca5a5; }
+.ln-chip.is-wait i { background: var(--accent); animation: wlPulse 1.6s ease-out infinite; }
+.ln-tools { justify-self: end; display: flex; align-items: center; }
+.ln-tools > * + * { margin-left: .6rem; }
+.ln-round { width: 2.9rem; height: 2.9rem; flex: none; display: grid; place-items: center; border-radius: 50%; background: rgba(255, 255, 255, .05); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12); color: var(--text-2); }
+.ln-round .i { width: 1.25rem; height: 1.25rem; }
+.ln-round.is-busy .i { animation: spin 1s linear infinite; }
+.ln-tools .lang-btn { height: 2.9rem; padding: 0 1rem; border-radius: 999px; background: rgba(255, 255, 255, .05); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12); color: var(--text); white-space: nowrap; }
+.ln-round:hover, .ln-tools .lang-btn:hover { background: rgba(255, 255, 255, .1); color: var(--text); }
+body.kbd .ln-round.f:focus, body.is-tv .ln-round.f:focus, body.kbd .ln-tools .lang-btn.f:focus, body.is-tv .ln-tools .lang-btn.f:focus { background: var(--text); color: var(--bg); box-shadow: none; }
+
+/* Kacheln: Farbe je Bereich als RGB-Wert (--cr), hell (--c1) und kräftig (--c2) */
+.ln-grid { flex: 1 1 auto; min-height: 12rem; max-height: 21rem; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, .7fr); grid-gap: 1.1rem; gap: 1.1rem; margin-top: 1.8rem; }
+.ln-tile.k-live, .ln-card.k-favs { --cr: 168, 85, 247; --c1: #c084fc; --c2: #9333ea; }
+.ln-tile.k-movie { --cr: 245, 158, 11; --c1: #fbbf24; --c2: #f97316; }
+.ln-tile.k-series { --cr: 56, 160, 248; --c1: #7dd3fc; --c2: #3b82f6; }
+.ln-card.k-radio { --cr: 236, 72, 153; --c1: #f9a8d4; --c2: #ec4899; }
+.ln-card.k-favs { --c1: #d8b4fe; }
+.ln-tile, .ln-card {
+  position: relative; min-width: 0; overflow: hidden; color: #fff; border-radius: 1.5rem;
+  background: radial-gradient(120% 70% at 50% 125%, rgba(var(--cr), .42), transparent 62%), linear-gradient(180deg, rgba(var(--cr), .15), rgba(var(--cr), .04) 55%), #15131d;
+  box-shadow: inset 0 0 0 1.5px rgba(var(--cr), .36), 0 1rem 2.2rem -1.6rem rgba(var(--cr), .8);
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.ln-tile { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.4rem 1rem 2.6rem; text-align: center; }
+.lt-wave { position: absolute; left: 0; right: 0; bottom: 0; height: 32%; color: var(--c1); pointer-events: none; }
+.lt-wave svg { display: block; width: 100%; height: 100%; }
+.lt-upd { position: absolute; top: .9rem; left: .8rem; right: .8rem; color: rgba(255, 255, 255, .75); font-size: .74rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lt-upd:empty { display: none; }
+.lt-ic { position: relative; color: var(--c1); }
+.lt-ic .i { display: block; width: 4.6rem; height: 4.6rem; stroke-width: 1.7; filter: drop-shadow(0 0 .9rem rgba(var(--cr), .55)); }
+.lt-label { position: relative; margin-top: 1.1rem; font-size: 2.1rem; font-weight: 800; letter-spacing: -.03em; line-height: 1.1; }
+.lt-sub { position: relative; max-width: 100%; margin-top: .35rem; color: rgba(255, 255, 255, .78); font-size: 1.05rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.lt-go { position: relative; display: grid; place-items: center; width: 2.3rem; height: 2.3rem; margin-top: 1.3rem; border-radius: 50%; background: rgba(255, 255, 255, .1); color: #fff; }
+.lt-go .i { width: 1.1rem; height: 1.1rem; stroke-width: 2.6; }
+.lt-new { display: none; position: absolute; top: -.3rem; right: -1.5rem; padding: .2rem .5rem; border-radius: 999px; background: var(--c2); color: #fff; font-size: .7rem; font-weight: 900; letter-spacing: .04em; box-shadow: 0 0 0 .18rem #15131d; }
+.ln-tile.has-new .lt-new { display: block; animation: newPulse 2.2s ease-in-out infinite; }
+.ln-tile.is-busy .lt-ic { opacity: .6; }
+
+/* Radio und Favoriten */
+.ln-side { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.ln-side > * + * { margin-top: 1.1rem; }
+.ln-card { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: 1rem 3.4rem 1.5rem 1.4rem; text-align: left; }
+.ln-card .lc-ic { position: relative; color: var(--c1); }
+.ln-card .lc-ic .i { display: block; width: 2.7rem; height: 2.7rem; stroke-width: 1.7; filter: drop-shadow(0 0 .7rem rgba(var(--cr), .5)); }
+.ln-card .lc-txt { position: relative; display: flex; flex-direction: column; min-width: 0; max-width: 100%; margin-top: .55rem; }
+.ln-card .lc-txt b { font-size: 1.45rem; font-weight: 800; letter-spacing: -.02em; }
+.ln-card .lc-txt small { margin-top: .15rem; color: rgba(255, 255, 255, .75); font-size: .98rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lc-go { position: absolute; top: 50%; right: 1.1rem; margin-top: -.7rem; color: rgba(255, 255, 255, .7); }
+.lc-go .i { display: block; width: 1.4rem; height: 1.4rem; stroke-width: 2.4; }
+.ln-card .lt-wave { height: 30%; }
+
+.ln-tile:hover, .ln-card:hover { box-shadow: inset 0 0 0 1.5px rgba(var(--cr), .7), 0 1rem 2.2rem -1.4rem rgba(var(--cr), .9); }
+body.kbd .ln-tile.f:focus, body.is-tv .ln-tile.f:focus, body.kbd .ln-card.f:focus, body.is-tv .ln-card.f:focus {
+  transform: scale(1.03); box-shadow: inset 0 0 0 2.5px var(--c1), 0 0 0 .25rem rgba(var(--cr), .28), 0 0 2.6rem rgba(var(--cr), .6);
+}
+body.kbd .ln-tile.f:focus .lt-go, body.is-tv .ln-tile.f:focus .lt-go { background: var(--c1); color: #120f1a; }
+body.kbd .ln-card.f:focus .lc-go, body.is-tv .ln-card.f:focus .lc-go { color: #fff; }
+body.lite .ln-tile, body.lite .ln-card, body.lite .lr-card { transition: none; }
+body.lite .lt-ic .i, body.lite .ln-card .lc-ic .i { filter: none; }
+body.lite .ln-tile.has-new .lt-new { animation: none; }
+
+/* Zuletzt angesehen */
+.ln-recent { flex: none; margin-top: 1.7rem; }
+.lr-head { display: flex; align-items: center; margin-bottom: .8rem; padding: 0 .2rem; }
+.lr-title { display: flex; align-items: center; font-size: 1.35rem; font-weight: 750; letter-spacing: -.01em; }
+.lr-title .i { width: 1.6rem; height: 1.6rem; margin-right: .8rem; color: #c084fc; }
+.lr-all { margin-left: auto; display: inline-flex; align-items: center; padding: .35rem .6rem .35rem .85rem; border-radius: 999px; color: #c084fc; font-size: .92rem; font-weight: 650; }
+.lr-all .i { width: 1rem; height: 1rem; margin-left: .35rem; stroke-width: 2.4; }
+.lr-all:hover { background: rgba(192, 132, 252, .12); }
+body.kbd .lr-all.f:focus, body.is-tv .lr-all.f:focus { background: #c084fc; color: #120f1a; box-shadow: none; }
+.lr-track { display: flex; overflow-x: auto; overflow-y: hidden; padding: .5rem; margin: -.5rem; scrollbar-width: none; }
+.lr-track::-webkit-scrollbar { display: none; }
+.lr-track > * + * { margin-left: 1.1rem; }
+.lr-card { position: relative; flex: none; width: calc((100% - 2.2rem) / 3); height: 10.2rem; overflow: hidden; border-radius: 1.1rem; background: #1a1724; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1); color: #fff; text-align: left; transition: transform .18s ease, box-shadow .18s ease; }
+.lr-art, .lr-art .ph, .lr-art img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.lr-art img { object-fit: cover; }
+.lr-art img.is-poster { object-position: center 22%; }
+.lr-shade { position: absolute; left: 0; right: 0; bottom: 0; height: 72%; background: linear-gradient(180deg, rgba(8, 7, 12, 0), rgba(8, 7, 12, .9)); }
+.lr-info { position: absolute; left: 1.1rem; right: 1.1rem; bottom: 1.4rem; display: flex; align-items: baseline; }
+.lr-info b { flex: 1; min-width: 0; font-size: 1.05rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 3px rgba(0, 0, 0, .5); }
+.lr-info small { flex: none; margin-left: .8rem; color: rgba(255, 255, 255, .9); font-size: .92rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.lr-bar { position: absolute; left: 1.1rem; right: 1.1rem; bottom: .75rem; height: .26rem; overflow: hidden; border-radius: 999px; background: rgba(255, 255, 255, .2); }
+.lr-bar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #a855f7, #c084fc); }
+.lr-card:hover { box-shadow: inset 0 0 0 1px rgba(192, 132, 252, .6); }
+body.kbd .lr-card.f:focus, body.is-tv .lr-card.f:focus { transform: scale(1.03); box-shadow: 0 0 0 .2rem var(--bg), 0 0 0 .42rem #c084fc, 0 0 2rem rgba(168, 85, 247, .5); }
+/* „Alle anzeigen“: alle Einträge als Raster */
+.lr-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-gap: 1rem; gap: 1rem; }
+.lr-grid .lr-card { width: auto; }
+
+/* Helles Design: Glas auf hellem Grund */
+:root[data-theme="light"] .ln-chip, :root[data-theme="light"] .ln-round, :root[data-theme="light"] .ln-tools .lang-btn { background: var(--surface); box-shadow: inset 0 0 0 1px var(--line-2); }
+:root[data-theme="light"] .ln-tile, :root[data-theme="light"] .ln-card { color: var(--text); background: radial-gradient(120% 70% at 50% 125%, rgba(var(--cr), .3), transparent 62%), linear-gradient(180deg, rgba(var(--cr), .12), rgba(var(--cr), .04) 55%), var(--surface); }
+:root[data-theme="light"] .lt-ic, :root[data-theme="light"] .ln-card .lc-ic, :root[data-theme="light"] .lt-wave { color: var(--c2); }
+:root[data-theme="light"] .lt-sub, :root[data-theme="light"] .ln-card .lc-txt small, :root[data-theme="light"] .lc-go { color: var(--muted); }
+:root[data-theme="light"] .lt-go { background: rgba(0, 0, 0, .06); color: var(--text); }
+
+/* Handy quer und kleine Bildschirme */
+@media (orientation: landscape) and (max-height: 540px) {
+  html:not(.tv) .launcher { overflow-y: auto; padding: calc(.6rem + env(safe-area-inset-top)) var(--pad) .6rem calc(var(--pad) + env(safe-area-inset-left)); }
+  html:not(.tv) .ln-head .brand { font-size: 1.2rem; }
+  html:not(.tv) .ln-head .brand-mark { width: 1.9rem; height: 1.9rem; }
+  html:not(.tv) .ln-chip { height: 2.1rem; margin: 0 .15rem; padding: 0 .55rem; }
+  html:not(.tv) .ln-chip span { display: none; }
+  html:not(.tv) .ln-chip .i { margin-right: 0; }
+  html:not(.tv) .ln-round, html:not(.tv) .ln-tools .lang-btn { height: 2.3rem; }
+  html:not(.tv) .ln-round { width: 2.3rem; }
+  html:not(.tv) .ln-round .i { width: 1.05rem; height: 1.05rem; }
+  html:not(.tv) .ln-tools > * + * { margin-left: .4rem; }
+  html:not(.tv) .ln-tools .lang-btn { padding: 0 .7rem; font-size: .8rem; }
+  html:not(.tv) .ln-grid { flex: none; height: 13rem; min-height: 0; margin-top: .9rem; grid-gap: .7rem; gap: .7rem; }
+  html:not(.tv) .ln-tile { padding: .8rem .5rem 1.4rem; border-radius: 1.1rem; }
+  html:not(.tv) .ln-card { padding: .5rem 2.2rem .8rem .9rem; border-radius: 1.1rem; }
+  html:not(.tv) .lt-ic .i { width: 2.8rem; height: 2.8rem; }
+  html:not(.tv) .lt-label { margin-top: .5rem; font-size: 1.35rem; }
+  html:not(.tv) .lt-sub { font-size: .8rem; }
+  html:not(.tv) .lt-go { width: 1.7rem; height: 1.7rem; margin-top: .6rem; }
+  html:not(.tv) .ln-card .lc-ic .i { width: 1.7rem; height: 1.7rem; }
+  html:not(.tv) .ln-card .lc-txt { margin-top: .3rem; }
+  html:not(.tv) .ln-card .lc-txt b { font-size: 1.05rem; }
+  html:not(.tv) .ln-card .lc-txt small { font-size: .75rem; }
+  html:not(.tv) .lc-go { right: .6rem; }
+  html:not(.tv) .ln-side > * + * { margin-top: .7rem; }
+  html:not(.tv) .ln-recent { margin-top: 1rem; }
+  html:not(.tv) .lr-title { font-size: 1rem; }
+  html:not(.tv) .lr-title .i { width: 1.2rem; height: 1.2rem; margin-right: .5rem; }
+  html:not(.tv) .lr-card { width: 15rem; height: 7rem; }
+}
+/* Handy hochkant (Webseite im Browser): Kacheln nebeneinander, Radio und Favoriten darunter */
+@media (max-width: 700px) and (orientation: portrait) {
+  html:not(.tv) .launcher { overflow-y: auto; padding: calc(1rem + env(safe-area-inset-top)) var(--pad) 1rem; }
+  html:not(.tv) .ln-head { grid-template-columns: minmax(0, 1fr) auto; }
+  html:not(.tv) .ln-status { grid-column: 1 / -1; grid-row: 2; margin-top: .8rem; }
+  html:not(.tv) .ln-chip span { display: none; }
+  html:not(.tv) .ln-round { width: 2.4rem; height: 2.4rem; }
+  html:not(.tv) .ln-round[data-key="ln:reload"], html:not(.tv) .ln-round[data-key="ln:help"] { display: none; }
+  html:not(.tv) .ln-tools .lang-btn { height: 2.4rem; padding: 0 .7rem; }
+  html:not(.tv) .ln-grid { flex: none; max-height: none; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 1rem; grid-gap: .6rem; gap: .6rem; }
+  html:not(.tv) .ln-tile { min-height: 9.5rem; padding: 1rem .3rem 1.4rem; }
+  html:not(.tv) .lt-ic .i { width: 2.6rem; height: 2.6rem; }
+  html:not(.tv) .lt-label { font-size: 1.05rem; margin-top: .5rem; }
+  html:not(.tv) .lt-sub { font-size: .72rem; }
+  html:not(.tv) .lt-go { display: none; }
+  html:not(.tv) .ln-side { grid-column: 1 / -1; flex-direction: row; }
+  html:not(.tv) .ln-side > * + * { margin: 0 0 0 .6rem; }
+  html:not(.tv) .ln-card { min-height: 6rem; padding: .8rem 2.4rem 1rem 1rem; }
+  html:not(.tv) .lr-card { width: 80%; height: 9rem; }
+  html:not(.tv) .lr-grid { grid-template-columns: minmax(0, 1fr); }
+}

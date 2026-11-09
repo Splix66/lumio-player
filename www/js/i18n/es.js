@@ -775,5 +775,14 @@ window.LUMIO_I18N["es"] = {
   "Gesehene Filme ausblenden": "Ocultar películas vistas",
   "Gesehene Serien ausblenden": "Ocultar series vistas",
   "Serien, bei denen du alle Folgen gesehen hast.": "Series de las que has visto todos los episodios.",
-  "Filme, die du zu Ende geschaut oder als gesehen markiert hast.": "Películas que viste hasta el final o marcaste como vistas."
+  "Filme, die du zu Ende geschaut oder als gesehen markiert hast.": "Películas que viste hasta el final o marcaste como vistas.",
+  "Playlist aktiv": "Lista activa",
+  "{0} Titel": "{0} títulos",
+  "Meine Liste": "Mi lista",
+  "Zuletzt angesehen": "Vistos recientemente",
+  "Alle anzeigen": "Ver todo",
+  "S{0}: F{1}": "T{0}: E{1}",
+  "Keine Sender": "Sin emisoras",
+  "Keine Radiosender": "No hay emisoras de radio",
+  "In deiner Playlist sind keine Radiosender.": "Tu lista no tiene emisoras de radio."
 };

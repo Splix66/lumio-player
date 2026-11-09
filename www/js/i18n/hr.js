@@ -775,5 +775,14 @@ window.LUMIO_I18N["hr"] = {
   "Gesehene Filme ausblenden": "Sakrij pogledane filmove",
   "Gesehene Serien ausblenden": "Sakrij pogledane serije",
   "Serien, bei denen du alle Folgen gesehen hast.": "Serije kojima si pogledao sve epizode.",
-  "Filme, die du zu Ende geschaut oder als gesehen markiert hast.": "Filmovi koje si pogledao do kraja ili označio kao pogledane."
+  "Filme, die du zu Ende geschaut oder als gesehen markiert hast.": "Filmovi koje si pogledao do kraja ili označio kao pogledane.",
+  "Playlist aktiv": "Playlista aktivna",
+  "{0} Titel": "{0} naslova",
+  "Meine Liste": "Moja lista",
+  "Zuletzt angesehen": "Nedavno gledano",
+  "Alle anzeigen": "Prikaži sve",
+  "S{0}: F{1}": "S{0}: E{1}",
+  "Keine Sender": "Nema stanica",
+  "Keine Radiosender": "Nema radio stanica",
+  "In deiner Playlist sind keine Radiosender.": "Tvoja playlista nema radio stanica."
 };

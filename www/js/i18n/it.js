@@ -775,5 +775,14 @@ window.LUMIO_I18N["it"] = {
   "Gesehene Filme ausblenden": "Nascondi film visti",
   "Gesehene Serien ausblenden": "Nascondi serie viste",
   "Serien, bei denen du alle Folgen gesehen hast.": "Serie di cui hai visto tutti gli episodi.",
-  "Filme, die du zu Ende geschaut oder als gesehen markiert hast.": "Film visti fino alla fine o segnati come visti."
+  "Filme, die du zu Ende geschaut oder als gesehen markiert hast.": "Film visti fino alla fine o segnati come visti.",
+  "Playlist aktiv": "Playlist attiva",
+  "{0} Titel": "{0} titoli",
+  "Meine Liste": "La mia lista",
+  "Zuletzt angesehen": "Visti di recente",
+  "Alle anzeigen": "Mostra tutto",
+  "S{0}: F{1}": "S{0}: E{1}",
+  "Keine Sender": "Nessuna stazione",
+  "Keine Radiosender": "Nessuna stazione radio",
+  "In deiner Playlist sind keine Radiosender.": "La tua playlist non contiene stazioni radio."
 };

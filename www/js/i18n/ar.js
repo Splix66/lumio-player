@@ -775,5 +775,14 @@ window.LUMIO_I18N["ar"] = {
   "Gesehene Filme ausblenden": "إخفاء الأفلام المُشاهدة",
   "Gesehene Serien ausblenden": "إخفاء المسلسلات المُشاهدة",
   "Serien, bei denen du alle Folgen gesehen hast.": "المسلسلات التي شاهدت كل حلقاتها.",
-  "Filme, die du zu Ende geschaut oder als gesehen markiert hast.": "الأفلام التي شاهدتها حتى النهاية أو وضعت عليها علامة كمُشاهدة."
+  "Filme, die du zu Ende geschaut oder als gesehen markiert hast.": "الأفلام التي شاهدتها حتى النهاية أو وضعت عليها علامة كمُشاهدة.",
+  "Playlist aktiv": "قائمة التشغيل نشطة",
+  "{0} Titel": "{0} عنوان",
+  "Meine Liste": "قائمتي",
+  "Zuletzt angesehen": "شوهد مؤخرًا",
+  "Alle anzeigen": "عرض الكل",
+  "S{0}: F{1}": "م{0}: ح{1}",
+  "Keine Sender": "لا توجد محطات",
+  "Keine Radiosender": "لا توجد محطات راديو",
+  "In deiner Playlist sind keine Radiosender.": "لا تحتوي قائمة التشغيل على محطات راديو."
 };

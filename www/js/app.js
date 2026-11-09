@@ -706,7 +706,8 @@
                 return {
                   kind: 'episode', id: String(e.id), num: Number(e.episode_num) || 0, season: Number(k),
                   name: e.title || T('Folge {0}', e.episode_num), ext: e.container_extension || 'mp4',
-                  plot: ei.plot, duration: ei.duration, seriesId: item.id, seriesName: item.name, logo: ei.movie_image || item.logo
+                  plot: ei.plot, duration: ei.duration, seriesId: item.id, seriesName: item.name, logo: ei.movie_image || item.logo,
+                  backdrop: Array.isArray(i.backdrop_path) ? i.backdrop_path[0] : i.backdrop_path
                 };
               }).sort(function (a, b) { return a.num - b.num; })
             };
@@ -2965,14 +2966,14 @@
       self.player = 'wait';
       ensureHls().then(function (Hls) { self.player = Hls && Hls.isSupported() ? 'ok' : 'off'; self.paint(); StatusLine.paint(); }, function () { self.player = 'off'; self.paint(); StatusLine.paint(); });
     },
-    // [Zustand, Symbol, Text] für Internet, Player und Playlist
-    items: function () {
+    // [Zustand, Symbol, Text] für Internet, Player und Playlist. active: eine Playlist ist gerade geöffnet
+    items: function (active) {
       this.checkPlayer();
       var n = this.net(), pl = Profiles.list().length;
       return [
         [n[0], 'wifi', n[1]],
         [this.player, 'player', this.player === 'ok' ? T('Player bereit') : this.player === 'wait' ? T('Player wird geprüft …') : T('Player eingeschränkt')],
-        [pl ? 'ok' : 'none', 'playlist', pl ? T('Playlist hinterlegt') : T('Keine Playlist')]
+        active ? ['ok', 'playlist', T('Playlist aktiv')] : [pl ? 'ok' : 'none', 'playlist', pl ? T('Playlist hinterlegt') : T('Keine Playlist')]
       ];
     },
     paint: function () {
@@ -2990,14 +2991,15 @@
       window.addEventListener('online', tick); window.addEventListener('offline', tick);
     }
   };
-  /* Dieselbe Statusanzeige klein in der Fußleiste neben MAC und KEY, sobald eine Playlist da ist – immer sichtbar */
+  /* Statusanzeige, sobald eine Playlist geöffnet ist – immer sichtbar:
+     auf dem Startbildschirm oben als Chips (cls 'ln-status'), sonst klein in der Fußleiste neben MAC und KEY ('sb-status') */
   var StatusLine = {
-    box: null, sig: '', timer: null, wired: false,
-    el: function () {
-      var self = this, box = h('div', { class: 'sb-status', role: 'status', 'aria-live': 'polite' });
-      self.box = box; self.sig = ''; self.paint();
-      clearInterval(self.timer);
-      self.timer = setInterval(function () { if (!document.body.contains(box)) { clearInterval(self.timer); return; } self.paint(); }, 5000);
+    boxes: [], timer: null, wired: false,
+    el: function (cls) {
+      var self = this, box = h('div', { class: cls || 'sb-status', role: 'status', 'aria-live': 'polite' });
+      box._chips = cls === 'ln-status';
+      self.boxes.push(box); self.paintBox(box);
+      if (!self.timer) self.timer = setInterval(function () { self.paint(); }, 5000);
       if (!self.wired) {
         self.wired = true;
         window.addEventListener('online', function () { self.paint(); });
@@ -3006,12 +3008,20 @@
       return box;
     },
     paint: function () {
-      var box = this.box;
-      if (!box) return;
-      var items = WelcomeStatus.items(), sig = items.map(function (it) { return it[0] + it[2]; }).join('|');
-      if (sig === this.sig) return;
-      this.sig = sig; clear(box);
-      items.forEach(function (it) { box.appendChild(h('span', { class: 'sb-st is-' + it[0], title: it[2] }, h('i', { 'aria-hidden': 'true' }), h('span', { text: it[2] }))); });
+      var self = this;
+      // nicht mehr angezeigte Felder vergessen (Startbildschirm wird bei jedem Besuch neu gebaut)
+      self.boxes = self.boxes.filter(function (b) { var on = document.body.contains(b); if (on) b._seen = true; return on || !b._seen; });
+      self.boxes.forEach(function (b) { self.paintBox(b); });
+    },
+    paintBox: function (box) {
+      var items = WelcomeStatus.items(true), sig = items.map(function (it) { return it[0] + it[2]; }).join('|');
+      if (sig === box._sig) return;
+      box._sig = sig; clear(box);
+      items.forEach(function (it) {
+        box.appendChild(box._chips
+          ? h('span', { class: 'ln-chip is-' + it[0] }, h('i', { 'aria-hidden': 'true' }), icon(it[1]), h('span', { text: it[2] }))
+          : h('span', { class: 'sb-st is-' + it[0], title: it[2] }, h('i', { 'aria-hidden': 'true' }), h('span', { text: it[2] })));
+      });
     }
   };
   /* Kurze Hilfe auf der Willkommensseite */
@@ -3403,37 +3413,110 @@
   function some(list, fn) { for (var i = 0; i < list.length; i++) if (fn(list[i])) return true; return false; }
 
   /* ---------- Startbildschirm ----------
-     Oben Suche, Aktualisieren, Einstellungen. Darunter Live TV / Filme / Serien mit Anzahl und Stand,
-     rechts Favoriten und die aktive Playlist mit Laufzeit, unten kompakt „Zuletzt geschaut“. */
+     Oben Logo, Status (Internet, Player, Playlist) und Knöpfe (Suche, Aktualisieren, Einstellungen, Hilfe, Sprache).
+     Darunter Live TV / Filme / Serien als große Glas-Kacheln, rechts Radio und Favoriten,
+     unten „Zuletzt angesehen“ als breite Bildkarten. */
+  var launcherRadio = false;   // zuletzt über „Radio“ zu Live TV gegangen → beim Zurückkommen dort den Fokus
+  function fmtHMS(sec) {
+    sec = Math.max(0, Math.floor(sec || 0));
+    var p2 = function (n) { return n < 10 ? '0' + n : '' + n; };
+    return p2(Math.floor(sec / 3600)) + ':' + p2(Math.floor((sec % 3600) / 60)) + ':' + p2(sec % 60);
+  }
+  // Leuchtende Welle unten in den Kacheln (Farbe kommt aus CSS über currentColor)
+  function waveArt() {
+    var w = h('span', { class: 'lt-wave', 'aria-hidden': 'true' });
+    w.innerHTML = '<svg viewBox="0 0 400 100" preserveAspectRatio="none">' +
+      '<path d="M0 62C70 40 150 86 240 62S360 34 400 44V100H0Z" fill="currentColor" opacity=".16"/>' +
+      '<path d="M0 78C90 58 170 96 260 74S370 56 400 64V100H0Z" fill="currentColor" opacity=".22"/>' +
+      '<path d="M0 62C70 40 150 86 240 62S360 34 400 44" fill="none" stroke="currentColor" stroke-width="2.2" opacity=".85" vector-effect="non-scaling-stroke"/></svg>';
+    return w;
+  }
+  // „Zuletzt angesehen“: breite Bildkarte (Hintergrundbild, Titel, Restzeit oder Folge, Fortschritt)
+  function recentCard(r, onOpen) {
+    var it = r.item, u = r.upNext, ep = it.kind === 'episode' || !!u;
+    var name = ep ? (it.seriesName || (u && u.series.name) || it.name) : it.name;
+    var src = it.backdrop || it.logo || (u && u.series.logo);
+    var art = h('span', { class: 'lr-art' }, h('span', { class: 'ph', style: 'background:' + gradientFor(name) }));
+    if (src) art.appendChild(img(src, it.backdrop ? 'is-wide' : 'is-poster', function (i) { if (i.parentNode) i.parentNode.removeChild(i); }));
+    var right = ep && it.season ? T('S{0}: F{1}', it.season, it.num) : r.d ? fmtHMS(r.d - r.t) : '';
+    var pct = r.d ? Math.max(3, Math.min(100, Math.round(r.t / r.d * 100))) : 0;
+    var label = name + (right ? ' – ' + (ep ? right : T('Noch {0}', fmtLeft(r.d - r.t))) : '');
+    var sid = it.seriesId || (u && u.series.id);
+    return h('button', { class: 'lr-card f k-' + (ep ? 'series' : 'movie'), 'data-key': 'lr:' + (ep ? 'series:' + sid : 'movie:' + it.id), title: label, 'aria-label': label,
+      onclick: function () { (onOpen || openContinue)(r); } },
+      art, h('span', { class: 'lr-shade' }),
+      h('span', { class: 'lr-info' }, h('b', { text: name }), right ? h('small', { text: right }) : null),
+      h('span', { class: 'lr-bar' }, h('i', { style: 'width:' + pct + '%' })));
+  }
+  function recentEntries() {
+    return Resume.recent().filter(function (r) { return r.item && (r.item.kind === 'movie' || r.item.kind === 'episode'); })
+      .concat(UpNext.entries()).sort(function (a, b) { return b.at - a.at; });
+  }
+  function showAllRecent() {
+    var grid = h('div', { class: 'lr-grid' });
+    recentEntries().slice(0, 20).forEach(function (r) {
+      grid.appendChild(recentCard(r, function (x) { goBack(); setTimeout(function () { openContinue(x); }, 60); }));
+    });
+    openSheet(T('Zuletzt angesehen'), 'history', grid, { wide: true });
+  }
+  function openRadio() {
+    var st = Stats.get();
+    if (st.radio && !st.radio.n) { toast(T('In deiner Playlist sind keine Radiosender.')); return; }
+    launcherRadio = true;
+    lastCat[pid() + 'live'] = '__radio'; lastGroup[pid() + 'live'] = null;
+    Shell.show('live', true);
+  }
+
   function LauncherView(focusKind) {
-    var p = App.profile, busy = false;
+    var busy = false;
     // Kindersicherung: entsperrte Kategorien sind wieder zu, sobald man zum Startbildschirm zurückkommt
     if (Parental.unlocked) { Parental.unlocked = false; searchCache = {}; }
-    var want = focusKind === 'movie' || focusKind === 'series' || focusKind === 'favs' || focusKind === 'profile' || focusKind === 'settings' ? focusKind : 'live';
+    var want = focusKind === 'movie' || focusKind === 'series' || focusKind === 'favs' || focusKind === 'settings' ? focusKind
+      : focusKind === 'live' && launcherRadio ? 'radio' : 'live';
+    launcherRadio = false;
 
     // Kopfzeile
-    var searchBtn = h('button', { class: 'ln-search f', 'data-key': 'ln:search', onclick: function () { QuickSearch.toggle(searchBtn); } },
-      icon('search'), h('span', { text: T('Suche') }));
-    var reloadBtn = h('button', { class: 'ln-round f', 'data-key': 'ln:reload', title: T('Playlist aktualisieren'), 'aria-label': T('Playlist aktualisieren'), onclick: reloadWithSplash }, icon('refresh'));
-    var setBtn = h('button', { class: 'ln-round f', 'data-key': 'ln:settings', 'data-autofocus': want === 'settings' ? true : null, title: T('Einstellungen'), 'aria-label': T('Einstellungen'), onclick: function () { Shell.show('settings', true); } }, icon('settings'));
-    var head = h('header', { class: 'ln-head' }, h('div', { class: 'brand' }, brandMark(), wordmark()), h('div', { class: 'ln-tools' }, searchBtn, reloadBtn, setBtn));
+    function round(key, ic, label, fn) {
+      return h('button', { class: 'ln-round f', 'data-key': 'ln:' + key, 'data-autofocus': want === key ? true : null, title: label, 'aria-label': label, onclick: fn }, icon(ic));
+    }
+    var searchBtn = round('search', 'search', T('Suche'), function () { QuickSearch.toggle(searchBtn); });
+    var reloadBtn = round('reload', 'refresh', T('Playlist aktualisieren'), reloadWithSplash);
+    var head = h('header', { class: 'ln-head' },
+      h('div', { class: 'brand' }, brandMark(), wordmark()),
+      StatusLine.el('ln-status'),
+      h('div', { class: 'ln-tools' }, searchBtn, reloadBtn,
+        round('settings', 'settings', T('Einstellungen'), function () { Shell.show('settings', true); }),
+        round('help', 'help', T('Hilfe'), showWelcomeHelp), langButton()));
 
     // Live TV / Filme / Serien
     function tile(kind, label, unit, none) {
       var upd = h('span', { class: 'lt-upd' }), cnt = h('span', { class: 'lt-sub' });
       var b = h('button', { class: 'ln-tile f k-' + kind, 'data-key': 'ln:' + kind, 'data-autofocus': kind === want ? true : null, onclick: function () { Shell.show(kind, true); } },
-        upd, h('span', { class: 'lt-ic' }, icon(kind), kind !== 'live' ? h('span', { class: 'lt-new', text: T('NEU') }) : null), h('span', { class: 'lt-label', text: label }), cnt,
-        h('span', { class: 'lt-go', 'aria-hidden': 'true' }, icon('next')));
+        waveArt(), upd, h('span', { class: 'lt-ic' }, icon(kind), kind !== 'live' ? h('span', { class: 'lt-new', text: T('NEU') }) : null),
+        h('span', { class: 'lt-label', text: label }), cnt, h('span', { class: 'lt-go', 'aria-hidden': 'true' }, icon('next')));
       b._upd = upd; b._cnt = cnt; b._unit = unit; b._none = none; b._kind = kind;
       return b;
     }
-    var tiles = [tile('live', T('Live TV'), '{0} Sender', T('Alle Sender')), tile('movie', T('Filme'), '{0} Filme', T('Alle Filme')), tile('series', T('Serien'), '{0} Serien', T('Alle Serien'))];
+    var tiles = [tile('live', T('Live TV'), '{0} Sender', T('Alle Sender')), tile('movie', T('Filme'), '{0} Titel', T('Alle Filme')), tile('series', T('Serien'), '{0} Serien', T('Alle Serien'))];
+
+    // Radio und Favoriten (rechte Spalte)
+    function card(key, ic, label, fn) {
+      var sub = h('small');
+      var b = h('button', { class: 'ln-card f k-' + key, 'data-key': 'ln:' + key, 'data-autofocus': want === key ? true : null, onclick: fn },
+        waveArt(), h('span', { class: 'lc-ic' }, icon(ic)), h('span', { class: 'lc-txt' }, h('b', { text: label }), sub), h('span', { class: 'lc-go', 'aria-hidden': 'true' }, icon('next')));
+      b._sub = sub;
+      return b;
+    }
+    var radioCard = card('radio', 'radio', T('Radio'), openRadio);
+    var favCard = card('favs', 'heart', T('Favoriten'), function () { Shell.show('favs', true); });
+    favCard._sub.textContent = T('Meine Liste');
+
     function paintStats() {
       var st = Stats.get();
       tiles.forEach(function (t) {
         var x = st[t._kind];
         t.classList.toggle('is-busy', busy);
-        t._upd.textContent = busy ? T('Wird aktualisiert …') : x ? T('Aktualisiert {0}', ago(x.at)) : '';
+        t._upd.textContent = busy ? T('Wird aktualisiert …') : '';
         t._cnt.textContent = x ? T(t._unit, fmtCount(x.n)) : t._none;
         if (t._kind !== 'live') {
           var isNew = !busy && NewMark.has(t._kind);
@@ -3441,69 +3524,25 @@
           t.setAttribute('aria-label', t._kind === 'movie' ? T('Filme') + (isNew ? ' – ' + T('Neue Filme') : '') : T('Serien') + (isNew ? ' – ' + T('Neue Serien oder Folgen') : ''));
         }
       });
+      var r = st.radio;
+      radioCard._sub.textContent = r ? (r.n ? T('{0} Sender', fmtCount(r.n)) : T('Keine Sender')) : '…';
+      radioCard.classList.toggle('is-empty', !!r && !r.n);
     }
+    // Radiosender noch nie gezählt (z. B. nach einem Update): einmal im Hintergrund zählen
+    if (Stats.get().live && !Stats.get().radio) catCounts('live').then(function () { paintStats(); }, function () {});
 
-    // Favoriten
-    var favN = h('small');
-    var favCard = h('button', { class: 'ln-card ln-fav f', 'data-key': 'ln:favs', 'data-autofocus': want === 'favs' ? true : null, onclick: function () { Shell.show('favs', true); } },
-      h('span', { class: 'lc-ic' }, icon('heart')), h('span', { class: 'lc-txt' }, h('b', { text: T('Favoriten') }), favN), icon('next'));
-    function paintFavs() {
-      var a = Favs.all(), n = (a.live || []).length + (a.movie || []).length + (a.series || []).length;
-      favN.textContent = n === 1 ? T('1 Eintrag') : T('{0} Einträge', n);
-    }
-
-    // Aktive Playlist mit Laufzeit
-    var nPl = Profiles.list().length;
-    var expEl = h('b', { text: '…' }), leftEl = h('small', { class: 'lp-left' });
-    var plCard = h('div', { class: 'ln-card ln-pl' },
-      h('div', { class: 'lp-top' },
-        h('span', { class: 'lc-ic' }, icon('playlist')),
-        h('span', { class: 'lc-txt' }, h('b', { text: T('Playlist') }), h('small', { text: nPl === 1 ? T('1 Playlist') : T('{0} Playlists', nPl) })),
-        h('button', { class: 'ln-mini f', 'data-key': 'ln:profile', 'data-autofocus': want === 'profile' ? true : null, onclick: function () { Shell.show('profile', true); } }, T('Verwalten'))),
-      h('div', { class: 'lp-row' },
-        h('div', { class: 'lp-cell' }, h('small', { text: T('Aktuelle Playlist') }), h('b', { text: p.type === 'demo' ? T('Demo-Modus') : p.name })),
-        h('div', { class: 'lp-cell lp-exp' }, h('small', { text: T('Gültig bis') }), expEl, leftEl)));
-    function paintExpiry() {
-      App.provider.account().then(function (a) {
-        if (!a || a.expires === undefined) { expEl.textContent = '—'; return; }
-        if (!a.expires) { expEl.textContent = T('unbegrenzt'); return; }
-        var days = Math.ceil((Number(a.expires) * 1000 - Date.now()) / 86400000);
-        expEl.textContent = fmtDate(a.expires);
-        leftEl.textContent = days <= 0 ? T('abgelaufen') : days === 1 ? T('noch 1 Tag') : T('noch {0} Tage', days);
-        plCard.classList.toggle('is-warn', days > 0 && days <= 30);
-        plCard.classList.toggle('is-off', days <= 0);
-      }).catch(function () { expEl.textContent = T('keine Verbindung'); plCard.classList.add('is-off'); });
-    }
-
-    // Zuletzt geschaut: angefangene Filme (gelb) und Serien (blau) als Bildkarten – keine Live-Sender
+    // Zuletzt angesehen
     var recent = h('section', { class: 'ln-recent' });
-    function recCard(r) {
-      var it = r.item, ep = it.kind === 'episode' || !!r.upNext, kind = ep ? 'series' : 'movie';
-      var src = it.logo || it.backdrop || (r.upNext && r.upNext.series.logo);
-      var thumb = h('span', { class: 'lr-thumb' }, h('span', { class: 'ph', style: 'background:' + gradientFor(it.seriesName || it.name) }));
-      if (src) {
-        // Cover vollständig zeigen, dahinter dasselbe Bild unscharf als Hintergrund
-        if (!Platform.lite) thumb.appendChild(img(src, 'lr-blur', function (i) { if (i.parentNode) i.parentNode.removeChild(i); }));
-        thumb.appendChild(img(src, 'lr-cover', function (i) { if (i.parentNode) i.parentNode.removeChild(i); }));
-      }
-      thumb.appendChild(h('span', { class: 'lr-tag', text: ep ? T('Serie') : T('Film') }));
-      if (!r.upNext) thumb.appendChild(h('span', { class: 'lr-bar' }, h('i', { style: 'width:' + Math.max(3, Math.round(r.t / r.d * 100)) + '%' })));
-      var u = r.upNext, sid = it.seriesId || (u && u.series.id), name = ep ? (it.seriesName || it.name) : u ? u.series.name : it.name;
-      return h('button', { class: 'lr-card f k-' + kind, 'data-key': 'lr:' + (ep || u ? 'series:' + sid : 'movie:' + it.id), title: name, onclick: function () { openContinue(r); } },
-        thumb,
-        h('span', { class: 'lr-txt' },
-          h('b', { text: name }),
-          h('small', null, u ? h('span', { text: upNextText(u) }) : [ep ? h('span', { class: 'lr-ep', text: 'S' + it.season + ' E' + it.num }) : null, h('span', { text: T('Noch {0}', fmtLeft(r.d - r.t)) })])));
-    }
     function paintRecent() {
       clear(recent);
-      var res = Resume.recent().filter(function (r) { return r.item && (r.item.kind === 'movie' || r.item.kind === 'episode'); })
-        .concat(UpNext.entries()).sort(function (a, b) { return b.at - a.at; }).slice(0, 10);
+      var res = recentEntries();
       recent.hidden = !res.length;
       if (!res.length) return;
       var track = h('div', { class: 'lr-track' });
-      res.forEach(function (r) { track.appendChild(recCard(r)); });
-      recent.appendChild(h('h2', { class: 'lr-title', text: T('Zuletzt geschaut') }));
+      res.slice(0, 10).forEach(function (r) { track.appendChild(recentCard(r)); });
+      recent.appendChild(h('div', { class: 'lr-head' },
+        h('h2', { class: 'lr-title' }, icon('movie'), h('span', { text: T('Zuletzt angesehen') })),
+        h('button', { class: 'lr-all f', 'data-key': 'lr:all', onclick: showAllRecent }, h('span', { text: T('Alle anzeigen') }), icon('next'))));
       recent.appendChild(track);
     }
 
@@ -3513,7 +3552,7 @@
       busy = true; reloadBtn.classList.add('is-busy'); paintStats();
       refreshPlaylist().then(function (r) {
         busy = false; reloadBtn.classList.remove('is-busy');
-        paintStats(); paintExpiry();
+        paintStats();
         // alles frisch: die 30-Minuten-Pause gilt nur nach einem Fehlschlag
         if (!Stats.stale()) autoTried = 0;
         if (r.error) { if (!quiet) toast(T('Hinweis: {0}', r.error.message || T('Verbindung fehlgeschlagen.')), 4000); }
@@ -3528,12 +3567,12 @@
       doRefresh(false, !first);
     }
 
-    var el = h('div', { class: 'launcher' }, heroArt(), head,
-      h('div', { class: 'ln-grid' }, tiles[0], tiles[1], tiles[2], h('div', { class: 'ln-side' }, favCard, plCard)),
+    var el = h('div', { class: 'launcher' }, head,
+      h('div', { class: 'ln-grid' }, tiles[0], tiles[1], tiles[2], h('div', { class: 'ln-side' }, radioCard, favCard)),
       recent);
-    paintStats(); paintFavs(); paintExpiry(); paintRecent();
+    paintStats(); paintRecent();
 
-    // Uhr und Datum unten rechts (in der Fußleiste), „vor X Min.“ laufend aktualisieren
+    // Uhr und Datum unten rechts (in der Fußleiste)
     function tick() {
       var c = $('.sb-clock'), d = new Date();
       if (c) {
@@ -3546,7 +3585,7 @@
       if (!busy) paintStats();
     }
     setTimeout(tick, 0);
-    // alle 20 Sekunden: Uhr und „vor X Min.“ aktualisieren, veraltete Listen nachladen (Box bleibt oft tagelang an)
+    // alle 20 Sekunden: Uhr aktualisieren, veraltete Listen nachladen (Box bleibt oft tagelang an)
     var timer = setInterval(function () { tick(); autoCheck(); }, 20000);
     // Erste Nutzung oder Listen älter als 12 Stunden: kurz nach dem Öffnen im Hintergrund neu laden
     setTimeout(autoCheck, 1500);
@@ -3554,7 +3593,7 @@
     // nach dem Schauen nur die Inhalte auffrischen, Fokus bleibt auf derselben Karte
     el._refresh = function () {
       var sc = Screens.top(), lf = sc && sc.lastFocus, key = lf && lf.getAttribute && lf.getAttribute('data-key');
-      paintRecent(); paintFavs(); paintStats();
+      paintRecent(); paintStats();
       if (sc && key && !el.contains(lf)) sc.lastFocus = $('[data-key="' + key + '"]', el) || tiles[0];
       setTimeout(autoCheck, 1500);
     };
@@ -3901,17 +3940,37 @@
   function catCounts(kind) {
     var owner = pid(), k = owner + kind;
     if (!countCache[k]) {
-      countCache[k] = App.provider.items(kind, '__all').then(function (list) {
-        var by = {};
+      var catsP = kind === 'live' ? App.provider.categories('live').then(null, function () { return []; }) : Promise.resolve(null);
+      countCache[k] = Promise.all([App.provider.items(kind, '__all'), catsP]).then(function (r) {
+        var list = r[0], by = {};
         var newest = 0;
         list.forEach(function (x) { var c = String(x.catId); by[c] = (by[c] || 0) + 1; var a = Number(x.added) || 0; if (a > newest) newest = a; });
         // Ergebnis gehört zur Playlist, die beim Start aktiv war (Wechsel während des Ladens → keine falschen Zahlen)
         Stats.set(kind, list.length, newest, owner);
-        return { by: by, total: list.length };
+        var out = { by: by, total: list.length };
+        if (r[1]) {
+          var ids = radioIds(r[1]), n = 0;
+          Object.keys(ids).forEach(function (id) { n += by[id] || 0; });
+          Stats.set('radio', n, 0, owner);
+          out.radio = n;
+        }
+        return out;
       });
       countCache[k].catch(function () { delete countCache[k]; });
     }
     return countCache[k];
+  }
+  /* Radio: Sender in Kategorien, deren Name nach Radio aussieht („Radio“, „Radyo“ …) – ausgeblendete Kategorien zählen nicht */
+  function radioIds(cats) {
+    var ids = {};
+    visibleCats('live', cats || []).forEach(function (c) { if (RADIO_RE.test(c.orig || c.full || c.name)) ids[String(c.id)] = 1; });
+    return ids;
+  }
+  function radioItems() {
+    return App.provider.categories('live').then(function (cs) {
+      var ids = radioIds(cs);
+      return App.provider.items('live', '__all').then(function (list) { return list.filter(function (x) { return ids[String(x.catId)]; }); });
+    });
   }
   function fmtCount(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, Lang.cur === 'en' ? ',' : '.'); }
 
@@ -3940,6 +3999,7 @@
         if (!slot) continue;
         if (b._group) { n = 0; b._group.cats.forEach(function (c) { n += counts.by[c.id] || 0; }); }
         else if (b._cat && b._cat.local) n = b._cat.local().length;
+        else if (b._cat && b._cat.id === '__radio') n = counts.radio != null ? counts.radio : null;
         else if (b._cat) n = b._cat.id === '__all' ? counts.total : (counts.by[b._cat.id] || 0);
         if (n !== null) slot.textContent = fmtCount(n);
       }
@@ -4009,7 +4069,7 @@
 
     function selectCat(cat, focusList) {
       // Gesperrte Kategorie (Kindersicherung): nur nach PIN – beim automatischen Öffnen stattdessen „Alle“
-      if (!cat.local && cat.id !== '__all' && Parental.blocked(kind, cat)) {
+      if (!cat.local && !cat.load && cat.id !== '__all' && Parental.blocked(kind, cat)) {
         if (focusList) { Parental.ask(function () { selectCat(cat, true); }); return; }
         cat = allCat;
       }
@@ -4020,7 +4080,7 @@
       if (chunker) { chunker.dispose(); chunker = null; }
       clear(items).appendChild(loader());
       Shell.setCount(kind, '');
-      (cat.local ? Promise.resolve(cat.local()) : cat.id === '__all' ? visibleItems(kind, App.provider.items(kind, cat.id)) : App.provider.items(kind, cat.id)).then(function (list) {
+      (cat.local ? Promise.resolve(cat.local()) : cat.load ? cat.load() : cat.id === '__all' ? visibleItems(kind, App.provider.items(kind, cat.id)) : App.provider.items(kind, cat.id)).then(function (list) {
         if (my !== req) return;
         if (kind === 'live' && !cat.local) list = ChanHide.filter(list);
         if (kind === 'live' && cat.id !== '__recent') list = sortChannels(list);
@@ -4032,6 +4092,7 @@
         if (!list.length) {
           items.appendChild(cat.id === '__fav' ? stateBox(T('Noch keine Lieblingssender'), T('Wähle im Player bei einem Sender „Merken“ – dann erscheint er hier.'))
             : cat.id === '__recent' ? stateBox(T('Noch nichts geschaut'), T('Die zuletzt gesehenen Sender erscheinen hier.'))
+            : cat.id === '__radio' ? stateBox(T('Keine Radiosender'), T('In deiner Playlist sind keine Radiosender.'))
             : stateBox(T('Keine Einträge'), T('In dieser Kategorie ist gerade nichts enthalten.')));
           return;
         }
@@ -4072,7 +4133,12 @@
 
     App.provider.categories(kind).then(function (list) {
       list = visibleCats(kind, list || []);
-      var want = lastCat[key], target = null;
+      var want = lastCat[key], target = null, radioCat = null;
+      // Radio (vom Startbildschirm): alle Radiosender als eigene Liste unter „Zuletzt gesehen“
+      if (kind === 'live' && Object.keys(radioIds(list)).length) {
+        radioCat = { id: '__radio', name: T('Radio'), ic: 'radio', load: radioItems };
+        extraCats.push(radioCat);
+      }
       groups = groupCats(list);
       if (!groups) {
         // Keine Sprachen erkannt: alle Kategorien untereinander wie bisher
@@ -4091,6 +4157,7 @@
           if (!target) target = groups[0].cats[0];
         }
       }
+      if (want === '__radio' && radioCat) target = radioCat;
       selectCat(target, false);
       if (document.activeElement === document.body) Nav.focus(activeButton() || cats.children[0]);
       catCounts(kind).then(function (c) { counts = c; paintCounts(); }).catch(function () {});
