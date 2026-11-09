@@ -2,6 +2,11 @@
 'use strict';
 window.LUMIO_I18N = {
   en: {
+    'Bereit loszulegen?': 'Ready to get started?',
+    'App installieren, QR-Code scannen, Playlist eintragen – in wenigen Minuten läuft dein Programm.': 'Install the app, scan the QR code, add your playlist – you’ll be watching in a few minutes.',
+    'Der IPTV-Player für deine eigene Playlist – auf Fire TV, Android, Windows und Mac.': 'The IPTV player for your own playlist – on Fire TV, Android, Windows and Mac.',
+    'Produkt': 'Product',
+    'Rechtliches': 'Legal',
     'Lumio Player – Kundenbereich': 'Lumio Player – Customer area',
     "Systemanforderungen": "System requirements",
     "Das brauchst du mindestens, damit Lumio Player läuft.": "The minimum you need to run Lumio Player.",
@@ -173,6 +178,11 @@ window.LUMIO_I18N = {
     'Lumio Player ist nur der Player und enthält keine Sender oder Inhalte. Die Playlist bekommst du von deinem IPTV-Anbieter.': 'Lumio Player is only the player and contains no channels or content. You get the playlist from your IPTV provider.'
   },
   tr: {
+    'Bereit loszulegen?': 'Başlamaya hazır mısın?',
+    'App installieren, QR-Code scannen, Playlist eintragen – in wenigen Minuten läuft dein Programm.': 'Uygulamayı yükle, QR kodu tara, listeni ekle – birkaç dakika içinde yayın başlar.',
+    'Der IPTV-Player für deine eigene Playlist – auf Fire TV, Android, Windows und Mac.': 'Kendi listen için IPTV oynatıcı – Fire TV, Android, Windows ve Mac’te.',
+    'Produkt': 'Ürün',
+    'Rechtliches': 'Yasal',
     'Lumio Player – Kundenbereich': 'Lumio Player – Müşteri alanı',
     "Systemanforderungen": "Sistem gereksinimleri",
     "Das brauchst du mindestens, damit Lumio Player läuft.": "Lumio Player’ın çalışması için en az bunlara ihtiyacın var.",

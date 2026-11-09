@@ -464,7 +464,24 @@
   // Neue Playlists aus der App erscheinen, sobald man zur Seite zurückkehrt
   document.addEventListener('visibilitychange', function () { if (!document.hidden && device && $('editor').hidden) refresh(); });
 
-  /* ---------- Start: Werte aus dem QR-Code übernehmen ---------- */
+  /* ---------- Sanftes Einblenden beim Scrollen ---------- */
+// Nur wenn der Browser es kann und „Bewegung reduzieren“ aus ist – sonst bleibt alles sofort sichtbar.
+(function () {
+  var calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (calm || !('IntersectionObserver' in window)) return;
+  var io = new IntersectionObserver(function (es) {
+    es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { rootMargin: '0px 0px -8% 0px' });
+  var sel = '.hero-txt > *, .hero-art, .avail, .block > h2, .steps li, .feat, .notice, .cta-band, .req, .page-head';
+  Array.prototype.forEach.call(document.querySelectorAll(sel), function (n, i) {
+    n.classList.add('rv');
+    var sib = n.parentNode ? Array.prototype.indexOf.call(n.parentNode.children, n) : 0;
+    n.style.transitionDelay = Math.min(sib, 5) * 70 + 'ms';
+    io.observe(n);
+  });
+})();
+
+/* ---------- Start: Werte aus dem QR-Code übernehmen ---------- */
   applyLang();
   var qm = normMac(qs0.get('mac')), qk = (qs0.get('key') || '').toUpperCase();
   if (qm) $('mac').value = qm;

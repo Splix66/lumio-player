@@ -66,14 +66,14 @@ App (TV/Handy/PC) ──register_device / list_playlists──▶ Supabase ◀�
 
 ### Mittel (Professionalität, Wartbarkeit)
 
-9. **Alles in einer 123-KB-Datei** (Design, 3 Sprachen, Logik). Schwer zu pflegen; jede Textänderung riskiert Fehler.
+9. ✅ **Alles in einer 123-KB-Datei** (Design, 3 Sprachen, Logik). Schwer zu pflegen; jede Textänderung riskiert Fehler.
    → Aufteilen in `site.css`, `site.js`, Sprachdateien (ohne Build-Schritt, ohne neue Abhängigkeiten).
-10. **Design solide, aber austauschbar.** Sauber und einheitlich, aber Systemschrift, wenig Bewegung, Startseite
+10. ✅ **Design solide, aber austauschbar.** Sauber und einheitlich, aber Systemschrift, wenig Bewegung, Startseite
     endet abrupt. Die App selbst nutzt bereits die Schrift *Inter* – die Webseite nicht.
 11. **Webseite nur in 3 Sprachen**, die App in 11 (u. a. AR, RU, UK, PL) – Kunden aus der App landen auf Deutsch.
 12. **Startseite und Kundenportal sind dieselbe Seite.** Für eine Produktseite ist das ungewöhnlich; Menüpunkt
     „Playlist hochladen“ ist für Neukunden unklar.
-13. Rote „Wichtig“-Box auf der Startseite wirkt wie eine Fehlermeldung (Inhalt ist rechtlich sinnvoll und bleibt).
+13. ✅ Rote „Wichtig“-Box auf der Startseite wirkt wie eine Fehlermeldung (Inhalt ist rechtlich sinnvoll und bleibt).
 14. Verwaltungsbereich hat eigenes CSS mit leicht abweichenden Farben.
 
 ### Niedrig
@@ -103,3 +103,28 @@ App (TV/Handy/PC) ──register_device / list_playlists──▶ Supabase ◀�
 
 Getestet in Chromium: Desktop 1440 px, Handy 390/360/320 px, DE/EN/TR, Zurück-Knopf, Direktlinks (`#download`),
 keine JavaScript-Fehler.
+
+## 7. Erledigt im zweiten Schritt
+
+- `docs/index.html` aufgeteilt: `assets/site.css` (Gestaltung), `assets/i18n.js` (Übersetzungen), `assets/site.js` (Logik)
+- Schrift **Inter** (variabel, inkl. türkischer Sonderzeichen) lokal ausgeliefert – keine Verbindung zu Google (DSGVO)
+- Neues Erscheinungsbild: Lichtschein im Hintergrund, Überschrift mit Farbverlauf, schwebendes TV-Bild,
+  Knöpfe mit Tiefe, Karten mit Hover-Effekt, sanftes Einblenden beim Scrollen (aus bei „Bewegung reduzieren“)
+- „Wichtig“-Box sachlich statt alarmrot, neuer Abschluss-Aufruf „Bereit loszulegen?“, neue Fußzeile mit Menü
+- Getestet: Desktop + Handy, DE/EN/TR, Zurück-Knopf, Direktlinks, keine JavaScript-Fehler, kein seitliches Verrutschen
+
+## 8. Entscheidungen (09.11.2026)
+
+- **Impressum/Datenschutz:** Platzhalter bleiben vorerst. ⚠️ Vor einer echten Veröffentlichung nötig.
+- **Google-Sperre (`noindex`):** wird aufgehoben, sobald das Impressum vollständig ist.
+- **Bezahlmodell:** Idee für später – App 30 Tage kostenlos, danach kostenpflichtig. Jetzt **nichts** umsetzen.
+  Für später vormerken: Kundenkonto (E-Mail-Anmeldung über Supabase Auth, das für Admins schon läuft),
+  Geräte einem Konto zuordnen, Testzeitraum pro Gerät/Konto serverseitig prüfen (nicht nur in der App),
+  Zahlungsanbieter (z. B. Stripe), Preisseite, AGB/Widerrufsbelehrung.
+
+## 9. Nächste sinnvolle Schritte
+
+1. Kontaktmöglichkeit ohne Gerät (braucht eine Kontakt-E-Mail oder eine neue, abgesicherte Datenbankfunktion)
+2. Verwaltungsbereich optisch an die Webseite angleichen (Schrift, Farben, Knöpfe)
+3. Webseite in weitere App-Sprachen übersetzen (AR, RU, UK, PL …)
+4. Download-Kurzseite `docs/app/` und Rechtsseiten im neuen Stil
