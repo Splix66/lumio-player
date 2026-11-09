@@ -65,8 +65,9 @@ Technisch solide und deutlich über dem Durchschnitt vergleichbarer IPTV-Player:
 - Der aktive Reiter (Live TV / Filme / Serien) sitzt absichtlich tiefer und größer (Gestaltungsentscheidung im Code).
 - Unverschlüsselte Verbindungen (http) zu Anbietern sind bei IPTV üblich und nötig.
 
-## Hinweis: Verwaltungsbereich nicht eingerichtet
+## Verwaltungsbereich eingerichtet (09.11.2026)
 
-Bei der Prüfung der Live-Datenbank (09.11.2026) fehlten alle Funktionen aus `server/admin.sql` (`admin_*`, Tabelle `admins`).
-Der Verwaltungsbereich `docs/admin.html` funktioniert deshalb noch nicht. Einrichtung siehe README → „Verwaltungsbereich einrichten“
-(SQL einspielen, Admin-Konto in Supabase → Authentication anlegen und eintragen).
+`server/admin.sql` in Supabase eingespielt (nach dem Sicherheits-Update; berührt dessen Funktionen nicht).
+Geprüft: anonyme Besucher dürfen keine `admin_*`-Funktionen aufrufen, angemeldete Nicht-Admins bekommen
+„Keine Berechtigung“. Admin-Konto `telvo.support@gmail.com` angelegt und eingetragen, Anmeldung vom Inhaber bestätigt.
+Empfohlen und vom Inhaber erledigt: neue Registrierungen in Supabase Auth abgeschaltet.
