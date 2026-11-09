@@ -112,7 +112,7 @@ async function newPage(browser, opts, backend) {
 
     /* ---------- 2. Alle Seiten laden fehlerfrei ---------- */
     group('Seiten laden ohne Fehler (inkl. Sicherheitsregel)');
-    for (const [p, sel] of [['', '.hero h1'], ['impressum.html', 'h1'], ['datenschutz.html', 'h1'], ['gibt-es-nicht', 'h1'], ['app/', '#dl'], ['admin.html?demo', '#loginForm']]) {
+    for (const [p, sel] of [['', '.hero h1'], ['impressum.html', 'h1'], ['datenschutz.html', 'h1'], ['nutzungsbedingungen.html', 'h1'], ['gibt-es-nicht', 'h1'], ['app/', '#dl'], ['admin.html?demo', '#loginForm']]) {
       const { ctx, page, errors } = await newPage(browser);
       const resp = await page.goto(base + p); await page.waitForTimeout(300);
       const visible = await page.isVisible(sel);

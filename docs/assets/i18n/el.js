@@ -175,6 +175,7 @@ window.LUMIO_I18N["el"] = {
   "Telvo Player enthält keine Sender oder Inhalte. Nutze nur Zugänge, für die du eine Berechtigung hast. Alle Daten werden verschlüsselt übertragen.": "Το Telvo Player δεν περιέχει κανάλια ή περιεχόμενο. Χρησιμοποίησε μόνο συνδρομές για τις οποίες έχεις δικαίωμα. Όλα τα δεδομένα μεταδίδονται κρυπτογραφημένα.",
   "Impressum": "Νομικές πληροφορίες",
   "Datenschutz": "Απόρρητο",
+  "Nutzungsbedingungen": "Όροι χρήσης",
   "Keine Verbindung. Bitte Internet prüfen und erneut versuchen.": "Δεν υπάρχει σύνδεση. Έλεγξε το ίντερνετ και δοκίμασε ξανά.",
   "Bitte eine vollständige MAC-Adresse eingeben (12 Zeichen).": "Βάλε μια πλήρη διεύθυνση MAC (12 χαρακτήρες).",
   "Bitte den KEY aus der App eingeben.": "Βάλε το KEY από την εφαρμογή.",

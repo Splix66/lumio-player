@@ -665,5 +665,8 @@ window.LUMIO_I18N["ar"] = {
   "Demo-Filme": "أفلام تجريبية",
   "Lizenztext": "نص الترخيص",
   "Lizenztexte konnten nicht geladen werden.": "تعذّر تحميل نصوص التراخيص.",
-  "Windows und Mac: Weitere Lizenzen (Chromium) liegen dem Programm bei – Datei LICENSES.chromium.html.": "ويندوز وماك: تراخيص إضافية (Chromium) مرفقة بالبرنامج – الملف LICENSES.chromium.html."
+  "Windows und Mac: Weitere Lizenzen (Chromium) liegen dem Programm bei – Datei LICENSES.chromium.html.": "ويندوز وماك: تراخيص إضافية (Chromium) مرفقة بالبرنامج – الملف LICENSES.chromium.html.",
+  "Bevor es losgeht": "قبل أن تبدأ",
+  "Nutzungsbedingungen lesen": "قراءة شروط الاستخدام",
+  "Telvo ist ein Player ohne eigene Sender oder Inhalte. Du trägst deine eigene Playlist ein und nutzt nur Quellen, für die du eine Berechtigung hast. Mit „Verstanden“ stimmst du den Nutzungsbedingungen zu: {0}": "Telvo مشغّل بدون قنوات أو محتوى خاص به. تضيف قائمة التشغيل الخاصة بك وتستخدم فقط المصادر التي يحق لك استخدامها. بالضغط على «حسنًا» توافق على شروط الاستخدام: {0}"
 };

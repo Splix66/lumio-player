@@ -665,5 +665,8 @@ window.LUMIO_I18N["ku"] = {
   "Demo-Filme": "Fîlmên demo",
   "Lizenztext": "Nivîsa lîsansê",
   "Lizenztexte konnten nicht geladen werden.": "Nivîsên lîsansê nehatin barkirin.",
-  "Windows und Mac: Weitere Lizenzen (Chromium) liegen dem Programm bei – Datei LICENSES.chromium.html.": "Windows û Mac: lîsansên din (Chromium) bi bernameyê re ne – pela LICENSES.chromium.html."
+  "Windows und Mac: Weitere Lizenzen (Chromium) liegen dem Programm bei – Datei LICENSES.chromium.html.": "Windows û Mac: lîsansên din (Chromium) bi bernameyê re ne – pela LICENSES.chromium.html.",
+  "Bevor es losgeht": "Berî ku dest pê bikî",
+  "Nutzungsbedingungen lesen": "Mercên bikaranînê bixwîne",
+  "Telvo ist ein Player ohne eigene Sender oder Inhalte. Du trägst deine eigene Playlist ein und nutzt nur Quellen, für die du eine Berechtigung hast. Mit „Verstanden“ stimmst du den Nutzungsbedingungen zu: {0}": "Telvo lîstikvanek bê kanal an naveroka xwe ye. Tu lîsteya xwe zêde dikî û tenê çavkaniyên ku mafê te heye bi kar tînî. Bi “Fêm kir” tu mercên bikaranînê qebûl dikî: {0}"
 };

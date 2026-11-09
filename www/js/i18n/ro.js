@@ -665,5 +665,8 @@ window.LUMIO_I18N["ro"] = {
   "Demo-Filme": "Filme demo",
   "Lizenztext": "Textul licenței",
   "Lizenztexte konnten nicht geladen werden.": "Textele licențelor nu au putut fi încărcate.",
-  "Windows und Mac: Weitere Lizenzen (Chromium) liegen dem Programm bei – Datei LICENSES.chromium.html.": "Windows și Mac: alte licențe (Chromium) sunt incluse în program – fișierul LICENSES.chromium.html."
+  "Windows und Mac: Weitere Lizenzen (Chromium) liegen dem Programm bei – Datei LICENSES.chromium.html.": "Windows și Mac: alte licențe (Chromium) sunt incluse în program – fișierul LICENSES.chromium.html.",
+  "Bevor es losgeht": "Înainte de a începe",
+  "Nutzungsbedingungen lesen": "Citește termenii de utilizare",
+  "Telvo ist ein Player ohne eigene Sender oder Inhalte. Du trägst deine eigene Playlist ein und nutzt nur Quellen, für die du eine Berechtigung hast. Mit „Verstanden“ stimmst du den Nutzungsbedingungen zu: {0}": "Telvo este un player fără canale sau conținut propriu. Adaugi propriul playlist și folosești doar surse pentru care ai drept de utilizare. Cu „Am înțeles” accepți termenii de utilizare: {0}"
 };

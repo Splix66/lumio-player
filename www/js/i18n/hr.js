@@ -665,5 +665,8 @@ window.LUMIO_I18N["hr"] = {
   "Demo-Filme": "Demo filmovi",
   "Lizenztext": "Tekst licencije",
   "Lizenztexte konnten nicht geladen werden.": "Tekstovi licencija nisu se mogli učitati.",
-  "Windows und Mac: Weitere Lizenzen (Chromium) liegen dem Programm bei – Datei LICENSES.chromium.html.": "Windows i Mac: dodatne licencije (Chromium) priložene su programu – datoteka LICENSES.chromium.html."
+  "Windows und Mac: Weitere Lizenzen (Chromium) liegen dem Programm bei – Datei LICENSES.chromium.html.": "Windows i Mac: dodatne licencije (Chromium) priložene su programu – datoteka LICENSES.chromium.html.",
+  "Bevor es losgeht": "Prije nego što počneš",
+  "Nutzungsbedingungen lesen": "Pročitaj uvjete korištenja",
+  "Telvo ist ein Player ohne eigene Sender oder Inhalte. Du trägst deine eigene Playlist ein und nutzt nur Quellen, für die du eine Berechtigung hast. Mit „Verstanden“ stimmst du den Nutzungsbedingungen zu: {0}": "Telvo je player bez vlastitih programa ili sadržaja. Dodaješ vlastitu playlistu i koristiš samo izvore za koje imaš pravo. Odabirom „Razumijem” prihvaćaš uvjete korištenja: {0}"
 };

@@ -175,6 +175,7 @@ window.LUMIO_I18N["ro"] = {
   "Telvo Player enthält keine Sender oder Inhalte. Nutze nur Zugänge, für die du eine Berechtigung hast. Alle Daten werden verschlüsselt übertragen.": "Telvo Player nu conține canale sau conținut. Folosește doar conturi pentru care ai drept de acces. Toate datele sunt transmise criptat.",
   "Impressum": "Informații legale",
   "Datenschutz": "Confidențialitate",
+  "Nutzungsbedingungen": "Termeni de utilizare",
   "Keine Verbindung. Bitte Internet prüfen und erneut versuchen.": "Nu există conexiune. Verifică internetul și încearcă din nou.",
   "Bitte eine vollständige MAC-Adresse eingeben (12 Zeichen).": "Introdu o adresă MAC completă (12 caractere).",
   "Bitte den KEY aus der App eingeben.": "Introdu KEY-ul din aplicație.",

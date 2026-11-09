@@ -175,6 +175,7 @@ window.LUMIO_I18N["uk"] = {
   "Telvo Player enthält keine Sender oder Inhalte. Nutze nur Zugänge, für die du eine Berechtigung hast. Alle Daten werden verschlüsselt übertragen.": "Telvo Player не містить каналів чи контенту. Використовуйте лише ті доступи, на які у вас є права. Усі дані передаються в зашифрованому вигляді.",
   "Impressum": "Вихідні дані",
   "Datenschutz": "Конфіденційність",
+  "Nutzungsbedingungen": "Умови використання",
   "Keine Verbindung. Bitte Internet prüfen und erneut versuchen.": "Немає зʼєднання. Перевірте інтернет і спробуйте ще раз.",
   "Bitte eine vollständige MAC-Adresse eingeben (12 Zeichen).": "Введіть повну MAC-адресу (12 символів).",
   "Bitte den KEY aus der App eingeben.": "Введіть KEY із застосунку.",

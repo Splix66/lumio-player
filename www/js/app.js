@@ -1626,6 +1626,24 @@
 
   /* Erinnert 30 Tage, 7 Tage und 24 Stunden vor Ablauf des Zugangs (und nach Ablauf) – jeweils einmal.
      Später kann hier auch eine eigene Nachricht, ein Bild oder Video des Anbieters erscheinen. */
+  /* ---------- Nutzungsbedingungen: einmaliger Hinweis beim ersten Start ----------
+     Erscheint erneut nur, wenn sich die Bedingungen ändern (dann „version“ erhöhen). */
+  var Terms = {
+    version: '2026-11',
+    check: function () {
+      if (Store.get('terms') === this.version) return;
+      var self = this, url = CONFIG.portalUrl + 'nutzungsbedingungen.html';
+      var show = function () {
+        if (Dialog.open) { setTimeout(show, 1500); return; }
+        var btns = [{ label: T('Verstanden'), primary: true, action: function () { Store.set('terms', self.version); } }];
+        // Auf dem Fernseher gibt es keinen Browser – dort steht die Adresse im Text
+        if (!Platform.tv) btns.unshift({ label: T('Nutzungsbedingungen lesen'), action: function () { openExternal(url); } });
+        Dialog.show(T('Bevor es losgeht'), T('Telvo ist ein Player ohne eigene Sender oder Inhalte. Du trägst deine eigene Playlist ein und nutzt nur Quellen, für die du eine Berechtigung hast. Mit „Verstanden“ stimmst du den Nutzungsbedingungen zu: {0}', url.replace(/^https?:\/\//, '')), btns);
+      };
+      setTimeout(show, 600);
+    }
+  };
+
   var Expiry = {
     timer: null,
     check: function () {
@@ -6033,6 +6051,7 @@
       }, 1200);
     }
     else showProfiles();
+    Terms.check();
     setTimeout(function () { Updates.daily(); }, 8000);
     Cloud.start();
     StillWatching.start();

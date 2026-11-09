@@ -175,6 +175,7 @@ window.LUMIO_I18N["ku"] = {
   "Telvo Player enthält keine Sender oder Inhalte. Nutze nur Zugänge, für die du eine Berechtigung hast. Alle Daten werden verschlüsselt übertragen.": "Di Telvo Player de ti kanal an naverok tune ne. Tenê gihîştinên ku mafê te yê bikaranînê heye bikar bîne. Hemû dane bi şîfrekirî têne veguhestin.",
   "Impressum": "Agahiyên hiqûqî",
   "Datenschutz": "Nepenî",
+  "Nutzungsbedingungen": "Mercên bikaranînê",
   "Keine Verbindung. Bitte Internet prüfen und erneut versuchen.": "Girêdan tune. Ji kerema xwe înternetê kontrol bike û dîsa biceribîne.",
   "Bitte eine vollständige MAC-Adresse eingeben (12 Zeichen).": "Ji kerema xwe navnîşaneke MAC a temam binivîse (12 tîp).",
   "Bitte den KEY aus der App eingeben.": "Ji kerema xwe KEY ji sepanê binivîse.",
