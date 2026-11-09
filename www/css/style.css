@@ -1836,6 +1836,7 @@ body.kbd .ln-tile.f:focus, body.is-tv .ln-tile.f:focus { filter: none; box-shado
 /* ==========================================================
    Willkommensseite (noch keine Playlist) – Premium-Design
    Tiefschwarz #0B0B0F, Karten #17171E, Akzent Violett #9B83D5.
+   Aufbau: Begrüßung oben, darunter eine Karte mit Schritten | QR-Code (Mitte) | MAC, KEY und Knöpfen.
    Gilt nur für diese Seite (.wl) und bleibt bewusst dunkel – auch im hellen Modus.
    ========================================================== */
 .wl {
@@ -1857,13 +1858,21 @@ body.kbd .ln-tile.f:focus, body.is-tv .ln-tile.f:focus { filter: none; box-shado
 .wl .wordmark span { color: var(--wl-muted); }
 .wl .lang-btn { background: rgba(255, 255, 255, .05); color: var(--wl-text); box-shadow: inset 0 0 0 1px var(--wl-line-2); }
 .wl .lang-btn:hover { background: rgba(255, 255, 255, .09); }
-.wl-main { position: relative; flex: 1; width: 100%; max-width: 76rem; margin: 0 auto; display: flex; flex-direction: column; justify-content: center; padding: 2.2rem var(--pad) 1.6rem; }
+.wl-main { position: relative; flex: 1; width: 100%; max-width: 76rem; margin: 0 auto; display: flex; flex-direction: column; justify-content: center; padding: 1.6rem var(--pad) 1.4rem; }
 
-/* Karte */
+/* Begrüßung über der Karte */
+.wl-head { text-align: center; margin: 0 0 1.7rem; animation: wlIn .6s cubic-bezier(.2, .7, .2, 1) both; }
+.wl-title {
+  margin: 0; font-size: 2.6rem; font-weight: 800; letter-spacing: -.045em; line-height: 1.08;
+  color: var(--wl-text); background: linear-gradient(180deg, #FFFFFF 30%, #D3C7F0 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.wl-sub { margin: .5rem 0 0; font-size: 1.2rem; font-weight: 600; letter-spacing: -.015em; color: var(--wl-accent-2); }
+
+/* Karte: Schritte | QR-Code | MAC, KEY, Knöpfe – die äußeren Spalten sind gleich breit, damit der QR-Code genau in der Mitte steht */
 .wl-card {
-  position: relative; display: grid; grid-template-columns: 14.5rem minmax(0, 1fr) auto; grid-gap: 2.4rem; gap: 2.4rem; align-items: center;
-  padding: 3rem 3.2rem; border-radius: 1.6rem; background: var(--wl-card);
-  background-image: linear-gradient(180deg, rgba(255, 255, 255, .035), transparent 40%), radial-gradient(40rem 22rem at 0% 0%, rgba(155, 131, 213, .09), transparent 70%);
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); grid-gap: 2.6rem; gap: 2.6rem; align-items: center;
+  padding: 2.4rem 2.6rem; border-radius: 1.6rem; background: var(--wl-card);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, .035), transparent 40%), radial-gradient(40rem 22rem at 50% 0%, rgba(155, 131, 213, .09), transparent 70%);
   box-shadow: inset 0 0 0 1px var(--wl-line), 0 2.4rem 4.8rem -2.4rem rgba(0, 0, 0, .8);
   animation: wlIn .7s cubic-bezier(.2, .7, .2, 1) both;
 }
@@ -1871,51 +1880,55 @@ body.kbd .ln-tile.f:focus, body.is-tv .ln-tile.f:focus { filter: none; box-shado
 .wl-card::before { content: ""; position: absolute; left: 12%; right: 12%; top: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(179, 160, 227, .55), transparent); }
 @keyframes wlIn { from { opacity: 0; transform: translateY(14px); } }
 
-/* Text */
-.wl-text { min-width: 0; }
-@keyframes wlPulse { 0% { box-shadow: 0 0 0 0 rgba(155, 131, 213, .55); } 70%, 100% { box-shadow: 0 0 0 .5rem rgba(155, 131, 213, 0); } }
-.wl-title {
-  margin: 0; font-size: 2.85rem; font-weight: 800; letter-spacing: -.045em; line-height: 1.05;
-  color: var(--wl-text); background: linear-gradient(180deg, #FFFFFF 30%, #D3C7F0 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+/* QR-Code (Mitte) */
+.wl-qr { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.wl-qr-frame { position: relative; padding: .55rem; border-radius: 1.35rem; background: linear-gradient(145deg, rgba(179, 160, 227, .55), rgba(155, 131, 213, .08) 45%, rgba(155, 131, 213, .35)); box-shadow: 0 1.6rem 3rem -1.6rem rgba(155, 131, 213, .55); }
+.wl .qr.wl-qrcode { width: 15.5rem; padding: .7rem; border-radius: 1rem; background: #fff; box-shadow: none; transition: transform .2s ease; }
+.wl .qr.wl-qrcode img { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+.wl .qr.wl-qrcode:hover { transform: scale(1.015); }
+body.kbd .wl .qr.f:focus, body.is-tv .wl .qr.f:focus { outline: none; box-shadow: 0 0 0 .2rem #0B0B0F, 0 0 0 .42rem #fff; }
+.wl-qr-title { margin: 1.1rem 0 .6rem; font-size: .74rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--wl-dim); }
+/* Link zur Webseite: ruhige Pille statt unterstrichenem Text */
+.wl-link {
+  display: inline-flex; align-items: center; max-width: 100%; padding: .5rem .95rem .5rem .8rem; border-radius: 999px;
+  background: rgba(255, 255, 255, .04); box-shadow: inset 0 0 0 1px var(--wl-line-2); color: var(--wl-muted);
+  font-size: .84rem; font-weight: 600; letter-spacing: .005em; cursor: pointer; transition: color .2s ease, background-color .2s ease;
 }
-.wl-sub { margin: .7rem 0 0; font-size: 1.3rem; font-weight: 600; letter-spacing: -.015em; color: var(--wl-accent-2); }
+.wl-link .i { flex: none; width: 1rem; height: 1rem; margin-right: .5rem; color: var(--wl-accent-2); }
+.wl-link span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wl-link:hover { color: var(--wl-text); background: rgba(255, 255, 255, .08); }
+body.kbd .wl-link.f:focus, body.is-tv .wl-link.f:focus { outline: none; color: var(--wl-text); box-shadow: 0 0 0 .2rem #0B0B0F, 0 0 0 .4rem #fff; }
 
-/* MAC und KEY */
-/* nebeneinander, wenn Platz ist – sonst untereinander. Werte werden nie abgekürzt. */
-.wl-ids { display: flex; flex-wrap: wrap; margin: 1.35rem -.45rem 0; }
-.wl-id { flex: 1 1 auto; min-width: 0; margin: .45rem; padding: .95rem 1.1rem 1rem; border-radius: 1rem; background: var(--wl-tile); box-shadow: inset 0 0 0 1px var(--wl-line); }
-.wl-id-label { display: block; font-size: .7rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--wl-dim); }
-.wl-id-row { display: flex; align-items: center; justify-content: space-between; margin-top: .4rem; }
-.wl-id-value { font-family: ui-monospace, "SF Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace; font-size: 1.55rem; font-weight: 700; letter-spacing: .04em; color: var(--wl-text); white-space: nowrap; }
-.wl .wl-id .copy-btn { flex: none; width: 2.2rem; height: 2.2rem; margin-left: .6rem; border-radius: .6rem; color: var(--wl-dim); }
+/* Rechts: MAC, KEY und Knöpfe untereinander */
+.wl-side { min-width: 0; display: flex; flex-direction: column; }
+.wl-id { min-width: 0; margin: 0 0 .75rem; padding: .85rem 1.05rem .9rem; border-radius: 1rem; background: var(--wl-tile); box-shadow: inset 0 0 0 1px var(--wl-line); }
+.wl-id-label { display: block; font-size: .68rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--wl-dim); }
+.wl-id-row { display: flex; align-items: center; justify-content: space-between; margin-top: .35rem; }
+/* Werte werden nie abgekürzt – notfalls umbrechen */
+.wl-id-value { min-width: 0; font-family: ui-monospace, "SF Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace; font-size: 1.4rem; font-weight: 700; letter-spacing: .04em; color: var(--wl-text); overflow-wrap: anywhere; word-break: break-all; }
+.wl .wl-id .copy-btn { flex: none; width: 2.1rem; height: 2.1rem; margin-left: .6rem; border-radius: .6rem; color: var(--wl-dim); }
 .wl .wl-id .copy-btn:hover { color: var(--wl-text); background: rgba(255, 255, 255, .07); }
 
 /* Knöpfe */
-.wl-actions { display: flex; flex-wrap: wrap; margin: 2rem -.4rem 0; }
+.wl-actions { display: flex; flex-direction: column; margin-top: .35rem; }
 .wl-btn {
-  display: inline-flex; align-items: center; justify-content: center; margin: 0 .4rem .6rem; padding: .95rem 1.4rem; border-radius: 999px;
+  display: flex; align-items: center; justify-content: center; width: 100%; margin: 0 0 .6rem; padding: .85rem 1.3rem; border-radius: 999px;
   font-size: 1rem; font-weight: 700; letter-spacing: -.005em; white-space: nowrap; cursor: pointer;
   transition: background-color .2s ease, box-shadow .2s ease, transform .2s ease, color .2s ease;
 }
+.wl-btn:last-child { margin-bottom: 0; }
 .wl-btn .i { width: 1.15rem; height: 1.15rem; margin-right: .55rem; }
 .wl-primary { background: var(--wl-accent); color: #0B0B0F; box-shadow: 0 .7rem 1.6rem -.9rem rgba(155, 131, 213, .75), inset 0 1px 0 rgba(255, 255, 255, .25); }
 .wl-primary:hover { background: var(--wl-accent-2); transform: translateY(-1px); }
 .wl-ghost { background: rgba(255, 255, 255, .03); color: var(--wl-text); box-shadow: inset 0 0 0 1px var(--wl-line-2); }
 .wl-ghost:hover { background: rgba(255, 255, 255, .07); transform: translateY(-1px); }
 .wl-btn:active { transform: translateY(0) scale(.98); }
-body.kbd .wl-btn.f:focus, body.is-tv .wl-btn.f:focus { outline: none; transform: scale(1.04); box-shadow: 0 0 0 .2rem #0B0B0F, 0 0 0 .42rem #fff; }
+.wl-btn.is-busy { color: var(--wl-muted); cursor: default; }
+.wl-btn.is-busy .i { animation: wlSpin .9s linear infinite; }
+@keyframes wlSpin { to { transform: rotate(360deg); } }
+body.kbd .wl-btn.f:focus, body.is-tv .wl-btn.f:focus { outline: none; transform: scale(1.03); box-shadow: 0 0 0 .2rem #0B0B0F, 0 0 0 .42rem #fff; }
 
-/* QR-Code */
-.wl-qr { width: 16rem; display: flex; flex-direction: column; align-items: center; text-align: center; }
-.wl-qr-title { margin: 1.1rem 0 .35rem; font-size: .74rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--wl-dim); }
-.wl-qr-frame { position: relative; padding: .55rem; border-radius: 1.35rem; background: linear-gradient(145deg, rgba(179, 160, 227, .55), rgba(155, 131, 213, .08) 45%, rgba(155, 131, 213, .35)); box-shadow: 0 1.6rem 3rem -1.6rem rgba(155, 131, 213, .55); }
-.wl .qr.wl-qrcode { width: 14.5rem; padding: .7rem; border-radius: 1rem; background: #fff; box-shadow: none; transition: transform .2s ease; }
-.wl .qr.wl-qrcode img { display: block; width: 100%; height: auto; image-rendering: pixelated; }
-.wl .qr.wl-qrcode:hover { transform: scale(1.015); }
-body.kbd .wl .qr.f:focus, body.is-tv .wl .qr.f:focus { outline: none; box-shadow: 0 0 0 .2rem #0B0B0F, 0 0 0 .42rem #fff; }
-.wl .wl-qr .link { color: var(--wl-accent-2); font-weight: 650; }
-
-.wl-legal { margin: 1.4rem auto 0; max-width: 46rem; text-align: center; font-size: .78rem; line-height: 1.5; color: var(--wl-dim); }
+.wl-legal { margin: 1.3rem auto 0; max-width: 46rem; text-align: center; font-size: .78rem; line-height: 1.5; color: var(--wl-dim); }
 
 /* Kopfzeile rechts: Status, Hilfe, Sprache */
 .wl-tools { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
@@ -1935,9 +1948,9 @@ body.kbd .wl .qr.f:focus, body.is-tv .wl .qr.f:focus { outline: none; box-shadow
 .wl-help:hover { background: rgba(255, 255, 255, .1); }
 body.kbd .wl-help.f:focus, body.is-tv .wl-help.f:focus { outline: none; box-shadow: 0 0 0 .2rem #0B0B0F, 0 0 0 .4rem #fff; }
 
-/* Einrichtungshilfe: drei Schritte untereinander */
-.wl-steps { list-style: none; margin: 0; padding: 0 1.8rem 0 0; align-self: stretch; display: flex; flex-direction: column; justify-content: center; border-right: 1px solid var(--wl-line); }
-.wl-step { position: relative; display: flex; align-items: flex-start; padding: 0 0 2.2rem; }
+/* Einrichtungshilfe: drei Schritte untereinander (links) */
+.wl-steps { list-style: none; margin: 0; padding: 0 2rem 0 0; align-self: stretch; display: flex; flex-direction: column; justify-content: center; border-right: 1px solid var(--wl-line); }
+.wl-step { position: relative; display: flex; align-items: flex-start; padding: 0 0 2rem; }
 .wl-step:last-child { padding-bottom: 0; }
 .wl-step::before { content: ""; position: absolute; left: 1.05rem; top: 2.35rem; bottom: .25rem; width: 1px; background: linear-gradient(180deg, rgba(155, 131, 213, .45), rgba(155, 131, 213, .08)); }
 .wl-step:last-child::before { display: none; }
@@ -1952,46 +1965,48 @@ body.kbd .wl-help.f:focus, body.is-tv .wl-help.f:focus { outline: none; box-shad
 .wl-faq-item p { margin: .3rem 0 0; color: var(--muted); line-height: 1.5; }
 .wl-faq-more { margin-top: 1.4rem; }
 
-html.tv .wl-main { padding-top: 1.4rem; }
+html.tv .wl-main { padding-top: 1.2rem; }
 
-/* Mittlere Breiten (Laptop, Tablet quer): Schritte als Zeile über dem Inhalt */
-@media (max-width: 1199px) {
-  html:not(.tv) .wl-card { grid-template-columns: minmax(0, 1fr) auto; grid-gap: 2.2rem 2.6rem; gap: 2.2rem 2.6rem; padding: 2.4rem 2.4rem; }
-  html:not(.tv) .wl-steps { grid-column: 1 / -1; flex-direction: row; padding: 0 0 2rem; border-right: 0; border-bottom: 1px solid var(--wl-line); }
+/* Mittlere Breiten (Laptop klein, Tablet quer): Schritte als Zeile oben, darunter QR-Code | MAC/KEY/Knöpfe */
+@media (max-width: 1099px) {
+  html:not(.tv) .wl-card { grid-template-columns: auto minmax(0, 22rem); justify-content: center; grid-gap: 2rem 2.6rem; gap: 2rem 2.6rem; padding: 2.2rem 2.2rem; }
+  html:not(.tv) .wl-steps { grid-column: 1 / -1; flex-direction: row; padding: 0 0 1.8rem; border-right: 0; border-bottom: 1px solid var(--wl-line); }
   html:not(.tv) .wl-step { flex: 1 1 0; padding: 0 1rem 0 0; }
   html:not(.tv) .wl-step::before { display: none; }
 }
-/* Tablet hoch und Handy */
-@media (max-width: 860px) {
+/* Tablet hoch und Handy: alles untereinander */
+@media (max-width: 760px) {
   html:not(.tv) .wl-top { flex-wrap: wrap; }
   html:not(.tv) .wl-status { order: 3; width: 100%; justify-content: flex-start; margin-top: .9rem; }
   html:not(.tv) .wl-status .wl-chip { margin: .2rem .5rem .2rem 0; }
   html:not(.tv) .wl-tools { display: contents; }
   html:not(.tv) .wl-help { margin-left: auto; }
   html:not(.tv) .wl-top .lang-btn { margin-left: .6rem; }
-  html:not(.tv) .wl-card { grid-template-columns: minmax(0, 1fr); padding: 2rem 1.6rem; }
-  html:not(.tv) .wl-text { -webkit-box-ordinal-group: 0; order: -1; }   /* Begrüßung zuerst, danach die Schritte */
-  html:not(.tv) .wl-steps { padding: 1.8rem 0 0; border-bottom: 0; border-top: 1px solid var(--wl-line); }
-  html:not(.tv) .wl-qr { width: 100%; padding-top: 2rem; border-top: 1px solid var(--wl-line); }
-  html:not(.tv) .wl-title { font-size: 2.3rem; }
+  html:not(.tv) .wl-head { text-align: left; }
+  html:not(.tv) .wl-card { grid-template-columns: minmax(0, 1fr); padding: 1.8rem 1.5rem; }
+  html:not(.tv) .wl-qr { -webkit-box-ordinal-group: 2; order: 1; }
+  html:not(.tv) .wl-side { -webkit-box-ordinal-group: 3; order: 2; }
+  html:not(.tv) .wl-steps { -webkit-box-ordinal-group: 4; order: 3; padding: 1.6rem 0 0; border-bottom: 0; border-top: 1px solid var(--wl-line); }
+  html:not(.tv) .wl-title { font-size: 2.2rem; }
 }
+/* Handy: Knöpfe zuerst (den QR-Code scannt man mit einem anderen Gerät) */
 @media (max-width: 560px) {
   html:not(.tv) .wl-top { padding-top: calc(1.1rem + env(safe-area-inset-top)); }
-  html:not(.tv) .wl-main { padding: 1.1rem var(--pad) 1.2rem; justify-content: flex-start; }
-  html:not(.tv) .wl-card { padding: 1.5rem 1.15rem; border-radius: 1.3rem; }
+  html:not(.tv) .wl-main { padding: 1.2rem var(--pad) 1.2rem; justify-content: flex-start; }
+  html:not(.tv) .wl-head { margin-bottom: 1.2rem; }
+  html:not(.tv) .wl-card { padding: 1.4rem 1.15rem; border-radius: 1.3rem; grid-gap: 1.6rem; gap: 1.6rem; }
+  html:not(.tv) .wl-side { -webkit-box-ordinal-group: 2; order: 1; }
+  html:not(.tv) .wl-qr { -webkit-box-ordinal-group: 3; order: 2; padding-top: 1.6rem; border-top: 1px solid var(--wl-line); }
   html:not(.tv) .wl-steps { flex-direction: column; padding-top: 1.4rem; }
   html:not(.tv) .wl-step { padding: 0 0 1rem; }
   html:not(.tv) .wl-step:last-child { padding-bottom: 0; }
-  html:not(.tv) .wl-title { font-size: 1.95rem; }
+  html:not(.tv) .wl-title { font-size: 1.9rem; }
   html:not(.tv) .wl-sub { font-size: 1.05rem; }
-  html:not(.tv) .wl-id { flex-basis: 100%; }
-  html:not(.tv) .wl-id-value { font-size: 1.35rem; }
-  html:not(.tv) .wl-actions { flex-direction: column; margin-left: 0; margin-right: 0; }
-  html:not(.tv) .wl-btn { margin: 0 0 .7rem; width: 100%; }
+  html:not(.tv) .wl-id-value { font-size: 1.3rem; }
   html:not(.tv) .wl .qr.wl-qrcode { width: 12rem; }
   html:not(.tv) .wl .brand { font-size: 1.2rem; }
   html:not(.tv) .wl-chip { font-size: .72rem; }
 }
 /* Ruhe für alte Fernseher und „Bewegung reduzieren“ */
-body.lite .wl-card, body.lite .wl-chip i { animation: none; }
-@media (prefers-reduced-motion: reduce) { .wl-card, .wl-chip i { animation: none; } .wl-btn, .wl .qr.wl-qrcode { transition: none; } }
+body.lite .wl-card, body.lite .wl-head, body.lite .wl-chip i { animation: none; }
+@media (prefers-reduced-motion: reduce) { .wl-card, .wl-head, .wl-chip i { animation: none; } .wl-btn, .wl-link, .wl .qr.wl-qrcode { transition: none; } }

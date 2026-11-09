@@ -630,5 +630,6 @@ window.LUMIO_I18N["ar"] = {
   "Die App prüft alle 30 Sekunden. Stimmen MAC und KEY auf der Webseite genau? Ist das Gerät online?": "يفحص التطبيق كل 30 ثانية. هل MAC وKEY على الموقع مطابقان تمامًا؟ هل الجهاز متصل بالإنترنت؟",
   "Kein Handy zur Hand?": "لا يوجد هاتف معك؟",
   "„Playlist hinzufügen“ wählen und die Daten direkt hier eingeben.": "اختر «إضافة قائمة تشغيل» وأدخل البيانات هنا مباشرة.",
-  "Mehr Hilfe:": "مساعدة إضافية:"
+  "Mehr Hilfe:": "مساعدة إضافية:",
+  "Noch keine Playlist gefunden.": "لم يتم العثور على قائمة تشغيل بعد."
 };

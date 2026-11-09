@@ -630,5 +630,6 @@ window.LUMIO_I18N["fr"] = {
   "Die App prüft alle 30 Sekunden. Stimmen MAC und KEY auf der Webseite genau? Ist das Gerät online?": "L’app vérifie toutes les 30 secondes. MAC et KEY sur le site correspondent-ils exactement ? L’appareil est-il en ligne ?",
   "Kein Handy zur Hand?": "Pas de téléphone sous la main ?",
   "„Playlist hinzufügen“ wählen und die Daten direkt hier eingeben.": "Choisissez « Ajouter une playlist » et saisissez les données directement ici.",
-  "Mehr Hilfe:": "Plus d’aide :"
+  "Mehr Hilfe:": "Plus d’aide :",
+  "Noch keine Playlist gefunden.": "Aucune playlist trouvée pour l’instant."
 };

@@ -630,5 +630,6 @@ window.LUMIO_I18N["hr"] = {
   "Die App prüft alle 30 Sekunden. Stimmen MAC und KEY auf der Webseite genau? Ist das Gerät online?": "Aplikacija provjerava svakih 30 sekundi. Jesu li MAC i KEY na web-stranici potpuno isti? Je li uređaj na mreži?",
   "Kein Handy zur Hand?": "Nemaš mobitel pri ruci?",
   "„Playlist hinzufügen“ wählen und die Daten direkt hier eingeben.": "Odaberi „Dodaj playlistu“ i unesi podatke izravno ovdje.",
-  "Mehr Hilfe:": "Više pomoći:"
+  "Mehr Hilfe:": "Više pomoći:",
+  "Noch keine Playlist gefunden.": "Još nije pronađena playlista."
 };

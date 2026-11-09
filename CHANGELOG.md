@@ -1,5 +1,11 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## Noch nicht veröffentlicht
+
+**App – Willkommensseite neu angeordnet:** QR-Code in der Mitte · rechts MAC, KEY, „Playlist hinzufügen“, „Demo“ und
+neuer Knopf „Aktualisieren“ (sieht sofort nach, ob auf der Webseite eine Playlist eingetragen wurde) · Begrüßung über der
+Karte · Link zur Webseite als ruhige Schaltfläche statt unterstrichen.
+
 ## 1.11.1 – 2026-11-09 · Neue Willkommensseite
 
 **App – Willkommensseite (noch keine Playlist) neu:** dunkles Premium-Design (#0B0B0F, Karten #17171E, Akzent #9B83D5) ·

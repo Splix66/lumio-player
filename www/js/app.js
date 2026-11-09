@@ -2535,6 +2535,26 @@
       var status = WelcomeStatus.el();
       // Handy/Tablet: nicht vorwählen – sonst springt die Seite beim Öffnen nach unten zum Knopf
       var touchOnly = !Platform.tv && !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+      // „Aktualisieren“: sofort beim Online-Dienst nachsehen, ob eine Playlist von der Webseite da ist
+      // (sonst prüft die App alle 30 Sekunden von selbst). Kommt eine an, öffnet Cloud.apply sie direkt.
+      var refreshBtn = CONFIG.cloudUrl ? h('button', { class: 'wl-btn wl-ghost f', onclick: function () {
+        if (refreshBtn.classList.contains('is-busy')) return;
+        var label = refreshBtn.querySelector('span');
+        refreshBtn.classList.add('is-busy'); label.textContent = T('Wird geprüft …');
+        var tries = 0;
+        function run() {
+          // läuft gerade ein automatischer Abgleich: kurz warten statt doppelt fragen
+          if (Cloud.busy && tries++ < 20) return new Promise(function (r) { setTimeout(r, 300); }).then(run);
+          return Cloud.sync();
+        }
+        run().then(function (r) {
+          refreshBtn.classList.remove('is-busy'); label.textContent = T('Aktualisieren');
+          WelcomeStatus.paint();
+          if (!r) toast(navigator.onLine === false ? T('Kein Internet') : T('Online-Dienst nicht erreichbar'), 3000);
+          else if (!r.added || !r.added.length) toast(T('Noch keine Playlist gefunden.'), 3000);
+        });
+      } }, icon('refresh'), h('span', { text: T('Aktualisieren') })) : null;
+      var host = CONFIG.portalUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
       var welcome = h('div', { class: 'profiles is-empty wl' },
         h('div', { class: 'wl-top' },
           h('div', { class: 'brand' }, brandMark(), wordmark()),
@@ -2542,24 +2562,27 @@
             h('button', { class: 'wl-help f', title: T('Hilfe'), 'aria-label': T('Hilfe'), onclick: showWelcomeHelp }, icon('help')),
             langButton())),
         h('div', { class: 'wl-main' },
+          h('div', { class: 'wl-head' },
+            h('h1', { class: 'wl-title', text: T('Willkommen bei Telvo.') }),
+            h('p', { class: 'wl-sub', text: T('Dein Entertainment. Alles an einem Ort.') })),
           h('div', { class: 'wl-card' },
             h('ol', { class: 'wl-steps', 'aria-label': T('Einrichtung') },
               step(1, T('QR-Code scannen'), T('Mit dem Handy – MAC und KEY sind schon eingetragen.')),
               step(2, T('Playlist eintragen'), T('M3U-Link oder Xtream-Zugang')),
               step(3, T('Loslegen'), T('Erscheint hier automatisch'))),
-            h('div', { class: 'wl-text' },
-              h('h1', { class: 'wl-title', text: T('Willkommen bei Telvo.') }),
-              h('p', { class: 'wl-sub', text: T('Dein Entertainment. Alles an einem Ort.') }),
-              h('div', { class: 'wl-ids' },
-                idTile(T('MAC-Adresse'), Device.mac(), 'MAC'),
-                idTile('KEY', Device.key(), 'KEY')),
-              h('div', { class: 'wl-actions' },
-                h('button', { class: 'wl-btn wl-primary f', onclick: showAddProfile, 'data-autofocus': touchOnly ? null : true }, icon('plus'), h('span', { text: T('Playlist hinzufügen') })),
-                h('button', { class: 'wl-btn wl-ghost f', onclick: startDemo, title: T('Mit freien Test-Videos – ohne Zugang.') }, icon('play'), h('span', { text: T('Demo ausprobieren') })))),
+            // QR-Code in der Mitte – das Wichtigste auf dieser Seite
             h('div', { class: 'wl-qr' },
               h('div', { class: 'wl-qr-frame' }, qrBox(Device.portalLink(), 'wl-qrcode')),
               h('p', { class: 'wl-qr-title', text: T('Mit dem Handy einrichten') }),
-              portalLinkBtn())),
+              h('button', { class: 'wl-link f', title: T('Webseite öffnen'), onclick: function () { openExternal(Device.portalLink()); } }, icon('globe'), h('span', { text: host }))),
+            // rechts: MAC, KEY und die Knöpfe untereinander
+            h('div', { class: 'wl-side' },
+              idTile(T('MAC-Adresse'), Device.mac(), 'MAC'),
+              idTile('KEY', Device.key(), 'KEY'),
+              h('div', { class: 'wl-actions' },
+                h('button', { class: 'wl-btn wl-primary f', onclick: showAddProfile, 'data-autofocus': touchOnly ? null : true }, icon('plus'), h('span', { text: T('Playlist hinzufügen') })),
+                h('button', { class: 'wl-btn wl-ghost f', onclick: startDemo, title: T('Mit freien Test-Videos – ohne Zugang.') }, icon('play'), h('span', { text: T('Demo') })),
+                refreshBtn))),
           h('p', { class: 'wl-legal', text: T('Diese App enthält keine Sender oder Inhalte. Du benötigst einen eigenen Zugang von deinem Anbieter.') })));
       WelcomeStatus.start(welcome);
       Screens.reset('profiles', welcome);

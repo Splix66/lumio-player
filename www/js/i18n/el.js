@@ -630,5 +630,6 @@ window.LUMIO_I18N["el"] = {
   "Die App prüft alle 30 Sekunden. Stimmen MAC und KEY auf der Webseite genau? Ist das Gerät online?": "Η εφαρμογή ελέγχει κάθε 30 δευτερόλεπτα. Ταιριάζουν ακριβώς τα MAC και KEY στον ιστότοπο; Είναι η συσκευή online;",
   "Kein Handy zur Hand?": "Δεν έχεις κινητό;",
   "„Playlist hinzufügen“ wählen und die Daten direkt hier eingeben.": "Επίλεξε «Προσθήκη λίστας» και βάλε τα στοιχεία απευθείας εδώ.",
-  "Mehr Hilfe:": "Περισσότερη βοήθεια:"
+  "Mehr Hilfe:": "Περισσότερη βοήθεια:",
+  "Noch keine Playlist gefunden.": "Δεν βρέθηκε ακόμη λίστα."
 };

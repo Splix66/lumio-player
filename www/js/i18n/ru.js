@@ -630,5 +630,6 @@ window.LUMIO_I18N["ru"] = {
   "Die App prüft alle 30 Sekunden. Stimmen MAC und KEY auf der Webseite genau? Ist das Gerät online?": "Приложение проверяет каждые 30 секунд. Совпадают ли MAC и KEY на сайте? Подключено ли устройство к сети?",
   "Kein Handy zur Hand?": "Нет телефона под рукой?",
   "„Playlist hinzufügen“ wählen und die Daten direkt hier eingeben.": "Выберите «Добавить плейлист» и введите данные прямо здесь.",
-  "Mehr Hilfe:": "Ещё помощь:"
+  "Mehr Hilfe:": "Ещё помощь:",
+  "Noch keine Playlist gefunden.": "Плейлист пока не найден."
 };

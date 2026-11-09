@@ -630,5 +630,6 @@ window.LUMIO_I18N["ku"] = {
   "Die App prüft alle 30 Sekunden. Stimmen MAC und KEY auf der Webseite genau? Ist das Gerät online?": "Sepan her 30 saniyeyan kontrol dike. MAC û KEY li ser malperê tam wek hev in? Cîhaz online e?",
   "Kein Handy zur Hand?": "Telefon li cem te tune?",
   "„Playlist hinzufügen“ wählen und die Daten direkt hier eingeben.": "„Lîsteyê zêde bike“ hilbijêre û agahiyan rasterast li vir binivîse.",
-  "Mehr Hilfe:": "Alîkariya zêdetir:"
+  "Mehr Hilfe:": "Alîkariya zêdetir:",
+  "Noch keine Playlist gefunden.": "Hîn tu lîsteya lîstikê nehat dîtin."
 };

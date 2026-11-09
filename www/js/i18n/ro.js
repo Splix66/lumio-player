@@ -630,5 +630,6 @@ window.LUMIO_I18N["ro"] = {
   "Die App prüft alle 30 Sekunden. Stimmen MAC und KEY auf der Webseite genau? Ist das Gerät online?": "Aplicația verifică la fiecare 30 de secunde. MAC și KEY de pe site sunt exact aceleași? Dispozitivul este online?",
   "Kein Handy zur Hand?": "Nu ai telefonul la îndemână?",
   "„Playlist hinzufügen“ wählen und die Daten direkt hier eingeben.": "Alege „Adaugă listă” și introdu datele direct aici.",
-  "Mehr Hilfe:": "Mai mult ajutor:"
+  "Mehr Hilfe:": "Mai mult ajutor:",
+  "Noch keine Playlist gefunden.": "Nu a fost găsit încă niciun playlist."
 };
