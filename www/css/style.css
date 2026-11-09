@@ -1832,3 +1832,118 @@ body.kbd .tr-close.f:focus, body.is-tv .tr-close.f:focus { background: #fff; col
 .lt-go { display: none; }
 body.kbd .ln-tile.f:focus, body.is-tv .ln-tile.f:focus { filter: none; box-shadow: 0 0 0 .22rem var(--bg), 0 0 0 .45rem #fff; }
 :root[data-theme="light"] .ln-tile { box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .06), 0 .5rem 1.2rem -.8rem rgba(0, 0, 0, .35); }
+
+/* ==========================================================
+   Willkommensseite (noch keine Playlist) – Premium-Design
+   Tiefschwarz #0B0B0F, Karten #17171E, Akzent Violett #9B83D5.
+   Gilt nur für diese Seite (.wl) und bleibt bewusst dunkel – auch im hellen Modus.
+   ========================================================== */
+.wl {
+  --wl-bg: #0B0B0F; --wl-card: #17171E; --wl-tile: #101016; --wl-line: rgba(255, 255, 255, .07); --wl-line-2: rgba(255, 255, 255, .13);
+  --wl-text: #F4F4F6; --wl-muted: #A3A3B2; --wl-dim: #8A8A9B; --wl-accent: #9B83D5; --wl-accent-2: #B3A0E3;
+  overflow-x: hidden; overflow-y: auto; align-items: stretch; padding: 0;   /* Position/Größe kommt von .screen (ganzer Bildschirm) */
+  color: var(--wl-text); background: var(--wl-bg);
+  background-image:
+    radial-gradient(60rem 38rem at 12% -10%, rgba(155, 131, 213, .13), transparent 70%),
+    radial-gradient(48rem 34rem at 100% 110%, rgba(155, 131, 213, .08), transparent 70%);
+}
+.wl-top {
+  position: relative; width: 100%; max-width: 76rem; margin: 0 auto; display: flex; align-items: center; justify-content: space-between;
+  padding: calc(1.8rem + env(safe-area-inset-top)) var(--pad) 0;
+}
+.wl .brand { font-size: 1.45rem; color: var(--wl-text); }
+.wl .brand-mark { width: 2.2rem; height: 2.2rem; color: var(--wl-text); }
+.wl .wordmark b { color: var(--wl-text); }
+.wl .wordmark span { color: var(--wl-muted); }
+.wl .lang-btn { background: rgba(255, 255, 255, .05); color: var(--wl-text); box-shadow: inset 0 0 0 1px var(--wl-line-2); }
+.wl .lang-btn:hover { background: rgba(255, 255, 255, .09); }
+.wl-main { position: relative; flex: 1; width: 100%; max-width: 76rem; margin: 0 auto; display: flex; flex-direction: column; justify-content: center; padding: 2.2rem var(--pad) 1.6rem; }
+
+/* Karte */
+.wl-card {
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-gap: 3.2rem; gap: 3.2rem; align-items: center;
+  padding: 3rem 3.2rem; border-radius: 1.6rem; background: var(--wl-card);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, .035), transparent 40%), radial-gradient(40rem 22rem at 0% 0%, rgba(155, 131, 213, .09), transparent 70%);
+  box-shadow: inset 0 0 0 1px var(--wl-line), 0 2.4rem 4.8rem -2.4rem rgba(0, 0, 0, .8);
+  animation: wlIn .7s cubic-bezier(.2, .7, .2, 1) both;
+}
+/* feine Lichtkante oben */
+.wl-card::before { content: ""; position: absolute; left: 12%; right: 12%; top: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(179, 160, 227, .55), transparent); }
+@keyframes wlIn { from { opacity: 0; transform: translateY(14px); } }
+
+/* Text */
+.wl-text { min-width: 0; }
+.wl-status { display: inline-flex; align-items: center; margin: 0 0 1.4rem; padding: .38rem .8rem .38rem .7rem; border-radius: 999px; background: rgba(155, 131, 213, .1); box-shadow: inset 0 0 0 1px rgba(155, 131, 213, .25); color: var(--wl-accent-2); font-size: .8rem; font-weight: 650; letter-spacing: .01em; }
+.wl-status i { width: .5rem; height: .5rem; margin-right: .55rem; border-radius: 50%; background: var(--wl-accent); box-shadow: 0 0 0 0 rgba(155, 131, 213, .6); animation: wlPulse 2.4s ease-out infinite; }
+@keyframes wlPulse { 0% { box-shadow: 0 0 0 0 rgba(155, 131, 213, .55); } 70%, 100% { box-shadow: 0 0 0 .5rem rgba(155, 131, 213, 0); } }
+.wl-title {
+  margin: 0; font-size: 3.1rem; font-weight: 800; letter-spacing: -.045em; line-height: 1.05;
+  color: var(--wl-text); background: linear-gradient(180deg, #FFFFFF 30%, #D3C7F0 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.wl-sub { margin: .7rem 0 0; font-size: 1.3rem; font-weight: 600; letter-spacing: -.015em; color: var(--wl-accent-2); }
+.wl-lead { margin: 1rem 0 0; max-width: 32rem; font-size: 1.02rem; line-height: 1.6; color: var(--wl-muted); }
+
+/* MAC und KEY */
+.wl-ids { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); grid-gap: .9rem; gap: .9rem; margin-top: 2rem; }
+.wl-id { min-width: 0; padding: .95rem 1.1rem 1rem; border-radius: 1rem; background: var(--wl-tile); box-shadow: inset 0 0 0 1px var(--wl-line); }
+.wl-id-label { display: block; font-size: .7rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--wl-dim); }
+.wl-id-row { display: flex; align-items: center; justify-content: space-between; margin-top: .4rem; }
+.wl-id-value { min-width: 0; font-family: ui-monospace, "SF Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace; font-size: 1.55rem; font-weight: 700; letter-spacing: .05em; color: var(--wl-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wl .wl-id .copy-btn { flex: none; width: 2.2rem; height: 2.2rem; margin-left: .6rem; border-radius: .6rem; color: var(--wl-dim); }
+.wl .wl-id .copy-btn:hover { color: var(--wl-text); background: rgba(255, 255, 255, .07); }
+
+/* Knöpfe */
+.wl-actions { display: flex; flex-wrap: wrap; margin: 2rem -.4rem 0; }
+.wl-btn {
+  display: inline-flex; align-items: center; justify-content: center; margin: 0 .4rem .6rem; padding: .95rem 1.6rem; border-radius: 999px;
+  font-size: 1rem; font-weight: 700; letter-spacing: -.005em; white-space: nowrap; cursor: pointer;
+  transition: background-color .2s ease, box-shadow .2s ease, transform .2s ease, color .2s ease;
+}
+.wl-btn .i { width: 1.15rem; height: 1.15rem; margin-right: .55rem; }
+.wl-primary { background: var(--wl-accent); color: #0B0B0F; box-shadow: 0 .7rem 1.6rem -.9rem rgba(155, 131, 213, .75), inset 0 1px 0 rgba(255, 255, 255, .25); }
+.wl-primary:hover { background: var(--wl-accent-2); transform: translateY(-1px); }
+.wl-ghost { background: rgba(255, 255, 255, .03); color: var(--wl-text); box-shadow: inset 0 0 0 1px var(--wl-line-2); }
+.wl-ghost:hover { background: rgba(255, 255, 255, .07); transform: translateY(-1px); }
+.wl-btn:active { transform: translateY(0) scale(.98); }
+body.kbd .wl-btn.f:focus, body.is-tv .wl-btn.f:focus { outline: none; transform: scale(1.04); box-shadow: 0 0 0 .2rem #0B0B0F, 0 0 0 .42rem #fff; }
+
+/* QR-Code */
+.wl-qr { width: 17.5rem; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.wl-qr-title { margin: 0 0 1rem; font-size: .78rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--wl-dim); }
+.wl-qr-frame { position: relative; padding: .55rem; border-radius: 1.35rem; background: linear-gradient(145deg, rgba(179, 160, 227, .55), rgba(155, 131, 213, .08) 45%, rgba(155, 131, 213, .35)); box-shadow: 0 1.6rem 3rem -1.6rem rgba(155, 131, 213, .55); }
+.wl .qr.wl-qrcode { width: 15.5rem; padding: .7rem; border-radius: 1rem; background: #fff; box-shadow: none; transition: transform .2s ease; }
+.wl .qr.wl-qrcode img { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+.wl .qr.wl-qrcode:hover { transform: scale(1.015); }
+body.kbd .wl .qr.f:focus, body.is-tv .wl .qr.f:focus { outline: none; box-shadow: 0 0 0 .2rem #0B0B0F, 0 0 0 .42rem #fff; }
+.wl-qr-cap { margin: 1.1rem 0 0; font-size: .86rem; line-height: 1.5; color: var(--wl-muted); }
+.wl-qr-or { margin: .9rem 0 .2rem; font-size: .78rem; color: var(--wl-dim); }
+.wl .wl-qr .link { color: var(--wl-accent-2); font-weight: 650; }
+
+.wl-legal { margin: 1.4rem auto 0; max-width: 46rem; text-align: center; font-size: .78rem; line-height: 1.5; color: var(--wl-dim); }
+
+/* Fernseher und große Bildschirme: alles auf einen Blick, ohne Scrollen */
+html.tv .wl-main { padding-top: 1.4rem; }
+
+/* Tablet und Handy (keine Fernseher) */
+@media (max-width: 960px) {
+  html:not(.tv) .wl-card { grid-template-columns: minmax(0, 1fr); grid-gap: 2.4rem; gap: 2.4rem; padding: 2.2rem 1.8rem; }
+  html:not(.tv) .wl-qr { width: 100%; padding-top: 2rem; border-top: 1px solid var(--wl-line); }
+  html:not(.tv) .wl-title { font-size: 2.4rem; }
+}
+@media (max-width: 560px) {
+  html:not(.tv) .wl-top { padding-top: calc(1.1rem + env(safe-area-inset-top)); }
+  html:not(.tv) .wl-main { padding: 1.2rem var(--pad) 1.2rem; justify-content: flex-start; }
+  html:not(.tv) .wl-card { padding: 1.6rem 1.15rem; border-radius: 1.3rem; }
+  html:not(.tv) .wl-title { font-size: 2rem; }
+  html:not(.tv) .wl-sub { font-size: 1.08rem; }
+  html:not(.tv) .wl-lead { font-size: .95rem; }
+  html:not(.tv) .wl-ids { grid-template-columns: minmax(0, 1fr); }
+  html:not(.tv) .wl-id-value { font-size: 1.35rem; }
+  html:not(.tv) .wl-actions { flex-direction: column; margin-left: 0; margin-right: 0; }
+  html:not(.tv) .wl-btn { margin: 0 0 .7rem; width: 100%; }
+  html:not(.tv) .wl .qr.wl-qrcode { width: 12.5rem; }
+  html:not(.tv) .wl .brand { font-size: 1.25rem; }
+}
+/* Ruhe für alte Fernseher und „Bewegung reduzieren“ */
+body.lite .wl-card, body.lite .wl-status i { animation: none; }
+@media (prefers-reduced-motion: reduce) { .wl-card, .wl-status i { animation: none; } .wl-btn, .wl .qr.wl-qrcode { transition: none; } }

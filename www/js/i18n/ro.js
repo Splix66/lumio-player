@@ -598,5 +598,10 @@ window.LUMIO_I18N["ro"] = {
   "Neuen KEY erzeugen?": "Generezi un KEY nou?",
   "Der alte KEY funktioniert danach nicht mehr – auch nicht auf der Webseite. Deine Playlists bleiben erhalten.": "Vechiul KEY nu va mai funcționa – nici pe site. Listele tale rămân.",
   "KEY konnte nicht erneuert werden.": "KEY-ul nu a putut fi reînnoit.",
-  "Neuer KEY: {0}": "KEY nou: {0}"
+  "Neuer KEY: {0}": "KEY nou: {0}",
+  "Wartet auf deine Playlist …": "Se așteaptă lista ta …",
+  "Willkommen bei Telvo.": "Bun venit la Telvo.",
+  "Dein Entertainment. Alles an einem Ort.": "Divertismentul tău. Totul într-un singur loc.",
+  "Verbinde jetzt deine Playlist und entdecke dein persönliches Entertainment-Erlebnis.": "Conectează acum lista ta și descoperă experiența ta personală de divertisment.",
+  "Mit dem Handy einrichten": "Configurare cu telefonul"
 };

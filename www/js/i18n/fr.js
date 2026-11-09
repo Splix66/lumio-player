@@ -598,5 +598,10 @@ window.LUMIO_I18N["fr"] = {
   "Neuen KEY erzeugen?": "Créer un nouveau KEY ?",
   "Der alte KEY funktioniert danach nicht mehr – auch nicht auf der Webseite. Deine Playlists bleiben erhalten.": "L’ancien KEY ne fonctionnera plus, y compris sur le site. Vos playlists sont conservées.",
   "KEY konnte nicht erneuert werden.": "Impossible de renouveler le KEY.",
-  "Neuer KEY: {0}": "Nouveau KEY : {0}"
+  "Neuer KEY: {0}": "Nouveau KEY : {0}",
+  "Wartet auf deine Playlist …": "En attente de votre playlist …",
+  "Willkommen bei Telvo.": "Bienvenue sur Telvo.",
+  "Dein Entertainment. Alles an einem Ort.": "Votre divertissement. Tout au même endroit.",
+  "Verbinde jetzt deine Playlist und entdecke dein persönliches Entertainment-Erlebnis.": "Connectez dès maintenant votre playlist et découvrez votre expérience de divertissement personnelle.",
+  "Mit dem Handy einrichten": "Configurer avec le téléphone"
 };

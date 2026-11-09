@@ -598,5 +598,10 @@ window.LUMIO_I18N["ku"] = {
   "Neuen KEY erzeugen?": "KEY-ya nû were çêkirin?",
   "Der alte KEY funktioniert danach nicht mehr – auch nicht auf der Webseite. Deine Playlists bleiben erhalten.": "KEY-ya kevn êdî naxebite – li ser malperê jî. Lîsteyên te dimînin.",
   "KEY konnte nicht erneuert werden.": "KEY nehat nûkirin.",
-  "Neuer KEY: {0}": "KEY-ya nû: {0}"
+  "Neuer KEY: {0}": "KEY-ya nû: {0}",
+  "Wartet auf deine Playlist …": "Li benda lîsteya te ye …",
+  "Willkommen bei Telvo.": "Bi xêr hatî Telvo.",
+  "Dein Entertainment. Alles an einem Ort.": "Şahiya te. Hemû li cihekî.",
+  "Verbinde jetzt deine Playlist und entdecke dein persönliches Entertainment-Erlebnis.": "Niha lîsteya xwe girê bide û ezmûna şahiya xwe ya kesane keşf bike.",
+  "Mit dem Handy einrichten": "Bi telefonê saz bike"
 };

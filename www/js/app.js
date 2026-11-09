@@ -2454,22 +2454,35 @@
   function showProfiles() {
     var list = Profiles.list();
     if (!list.length) {
-      var welcome = h('div', { class: 'profiles is-empty' }, heroArt(),
-        h('div', { class: 'profiles-top' }, h('div', { class: 'brand' }, brandMark(), wordmark()), langButton()),
-        h('div', { class: 'welcome' },
-          h('div', { class: 'qr-hero' },
-            qrBox(Device.portalLink(), 'big'),
-            h('div', { class: 'qr-info' },
-              h('h1', { text: T('Playlist hinzufügen') }),
-              h('p', { class: 'lead', text: T('Scanne den QR-Code mit deinem Handy. Dort gibst du nur noch deinen M3U-Link oder Xtream-Zugang ein – die Playlist erscheint dann automatisch hier.') }),
-              h('div', { class: 'id-box' },
-                h('div', { class: 'id-row' }, h('span', { text: 'MAC' }), h('b', { text: Device.mac() }), copyBtn(Device.mac(), 'MAC')),
-                h('div', { class: 'id-row' }, h('span', { text: 'KEY' }), h('b', { text: Device.key() }), copyBtn(Device.key(), 'KEY'))),
-              h('p', { class: 'hint', text: T('Oder öffne diese Seite und gib MAC und KEY ein:') }),
-              portalLinkBtn(),
-              h('div', { class: 'row small-actions' },
-                h('button', { class: 'btn small ghost f', onclick: showAddProfile, 'data-autofocus': true }, icon('plus'), h('span', { text: T('M3U oder Xtream hier eingeben') })),
-                h('button', { class: 'btn small ghost f', onclick: startDemo, title: T('Mit freien Test-Videos – ohne Zugang.') }, icon('play'), h('span', { text: T('Demo ausprobieren') })))))));
+      // Willkommensseite (noch keine Playlist): eigenes Premium-Design, Klassen „wl-…“ in css/style.css.
+      // MAC, KEY und QR-Code kommen wie bisher aus Device / qrBox – nichts Festes eingebaut.
+      function idTile(label, value, copyLabel) {
+        return h('div', { class: 'wl-id' },
+          h('span', { class: 'wl-id-label', text: label }),
+          h('span', { class: 'wl-id-row' }, h('b', { class: 'wl-id-value', text: value }), copyBtn(value, copyLabel)));
+      }
+      var welcome = h('div', { class: 'profiles is-empty wl' },
+        h('div', { class: 'wl-top' }, h('div', { class: 'brand' }, brandMark(), wordmark()), langButton()),
+        h('div', { class: 'wl-main' },
+          h('div', { class: 'wl-card' },
+            h('div', { class: 'wl-text' },
+              CONFIG.cloudUrl ? h('p', { class: 'wl-status' }, h('i', { 'aria-hidden': 'true' }), h('span', { text: T('Wartet auf deine Playlist …') })) : null,
+              h('h1', { class: 'wl-title', text: T('Willkommen bei Telvo.') }),
+              h('p', { class: 'wl-sub', text: T('Dein Entertainment. Alles an einem Ort.') }),
+              h('p', { class: 'wl-lead', text: T('Verbinde jetzt deine Playlist und entdecke dein persönliches Entertainment-Erlebnis.') }),
+              h('div', { class: 'wl-ids' },
+                idTile(T('MAC-Adresse'), Device.mac(), 'MAC'),
+                idTile('KEY', Device.key(), 'KEY')),
+              h('div', { class: 'wl-actions' },
+                h('button', { class: 'wl-btn wl-primary f', onclick: showAddProfile, 'data-autofocus': true }, icon('plus'), h('span', { text: T('Playlist hinzufügen') })),
+                h('button', { class: 'wl-btn wl-ghost f', onclick: startDemo, title: T('Mit freien Test-Videos – ohne Zugang.') }, icon('play'), h('span', { text: T('Demo ausprobieren') })))),
+            h('div', { class: 'wl-qr' },
+              h('p', { class: 'wl-qr-title', text: T('Mit dem Handy einrichten') }),
+              h('div', { class: 'wl-qr-frame' }, qrBox(Device.portalLink(), 'wl-qrcode')),
+              h('p', { class: 'wl-qr-cap', text: T('Scanne den QR-Code mit deinem Handy. Dort gibst du nur noch deinen M3U-Link oder Xtream-Zugang ein – die Playlist erscheint dann automatisch hier.') }),
+              h('p', { class: 'wl-qr-or', text: T('Oder öffne diese Seite und gib MAC und KEY ein:') }),
+              portalLinkBtn())),
+          h('p', { class: 'wl-legal', text: T('Diese App enthält keine Sender oder Inhalte. Du benötigst einen eigenen Zugang von deinem Anbieter.') })));
       Screens.reset('profiles', welcome);
       return;
     }

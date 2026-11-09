@@ -598,5 +598,10 @@ window.LUMIO_I18N["hr"] = {
   "Neuen KEY erzeugen?": "Izraditi novi KEY?",
   "Der alte KEY funktioniert danach nicht mehr – auch nicht auf der Webseite. Deine Playlists bleiben erhalten.": "Stari KEY više neće raditi – ni na web-stranici. Tvoje playliste ostaju.",
   "KEY konnte nicht erneuert werden.": "KEY nije moguće obnoviti.",
-  "Neuer KEY: {0}": "Novi KEY: {0}"
+  "Neuer KEY: {0}": "Novi KEY: {0}",
+  "Wartet auf deine Playlist …": "Čeka se tvoja playlista …",
+  "Willkommen bei Telvo.": "Dobro došli u Telvo.",
+  "Dein Entertainment. Alles an einem Ort.": "Tvoja zabava. Sve na jednom mjestu.",
+  "Verbinde jetzt deine Playlist und entdecke dein persönliches Entertainment-Erlebnis.": "Poveži sada svoju playlistu i otkrij svoje osobno iskustvo zabave.",
+  "Mit dem Handy einrichten": "Postavi putem mobitela"
 };

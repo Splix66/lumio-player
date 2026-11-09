@@ -7,6 +7,11 @@
 window.LUMIO_I18N = {
   /* ---------------- English ---------------- */
   en: {
+    "Wartet auf deine Playlist …": "Waiting for your playlist …",
+    "Willkommen bei Telvo.": "Welcome to Telvo.",
+    "Dein Entertainment. Alles an einem Ort.": "Your entertainment. All in one place.",
+    "Verbinde jetzt deine Playlist und entdecke dein persönliches Entertainment-Erlebnis.": "Connect your playlist now and discover your personal entertainment experience.",
+    "Mit dem Handy einrichten": "Set up with your phone",
     "Neuen KEY erzeugen": "Create new KEY",
     "Neuen KEY erzeugen?": "Create a new KEY?",
     "Der alte KEY funktioniert danach nicht mehr – auch nicht auf der Webseite. Deine Playlists bleiben erhalten.": "The old KEY will stop working – on the website too. Your playlists are kept.",
@@ -609,6 +614,11 @@ window.LUMIO_I18N = {
 
   /* ---------------- Türkçe ---------------- */
   tr: {
+    "Wartet auf deine Playlist …": "Listen bekleniyor …",
+    "Willkommen bei Telvo.": "Telvo’ya hoş geldin.",
+    "Dein Entertainment. Alles an einem Ort.": "Eğlencen. Hepsi tek bir yerde.",
+    "Verbinde jetzt deine Playlist und entdecke dein persönliches Entertainment-Erlebnis.": "Şimdi listeni bağla ve kişisel eğlence deneyimini keşfet.",
+    "Mit dem Handy einrichten": "Telefonla kur",
     "Neuen KEY erzeugen": "Yeni KEY oluştur",
     "Neuen KEY erzeugen?": "Yeni KEY oluşturulsun mu?",
     "Der alte KEY funktioniert danach nicht mehr – auch nicht auf der Webseite. Deine Playlists bleiben erhalten.": "Eski KEY artık çalışmaz – web sitesinde de. Listelerin korunur.",

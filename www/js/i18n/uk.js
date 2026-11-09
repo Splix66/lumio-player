@@ -598,5 +598,10 @@ window.LUMIO_I18N["uk"] = {
   "Neuen KEY erzeugen?": "Створити новий KEY?",
   "Der alte KEY funktioniert danach nicht mehr – auch nicht auf der Webseite. Deine Playlists bleiben erhalten.": "Старий KEY перестане працювати – і на сайті теж. Ваші плейлисти збережуться.",
   "KEY konnte nicht erneuert werden.": "Не вдалося оновити KEY.",
-  "Neuer KEY: {0}": "Новий KEY: {0}"
+  "Neuer KEY: {0}": "Новий KEY: {0}",
+  "Wartet auf deine Playlist …": "Очікування вашого плейлиста …",
+  "Willkommen bei Telvo.": "Ласкаво просимо до Telvo.",
+  "Dein Entertainment. Alles an einem Ort.": "Ваші розваги. Усе в одному місці.",
+  "Verbinde jetzt deine Playlist und entdecke dein persönliches Entertainment-Erlebnis.": "Підключіть плейлист і відкрийте для себе свої персональні розваги.",
+  "Mit dem Handy einrichten": "Налаштування з телефона"
 };
