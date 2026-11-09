@@ -1,10 +1,10 @@
 {
   "id": "de.lumio.player",
   "version": "1.0.0",
-  "vendor": "Lumio",
+  "vendor": "Telvo",
   "type": "web",
   "main": "index.html",
-  "title": "Lumio Player",
+  "title": "Telvo Player",
   "icon": "icon.png",
   "largeIcon": "largeIcon.png",
   "bgColor": "#0a0c11",

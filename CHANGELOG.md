@@ -1,4 +1,19 @@
-# Änderungsprotokoll – Lumio Player
+# Änderungsprotokoll – Telvo Player (früher Lumio Player)
+
+## Unveröffentlicht – Umbenennung in „Telvo“ und neue Webseite
+
+**Neuer Name: Telvo Player** (vorher „Lumio Player“ – den Namen nutzen bereits andere Apps, u. a. ein
+Android-Videoplayer und eine Schul-Software). Geändert ist nur der **sichtbare** Name und das Logo:
+- Neues Logo „T mit Play-Zeichen und Lichtpunkt“ (Webseite, App, Favicon, App-Symbole über `scripts/make-icons.py`)
+- App-Name in App, Android/Fire TV (Capacitor), Samsung, LG, Windows/Mac (`productName` → Mac-App heißt jetzt
+  „Telvo Player.app“), Release-Titel auf GitHub
+- **Bewusst unverändert** (damit bestehende Installationen, Updates, QR-Codes und der Downloader-Code 5619512
+  weiter funktionieren): Repository und Webadresse `splix66.github.io/lumio-player`, Dateinamen `lumio-player.apk` /
+  `lumio-player-setup.exe` / `lumio-player-mac.dmg`, App-Kennung `de.lumio.player`, Datenbankfunktionen `lumio_*`,
+  gespeicherte Einstellungen `lumio.*`, Test-Schnittstelle `window.LumioDebug`
+
+Webseite (`docs/`): neues Design, 14 Sprachen mit Sprachauswahl wie in der App, Sicherheitsregel (CSP),
+automatischer Webseiten-Test – Details in `WEBSEITE-BESTANDSAUFNAHME.md`.
 
 ## 1.10.0 – 2026-11-09 · Automatische Tests
 

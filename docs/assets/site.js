@@ -1,4 +1,4 @@
-/* Lumio-Webseite – Bereiche, Kundenportal (Playlists per MAC + KEY), Download, Hilfe & Support */
+/* Telvo-Webseite – Bereiche, Kundenportal (Playlists per MAC + KEY), Download, Hilfe & Support */
 (function () {
   'use strict';
   var API = 'https://oofzhklrbrpxjoicwbsf.supabase.co/rest/v1/rpc/';
@@ -14,7 +14,7 @@
       'Gib dort den Code 5619512 ein (oder die Adresse splix66.github.io/lumio-player/app). Der Download startet von selbst, danach auf „Installieren“ drücken.',
       'Fire TV fragt beim ersten Mal nach einer Erlaubnis: unter Einstellungen → Mein Fire TV → Entwickleroptionen → „Apps unbekannter Herkunft installieren“ für Downloader einschalten. Fehlen die Entwickleroptionen, unter Mein Fire TV → Info 7-mal auf den Gerätenamen drücken.']],
     ['Wo finde ich MAC-Adresse und KEY?', [
-      'Öffne Lumio Player auf deinem Fernseher oder Handy. MAC und KEY stehen ganz unten am Bildschirmrand – und oben rechts unter „Profil“.',
+      'Öffne Telvo Player auf deinem Fernseher oder Handy. MAC und KEY stehen ganz unten am Bildschirmrand – und oben rechts unter „Profil“.',
       'Ist noch keine Playlist eingerichtet, zeigt die App beides groß auf dem Startbildschirm, zusammen mit einem QR-Code. Scannst du ihn mit dem Handy, öffnet sich diese Seite mit allem schon ausgefüllt.']],
     ['Meine Playlist erscheint nicht in der App', [
       'Die App fragt alle 30 Sekunden nach neuen Playlists, solange sie geöffnet und mit dem Internet verbunden ist. Warte kurz oder starte die App neu.',
@@ -35,7 +35,7 @@
       'Alle Daten werden verschlüsselt übertragen. Abrufen kann sie nur, wer MAC-Adresse und KEY deines Geräts kennt. Nach 20 falschen Versuchen wird das Gerät für eine Stunde gesperrt.',
       'Gib MAC und KEY deshalb nicht an Fremde weiter.']],
     ['Woher bekomme ich Sender?', [
-      'Lumio Player ist nur der Player und enthält keine Sender oder Inhalte. Die Playlist bekommst du von deinem IPTV-Anbieter.']]
+      'Telvo Player ist nur der Player und enthält keine Sender oder Inhalte. Die Playlist bekommst du von deinem IPTV-Anbieter.']]
   ];
 
   /* ---------- Download: feste Links, die immer auf die neueste Version zeigen ---------- */
@@ -48,14 +48,14 @@
   var DL_FAQ = [
     ['Android blockiert die Installation', [
       'Beim ersten Mal fragt Android nach einer Erlaubnis. Tippe auf „Einstellungen“ und erlaube „Aus dieser Quelle installieren“ für deinen Browser oder für Downloader. Danach geht die Installation weiter.',
-      'Erscheint „App nicht installiert“, ist noch eine ältere Lumio-Version drauf. Deinstalliere sie einmal und installiere dann neu.']],
+      'Erscheint „App nicht installiert“, ist noch eine ältere Telvo-Version drauf. Deinstalliere sie einmal und installiere dann neu.']],
     ['Windows meldet „Der Computer wurde durch Windows geschützt“', [
       'Das erscheint bei neuen Programmen, die Windows noch nicht kennt. Klicke auf „Weitere Informationen“ und dann auf „Trotzdem ausführen“.',
-      'Danach findest du Lumio Player im Startmenü und auf dem Desktop.']],
+      'Danach findest du Telvo Player im Startmenü und auf dem Desktop.']],
     ['Der Mac öffnet die App nicht', [
-      'Öffne die heruntergeladene Datei und ziehe Lumio Player in den Ordner „Programme“.',
+      'Öffne die heruntergeladene Datei und ziehe Telvo Player in den Ordner „Programme“.',
       'Meldet der Mac beim ersten Start, dass die App nicht überprüft werden kann: Systemeinstellungen → Datenschutz & Sicherheit → ganz unten „Dennoch öffnen“ wählen. Das ist nur einmal nötig.',
-      'Steht dort, die App sei „beschädigt“: Programm „Terminal“ öffnen, xattr -cr "/Applications/Lumio Player.app" eingeben und Enter drücken. Danach startet die App normal.']],
+      'Steht dort, die App sei „beschädigt“: Programm „Terminal“ öffnen, xattr -cr "/Applications/Telvo Player.app" eingeben und Enter drücken. Danach startet die App normal.']],
     ['Wie bekomme ich Updates?', [
       'Lade die App hier einfach erneut herunter und installiere sie über die alte Version. Die Links liefern immer die neueste Version.',
       'Playlists, Favoriten und Einstellungen bleiben dabei erhalten.']]
@@ -516,7 +516,7 @@
   /* ---------- Kontakt per E-Mail (für alle ohne App) ---------- */
   if (/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(CONTACT_EMAIL)) {
     $('contactMail').hidden = false;
-    $('contactMailLink').href = 'mailto:' + CONTACT_EMAIL + '?subject=' + encodeURIComponent('Lumio Player');
+    $('contactMailLink').href = 'mailto:' + CONTACT_EMAIL + '?subject=' + encodeURIComponent('Telvo Player');
     $('contactMailLink').appendChild(el('span', 'addr', ' · ' + CONTACT_EMAIL));
   }
 

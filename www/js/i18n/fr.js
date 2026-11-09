@@ -1,4 +1,4 @@
-/* Lumio Player – Übersetzung: Französisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
+/* Telvo Player – Übersetzung: Französisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["fr"] = {
   "Dein Zugang ist abgelaufen": "Votre accès a expiré",
@@ -57,7 +57,7 @@ window.LUMIO_I18N["fr"] = {
   "Hell": "Clair",
   "Automatisch": "Automatique",
   "Darstellung": "Affichage",
-  "Gerade läuft das {0}-Design. Danach gilt wieder das Lumio-Violett.": "Le thème {0} est actif en ce moment. Ensuite, le violet Lumio revient.",
+  "Gerade läuft das {0}-Design. Danach gilt wieder das Telvo-Violett.": "Le thème {0} est actif en ce moment. Ensuite, le violet Telvo revient.",
   "Automatisch richtet sich nach deinem Gerät. Fernseher bleiben dunkel.": "Automatique suit votre appareil. Les téléviseurs restent sombres.",
   "Playlist per Handy hinzufügen": "Ajouter une playlist avec votre téléphone",
   "QR-Code scannen oder antippen. MAC und KEY sind auf der Seite schon eingetragen – du gibst nur noch deinen M3U-Link oder Xtream-Zugang ein.": "Scannez ou touchez le QR code. MAC et KEY sont déjà saisis sur la page – il ne vous reste qu’à entrer votre lien M3U ou votre accès Xtream.",
@@ -191,7 +191,7 @@ window.LUMIO_I18N["fr"] = {
   "{0} – gültig bis {1}": "{0} – valide jusqu’au {1}",
   "{0} – keine Verbindung": "{0} – aucune connexion",
   "Willkommen bei": "Bienvenue sur",
-  "mit Lumio Player": "avec Lumio Player",
+  "mit Telvo Player": "avec Telvo Player",
   "Probiere die App mit freien Test-Videos aus.": "Essayez l’appli avec des vidéos de test libres.",
   "Dein Licht für Live TV, Filme und Serien.": "Votre lumière pour la Live TV, les films et les séries.",
   "Mehr anzeigen": "Voir plus",
@@ -232,7 +232,7 @@ window.LUMIO_I18N["fr"] = {
   "Wiedergabe nicht möglich. Mit „Zurück“ schließen.": "Lecture impossible. Fermez avec « Retour ».",
   "Wiedergabe": "Lecture",
   "Android-Player": "Lecteur Android",
-  "Lumio-Player": "Lecteur Lumio",
+  "Telvo-Player": "Lecteur Telvo",
   "Top 10 Filme": "Top 10 films",
   "Top 10 Serien": "Top 10 séries",
   "Top 10 in {0}": "Top 10 en {0}",
@@ -464,7 +464,7 @@ window.LUMIO_I18N["fr"] = {
   "Name Z–A": "Nom Z–A",
   "Funktioniert auf den meisten Geräten am besten.": "Fonctionne le mieux sur la plupart des appareils.",
   "Probiere das, wenn Sender nicht starten oder ruckeln.": "Essayez ceci si les chaînes ne démarrent pas ou saccadent.",
-  "Aus – Lumio-Player verwenden": "Désactivé – utiliser le lecteur Lumio",
+  "Aus – Telvo-Player verwenden": "Désactivé – utiliser le lecteur Telvo",
   "Jedes Mal fragen": "Demander à chaque fois",
   "Android zeigt eine Auswahl deiner Player-Apps.": "Android affiche une sélection de vos applis de lecture.",
   "Alle 6 Stunden": "Toutes les 6 heures",

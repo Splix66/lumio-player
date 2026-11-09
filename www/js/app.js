@@ -1,5 +1,5 @@
 /* ==========================================================
-   Lumio Player – App-Logik
+   Telvo Player – App-Logik
    Läuft auf: Android, Fire TV, Android TV, iPhone, iPad (über Capacitor),
    Samsung (Tizen), LG (webOS) und im Browser.
    Bewusst ohne Build-Werkzeuge geschrieben, damit auch ältere
@@ -10,7 +10,7 @@
 
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
-    appName: 'Lumio Player',          // Name der App (auch in config-Dateien ändern)
+    appName: 'Telvo Player',          // Name der App (auch in config-Dateien ändern)
     version: '1.10.0',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     hlsCdn: 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js',
@@ -133,10 +133,10 @@
     return span.firstChild;
   }
   /* Logo: "L" und Play-Zeichen in Textfarbe, der Lichtpunkt in der gewählten Akzentfarbe */
-  var LOGO_SVG = '<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M14 20v44a20 20 0 0 0 20 20h44" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round"/><path class="play" d="M38 23.6c0-3.6 3.9-5.8 7-4l35.4 22.2c3 1.8 3 6.2 0 8L45 72c-3.1 1.8-7-.4-7-4z"/><circle class="dot" cx="84" cy="22" r="6"/><path class="star" d="M84 12L86.5 19.5L94 22L86.5 24.5L84 32L81.5 24.5L74 22L81.5 19.5Z"/></svg>';
+  var LOGO_SVG = '<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M14 22h56M34 22v62" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round"/><path class="play" d="M50 38.5c0-3.3 3.6-5.3 6.4-3.6l25.4 15.6c2.7 1.7 2.7 5.6 0 7.2L56.4 73.4C53.6 75.1 50 73.1 50 69.8z"/><circle class="dot" cx="84" cy="22" r="6"/><path class="star" d="M84 12L86.5 19.5L94 22L86.5 24.5L84 32L81.5 24.5L74 22L81.5 19.5Z"/></svg>';
   function brandMark() { var m = h('span', { class: 'brand-mark' }); m.innerHTML = LOGO_SVG; return m; }
-  /* Schriftzug: "Lumio" kräftig, "Player" leicht */
-  function wordmark() { return h('span', { class: 'wordmark' }, h('b', { text: 'Lumio' }), h('span', { text: 'Player' })); }
+  /* Schriftzug: "Telvo" kräftig, "Player" leicht */
+  function wordmark() { return h('span', { class: 'wordmark' }, h('b', { text: 'Telvo' }), h('span', { text: 'Player' })); }
 
   function hashCode(s) { var x = 0; s = String(s || ''); for (var i = 0; i < s.length; i++) x = (x * 31 + s.charCodeAt(i)) | 0; return Math.abs(x); }
   function colorFor(s) { var hue = hashCode(s) % 360; return 'hsl(' + hue + ',55%,38%)'; }
@@ -296,7 +296,7 @@
     return p.type === 'demo' ? '' : (p.name || '');
   }
 
-  /* ---------------- Darstellung: Hell/Dunkel mit fester Lumio-Farbe (Violett) ----------------
+  /* ---------------- Darstellung: Hell/Dunkel mit fester Telvo-Farbe (Violett) ----------------
      Die Farben selbst stehen in css/style.css. Nur die Saison-Designs färben kurzzeitig um. */
   function rgba(hex, alpha) {
     var n = parseInt(hex.slice(1), 16);
@@ -1226,14 +1226,14 @@
     paint();
     var s = Season.current();
     return h('div', { class: 'panel' }, h('h3', null, icon('sun'), T('Darstellung')), seg,
-      h('p', { class: 'hint', text: s ? T('Gerade läuft das {0}-Design. Danach gilt wieder das Lumio-Violett.', T(SEASONS[s].name)) : T('Automatisch richtet sich nach deinem Gerät. Fernseher bleiben dunkel.') }));
+      h('p', { class: 'hint', text: s ? T('Gerade läuft das {0}-Design. Danach gilt wieder das Telvo-Violett.', T(SEASONS[s].name)) : T('Automatisch richtet sich nach deinem Gerät. Fernseher bleiben dunkel.') }));
   }
 
   /* Hintergrund für Startseite und Playlists: dezenter Lichtschein und ein großes, kaum sichtbares Logo */
   function heroArt() {
     var box = h('div', { class: 'hero-art', 'aria-hidden': 'true' });
-    box.innerHTML = '<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><path d="M14 20v44a20 20 0 0 0 20 20h44" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>' +
-      '<path d="M38 23.6c0-3.6 3.9-5.8 7-4l35.4 22.2c3 1.8 3 6.2 0 8L45 72c-3.1 1.8-7-.4-7-4z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>' +
+    box.innerHTML = '<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><path d="M14 22h56M34 22v62" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>' +
+      '<path d="M50 38.5c0-3.3 3.6-5.3 6.4-3.6l25.4 15.6c2.7 1.7 2.7 5.6 0 7.2L56.4 73.4C53.6 75.1 50 73.1 50 69.8z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>' +
       '</svg>';
     return box;
   }
@@ -2397,7 +2397,7 @@
       }
       var searchBtn = h('button', { class: 'icon-btn f', title: T('Suche'), 'aria-label': T('Suche'), onclick: function () { QuickSearch.toggle(); } }, icon('search'));
       var head = h('header', { class: 'topnav' },
-        h('div', { class: 'nav-left' }, h('div', { class: 'brand brand-sm' }, brandMark(), h('span', { class: 'wordmark' }, h('b', { text: 'Lumio' }))), homeBtn),
+        h('div', { class: 'nav-left' }, h('div', { class: 'brand brand-sm' }, brandMark(), h('span', { class: 'wordmark' }, h('b', { text: 'Telvo' }))), homeBtn),
         tabs,
         h('div', { class: 'top-tools' }, searchBtn, reloadTop, tool('favs', T('Favoriten'), 'heart'), tool('settings', T('Einstellungen')), tool('profile', T('Profil'))));
       var runTime = h('div', { class: 'mac-tag sb-days' });
@@ -2910,9 +2910,9 @@
      die Anziehung, schwebt kurz und klatscht auf den Boden – dann setzt sich das Logo wieder zusammen.
      Darunter sieht man, was gerade geladen wird. Danach landet man immer auf dem Startbildschirm. */
   var RL_LOGO = '<svg viewBox="0 0 100 100" aria-hidden="true">' +
-    '<g class="rl-l"><path d="M14 20v44a20 20 0 0 0 20 20h44" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round"/></g>' +
+    '<g class="rl-l"><path d="M14 22h56M34 22v62" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round"/></g>' +
     '<g class="rl-dust"><circle cx="41" cy="77.5" r="1.7"/><circle cx="58" cy="76.5" r="1.3"/><circle cx="77" cy="77.5" r="1.7"/></g>' +
-    '<g class="rl-play"><path d="M38 23.6c0-3.6 3.9-5.8 7-4l35.4 22.2c3 1.8 3 6.2 0 8L45 72c-3.1 1.8-7-.4-7-4z"/></g>' +
+    '<g class="rl-play"><path d="M50 38.5c0-3.3 3.6-5.3 6.4-3.6l25.4 15.6c2.7 1.7 2.7 5.6 0 7.2L56.4 73.4C53.6 75.1 50 73.1 50 69.8z"/></g>' +
     '<g class="rl-dot"><circle cx="84" cy="22" r="6"/></g></svg>';
   var reloadingNow = false;
   function reloadWithSplash() {
@@ -3915,7 +3915,7 @@
     var POSTERS = [['s', T('Klein'), T('Mehr Cover auf einmal')], ['m', T('Normal')], ['l', T('Groß'), T('Besser lesbar aus der Entfernung')]];
     var SORTS = [['default', T('Wie beim Anbieter')], ['num', T('Nach Sendernummer')], ['az', T('Name A–Z')], ['za', T('Name Z–A')]];
     var FORMATS = [['m3u8', 'HLS (.m3u8)', T('Funktioniert auf den meisten Geräten am besten.')], ['ts', 'MPEG-TS (.ts)', T('Probiere das, wenn Sender nicht starten oder ruckeln.')]];
-    var EXTS = [['off', T('Aus – Lumio-Player verwenden')], ['ask', T('Jedes Mal fragen'), T('Android zeigt eine Auswahl deiner Player-Apps.')], ['vlc', 'VLC'], ['mx', 'MX Player'], ['just', 'Just Player']];
+    var EXTS = [['off', T('Aus – Telvo-Player verwenden')], ['ask', T('Jedes Mal fragen'), T('Android zeigt eine Auswahl deiner Player-Apps.')], ['vlc', 'VLC'], ['mx', 'MX Player'], ['just', 'Just Player']];
     var AUTOS = [[6, T('Alle 6 Stunden')], [12, T('Alle 12 Stunden'), T('Empfohlen')], [24, T('Einmal am Tag')], [0, T('Aus – nur von Hand')]];
     var IDLES = [[0, T('Aus')], [2, T('Nach {0} Stunden', 2)], [3, T('Nach {0} Stunden', 3)], [4, T('Nach {0} Stunden', 4)]];
     var CLOCKS = [[false, T('24 Stunden'), '20:15'], [true, T('12 Stunden'), '8:15 PM']];
@@ -3925,7 +3925,7 @@
     var SBGS = [['none', T('Ohne (mit Schatten)')], ['half', T('Halb durchsichtig')], ['black', T('Schwarz')]];
     function autoH() { var v = Settings.get('autoRefresh'); return typeof v === 'number' ? v : 12; }
     function engines() {
-      var o = [['auto', T('Android-Player'), T('Der eingebaute Player von Android.')], ['hlsjs', T('Lumio-Player'), T('Hilft bei manchen Sendern, die sonst hängen.')]];
+      var o = [['auto', T('Android-Player'), T('Der eingebaute Player von Android.')], ['hlsjs', T('Telvo-Player'), T('Hilft bei manchen Sendern, die sonst hängen.')]];
       if (NativePlayer.available()) o.unshift(['native', T('TV-Player'), T('Für Android-Boxen gemacht: stabil und sparsam.')]);
       return o;
     }
@@ -4046,7 +4046,7 @@
       var s = Season.current();
       openSheet(T('Darstellung'), 'sun', [
         h('h3', { class: 'sh-sub', text: T('Farben') }), choiceList(THEMES, function () { return Settings.get('theme') || 'dark'; }, function (v) { Settings.set('theme', v); Theme.apply(); }),
-        s ? h('p', { class: 'hint', text: T('Gerade läuft das {0}-Design. Danach gilt wieder das Lumio-Violett.', T(SEASONS[s].name)) }) : null,
+        s ? h('p', { class: 'hint', text: T('Gerade läuft das {0}-Design. Danach gilt wieder das Telvo-Violett.', T(SEASONS[s].name)) }) : null,
         h('h3', { class: 'sh-sub', text: T('Größe der Cover bei Filmen und Serien') }), choiceList(POSTERS, function () { return Settings.get('posterSize') || 'm'; }, function (v) { Settings.set('posterSize', v); Theme.apply(); })], { onClose: paint });
     });
     var tClock = tile('clock', T('Zeitformat'), function () { return opt(CLOCKS, !!Settings.get('clock12')); }, function () {
@@ -4381,7 +4381,7 @@
       try { return C.Plugins && C.Plugins.NativePlayer ? C.Plugins.NativePlayer : (C.registerPlugin ? C.registerPlugin('NativePlayer') : null); } catch (e) { return null; }
     },
     available: function () { return !this.failed && !!this.plugin(); },
-    /* Gewählte Wiedergabe: 'native' (TV-Player), 'auto' (Android-Player im Browser), 'hlsjs' (Lumio-Player).
+    /* Gewählte Wiedergabe: 'native' (TV-Player), 'auto' (Android-Player im Browser), 'hlsjs' (Telvo-Player).
        Auf Android-Boxen ist der TV-Player voreingestellt. */
     engine: function () { var e = Settings.get('engine'); return e || (Platform.androidTV && this.available() ? 'native' : 'auto'); },
     use: function (item) { return item && item.kind !== 'series' && this.engine() === 'native' && this.available(); },
@@ -4998,10 +4998,10 @@
           return { label: f[1], on: lf === f[0], pick: function () { if (lf === f[0]) return; Settings.set('liveFormat', f[0]); self.load(self.item); } };
         })]);
       }
-      // Android: eingebauter Android-Player oder der Lumio-eigene Player (hls.js) – je nach Gerät läuft einer stabiler
+      // Android: eingebauter Android-Player oder der Telvo-eigene Player (hls.js) – je nach Gerät läuft einer stabiler
       if (Platform.android) {
         var en = NativePlayer.engine();
-        var opts = [['auto', T('Android-Player')], ['hlsjs', T('Lumio-Player')]];
+        var opts = [['auto', T('Android-Player')], ['hlsjs', T('Telvo-Player')]];
         if (NativePlayer.available()) opts.unshift(['native', T('TV-Player')]);
         sections.push([T('Wiedergabe'), opts.map(function (f) {
           return { label: f[1], on: en === f[0], pick: function () {

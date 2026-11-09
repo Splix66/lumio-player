@@ -1,8 +1,8 @@
 {
   "name": "lumio-player-desktop",
   "version": "1.0.0",
-  "description": "Lumio Player für Windows und Mac",
-  "author": "Lumio",
+  "description": "Telvo Player für Windows und Mac",
+  "author": "Telvo",
   "private": true,
   "main": "main.js",
   "scripts": {
@@ -15,7 +15,7 @@
   },
   "build": {
     "appId": "de.lumio.player",
-    "productName": "Lumio Player",
+    "productName": "Telvo Player",
     "files": ["main.js", "app/**/*"],
     "directories": { "output": "dist" },
     "win": {

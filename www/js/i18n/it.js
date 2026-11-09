@@ -1,4 +1,4 @@
-/* Lumio Player – Übersetzung: Italienisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
+/* Telvo Player – Übersetzung: Italienisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["it"] = {
   "Dein Zugang ist abgelaufen": "Il tuo abbonamento è scaduto",
@@ -57,7 +57,7 @@ window.LUMIO_I18N["it"] = {
   "Hell": "Chiaro",
   "Automatisch": "Automatico",
   "Darstellung": "Aspetto",
-  "Gerade läuft das {0}-Design. Danach gilt wieder das Lumio-Violett.": "Al momento è attivo il tema {0}. Dopo torna il viola Lumio.",
+  "Gerade läuft das {0}-Design. Danach gilt wieder das Telvo-Violett.": "Al momento è attivo il tema {0}. Dopo torna il viola Telvo.",
   "Automatisch richtet sich nach deinem Gerät. Fernseher bleiben dunkel.": "Automatico segue il tuo dispositivo. Le TV restano scure.",
   "Playlist per Handy hinzufügen": "Aggiungi una playlist dal telefono",
   "QR-Code scannen oder antippen. MAC und KEY sind auf der Seite schon eingetragen – du gibst nur noch deinen M3U-Link oder Xtream-Zugang ein.": "Inquadra o tocca il codice QR. MAC e KEY sono già inseriti nella pagina: devi solo inserire il tuo link M3U o i dati Xtream.",
@@ -191,7 +191,7 @@ window.LUMIO_I18N["it"] = {
   "{0} – gültig bis {1}": "{0} – valido fino al {1}",
   "{0} – keine Verbindung": "{0} – nessuna connessione",
   "Willkommen bei": "Benvenuto in",
-  "mit Lumio Player": "con Lumio Player",
+  "mit Telvo Player": "con Telvo Player",
   "Probiere die App mit freien Test-Videos aus.": "Prova l’app con video di prova gratuiti.",
   "Dein Licht für Live TV, Filme und Serien.": "La tua luce per Live TV, film e serie.",
   "Mehr anzeigen": "Mostra di più",
@@ -232,7 +232,7 @@ window.LUMIO_I18N["it"] = {
   "Wiedergabe nicht möglich. Mit „Zurück“ schließen.": "Riproduzione non possibile. Chiudi con “Indietro”.",
   "Wiedergabe": "Riproduzione",
   "Android-Player": "Player Android",
-  "Lumio-Player": "Player Lumio",
+  "Telvo-Player": "Player Telvo",
   "Top 10 Filme": "Top 10 film",
   "Top 10 Serien": "Top 10 serie",
   "Top 10 in {0}": "Top 10 in {0}",
@@ -464,7 +464,7 @@ window.LUMIO_I18N["it"] = {
   "Name Z–A": "Nome Z–A",
   "Funktioniert auf den meisten Geräten am besten.": "Funziona meglio sulla maggior parte dei dispositivi.",
   "Probiere das, wenn Sender nicht starten oder ruckeln.": "Provalo se i canali non partono o vanno a scatti.",
-  "Aus – Lumio-Player verwenden": "No – usa il player Lumio",
+  "Aus – Telvo-Player verwenden": "No – usa il player Telvo",
   "Jedes Mal fragen": "Chiedi ogni volta",
   "Android zeigt eine Auswahl deiner Player-Apps.": "Android mostra una scelta delle tue app player.",
   "Alle 6 Stunden": "Ogni 6 ore",

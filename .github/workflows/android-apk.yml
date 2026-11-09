@@ -73,7 +73,7 @@ jobs:
               --ks-pass env:LUMIO_KS_PW --key-pass env:LUMIO_KS_PW lumio-player.apk
             rm -f "$RUNNER_TEMP/lumio.p12"
             "$BT/apksigner" verify --print-certs lumio-player.apk | head -n 3
-            echo "🔑 Mit dem festen Lumio-Schlüssel signiert – Updates ohne Deinstallieren möglich." >> $GITHUB_STEP_SUMMARY
+            echo "🔑 Mit dem festen Telvo-Schlüssel signiert – Updates ohne Deinstallieren möglich." >> $GITHUB_STEP_SUMMARY
           else
             echo "⚠️ Secret LUMIO_SIGNING fehlt – APK hat einen wechselnden Test-Schlüssel (Updates nur nach Deinstallieren)." >> $GITHUB_STEP_SUMMARY
           fi
@@ -98,7 +98,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: neueste
-          name: Lumio Player ${{ steps.ver.outputs.v }} – neueste Version
+          name: Telvo Player ${{ steps.ver.outputs.v }} – neueste Version
           body: |
             Version ${{ steps.ver.outputs.v }}, automatisch gebaut aus ${{ github.sha }}.
             Download: lumio-player.apk (Handy, Tablet, Fire TV, Android TV)

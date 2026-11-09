@@ -1,4 +1,4 @@
--- Lumio Player – Datenbank für "Playlist per MAC-Adresse hochladen"
+-- Telvo Player – Datenbank für "Playlist per MAC-Adresse hochladen"
 -- Einmal im Supabase SQL-Editor ausführen (kann gefahrlos wiederholt werden).
 -- Sicherheit: Die Tabellen sind von außen NICHT direkt lesbar (RLS ohne Regeln).
 -- Zugriff gibt es nur über die Funktionen unten, und nur mit MAC + Geräteschlüssel.

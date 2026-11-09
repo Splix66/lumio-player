@@ -1,4 +1,4 @@
-/* Lumio-Webseite (docs/) – automatischer Test im unsichtbaren Chrome.
+/* Telvo-Webseite (docs/) – automatischer Test im unsichtbaren Chrome.
    Startet selbst einen kleinen Webserver, simuliert den Online-Dienst (Supabase) und GitHub mit erfundenen Daten
    (keine Kundendaten, keine echte Verbindung) und prüft:
    - alle Seiten laden ohne JavaScript-Fehler und ohne Verstöße gegen die Sicherheitsregel (CSP)
@@ -73,7 +73,7 @@ async function newPage(browser, opts, backend) {
   const errors = [];
   await ctx.route('https://api.github.com/**', r => r.fulfill({
     status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' },
-    body: JSON.stringify([{ tag_name: 'neueste', name: 'Lumio Player 9.9.9', assets: [{ name: 'lumio-player.apk', size: 9000000, updated_at: '2030-01-01T10:00:00Z' }] }])
+    body: JSON.stringify([{ tag_name: 'neueste', name: 'Telvo Player 9.9.9', assets: [{ name: 'lumio-player.apk', size: 9000000, updated_at: '2030-01-01T10:00:00Z' }] }])
   }));
   await ctx.route('https://oofzhklrbrpxjoicwbsf.supabase.co/**', r => {
     const req = r.request();

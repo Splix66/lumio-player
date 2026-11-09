@@ -1,4 +1,4 @@
-# Lumio-Webseite – Bestandsaufnahme (09.11.2026)
+# Telvo-Webseite – Bestandsaufnahme (09.11.2026)
 
 Ausgangsstand: Commit `da2e142` (Version 1.10.0, `main`). Dieses Dokument liegt bewusst **nicht** in `docs/`,
 damit es nicht über GitHub Pages veröffentlicht wird.
@@ -59,7 +59,7 @@ App (TV/Handy/PC) ──register_device / list_playlists──▶ Supabase ◀�
 4. ✅ **Handy-Menü abgeschnitten**: „Hilfe & Support“ war auf Handys nur halb sichtbar.
 5. ✅ **Zu schwacher Kontrast** (Barrierefreiheit, WCAG AA): grauer Hinweistext 4,0 : 1 (nötig 4,5), weiße Schrift auf
    lila Knöpfen 4,2 : 1.
-6. ✅ **Kein Favicon, kein Vorschaubild**: Im Browser-Tab und beim Teilen in WhatsApp & Co. erschien kein Lumio-Logo.
+6. ✅ **Kein Favicon, kein Vorschaubild**: Im Browser-Tab und beim Teilen in WhatsApp & Co. erschien kein Telvo-Logo.
 7. ✅ **Keine eigene Fehlerseite (404)** – falsche Adressen zeigten die englische Standardseite von GitHub.
 8. **Seite ist für Google gesperrt** (`noindex`) und hat keinen Beschreibungstext → wird nicht gefunden.
    Absichtlich gelassen, bis das Impressum vollständig ist (siehe offene Fragen).
@@ -152,7 +152,15 @@ ein kurzer Blick durch Muttersprachler.
   `docs/assets/site.js` eingetragen ist. Bewusst **kein** öffentliches Formular ohne Gerät: Das wäre ohne
   IP-Speicherung nicht gegen Spam zu schützen.
 
-## 11. Nächste sinnvolle Schritte
+## 11. Umbenennung in „Telvo“ (09.11.2026)
+
+„Lumio Player“ gibt es bereits (Android-Videoplayer, „Lumio“ von SMART Technologies, lumio-app.com). Nach Namenssuche
+(20+ Kandidaten geprüft) gewählt: **Telvo**. Recherche: keine App/kein Player „Telvo“ gefunden; US-Marke TELVO seit
+2018 erloschen; ein Glasfaser-Anbieter „Telvo“ existiert (Land unklar). **Vor Veröffentlichung: TMview prüfen.**
+Neues Logo: „T“ mit Play-Zeichen und goldenem Lichtpunkt. Technische Namen (Adressen, Dateinamen, App-Kennung,
+Datenbank) bleiben „lumio“ – siehe CHANGELOG.
+
+## 12. Nächste sinnvolle Schritte
 
 1. **Domain + E-Mail-Adresse** (Empfehlung: eigene Domain + Zoho Mail Free, später mailbox.org) → Impressum,
    Datenschutz und `CONTACT_EMAIL` ausfüllen.

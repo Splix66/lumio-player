@@ -1,4 +1,4 @@
-/* Lumio Player – Übersetzung: Kurdisch (Kurmandschi). Wird nur geladen, wenn diese Sprache gewählt ist. */
+/* Telvo Player – Übersetzung: Kurdisch (Kurmandschi). Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["ku"] = {
   "Dein Zugang ist abgelaufen": "Gihîştina te qediya",
@@ -57,7 +57,7 @@ window.LUMIO_I18N["ku"] = {
   "Hell": "Ron",
   "Automatisch": "Bixweber",
   "Darstellung": "Xuyang",
-  "Gerade läuft das {0}-Design. Danach gilt wieder das Lumio-Violett.": "Niha sêwirana {0} çalak e. Piştre binefşiya Lumio vedigere.",
+  "Gerade läuft das {0}-Design. Danach gilt wieder das Telvo-Violett.": "Niha sêwirana {0} çalak e. Piştre binefşiya Telvo vedigere.",
   "Automatisch richtet sich nach deinem Gerät. Fernseher bleiben dunkel.": "Bixweber li gorî cîhaza te dibe. Televîzyon tim tarî dimînin.",
   "Playlist per Handy hinzufügen": "Playlist bi têlefonê zêde bike",
   "QR-Code scannen oder antippen. MAC und KEY sind auf der Seite schon eingetragen – du gibst nur noch deinen M3U-Link oder Xtream-Zugang ein.": "QR-kodê bixwîne an lê bixe. MAC û KEY di malperê de jixwe hatine nivîsandin – tu tenê lînka xwe ya M3U an gihîştina Xtream dinivîsî.",
@@ -191,7 +191,7 @@ window.LUMIO_I18N["ku"] = {
   "{0} – gültig bis {1}": "{0} – derbasdar heta {1}",
   "{0} – keine Verbindung": "{0} – girêdan tune",
   "Willkommen bei": "Bi xêr hatî",
-  "mit Lumio Player": "bi Lumio Player",
+  "mit Telvo Player": "bi Telvo Player",
   "Probiere die App mit freien Test-Videos aus.": "Sepanê bi vîdyoyên testê yên azad biceribîne.",
   "Dein Licht für Live TV, Filme und Serien.": "Ronahiya te ji bo Live TV, film û rêzefîlman.",
   "Mehr anzeigen": "Bêtir nîşan bide",
@@ -232,7 +232,7 @@ window.LUMIO_I18N["ku"] = {
   "Wiedergabe nicht möglich. Mit „Zurück“ schließen.": "Lêdan nabe. Bi „Vegere“ bigire.",
   "Wiedergabe": "Lêdan",
   "Android-Player": "Lêdanerê Android",
-  "Lumio-Player": "Lêdanerê Lumio",
+  "Telvo-Player": "Lêdanerê Telvo",
   "Top 10 Filme": "Top 10 Film",
   "Top 10 Serien": "Top 10 Rêzefîlm",
   "Top 10 in {0}": "Top 10 li {0}",
@@ -464,7 +464,7 @@ window.LUMIO_I18N["ku"] = {
   "Name Z–A": "Nav Z–A",
   "Funktioniert auf den meisten Geräten am besten.": "Li ser piraniya cîhazan çêtir dixebite.",
   "Probiere das, wenn Sender nicht starten oder ruckeln.": "Vê biceribîne heke kanal dest pê nekin an bikizin.",
-  "Aus – Lumio-Player verwenden": "Girtî – Lêdanerê Lumio bi kar bîne",
+  "Aus – Telvo-Player verwenden": "Girtî – Lêdanerê Telvo bi kar bîne",
   "Jedes Mal fragen": "Her car bipirse",
   "Android zeigt eine Auswahl deiner Player-Apps.": "Android lîsteyeke sepanên lêdanê yên te nîşan dide.",
   "Alle 6 Stunden": "Her 6 saetan",

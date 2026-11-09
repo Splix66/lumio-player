@@ -1,4 +1,4 @@
-/* Lumio Player – Übersetzung: Rumänisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
+/* Telvo Player – Übersetzung: Rumänisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["ro"] = {
   "Dein Zugang ist abgelaufen": "Accesul tău a expirat",
@@ -57,7 +57,7 @@ window.LUMIO_I18N["ro"] = {
   "Hell": "Luminos",
   "Automatisch": "Automat",
   "Darstellung": "Aspect",
-  "Gerade läuft das {0}-Design. Danach gilt wieder das Lumio-Violett.": "Acum este activă tema {0}. După aceea revine violetul Lumio.",
+  "Gerade läuft das {0}-Design. Danach gilt wieder das Telvo-Violett.": "Acum este activă tema {0}. După aceea revine violetul Telvo.",
   "Automatisch richtet sich nach deinem Gerät. Fernseher bleiben dunkel.": "Automat se potrivește cu dispozitivul tău. Televizoarele rămân întunecate.",
   "Playlist per Handy hinzufügen": "Adaugă o listă cu telefonul",
   "QR-Code scannen oder antippen. MAC und KEY sind auf der Seite schon eingetragen – du gibst nur noch deinen M3U-Link oder Xtream-Zugang ein.": "Scanează sau atinge codul QR. MAC și KEY sunt deja completate pe pagină – tu introduci doar linkul M3U sau datele Xtream.",
@@ -191,7 +191,7 @@ window.LUMIO_I18N["ro"] = {
   "{0} – gültig bis {1}": "{0} – valabil până la {1}",
   "{0} – keine Verbindung": "{0} – fără conexiune",
   "Willkommen bei": "Bun venit la",
-  "mit Lumio Player": "cu Lumio Player",
+  "mit Telvo Player": "cu Telvo Player",
   "Probiere die App mit freien Test-Videos aus.": "Încearcă aplicația cu videoclipuri de test gratuite.",
   "Dein Licht für Live TV, Filme und Serien.": "Lumina ta pentru Live TV, filme și seriale.",
   "Mehr anzeigen": "Arată mai multe",
@@ -232,7 +232,7 @@ window.LUMIO_I18N["ro"] = {
   "Wiedergabe nicht möglich. Mit „Zurück“ schließen.": "Redarea nu este posibilă. Închide cu „Înapoi”.",
   "Wiedergabe": "Redare",
   "Android-Player": "Player Android",
-  "Lumio-Player": "Player Lumio",
+  "Telvo-Player": "Player Telvo",
   "Top 10 Filme": "Top 10 filme",
   "Top 10 Serien": "Top 10 seriale",
   "Top 10 in {0}": "Top 10 în {0}",
@@ -464,7 +464,7 @@ window.LUMIO_I18N["ro"] = {
   "Name Z–A": "Nume Z–A",
   "Funktioniert auf den meisten Geräten am besten.": "Funcționează cel mai bine pe majoritatea dispozitivelor.",
   "Probiere das, wenn Sender nicht starten oder ruckeln.": "Încearcă dacă canalele nu pornesc sau se blochează.",
-  "Aus – Lumio-Player verwenden": "Oprit – folosește playerul Lumio",
+  "Aus – Telvo-Player verwenden": "Oprit – folosește playerul Telvo",
   "Jedes Mal fragen": "Întreabă de fiecare dată",
   "Android zeigt eine Auswahl deiner Player-Apps.": "Android afișează o listă cu aplicațiile tale de redare.",
   "Alle 6 Stunden": "La fiecare 6 ore",

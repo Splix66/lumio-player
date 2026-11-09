@@ -85,7 +85,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: pc
-          name: Lumio Player ${{ steps.ver.outputs.v }} – PC-Version
+          name: Telvo Player ${{ steps.ver.outputs.v }} – PC-Version
           body: |
             Version ${{ steps.ver.outputs.v }}
             Windows: lumio-player-setup.exe

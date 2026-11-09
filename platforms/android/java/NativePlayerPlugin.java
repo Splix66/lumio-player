@@ -14,7 +14,7 @@ import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
 /**
- * TV-Player für die Lumio-App: startet den eigenen Android-Videoplayer (ExoPlayer)
+ * TV-Player für die Telvo-App: startet den eigenen Android-Videoplayer (ExoPlayer)
  * und meldet beim Schließen Position und Länge zurück (für „Weiterschauen“).
  */
 @CapacitorPlugin(name = "NativePlayer")
@@ -87,7 +87,7 @@ public class NativePlayerPlugin extends Plugin {
                 i.setPackage(pkg);
                 getContext().startActivity(i);
             } else if (type != null && !type.isEmpty()) {
-                Intent chooser = Intent.createChooser(i, title != null ? title : "Lumio Player");
+                Intent chooser = Intent.createChooser(i, title != null ? title : "Telvo Player");
                 chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 getContext().startActivity(chooser);
             } else {

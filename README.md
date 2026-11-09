@@ -1,4 +1,4 @@
-# Lumio Player
+# Telvo Player
 
 IPTV-Player für Handy, Tablet, Fernseher und PC (Xtream Codes & M3U).
 Die App enthält keine Inhalte – Nutzer brauchen einen eigenen Zugang ihres Anbieters.

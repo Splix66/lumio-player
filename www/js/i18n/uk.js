@@ -1,4 +1,4 @@
-/* Lumio Player – Übersetzung: Ukrainisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
+/* Telvo Player – Übersetzung: Ukrainisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["uk"] = {
   "Dein Zugang ist abgelaufen": "Ваш доступ завершився",
@@ -57,7 +57,7 @@ window.LUMIO_I18N["uk"] = {
   "Hell": "Світла",
   "Automatisch": "Автоматично",
   "Darstellung": "Вигляд",
-  "Gerade läuft das {0}-Design. Danach gilt wieder das Lumio-Violett.": "Зараз діє тема «{0}». Потім знову буде фіолетова тема Lumio.",
+  "Gerade läuft das {0}-Design. Danach gilt wieder das Telvo-Violett.": "Зараз діє тема «{0}». Потім знову буде фіолетова тема Telvo.",
   "Automatisch richtet sich nach deinem Gerät. Fernseher bleiben dunkel.": "Автоматично залежить від вашого пристрою. Телевізори завжди темні.",
   "Playlist per Handy hinzufügen": "Додати плейлист через телефон",
   "QR-Code scannen oder antippen. MAC und KEY sind auf der Seite schon eingetragen – du gibst nur noch deinen M3U-Link oder Xtream-Zugang ein.": "Скануйте QR-код або торкніться його. MAC і KEY на сторінці вже вказані – вам лишається ввести лише посилання M3U або дані Xtream.",
@@ -191,7 +191,7 @@ window.LUMIO_I18N["uk"] = {
   "{0} – gültig bis {1}": "{0} – дійсний до {1}",
   "{0} – keine Verbindung": "{0} – немає зʼєднання",
   "Willkommen bei": "Ласкаво просимо до",
-  "mit Lumio Player": "з Lumio Player",
+  "mit Telvo Player": "з Telvo Player",
   "Probiere die App mit freien Test-Videos aus.": "Спробуйте застосунок із вільними тестовими відео.",
   "Dein Licht für Live TV, Filme und Serien.": "Ваше світло для Live TV, фільмів і серіалів.",
   "Mehr anzeigen": "Показати більше",
@@ -232,7 +232,7 @@ window.LUMIO_I18N["uk"] = {
   "Wiedergabe nicht möglich. Mit „Zurück“ schließen.": "Відтворення неможливе. Натисніть «Назад», щоб закрити.",
   "Wiedergabe": "Відтворення",
   "Android-Player": "Програвач Android",
-  "Lumio-Player": "Програвач Lumio",
+  "Telvo-Player": "Програвач Telvo",
   "Top 10 Filme": "Топ-10 фільмів",
   "Top 10 Serien": "Топ-10 серіалів",
   "Top 10 in {0}": "Топ-10 у {0}",
@@ -464,7 +464,7 @@ window.LUMIO_I18N["uk"] = {
   "Name Z–A": "Назва Я–А",
   "Funktioniert auf den meisten Geräten am besten.": "Найкраще працює на більшості пристроїв.",
   "Probiere das, wenn Sender nicht starten oder ruckeln.": "Спробуйте, якщо канали не запускаються або гальмують.",
-  "Aus – Lumio-Player verwenden": "Вимк. – використовувати програвач Lumio",
+  "Aus – Telvo-Player verwenden": "Вимк. – використовувати програвач Telvo",
   "Jedes Mal fragen": "Питати щоразу",
   "Android zeigt eine Auswahl deiner Player-Apps.": "Android покаже вибір ваших програвачів.",
   "Alle 6 Stunden": "Кожні 6 годин",

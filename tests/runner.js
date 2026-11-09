@@ -1,5 +1,5 @@
 /* ==========================================================
-   Lumio Player – kleine Testumgebung (ohne Zusatzprogramme)
+   Telvo Player – kleine Testumgebung (ohne Zusatzprogramme)
    Läuft im Browser: tests/run.html öffnen. Auf GitHub automatisch
    (siehe .github/workflows/tests.yml) in einem unsichtbaren Chrome.
    Ergebnis: <div id="summary" data-status="pass|fail"> und Klartext in <pre id="report">.
@@ -65,7 +65,7 @@ var Test = (function () {
       sum.textContent = pass ? 'Alle ' + cases.length + ' Tests bestanden.' : failed + ' von ' + cases.length + ' Tests fehlgeschlagen.';
       lines.unshift(sum.textContent, '');
       document.getElementById('report').textContent = lines.join('\n');
-      document.title = (pass ? 'BESTANDEN' : 'FEHLGESCHLAGEN') + ' – Lumio Tests';
+      document.title = (pass ? 'BESTANDEN' : 'FEHLGESCHLAGEN') + ' – Telvo Tests';
       if (window.console) console.log(lines.join('\n'));
     }
     return next();

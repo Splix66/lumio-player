@@ -1,4 +1,4 @@
-/* Lumio Player – Übersetzung: Griechisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
+/* Telvo Player – Übersetzung: Griechisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["el"] = {
   "Dein Zugang ist abgelaufen": "Η συνδρομή σου έχει λήξει",
@@ -57,7 +57,7 @@ window.LUMIO_I18N["el"] = {
   "Hell": "Ανοιχτό",
   "Automatisch": "Αυτόματα",
   "Darstellung": "Εμφάνιση",
-  "Gerade läuft das {0}-Design. Danach gilt wieder das Lumio-Violett.": "Αυτή τη στιγμή ισχύει το θέμα {0}. Μετά επιστρέφει το μοβ του Lumio.",
+  "Gerade läuft das {0}-Design. Danach gilt wieder das Telvo-Violett.": "Αυτή τη στιγμή ισχύει το θέμα {0}. Μετά επιστρέφει το μοβ του Telvo.",
   "Automatisch richtet sich nach deinem Gerät. Fernseher bleiben dunkel.": "Το αυτόματο ακολουθεί τη συσκευή σου. Οι τηλεοράσεις μένουν πάντα σκούρες.",
   "Playlist per Handy hinzufügen": "Πρόσθεσε playlist με το κινητό",
   "QR-Code scannen oder antippen. MAC und KEY sind auf der Seite schon eingetragen – du gibst nur noch deinen M3U-Link oder Xtream-Zugang ein.": "Σάρωσε ή πάτησε τον κωδικό QR. Τα MAC και KEY είναι ήδη συμπληρωμένα στη σελίδα – εσύ βάζεις μόνο τον σύνδεσμο M3U ή τα στοιχεία Xtream.",
@@ -191,7 +191,7 @@ window.LUMIO_I18N["el"] = {
   "{0} – gültig bis {1}": "{0} – ισχύει έως {1}",
   "{0} – keine Verbindung": "{0} – χωρίς σύνδεση",
   "Willkommen bei": "Καλώς ήρθες στο",
-  "mit Lumio Player": "με το Lumio Player",
+  "mit Telvo Player": "με το Telvo Player",
   "Probiere die App mit freien Test-Videos aus.": "Δοκίμασε την εφαρμογή με δωρεάν δοκιμαστικά βίντεο.",
   "Dein Licht für Live TV, Filme und Serien.": "Το φως σου για Live TV, ταινίες και σειρές.",
   "Mehr anzeigen": "Περισσότερα",
@@ -232,7 +232,7 @@ window.LUMIO_I18N["el"] = {
   "Wiedergabe nicht möglich. Mit „Zurück“ schließen.": "Η αναπαραγωγή δεν είναι δυνατή. Κλείσε με «Πίσω».",
   "Wiedergabe": "Αναπαραγωγή",
   "Android-Player": "Πρόγραμμα Android",
-  "Lumio-Player": "Πρόγραμμα Lumio",
+  "Telvo-Player": "Πρόγραμμα Telvo",
   "Top 10 Filme": "Top 10 ταινίες",
   "Top 10 Serien": "Top 10 σειρές",
   "Top 10 in {0}": "Top 10 σε {0}",
@@ -464,7 +464,7 @@ window.LUMIO_I18N["el"] = {
   "Name Z–A": "Όνομα Ω–Α",
   "Funktioniert auf den meisten Geräten am besten.": "Δουλεύει καλύτερα στις περισσότερες συσκευές.",
   "Probiere das, wenn Sender nicht starten oder ruckeln.": "Δοκίμασέ το αν τα κανάλια δεν ξεκινούν ή κολλάνε.",
-  "Aus – Lumio-Player verwenden": "Ανενεργό – χρήση προγράμματος Lumio",
+  "Aus – Telvo-Player verwenden": "Ανενεργό – χρήση προγράμματος Telvo",
   "Jedes Mal fragen": "Ερώτηση κάθε φορά",
   "Android zeigt eine Auswahl deiner Player-Apps.": "Το Android εμφανίζει μια επιλογή από τα προγράμματα αναπαραγωγής σου.",
   "Alle 6 Stunden": "Κάθε 6 ώρες",
