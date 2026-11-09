@@ -463,3 +463,11 @@ button.ghost:hover { box-shadow: inset 0 0 0 1px rgba(167, 139, 250, .45); }
 @keyframes floatRtl { 50% { transform: rotateY(7deg) rotateX(3deg) translateY(-8px); } }
 /* Markenname bleibt auch auf Arabisch „Lumio Player“ (nicht gespiegelt) */
 [dir="rtl"] .brand { direction: ltr; }
+
+/* Hilfsklassen statt style="…" im HTML (wegen der Content-Security-Policy) */
+.svg-defs { position: absolute; }
+.m-0 { margin: 0; }
+.mt-08 { margin-top: .8rem; }
+.mt-10 { margin-top: 1rem; }
+.mt-16 { margin-top: 1.6rem; }
+.mb-10 { margin-bottom: 1rem; }

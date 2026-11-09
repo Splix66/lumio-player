@@ -1,0 +1,37 @@
+# Prüft die Webseite (docs/) bei jeder Änderung automatisch: alle Seiten, Sicherheitsregel (CSP), Menü und Zurück-Knopf,
+# alle 14 Sprachen auf Desktop und Handy, Sprachauswahl und das Kundenportal (mit erfundenem Online-Dienst, ohne Kundendaten).
+# Dieselbe Prüfung lokal:  npm i --no-save playwright  und dann  node tests/site.e2e.js
+name: Webseite testen
+
+on:
+  push:
+    paths: ['docs/**', 'tests/site.e2e.js', '.github/workflows/site-tests.yml']
+  pull_request:
+    paths: ['docs/**', 'tests/site.e2e.js', '.github/workflows/site-tests.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  site:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Projekt holen
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Getrennt vom App-Projekt installieren, damit nicht alle App-Abhängigkeiten mitgeladen werden
+      - name: Test-Browser installieren
+        run: |
+          mkdir -p "$RUNNER_TEMP/pw" && cd "$RUNNER_TEMP/pw"
+          npm init -y > /dev/null
+          npm i playwright@1.63.0
+          npx playwright install --with-deps chromium
+
+      - name: Webseite testen
+        run: NODE_PATH="$RUNNER_TEMP/pw/node_modules" node tests/site.e2e.js
