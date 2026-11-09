@@ -62,6 +62,8 @@ und in `scripts/make-icons.py` (Android, Fire TV, Samsung, LG, Windows/Mac, TV-B
 
 Die neuen Daten gehören zum Profil, werden mitgesichert und von „Verlauf löschen“ entfernt.
 
+**Behoben:** Quadratische Senderlogos wurden in der Senderliste und bei den Favoriten unten abgeschnitten.
+
 **Android-TV-Player:** Media3 (ExoPlayer) von 1.4.1 auf 1.9.4 – gut ein Jahr Fehlerbehebungen, u. a. für HLS-Livestreams.
 
 ## 1.11.1 – 2026-11-09 · Neue Willkommensseite

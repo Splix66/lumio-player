@@ -566,6 +566,8 @@ body.kbd .cat-back.f:focus, body.is-tv .cat-back.f:focus { position: sticky; z-i
 .logo-box img { max-width: 86%; max-height: 80%; object-fit: contain; }
 .logo-box .ph { font-weight: 800; color: var(--dim); font-size: .85rem; }
 /* Logo und Initialen liegen übereinander; die Initialen verschwinden erst, wenn das Logo da ist */
+/* feste Rasterzelle = ganze Box, sonst wächst die Zeile mit dem Bild und quadratische Logos werden abgeschnitten */
+.logo-box, .chan-tile .ct-logo { grid-template-rows: minmax(0, 1fr); grid-template-columns: minmax(0, 1fr); }
 .logo-box > img, .logo-box > .ph, .ct-logo > img, .ct-logo > .ph { grid-area: 1 / 1; }
 .logo-box > img, .ct-logo > img { opacity: 0; transition: opacity .2s ease; }
 .logo-box.has-logo > img, .ct-logo.has-logo > img { opacity: 1; }
