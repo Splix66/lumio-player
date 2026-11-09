@@ -1819,3 +1819,16 @@ body.kbd .tr-close.f:focus, body.is-tv .tr-close.f:focus { background: #fff; col
 /* Playlist-Übersicht: „Webseite: an/aus“ (Zugangsdaten nur mit Zustimmung online) */
 .web-toggle .i { color: var(--muted); }
 .web-toggle.is-on .i { color: var(--ok); }
+
+/* ==========================================================
+   Startseite, Kacheln ruhiger (Rückmeldung 09.11.2026): kein farbiges Leuchten,
+   kein Pfeil, Symbol ohne Kreis-Umrandung. Die ganze Kachel ist der Knopf.
+   ========================================================== */
+.ln-tile { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1), 0 .6rem 1.4rem -.9rem rgba(0, 0, 0, .55); }
+.ln-tile::before { background: radial-gradient(90% 55% at 50% 0%, rgba(255, 255, 255, .1), transparent 70%); }
+.ln-tile:hover { filter: brightness(1.04); }
+.lt-ic { width: auto; height: auto; background: none; box-shadow: none; border-radius: 0; }
+.lt-ic .i { width: 4.4rem; height: 4.4rem; stroke-width: 1.6; filter: none; }
+.lt-go { display: none; }
+body.kbd .ln-tile.f:focus, body.is-tv .ln-tile.f:focus { filter: none; box-shadow: 0 0 0 .22rem var(--bg), 0 0 0 .45rem #fff; }
+:root[data-theme="light"] .ln-tile { box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .06), 0 .5rem 1.2rem -.8rem rgba(0, 0, 0, .35); }

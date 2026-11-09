@@ -5108,10 +5108,13 @@
             var best = Settings.get('quality') === 'best';
             var hls = new Hls({
               enableWorker: true, lowLatencyMode: false, backBufferLength: Platform.lite ? 10 : 30,
-              maxBufferLength: 30, maxMaxBufferLength: Platform.lite ? 40 : 60,          // genug Puffer, ohne alten TVs den Speicher zu füllen
+              // PC: größerer Puffer (genug Speicher) – überbrückt kurze Einbrüche beim Anbieter, statt zu hängen
+              maxBufferLength: desktop ? 60 : 30, maxMaxBufferLength: Platform.lite ? 40 : desktop ? 120 : 60,
               capLevelToPlayerSize: !desktop && !best,              // im kleinen Player auf schwachen Geräten keine volle Auflösung laden
-              abrEwmaDefaultEstimate: desktop ? 8000000 : 1500000,  // Startschätzung der Internetgeschwindigkeit
-              abrBandWidthUpFactor: desktop ? 0.85 : 0.7,
+              // Startschätzung der Internetgeschwindigkeit. Vorher 8 Mbit/s am PC: startete bei langsameren Servern zu hoch
+              // und lief leer („hängt“, auch bei den Demo-Videos). 4 Mbit/s ≈ gutes HD, steigt danach von selbst.
+              abrEwmaDefaultEstimate: desktop ? 4000000 : 1500000,
+              abrBandWidthUpFactor: 0.7,                            // erst hochschalten, wenn deutlich Luft ist
               fragLoadingMaxRetry: 4, levelLoadingMaxRetry: 3, manifestLoadingMaxRetry: 2,
               // Gegen Hänger bei Live-Sendern: kleine Lücken im Stream überspringen und nach einem Hänger
               // wieder an die aktuelle Stelle springen statt immer weiter hinterherzulaufen
