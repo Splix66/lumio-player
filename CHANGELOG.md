@@ -1,6 +1,6 @@
 # Änderungsprotokoll – Lumio Player
 
-## [Unveröffentlicht] – 2026-11-09 · Automatische Tests
+## 1.10.0 – 2026-11-09 · Automatische Tests
 
 Neue Dateien: `tests/run.html`, `tests/runner.js`, `tests/*.test.js`, `tests/fixtures/*`,
 `.github/workflows/tests.yml`. Die App selbst ist unverändert bis auf zusätzliche Einträge in der
@@ -31,9 +31,9 @@ Test-Schnittstelle `window.LumioDebug`. Die Tests werden nicht mit in die Apps g
 
 ### Geprüft
 - Im Browser und dreimal hintereinander im unsichtbaren Chrome (genau wie auf GitHub): jeweils alle 30 bestanden.
-- **Nicht geprüft:** der Workflow selbst auf GitHub – das geht erst nach dem ersten Upload.
+- Auf GitHub (Workflow „Tests“, Pull Request #1): alle 30 bestanden.
 
-## [Unveröffentlicht] – 2026-11-09 · Programmführer (EPG) für M3U-Playlists
+## 1.10.0 – 2026-11-09 · Programmführer (EPG) für M3U-Playlists
 
 Bisher gab es Programmdaten nur für Xtream-Zugänge – M3U-Nutzer sahen nie, was gerade läuft.
 
@@ -80,7 +80,7 @@ Dort laufen Anfragen über das native HTTP-Modul von Capacitor (`CapacitorHttp`)
 gepackte (.gz) Dateien unverändert durchreicht, ist ungeklärt. Falls auf Android kein Programm erscheint:
 eine ungepackte `.xml`-Adresse eintragen und mir Bescheid geben.
 
-## [Unveröffentlicht] – 2026-11-09 · Neuer Web-Verwaltungsbereich
+## 1.10.0 – 2026-11-09 · Neuer Web-Verwaltungsbereich
 
 Neue Dateien: `docs/admin.html`, `docs/admin.css`, `docs/admin.js`, `server/admin.sql`.
 Bestehende Tabellen, Funktionen, App und Kundenportal bleiben unverändert (nur Ergänzungen).
@@ -125,10 +125,10 @@ Einrichtung: siehe README → „Verwaltungsbereich einrichten“.
 beides habe ich bewusst nicht an der Produktionsdatenbank ausgeführt. Bitte nach dem Einrichten
 einmal anmelden und die Bereiche durchklicken; Fehlermeldungen werden in der Oberfläche angezeigt.
 
-## [Unveröffentlicht] – 2026-11-09 · Überarbeitung Sicherheit, Stabilität, Bedienung
+## 1.10.0 – 2026-11-09 · Überarbeitung Sicherheit, Stabilität, Bedienung
 
-Die Versionsnummer in `www/js/app.js` (`CONFIG.version`) wurde **bewusst nicht** erhöht –
-das passiert beim nächsten Release zusammen mit dem GitHub-Release-Namen (Update-Prüfung vergleicht beide).
+Alle Abschnitte mit „1.10.0“ zusammen sind Version 1.10.0 (vorher 1.9.1). Der Demo-Knopf bleibt auf Wunsch
+des Nutzers (am 09.11. bestätigt).
 
 Sicherung des Stands vor der Überarbeitung: `../lumio-backup-2026-11-09-vor-Ueberarbeitung.zip`
 

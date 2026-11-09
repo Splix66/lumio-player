@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Lumio Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.9.1',
+    version: '1.10.0',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     hlsCdn: 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js',
     tsCdn: 'https://cdn.jsdelivr.net/npm/mpegts.js@1.7.3/dist/mpegts.js',   // für rohe TV-Signale (.ts / „RAW“)
