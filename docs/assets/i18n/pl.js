@@ -2,7 +2,7 @@
    Schlüssel = deutscher Originaltext. Fehlende Texte bleiben deutsch. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["pl"] = {
-  "Bereit loszulegen?": "Gotowy, by zacząć?",
+  "Bereit loszulegen?": "Zaczynamy?",
   "App installieren, QR-Code scannen, Playlist eintragen – in wenigen Minuten läuft dein Programm.": "Zainstaluj aplikację, zeskanuj kod QR, dodaj playlistę – za kilka minut możesz oglądać.",
   "Der IPTV-Player für deine eigene Playlist – auf Fire TV, Android, Windows und Mac.": "Odtwarzacz IPTV dla Twojej własnej playlisty – na Fire TV, Android, Windows i Mac.",
   "Produkt": "Produkt",
@@ -57,7 +57,7 @@ window.LUMIO_I18N["pl"] = {
   "Filme und Serien": "Filmy i seriale",
   "Cover, Beschreibungen, Staffeln und Folgen – sortiert nach Sprachen.": "Okładki, opisy, sezony i odcinki – posortowane według języków.",
   "Weiterschauen": "Oglądaj dalej",
-  "Filme und Folgen laufen dort weiter, wo du aufgehört hast.": "Filmy i odcinki ruszają od miejsca, w którym skończyłeś.",
+  "Filme und Folgen laufen dort weiter, wo du aufgehört hast.": "Filmy i odcinki wznawiają się tam, gdzie je przerwano.",
   "Favoriten": "Ulubione",
   "Lieblingssender, Filme und Serien mit einem Klick merken.": "Zapisuj ulubione kanały, filmy i seriale jednym kliknięciem.",
   "Suche": "Szukaj",
@@ -120,7 +120,7 @@ window.LUMIO_I18N["pl"] = {
   "Verbinden": "Połącz",
   "Verbinde …": "Łączenie …",
   "MAC-Adresse und KEY stehen in der App ganz unten am Bildschirmrand und unter „Profil“.": "Adres MAC i KEY znajdziesz w aplikacji na samym dole ekranu oraz w sekcji „Profil”.",
-  "Hast du den QR-Code in der App gescannt, ist beides schon eingetragen.": "Jeśli zeskanowałeś kod QR z aplikacji, oba pola są już wypełnione.",
+  "Hast du den QR-Code in der App gescannt, ist beides schon eingetragen.": "Po zeskanowaniu kodu QR z aplikacji oba pola są już wypełnione.",
   "Verbunden mit Gerät": "Połączono z urządzeniem",
   "Auf diesem Gerät": "Na tym urządzeniu",
   "Anderes Gerät": "Inne urządzenie",
