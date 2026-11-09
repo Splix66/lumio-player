@@ -1,6 +1,6 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
-## Noch nicht veröffentlicht
+## 1.11.1 – 2026-11-09 · Neue Willkommensseite
 
 **App – Willkommensseite (noch keine Playlist) neu:** dunkles Premium-Design (#0B0B0F, Karten #17171E, Akzent #9B83D5) ·
 Einrichtungshilfe in 3 Schritten (QR-Code scannen → Playlist eintragen → Loslegen) · großer QR-Code · MAC und KEY gut
