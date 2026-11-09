@@ -86,13 +86,16 @@ if (!m2.includes('.PlayerActivity')) {
 
 const gradlePath = path.join(base, 'android', 'app', 'build.gradle');
 let g = fs.readFileSync(gradlePath, 'utf8');
+// Media3 (ExoPlayer): Version hier zentral – bei einem Wechsel die Änderungshinweise prüfen
+// (https://github.com/androidx/media/blob/release/RELEASENOTES.md) und auf echten Boxen testen.
+const MEDIA3 = '1.11.1';
 if (!g.includes('media3-exoplayer')) {
   g = g.replace(/\ndependencies\s*\{/, [
     '',
     'dependencies {',
-    '    implementation "androidx.media3:media3-exoplayer:1.4.1"',
-    '    implementation "androidx.media3:media3-exoplayer-hls:1.4.1"',
-    '    implementation "androidx.media3:media3-ui:1.4.1"'
+    '    implementation "androidx.media3:media3-exoplayer:' + MEDIA3 + '"',
+    '    implementation "androidx.media3:media3-exoplayer-hls:' + MEDIA3 + '"',
+    '    implementation "androidx.media3:media3-ui:' + MEDIA3 + '"'
   ].join('\n'));
   fs.writeFileSync(gradlePath, g);
 }
