@@ -66,7 +66,7 @@ Die neuen Daten gehören zum Profil, werden mitgesichert und von „Verlauf lös
 MAC und KEY (grün = in Ordnung, rot = kein Internet) – vorher nur auf der Willkommensseite.
 
 **Sprachauswahl mit Flaggen:** Der Knopf oben rechts zeigt Flagge und gewählte Sprache. Die Liste klappt direkt darunter auf,
-Englisch und Deutsch stehen ganz oben, danach eine Trennlinie und die übrigen Sprachen. Gleiche Reihenfolge in den Einstellungen.
+Englisch und Deutsch stehen ganz oben, danach die übrigen Sprachen. Gleiche Reihenfolge in den Einstellungen.
 
 **Behoben:** Quadratische Senderlogos wurden in der Senderliste und bei den Favoriten unten abgeschnitten.
 
