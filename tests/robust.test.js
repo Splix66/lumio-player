@@ -99,6 +99,27 @@
     }
   });
 
+  t(G, 'Online-Dienst: sicherer Weg mit Token, sonst bisheriger Weg mit KEY', function () {
+    var realRpc = D.Cloud.rpc, mode = D.Cloud.mode, sent = [];
+    D.Cloud.rpc = function (fn, body) { sent.push(fn + ':' + (body.p_token ? 'token' : '') + (body.p_key ? 'key' : '')); return Promise.resolve({ ok: true }); };
+    try {
+      D.Cloud.mode = 'token'; D.Cloud.call('list_playlists', { p_mac: 'AA:BB:CC:DD:EE:FF' });
+      D.Cloud.mode = 'legacy'; D.Cloud.call('list_playlists', { p_mac: 'AA:BB:CC:DD:EE:FF' });
+      eq(sent, ['app_list_playlists:token', 'list_playlists:key']);
+    } finally { D.Cloud.rpc = realRpc; D.Cloud.mode = mode; }
+  });
+
+  t(G, 'Anmeldung: fehlt die neue Datenbank-Funktion, wird der bisherige Weg genommen', function () {
+    var realRpc = D.Cloud.rpc, mode = D.Cloud.mode, sent = [];
+    D.Cloud.rpc = function (fn) {
+      sent.push(fn);
+      return Promise.resolve(fn === 'app_register' ? { code: 'PGRST202', message: 'Could not find the function' } : { ok: true });
+    };
+    return D.Cloud.register().then(function (r) {
+      eq(sent, ['app_register', 'register_device']); eq(D.Cloud.mode, 'legacy'); ok(r.ok);
+    }).then(function () { D.Cloud.rpc = realRpc; D.Cloud.mode = mode; }, function (e) { D.Cloud.rpc = realRpc; D.Cloud.mode = mode; throw e; });
+  });
+
   t(G, 'Xtream: abgelaufener Zugang wird als Fehler gemeldet, nicht als leere Liste', function () {
     var realFetch = window.fetch;
     window.fetch = function (url) {

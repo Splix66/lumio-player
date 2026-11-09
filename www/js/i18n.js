@@ -7,6 +7,11 @@
 window.LUMIO_I18N = {
   /* ---------------- English ---------------- */
   en: {
+    "Neuen KEY erzeugen": "Create new KEY",
+    "Neuen KEY erzeugen?": "Create a new KEY?",
+    "Der alte KEY funktioniert danach nicht mehr – auch nicht auf der Webseite. Deine Playlists bleiben erhalten.": "The old KEY will stop working – on the website too. Your playlists are kept.",
+    "KEY konnte nicht erneuert werden.": "The KEY could not be renewed.",
+    "Neuer KEY: {0}": "New KEY: {0}",
     "Auch auf der Webseite verwalten": "Also manage on the website",
     "Speichert die Zugangsdaten online, damit du die Playlist im Browser bearbeiten kannst. Ohne diese Option bleiben sie nur auf diesem Gerät.": "Stores your login details online so you can edit the playlist in a browser. Without this option they stay on this device only.",
     "Webseite: an": "Website: on",
@@ -604,6 +609,11 @@ window.LUMIO_I18N = {
 
   /* ---------------- Türkçe ---------------- */
   tr: {
+    "Neuen KEY erzeugen": "Yeni KEY oluştur",
+    "Neuen KEY erzeugen?": "Yeni KEY oluşturulsun mu?",
+    "Der alte KEY funktioniert danach nicht mehr – auch nicht auf der Webseite. Deine Playlists bleiben erhalten.": "Eski KEY artık çalışmaz – web sitesinde de. Listelerin korunur.",
+    "KEY konnte nicht erneuert werden.": "KEY yenilenemedi.",
+    "Neuer KEY: {0}": "Yeni KEY: {0}",
     "Auch auf der Webseite verwalten": "Web sitesinde de yönet",
     "Speichert die Zugangsdaten online, damit du die Playlist im Browser bearbeiten kannst. Ohne diese Option bleiben sie nur auf diesem Gerät.": "Listeyi tarayıcıda düzenleyebilmen için giriş bilgilerini çevrimiçi kaydeder. Bu seçenek kapalıyken bilgiler yalnızca bu cihazda kalır.",
     "Webseite: an": "Web sitesi: açık",

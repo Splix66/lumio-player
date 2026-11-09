@@ -593,5 +593,10 @@ window.LUMIO_I18N["ku"] = {
   "„{0}“ ist jetzt auf der Webseite verfügbar.": "„{0}“ êdî li ser malperê heye.",
   "Von der Webseite entfernen?": "Ji malperê were rakirin?",
   "„{0}“ bleibt auf diesem Gerät, die Online-Kopie samt Zugangsdaten wird gelöscht.": "„{0}“ li ser vê cîhazê dimîne; kopiya online bi agahiyên têketinê re tê jêbirin.",
-  "Entfernen": "Rake"
+  "Entfernen": "Rake",
+  "Neuen KEY erzeugen": "KEY-ya nû çêke",
+  "Neuen KEY erzeugen?": "KEY-ya nû were çêkirin?",
+  "Der alte KEY funktioniert danach nicht mehr – auch nicht auf der Webseite. Deine Playlists bleiben erhalten.": "KEY-ya kevn êdî naxebite – li ser malperê jî. Lîsteyên te dimînin.",
+  "KEY konnte nicht erneuert werden.": "KEY nehat nûkirin.",
+  "Neuer KEY: {0}": "KEY-ya nû: {0}"
 };

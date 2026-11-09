@@ -593,5 +593,10 @@ window.LUMIO_I18N["hr"] = {
   "„{0}“ ist jetzt auf der Webseite verfügbar.": "„{0}“ je sada dostupna na web-stranici.",
   "Von der Webseite entfernen?": "Ukloniti s web-stranice?",
   "„{0}“ bleibt auf diesem Gerät, die Online-Kopie samt Zugangsdaten wird gelöscht.": "„{0}“ ostaje na ovom uređaju, a online kopija zajedno s podacima za prijavu bit će izbrisana.",
-  "Entfernen": "Ukloni"
+  "Entfernen": "Ukloni",
+  "Neuen KEY erzeugen": "Izradi novi KEY",
+  "Neuen KEY erzeugen?": "Izraditi novi KEY?",
+  "Der alte KEY funktioniert danach nicht mehr – auch nicht auf der Webseite. Deine Playlists bleiben erhalten.": "Stari KEY više neće raditi – ni na web-stranici. Tvoje playliste ostaju.",
+  "KEY konnte nicht erneuert werden.": "KEY nije moguće obnoviti.",
+  "Neuer KEY: {0}": "Novi KEY: {0}"
 };

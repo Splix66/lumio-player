@@ -593,5 +593,10 @@ window.LUMIO_I18N["ro"] = {
   "„{0}“ ist jetzt auf der Webseite verfügbar.": "„{0}” este acum disponibilă pe site.",
   "Von der Webseite entfernen?": "Elimini de pe site?",
   "„{0}“ bleibt auf diesem Gerät, die Online-Kopie samt Zugangsdaten wird gelöscht.": "„{0}” rămâne pe acest dispozitiv, copia online împreună cu datele de autentificare va fi ștearsă.",
-  "Entfernen": "Elimină"
+  "Entfernen": "Elimină",
+  "Neuen KEY erzeugen": "Generează un KEY nou",
+  "Neuen KEY erzeugen?": "Generezi un KEY nou?",
+  "Der alte KEY funktioniert danach nicht mehr – auch nicht auf der Webseite. Deine Playlists bleiben erhalten.": "Vechiul KEY nu va mai funcționa – nici pe site. Listele tale rămân.",
+  "KEY konnte nicht erneuert werden.": "KEY-ul nu a putut fi reînnoit.",
+  "Neuer KEY: {0}": "KEY nou: {0}"
 };

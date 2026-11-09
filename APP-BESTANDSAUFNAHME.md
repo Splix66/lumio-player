@@ -28,28 +28,22 @@ Technisch solide und deutlich über dem Durchschnitt vergleichbarer IPTV-Player:
 | 8 | Schnelles Umschalten / Windows-Mac-Links | Zwei Videoplayer gleichzeitig; Links öffneten doppelt |
 | – | Hintergrund-Logo | Querbalken des neuen „T“ sah wie ein grauer Fehlerbalken aus |
 
-## Offen – Entscheidung nötig
+## Erledigt nach Entscheidung (09.11.2026)
 
-**E1. Automatisches Hochladen von Zugangsdaten (Datenschutz, wichtigster Punkt).**
-Trägt jemand eine Playlist direkt in der App ein, lädt die App sie samt Passwort in die Online-Datenbank hoch
-(damit sie auf der Webseite erscheint) – ohne Hinweis und ohne Abschaltmöglichkeit. Die Datenschutzerklärung sagt
-das Gegenteil („nur lokal auf deinem Gerät“). Optionen:
-- **(a) Empfohlen:** Hochladen nur nach Zustimmung – Schalter „Auch auf der Webseite verwalten“ beim Anlegen (aus).
-- (b) Weiter automatisch, aber deutlicher Hinweis + Abschaltmöglichkeit, Datenschutzerklärung anpassen.
-- (c) Gar nicht mehr hochladen – Webseite zeigt nur Playlists, die dort angelegt wurden.
-
-## Offen – braucht Änderung in der Datenbank (Supabase, SQL vom Inhaber ausführen)
-
-- **D1. Schutz gegen Durchprobieren von Schlüsseln lückenhaft:** gleichzeitige Fehlversuche zählen nur einfach,
-  und jeder erfolgreiche Abgleich der App setzt den Zähler zurück. Wer eine MAC kennt, kann den 6-stelligen KEY in
-  absehbarer Zeit erraten. Lösung: Zähler atomar, Zeitfenster statt Zurücksetzen, Begrenzung pro IP.
-- **D2. Fremde können ein Gerät dauerhaft aussperren** (eine falsche Eingabe pro Stunde genügt). Lösung: eigener,
-  langer Geräteschlüssel nur für die App; der 6-stellige KEY bleibt für die Webseite.
-- **D3. KEY nicht erneuerbar, Online-Daten nicht aus der App löschbar** („Alles zurücksetzen“ löscht nur lokal).
-- **D4. Aufbewahrung:** Datenschutz verspricht Löschen erledigter Support-Nachrichten – technisch nicht umgesetzt;
-  inaktive Geräte bleiben für immer. Lösung: automatische Löschung (pg_cron) oder Text anpassen.
-- D5. Unterschiedliche Meldung für „Gerät unbekannt“ und „KEY falsch“; unbegrenzt viele Geräte anlegbar.
-- D6. Zugangsdaten liegen lesbar in der Datenbank (bekannt, siehe README); Verschlüsselung mit Supabase Vault möglich.
+- **E1 → (a) umgesetzt:** Playlists aus der App gehen nur noch online, wenn „Auch auf der Webseite verwalten“
+  eingeschaltet ist (beim Anlegen, Voreinstellung aus; je Playlist „Webseite: an/aus“ in der Übersicht).
+  Datenschutzerklärung entsprechend korrigiert.
+- **Datenbank – `server/sicherheit-2026-11.sql`** (vom Inhaber in Supabase auszuführen), getestet gegen PostgreSQL 16:
+  - D1: Fehlversuche lückenlos gezählt (40 gleichzeitige Angriffe: vorher 1 gezählt, jetzt Sperre),
+    richtiger KEY setzt nicht mehr zurück – höchstens 20 Versuche pro Stunde.
+  - D2: App gleicht über eigenen 128-Bit-Token ab → kein Aussperren der App durch Fremde mehr.
+    Ohne eingespieltes Update arbeitet die App automatisch wie bisher.
+  - D3: „Neuen KEY erzeugen“ auf der Profilseite der App; Funktion zum Löschen eines Geräts vorhanden.
+  - D4: tägliches Aufräumen (pg_cron): erledigte Support-Nachrichten nach 30 Tagen, Geräte nach 12 Monaten,
+    Admin-Protokoll nach 12 Monaten. Datenschutzerklärung angepasst.
+  - Automatischer Test `tests/sql/run.sh` (GitHub „Datenbank testen“) – schlägt gegen die alte Datenbank nachweislich fehl.
+- Bewusst nicht geändert: D5 (gleiche Meldung für „Gerät unbekannt“ und „KEY falsch“) – die hilfreiche Meldung für
+  Kunden wiegt schwerer; MAC-Adressen sind zufällig und nicht durchprobierbar. D6 (Verschlüsselung in der DB) bleibt offen.
 
 ## Offen – nur App, ohne Entscheidung machbar
 

@@ -247,14 +247,26 @@
     },
     key: function () {
       var k = Store.get('devkey');
-      if (!k || !/^[A-Z2-9]{6}$/.test(k)) {
-        var abc = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-        var rnd = window.crypto && window.crypto.getRandomValues ? window.crypto.getRandomValues(new Uint8Array(6)) : null;
-        k = '';
-        for (var i = 0; i < 6; i++) k += abc.charAt((rnd ? rnd[i] : Math.floor(Math.random() * 256)) % abc.length);
-        Store.set('devkey', k);
-      }
+      if (!k || !/^[A-Z2-9]{6}$/.test(k)) { k = this.newKey(); Store.set('devkey', k); }
       return k;
+    },
+    newKey: function () {
+      var abc = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', k = '';
+      var rnd = window.crypto && window.crypto.getRandomValues ? window.crypto.getRandomValues(new Uint8Array(6)) : null;
+      for (var i = 0; i < 6; i++) k += abc.charAt((rnd ? rnd[i] : Math.floor(Math.random() * 256)) % abc.length);
+      return k;
+    },
+    /* Langer Geheimschlüssel nur für die App (128 Bit). Damit gleicht die App ab – ohne Sperre nach Fehlversuchen,
+       weil er sich nicht erraten lässt. Der kurze KEY bleibt für die Webseite. Wird nie angezeigt. */
+    token: function () {
+      var t = Store.get('devtoken');
+      if (!t || !/^[0-9a-f]{32}$/.test(t)) {
+        var rnd = window.crypto && window.crypto.getRandomValues ? window.crypto.getRandomValues(new Uint8Array(16)) : null;
+        t = '';
+        for (var i = 0; i < 16; i++) { var b = rnd ? rnd[i] : Math.floor(Math.random() * 256); t += (b < 16 ? '0' : '') + b.toString(16); }
+        Store.set('devtoken', t);
+      }
+      return t;
     },
     portalLink: function () { return CONFIG.portalUrl + '?mac=' + encodeURIComponent(this.mac()) + '&key=' + this.key() + '&lang=' + Lang.cur; }
   };
@@ -1174,11 +1186,29 @@
       var l = this.pendingDeletes();
       if (l.indexOf(remoteId) < 0) { l.push(remoteId); Store.set('cloudDel', l); }
     },
+    /* Sicherer Weg (seit server/sicherheit-2026-11.sql): app_*-Funktionen mit Token. Fehlen sie in der Datenbank
+       (SQL noch nicht eingespielt) oder passt das Token nicht, wie bisher mit MAC + KEY ('legacy'). */
+    mode: null,
+    call: function (fn, body) {
+      var b = {}, k;
+      for (k in body) if (body.hasOwnProperty(k)) b[k] = body[k];
+      if (this.mode === 'token') { delete b.p_key; b.p_token = Device.token(); return this.rpc('app_' + fn, b); }
+      b.p_key = Device.key();
+      return this.rpc(fn, b);
+    },
+    register: function () {
+      var self = this, mac = Device.mac(), key = Device.key();
+      function legacy() { self.mode = 'legacy'; return self.rpc('register_device', { p_mac: mac, p_key: key }); }
+      return self.rpc('app_register', { p_mac: mac, p_key: key, p_token: Device.token() }).then(function (r) {
+        if (r && r.ok) { self.mode = 'token'; return r; }
+        return legacy();   // Funktion fehlt (PGRST202) oder Token unbekannt → bisheriger Weg
+      }, legacy);
+    },
     flushDeletes: function () {
       var self = this, l = self.pendingDeletes();
       if (!l.length || !CONFIG.cloudUrl) return Promise.resolve();
       return Promise.all(l.map(function (rid) {
-        return self.rpc('delete_playlist', { p_mac: Device.mac(), p_key: Device.key(), p_id: rid }).then(function (r) {
+        return self.call('delete_playlist', { p_mac: Device.mac(), p_id: rid }).then(function (r) {
           if (r && r.ok) {
             Store.set('cloudDel', self.pendingDeletes().filter(function (x) { return x !== rid; }));
           }
@@ -1190,12 +1220,12 @@
       if (self.busy || !CONFIG.cloudUrl) return Promise.resolve(null);
       self.busy = true;
       var mac = Device.mac(), key = Device.key();
-      var first = self.registered ? Promise.resolve({ ok: true }) : self.rpc('register_device', { p_mac: mac, p_key: key });
+      var first = self.registered ? Promise.resolve({ ok: true }) : self.register();
       return first.then(function (r) {
         if (!r || !r.ok) return null;
         self.registered = true;
         // erst ausstehende Löschungen nachholen, dann die Liste holen
-        return self.flushDeletes().then(function () { return self.rpc('list_playlists', { p_mac: mac, p_key: key }); });
+        return self.flushDeletes().then(function () { return self.call('list_playlists', { p_mac: mac }); });
       }).then(function (r) {
         self.busy = false;
         if (!r || !r.ok) return null;
@@ -1263,10 +1293,10 @@
         // nur Playlists, bei denen „Auch auf der Webseite verwalten“ eingeschaltet wurde
         if (p.remoteId || p.cloud !== true || (p.type !== 'm3u' && p.type !== 'xtream') || self.uploading[p.id]) return;
         self.uploading[p.id] = true;
-        var body = { p_mac: Device.mac(), p_key: Device.key(), p_name: p.name || T('Playlist'), p_type: p.type };
+        var body = { p_mac: Device.mac(), p_name: p.name || T('Playlist'), p_type: p.type };
         if (p.type === 'm3u') body.p_url = p.url;
         else { body.p_server = p.server; body.p_username = p.username; body.p_password = p.password; }
-        self.rpc('add_playlist', body).then(function (r) {
+        self.call('add_playlist', body).then(function (r) {
           delete self.uploading[p.id];
           if (!r || !r.ok || !r.id) return;
           var list = Profiles.list();
@@ -3614,8 +3644,22 @@
           h('button', { class: 'btn f', onclick: reloadApp }, icon('restart'), h('span', { text: T('Daten neu laden') })))),
       h('div', { class: 'settings-grid' },
         panel('live', T('Zugang'), [acc]),
-        panel('phone', T('Dieses Gerät'), [dev, h('p', { class: 'hint', text: T('Mit MAC-Adresse und KEY kannst du Playlists per Handy oder über die Webseite auf dieses Gerät schicken.') })]),
+        panel('phone', T('Dieses Gerät'), [dev, h('p', { class: 'hint', text: T('Mit MAC-Adresse und KEY kannst du Playlists per Handy oder über die Webseite auf dieses Gerät schicken.') }),
+          Cloud.mode === 'token' ? h('div', { class: 'row' }, h('button', { class: 'btn f', onclick: rotateKey }, icon('restart'), h('span', { text: T('Neuen KEY erzeugen') }))) : null]),
         epgPanel));
+  }
+
+  /* Neuen KEY erzeugen: Wer den alten kennt (z. B. von einem Foto des Bildschirms), kommt nicht mehr an die Playlists */
+  function rotateKey() {
+    confirmBox(T('Neuen KEY erzeugen?'), T('Der alte KEY funktioniert danach nicht mehr – auch nicht auf der Webseite. Deine Playlists bleiben erhalten.'), T('Neuen KEY erzeugen'), function () {
+      var nk = Device.newKey();
+      Cloud.rpc('app_rotate_key', { p_mac: Device.mac(), p_token: Device.token(), p_new_key: nk }).then(function (r) {
+        if (!r || !r.ok) { toast(T('KEY konnte nicht erneuert werden.'), 3000); return; }
+        Store.set('devkey', nk);
+        toast(T('Neuer KEY: {0}', nk), 3000);
+        setTimeout(function () { location.reload(); }, 1600);   // KEY steht an mehreren Stellen (Fußleiste, QR-Code)
+      }, function () { toast(T('KEY konnte nicht erneuert werden.'), 3000); });
+    });
   }
 
   /* Profil (nur M3U): Programmführer – Stand anzeigen, Adresse ändern, neu laden */

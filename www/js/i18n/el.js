@@ -593,5 +593,10 @@ window.LUMIO_I18N["el"] = {
   "„{0}“ ist jetzt auf der Webseite verfügbar.": "Το «{0}» είναι πλέον διαθέσιμο στον ιστότοπο.",
   "Von der Webseite entfernen?": "Αφαίρεση από τον ιστότοπο;",
   "„{0}“ bleibt auf diesem Gerät, die Online-Kopie samt Zugangsdaten wird gelöscht.": "Το «{0}» μένει σε αυτή τη συσκευή· το online αντίγραφο μαζί με τα στοιχεία σύνδεσης θα διαγραφεί.",
-  "Entfernen": "Αφαίρεση"
+  "Entfernen": "Αφαίρεση",
+  "Neuen KEY erzeugen": "Δημιουργία νέου KEY",
+  "Neuen KEY erzeugen?": "Δημιουργία νέου KEY;",
+  "Der alte KEY funktioniert danach nicht mehr – auch nicht auf der Webseite. Deine Playlists bleiben erhalten.": "Το παλιό KEY δεν θα λειτουργεί πια – ούτε στον ιστότοπο. Οι λίστες σου παραμένουν.",
+  "KEY konnte nicht erneuert werden.": "Δεν ήταν δυνατή η ανανέωση του KEY.",
+  "Neuer KEY: {0}": "Νέο KEY: {0}"
 };

@@ -593,5 +593,10 @@ window.LUMIO_I18N["ar"] = {
   "„{0}“ ist jetzt auf der Webseite verfügbar.": "“{0}” متاحة الآن على الموقع.",
   "Von der Webseite entfernen?": "إزالتها من الموقع؟",
   "„{0}“ bleibt auf diesem Gerät, die Online-Kopie samt Zugangsdaten wird gelöscht.": "تبقى “{0}” على هذا الجهاز، وستُحذف النسخة عبر الإنترنت مع بيانات الدخول.",
-  "Entfernen": "إزالة"
+  "Entfernen": "إزالة",
+  "Neuen KEY erzeugen": "إنشاء KEY جديد",
+  "Neuen KEY erzeugen?": "إنشاء KEY جديد؟",
+  "Der alte KEY funktioniert danach nicht mehr – auch nicht auf der Webseite. Deine Playlists bleiben erhalten.": "لن يعمل KEY القديم بعد ذلك – ولا على الموقع أيضًا. تبقى قوائم التشغيل الخاصة بك.",
+  "KEY konnte nicht erneuert werden.": "تعذّر تجديد KEY.",
+  "Neuer KEY: {0}": "KEY الجديد: {0}"
 };

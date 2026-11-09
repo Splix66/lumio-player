@@ -593,5 +593,10 @@ window.LUMIO_I18N["fr"] = {
   "„{0}“ ist jetzt auf der Webseite verfügbar.": "« {0} » est maintenant disponible sur le site.",
   "Von der Webseite entfernen?": "Retirer du site ?",
   "„{0}“ bleibt auf diesem Gerät, die Online-Kopie samt Zugangsdaten wird gelöscht.": "« {0} » reste sur cet appareil ; la copie en ligne avec les identifiants sera supprimée.",
-  "Entfernen": "Retirer"
+  "Entfernen": "Retirer",
+  "Neuen KEY erzeugen": "Créer un nouveau KEY",
+  "Neuen KEY erzeugen?": "Créer un nouveau KEY ?",
+  "Der alte KEY funktioniert danach nicht mehr – auch nicht auf der Webseite. Deine Playlists bleiben erhalten.": "L’ancien KEY ne fonctionnera plus, y compris sur le site. Vos playlists sont conservées.",
+  "KEY konnte nicht erneuert werden.": "Impossible de renouveler le KEY.",
+  "Neuer KEY: {0}": "Nouveau KEY : {0}"
 };

@@ -73,6 +73,16 @@ Dateien unter `docs/assets/i18n/` ergänzen – der Test meldet fehlende Überse
 **Neue externe Adressen** (z. B. ein weiterer Dienst) müssen in der `Content-Security-Policy` in `docs/index.html`
 eingetragen werden, sonst blockiert der Browser sie.
 
+## Sicherheits-Update der Datenbank (November 2026)
+
+`server/sicherheit-2026-11.sql` einmal im Supabase SQL-Editor ausführen (wiederholbar, ändert keine Daten):
+lückenlose Zählung von Fehlversuchen (max. 20 pro Stunde und Gerät), eigener langer App-Schlüssel (Token) – die App
+lässt sich dadurch nicht mehr von Fremden aussperren –, „Neuen KEY erzeugen“ in der App und tägliches Aufräumen
+(erledigte Support-Nachrichten nach 30 Tagen, Geräte nach 12 Monaten ohne Verbindung).
+Für das Aufräumen vorher **Database → Extensions → pg_cron** einschalten (sonst gibt das Skript einen Hinweis aus).
+Die App erkennt selbst, ob das Update eingespielt ist; ohne Update arbeitet sie wie bisher mit MAC + KEY.
+Automatischer Test: `tests/sql/run.sh` („Actions“ → „Datenbank testen“).
+
 ## Verwaltungsbereich einrichten
 
 Adresse nach dem Veröffentlichen: `https://splix66.github.io/lumio-player/admin.html` (nicht verlinkt, `noindex`).

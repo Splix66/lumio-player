@@ -593,5 +593,10 @@ window.LUMIO_I18N["pl"] = {
   "„{0}“ ist jetzt auf der Webseite verfügbar.": "„{0}” jest teraz dostępna na stronie.",
   "Von der Webseite entfernen?": "Usunąć ze strony?",
   "„{0}“ bleibt auf diesem Gerät, die Online-Kopie samt Zugangsdaten wird gelöscht.": "„{0}” pozostaje na tym urządzeniu, kopia online wraz z danymi logowania zostanie usunięta.",
-  "Entfernen": "Usuń"
+  "Entfernen": "Usuń",
+  "Neuen KEY erzeugen": "Utwórz nowy KEY",
+  "Neuen KEY erzeugen?": "Utworzyć nowy KEY?",
+  "Der alte KEY funktioniert danach nicht mehr – auch nicht auf der Webseite. Deine Playlists bleiben erhalten.": "Stary KEY przestanie działać – również na stronie. Twoje playlisty zostaną zachowane.",
+  "KEY konnte nicht erneuert werden.": "Nie udało się odnowić KEY.",
+  "Neuer KEY: {0}": "Nowy KEY: {0}"
 };
