@@ -703,5 +703,6 @@ window.LUMIO_I18N["el"] = {
   "Sender ausblenden": "Απόκρυψη καναλιού",
   "Sender ausblenden?": "Απόκρυψη καναλιού;",
   "„{0}“ erscheint dann nicht mehr in den Senderlisten. Wieder einblenden: Einstellungen → Ausgeblendete Sender.": "Το «{0}» δεν θα εμφανίζεται πλέον στις λίστες. Για επαναφορά: Ρυθμίσεις → Κρυμμένα κανάλια.",
-  "„{0}“ ausgeblendet": "Το «{0}» κρύφτηκε"
+  "„{0}“ ausgeblendet": "Το «{0}» κρύφτηκε",
+  "Ohne Programmdaten": "Χωρίς δεδομένα προγράμματος"
 };

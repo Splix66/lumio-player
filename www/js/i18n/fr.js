@@ -703,5 +703,6 @@ window.LUMIO_I18N["fr"] = {
   "Sender ausblenden": "Masquer la chaîne",
   "Sender ausblenden?": "Masquer la chaîne ?",
   "„{0}“ erscheint dann nicht mehr in den Senderlisten. Wieder einblenden: Einstellungen → Ausgeblendete Sender.": "« {0} » n’apparaîtra plus dans les listes de chaînes. Pour l’afficher à nouveau : Réglages → Chaînes masquées.",
-  "„{0}“ ausgeblendet": "« {0} » masquée"
+  "„{0}“ ausgeblendet": "« {0} » masquée",
+  "Ohne Programmdaten": "Pas de données de programme"
 };

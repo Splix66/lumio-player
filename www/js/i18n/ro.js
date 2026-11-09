@@ -703,5 +703,6 @@ window.LUMIO_I18N["ro"] = {
   "Sender ausblenden": "Ascunde canalul",
   "Sender ausblenden?": "Ascunzi canalul?",
   "„{0}“ erscheint dann nicht mehr in den Senderlisten. Wieder einblenden: Einstellungen → Ausgeblendete Sender.": "„{0}” nu va mai apărea în listele de canale. Pentru a-l afișa din nou: Setări → Canale ascunse.",
-  "„{0}“ ausgeblendet": "„{0}” ascuns"
+  "„{0}“ ausgeblendet": "„{0}” ascuns",
+  "Ohne Programmdaten": "Fără date de program"
 };

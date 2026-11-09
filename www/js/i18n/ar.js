@@ -703,5 +703,6 @@ window.LUMIO_I18N["ar"] = {
   "Sender ausblenden": "إخفاء القناة",
   "Sender ausblenden?": "إخفاء القناة؟",
   "„{0}“ erscheint dann nicht mehr in den Senderlisten. Wieder einblenden: Einstellungen → Ausgeblendete Sender.": "لن تظهر «{0}» بعد الآن في قوائم القنوات. لإظهارها مجددًا: الإعدادات ← القنوات المخفية.",
-  "„{0}“ ausgeblendet": "تم إخفاء «{0}»"
+  "„{0}“ ausgeblendet": "تم إخفاء «{0}»",
+  "Ohne Programmdaten": "لا توجد بيانات برامج"
 };

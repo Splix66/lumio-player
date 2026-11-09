@@ -703,5 +703,6 @@ window.LUMIO_I18N["uk"] = {
   "Sender ausblenden": "Сховати канал",
   "Sender ausblenden?": "Сховати канал?",
   "„{0}“ erscheint dann nicht mehr in den Senderlisten. Wieder einblenden: Einstellungen → Ausgeblendete Sender.": "«{0}» більше не з’являтиметься у списках каналів. Повернути: Налаштування → Приховані канали.",
-  "„{0}“ ausgeblendet": "«{0}» приховано"
+  "„{0}“ ausgeblendet": "«{0}» приховано",
+  "Ohne Programmdaten": "Немає даних програми"
 };

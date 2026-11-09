@@ -703,5 +703,6 @@ window.LUMIO_I18N["it"] = {
   "Sender ausblenden": "Nascondi canale",
   "Sender ausblenden?": "Nascondere il canale?",
   "„{0}“ erscheint dann nicht mehr in den Senderlisten. Wieder einblenden: Einstellungen → Ausgeblendete Sender.": "“{0}” non comparirà più negli elenchi dei canali. Per mostrarlo di nuovo: Impostazioni → Canali nascosti.",
-  "„{0}“ ausgeblendet": "“{0}” nascosto"
+  "„{0}“ ausgeblendet": "“{0}” nascosto",
+  "Ohne Programmdaten": "Nessun dato di programma"
 };

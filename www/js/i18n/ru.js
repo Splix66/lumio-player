@@ -703,5 +703,6 @@ window.LUMIO_I18N["ru"] = {
   "Sender ausblenden": "Скрыть канал",
   "Sender ausblenden?": "Скрыть канал?",
   "„{0}“ erscheint dann nicht mehr in den Senderlisten. Wieder einblenden: Einstellungen → Ausgeblendete Sender.": "«{0}» больше не будет в списках каналов. Вернуть: Настройки → Скрытые каналы.",
-  "„{0}“ ausgeblendet": "«{0}» скрыт"
+  "„{0}“ ausgeblendet": "«{0}» скрыт",
+  "Ohne Programmdaten": "Нет данных программы"
 };

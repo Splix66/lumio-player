@@ -703,5 +703,6 @@ window.LUMIO_I18N["hr"] = {
   "Sender ausblenden": "Sakrij program",
   "Sender ausblenden?": "Sakriti program?",
   "„{0}“ erscheint dann nicht mehr in den Senderlisten. Wieder einblenden: Einstellungen → Ausgeblendete Sender.": "„{0}” se više neće prikazivati na popisima. Ponovni prikaz: Postavke → Skriveni programi.",
-  "„{0}“ ausgeblendet": "„{0}” skriven"
+  "„{0}“ ausgeblendet": "„{0}” skriven",
+  "Ohne Programmdaten": "Nema podataka o programu"
 };

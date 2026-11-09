@@ -703,5 +703,6 @@ window.LUMIO_I18N["ku"] = {
   "Sender ausblenden": "Kanalê veşêre",
   "Sender ausblenden?": "Kanal were veşartin?",
   "„{0}“ erscheint dann nicht mehr in den Senderlisten. Wieder einblenden: Einstellungen → Ausgeblendete Sender.": "“{0}” êdî di lîsteyên kanalan de xuya nabe. Ji bo dîsa nîşandanê: Mîheng → Kanalên veşartî.",
-  "„{0}“ ausgeblendet": "“{0}” hate veşartin"
+  "„{0}“ ausgeblendet": "“{0}” hate veşartin",
+  "Ohne Programmdaten": "Daneyên bernameyê tune"
 };
