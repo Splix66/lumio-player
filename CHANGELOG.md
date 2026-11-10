@@ -1,8 +1,9 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
-## 1.13.4 – 2026-11-10 · „Weiterschauen“ im TV-Player startete von vorne
+## 1.13.4 – 2026-11-10 · „Weiterschauen“ im TV-Player, Live-Vorschau in der Android-App
 
 - **„Weiter bei …“ (Filme) und „Weiter: S… E…“ (Serien)** starteten im TV-Player (Fire TV, Android-Boxen) immer bei 00:00. Weil der Neustart dann bei wenigen Sekunden beendet wurde, war anschließend auch die gespeicherte Position weg. Ursache: Das Plugin las die Startposition mit `call.getLong()`. Capacitor gibt dort nur bei echten Long-Werten etwas zurück, Startpositionen unter ~24 Tagen kommen aber als Integer an – Ergebnis war immer 0. Jetzt `optLong()`, das jede Zahl übernimmt (der Schlaf-Timer liest seine Uhrzeit vorsorglich genauso). Gefunden beim Gerätetest auf dem Fire TV Stick 4K Max.
+- **Live-Vorschau und eingebauter Player (Android-App) luden bei vielen HLS-Sendern nichts** (Dauer-Ladekreis). Ursache: CapacitorHttp leitet Anfragen über `http://localhost/_capacitor_http_interceptor_?u=…` um, und hls.js löste relative Pfade der Playlist gegen `http://localhost` auf (`Failed to connect to localhost/127.0.0.1:80`). Jetzt bekommt hls.js die echte Adresse zurück, Weiterleitungen werden vorab aufgelöst. Im App-WebView geprüft: vorher `levelLoadError` bei `http://localhost/…`, nachher lädt das Segment.
 
 ## 1.13.3 – 2026-11-10 · Layout für ältere Fernseher und Android-Boxen
 
