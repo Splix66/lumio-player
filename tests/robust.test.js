@@ -576,4 +576,11 @@
     ok(!/Banned/.test(D.statusError('Banned').message), 'Banned übersetzt');
     eq(D.statusError('Active'), null, 'aktiv = kein Fehler');
   });
+
+  t('Alte Geräte', 'Sichtbarkeit auch ohne „isIntersecting“ (Chrome bis 57: LG-Fernseher bis 2019, ältere Android-Boxen)', function () {
+    ok(D.isVisible({ isIntersecting: true, intersectionRatio: 0 }), 'neuer Browser: isIntersecting zählt');
+    ok(!D.isVisible({ isIntersecting: false, intersectionRatio: 0.5 }), 'neuer Browser: false bleibt false');
+    ok(D.isVisible({ intersectionRatio: 0.3 }), 'alter Browser: sichtbar über intersectionRatio');
+    ok(!D.isVisible({ intersectionRatio: 0 }), 'alter Browser: nicht sichtbar');
+  });
 })();

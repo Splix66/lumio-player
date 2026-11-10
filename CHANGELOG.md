@@ -1,5 +1,15 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## 1.13.2 – 2026-11-10 · Ältere Geräte: Programm wird wieder angezeigt, Android-Versionsnummer
+
+- **Ältere Android-Boxen und Fernseher** (Browser-Kern bis Chrome 57, z. B. LG-Fernseher bis 2019, Samsung 2018,
+  günstige Boxen mit Android 6/7): Die laufende Sendung in den Senderlisten und das TV-Programm wurden dort nie
+  geladen – die App wartete auf eine Angabe („isIntersecting“), die es dort noch nicht gibt. Jetzt mit Ersatzprüfung.
+  Nachgestellt im Browser: vorher 0 von 14 Programmzeilen, jetzt 14.
+- **Android-Versionsnummer:** In „Einstellungen → Apps“ stand bei jedem Kunden „1.0“, und der versionCode blieb 1.
+  Jetzt folgt beides der App-Version (1.13.2 → versionCode 11302) – Voraussetzung für App-Stores und klarer im Support.
+- Neuer Test für alte Geräte.
+
 ## 1.13.1 – 2026-11-10 · Gründlicher QA-Durchgang: Playlists, Player, Darstellung auf Handy/Tablet, Schutz der Datenbank
 
 **Wichtigste Korrektur – Playlists:** Jede neu hinzugefügte Playlist (von Hand, über die Webseite oder aus einer Sicherung)
