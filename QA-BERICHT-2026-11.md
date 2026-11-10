@@ -76,11 +76,15 @@ Android-TV-Player, bei Einstellungen, Wetter und Bewertung.
 - **JavaScript:** gesamter App-Code und alle Bibliotheken sind ES5 – auch sehr alte Browser-Kerne können ihn lesen.
 - **Behoben (1.13.2):** Auf Browser-Kernen bis Chrome 57 wurden laufende Sendung und TV-Programm nie geladen
   (`isIntersecting` fehlt). Nachgestellt: vorher 0 von 14 Programmzeilen, danach 14.
-- **Offen – Risiko für sehr alte Geräte:** Das Layout nutzt CSS-Grid (52 Stellen, erst ab Chrome 57) und Abstände
-  mit `gap` in Flex-Zeilen (erst ab Chrome 84). Auf LG-Fernsehern bis 2019 (webOS 4.x, Chrome 53), Samsung 2018 und
-  Android-Boxen mit nie aktualisiertem Browser-Kern fällt das Layout deshalb vermutlich zusammen bzw. Abstände fehlen.
-  Fire TV und aktuelle Android-TV-Geräte sind nicht betroffen. Ein Test in alten Browser-Kernen (Electron 1.4/2/3)
-  wurde vorbereitet, durfte in der Testumgebung aber nicht ausgeführt werden (Programme aus externer Quelle).
+- **Behoben (1.13.3) – Layout auf sehr alten Geräten:** CSS-Grid (59 Regeln, erst ab Chrome 57) und `gap` in
+  Flex-Zeilen (erst ab Chrome 84) ließen das Layout auf LG-Fernsehern bis 2019, Samsung 2018 und Android-Boxen mit
+  altem Browser-Kern zusammenfallen. Jetzt Flexbox-Ersatz vor jedem Grid plus Erkennung `no-grid`/`no-flexgap`.
+  **Wie geprüft:** Ein echter alter Browser-Kern (Electron 1.4/2/3) durfte in der Testumgebung nicht gestartet werden.
+  Stattdessen wurde style.css so ausgeliefert, wie ein Chrome 53 sie liest (ohne Grid, gap, place-items,
+  min()/max()/clamp(), inset, aspect-ratio, env()) – 17 Bildschirme in 1920×1080 und 1280×720 vorher/nachher
+  verglichen, automatische Überlappungsprüfung identisch zum modernen Browser. **Rest-Risiko:** Abweichungen alter
+  Browser-Kerne, die sich so nicht nachbilden lassen (z. B. Flexbox-Rechenfehler von Chrome 53) – ein Blick auf
+  einem echten alten Gerät bleibt sinnvoll.
 
 ## Noch offene Punkte
 

@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Telvo Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.13.2',
+    version: '1.13.3',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     /* Bibliotheken: werden beim Bauen nach www/lib kopiert (scripts/copy-libs.js) und von dort geladen.
        Nur wenn sie fehlen, aus dem Internet – mit fester Version und Prüfsumme (SRI): eine veränderte Datei
@@ -8896,7 +8896,24 @@
     document.body.appendChild(d.firstChild);
   }
 
+  /* Ältere Browser-Kerne erkennen (Fernseher bis 2019/2020, Android-Boxen mit altem WebView) – style.css ordnet dann
+     ohne CSS-Grid bzw. ohne „gap“ in Flex-Zeilen an (Abschnitt „Ältere Geräte“) */
+  function detectOldEngine() {
+    var d = document.documentElement;
+    function ok(p, v) { try { return !!(window.CSS && CSS.supports && CSS.supports(p, v)); } catch (e) { return false; } }
+    if (!ok('display', 'grid')) d.className += ' no-grid';
+    try {
+      var f = document.createElement('div');
+      f.style.cssText = 'display:flex;flex-direction:column;row-gap:1px;position:absolute;visibility:hidden';
+      f.appendChild(document.createElement('div')); f.appendChild(document.createElement('div'));
+      document.body.appendChild(f);
+      var noGap = f.scrollHeight !== 1;
+      f.parentNode.removeChild(f);
+      if (noGap) d.className += ' no-flexgap';
+    } catch (e) {}
+  }
   function boot() {
+    detectOldEngine();
     Profiles.fixIds();
     Lang.init();
     addLogoDefs();

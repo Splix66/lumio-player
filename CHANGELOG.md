@@ -1,5 +1,16 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## 1.13.3 – 2026-11-10 · Layout für ältere Fernseher und Android-Boxen
+
+- **Ältere Geräte ohne CSS-Grid** (Browser-Kern vor Chrome 57: LG-Fernseher bis 2019 / webOS 4.x, Samsung 2018,
+  Android-Boxen mit nie aktualisiertem WebView): Bisher fiel dort das Layout zusammen – Startbildschirm mit einer Kachel
+  je Zeile, Cover-Raster als eine große Fläche, PIN-Feld unbenutzbar, Menüleiste ohne Logo und Knöpfe. Jetzt steht vor
+  jedem Grid ein Flexbox-Ersatz (gleiche Spezifität, Versteck-Regeln wirken weiter), und die App setzt beim Start
+  `no-grid` bzw. `no-flexgap`, damit Spalten, Abstände und Zentrierung stimmen.
+- Geprüft durch Nachbilden eines alten Browser-Kerns (CSS ohne Grid, gap, place-items, min()/max()/clamp(), inset,
+  aspect-ratio, env()): 17 Bildschirme in 1920×1080 und 1280×720, Vorher-/Nachher-Vergleich, und eine automatische
+  Überlappungsprüfung zeigt dieselben Ergebnisse wie im modernen Browser.
+
 ## 1.13.2 – 2026-11-10 · Ältere Geräte: Programm wird wieder angezeigt, Android-Versionsnummer
 
 - **Ältere Android-Boxen und Fernseher** (Browser-Kern bis Chrome 57, z. B. LG-Fernseher bis 2019, Samsung 2018,
