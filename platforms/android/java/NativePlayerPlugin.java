@@ -20,6 +20,76 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 @CapacitorPlugin(name = "NativePlayer")
 public class NativePlayerPlugin extends Plugin {
 
+    private static final String CRASH_PREFS = "telvo_crash";
+
+    /**
+     * Absturz merken: Stürzt der Android-Teil ab (TV-Player, Plugins), wird Art, Meldung und Stelle kurz gespeichert.
+     * Beim nächsten Start holt die App das mit takeCrash() ab und schreibt es ins Fehlerprotokoll
+     * (Links und Zugangsdaten entfernt die App dort). Danach läuft der normale Absturz von Android weiter.
+     */
+    @Override
+    public void load() {
+        Thread.UncaughtExceptionHandler prev = Thread.getDefaultUncaughtExceptionHandler();
+        if (prev instanceof CrashSaver) return;
+        Thread.setDefaultUncaughtExceptionHandler(new CrashSaver(getContext().getApplicationContext(), prev));
+    }
+
+    static class CrashSaver implements Thread.UncaughtExceptionHandler {
+        private final android.content.Context ctx;
+        private final Thread.UncaughtExceptionHandler prev;
+
+        CrashSaver(android.content.Context ctx, Thread.UncaughtExceptionHandler prev) {
+            this.ctx = ctx;
+            this.prev = prev;
+        }
+
+        @Override
+        public void uncaughtException(Thread t, Throwable e) {
+            try {
+                Throwable root = e;
+                while (root.getCause() != null && root.getCause() != root) root = root.getCause();
+                StringBuilder sb = new StringBuilder();
+                sb.append(root.getClass().getSimpleName());
+                if (root.getMessage() != null) sb.append(": ").append(root.getMessage());
+                // die ersten Stellen im eigenen Code (sonst die oberste) – reicht, um den Fehler zu finden
+                StackTraceElement[] st = root.getStackTrace();
+                int shown = 0;
+                for (StackTraceElement el : st) {
+                    if (shown >= 2) break;
+                    if (el.getClassName().startsWith("de.lumio")) {
+                        sb.append(" @").append(el.getClassName().replace("de.lumio.player.", "")).append('.').append(el.getMethodName()).append(':').append(el.getLineNumber());
+                        shown++;
+                    }
+                }
+                if (shown == 0 && st.length > 0) sb.append(" @").append(st[0].getClassName()).append('.').append(st[0].getMethodName());
+                String s = sb.length() > 400 ? sb.substring(0, 400) : sb.toString();
+                ctx.getSharedPreferences(CRASH_PREFS, android.content.Context.MODE_PRIVATE).edit().putString("last", s).commit();
+            } catch (Throwable ignored) {
+            }
+            if (prev != null) prev.uncaughtException(t, e);
+            else {
+                android.os.Process.killProcess(android.os.Process.myPid());
+                System.exit(10);
+            }
+        }
+    }
+
+    /** Gemerkten Absturz einmal abholen (und löschen). */
+    @PluginMethod
+    public void takeCrash(PluginCall call) {
+        JSObject r = new JSObject();
+        try {
+            android.content.SharedPreferences p = getContext().getSharedPreferences(CRASH_PREFS, android.content.Context.MODE_PRIVATE);
+            String s = p.getString("last", null);
+            if (s != null) {
+                r.put("crash", s);
+                p.edit().remove("last").apply();
+            }
+        } catch (Exception ignored) {
+        }
+        call.resolve(r);
+    }
+
     @PluginMethod
     public void isAvailable(PluginCall call) {
         JSObject r = new JSObject();
