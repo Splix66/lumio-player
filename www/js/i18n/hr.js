@@ -1,6 +1,22 @@
 /* Telvo Player – Übersetzung: Bosnisch / Kroatisch / Serbisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["hr"] = {
+  "Ändern oder neues Feedback geben kannst du ab dem {0}.": "Promijeniti ili poslati novu povratnu informaciju možeš od {0}.",
+  "Beliebt auf Handys und Tablets.": "Popularan na mobitelima i tabletima.",
+  "Bitte schreib kurz, warum du deine Bewertung änderst.": "Ukratko napiši zašto mijenjaš ocjenu.",
+  "Danke – dein Feedback ist angekommen.": "Hvala – tvoja povratna informacija je stigla.",
+  "Deine Bewertung – beim Ändern bitte kurz begründen.": "Tvoja ocjena – kod promjene ukratko navedi razlog.",
+  "Empfohlen für Fire TV Stick und Cube, Chromecast mit Google TV, Nvidia Shield, Xiaomi Mi Box und andere Android-TV-Boxen.": "Preporučeno za Fire TV Stick i Cube, Chromecast s Google TV-om, Nvidia Shield, Xiaomi Mi Box i druge Android TV uređaje.",
+  "Fire TV, Android TV, Handy – spielt fast alles ab.": "Fire TV, Android TV, mobitel – reproducira gotovo sve.",
+  "Für ältere oder schwache Boxen und für Sender, die mit den anderen Playern hängen.": "Za starije ili slabije uređaje i za kanale koji zapinju s drugim playerima.",
+  "Für Android TV und Google TV.": "Za Android TV i Google TV.",
+  "Für Android-Boxen und Nvidia Shield.": "Za Android uređaje i Nvidia Shield.",
+  "Für Android-Handys und Tablets (Samsung, Xiaomi, Pixel) – oder wenn der TV-Player hakt.": "Za Android mobitele i tablete (Samsung, Xiaomi, Pixel) – ili kad TV player zapinje.",
+  "Für Technik-Fans mit vielen Einstellungen.": "Za ljubitelje tehnike, s puno postavki.",
+  "OK öffnet den Sender im Vollbild.": "OK otvara kanal preko cijelog zaslona.",
+  "Schlank, gut für Fire TV und Android-Boxen.": "Lagan, dobar za Fire TV i Android uređaje.",
+  "Telvo ist nur ein Player – nutze nur Quellen, für die du berechtigt bist.": "Telvo je samo player – koristi samo izvore za koje imaš dopuštenje.",
+  "Warum änderst du deine Bewertung?": "Zašto mijenjaš ocjenu?",
   "Dein Zugang ist abgelaufen": "Tvoj pristup je istekao",
   "Dein Zugang läuft bald ab": "Tvoj pristup uskoro istječe",
   "Verstanden": "Razumijem",
