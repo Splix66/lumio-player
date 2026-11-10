@@ -378,11 +378,15 @@ public class PlayerActivity extends Activity {
             if (bg != null) bg.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
                     new int[] { 0xB3000000, 0x1A000000, 0x00000000, 0x59000000, 0xF2000000 }));
             View bottom = exo("exo_bottom_bar");
-            if (bottom != null) {
-                bottom.setBackgroundColor(Color.TRANSPARENT);
-                // Abstand zum Bildschirmrand – sonst wird der runde Knopf ganz rechts (Einstellungen) angeschnitten
-                bottom.setPadding(dp(20), bottom.getPaddingTop(), dp(24), dp(10));
+            if (bottom != null) bottom.setBackgroundColor(Color.TRANSPARENT);
+            // Abstand zum Bildschirmrand – sonst wird der runde Knopf ganz rechts (Einstellungen) angeschnitten.
+            // Padding am Balken setzt Media3 selbst zurück, darum die Knopfgruppen verschieben (wirkt nur auf die Darstellung).
+            for (String n : new String[] { "exo_basic_controls", "exo_extra_controls", "exo_overflow_show" }) {
+                View g = exo(n);
+                if (g != null) { g.setTranslationX(-dp(28)); g.setTranslationY(-dp(10)); }
             }
+            View time = exo("exo_time");
+            if (time != null) { time.setTranslationX(dp(12)); time.setTranslationY(-dp(10)); }
             View tb = exo("exo_progress");
             if (tb instanceof DefaultTimeBar) {
                 DefaultTimeBar t = (DefaultTimeBar) tb;

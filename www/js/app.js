@@ -2688,6 +2688,12 @@
           return true;
         }
       }
+      // Startseite: Runter aus der Menüleiste führt ins Titelbild („Jetzt ansehen“) – sonst sprang der Fokus
+      // über das Titelbild hinweg auf die erste Karte darunter (die liegt waagerecht näher am Herz/Live TV)
+      if (dir === 'down' && cur.closest && cur.closest('.topnav')) {
+        var heroBtn = $('.launcher.hm .hm-heroslot .f');
+        if (heroBtn && list.indexOf(heroBtn) >= 0) { this.focus(heroBtn); return true; }
+      }
       // Startseite: Hoch aus den Reihen führt erst ins Titelbild, nicht gleich in die Menüleiste
       if (dir === 'up' && cur.closest && cur.closest('.hm-rows')) {
         var below = this.pick(cur, list.filter(function (el) { return !(el.closest && el.closest('.topnav')); }), dir);
