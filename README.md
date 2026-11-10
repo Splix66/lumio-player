@@ -83,6 +83,14 @@ Für das Aufräumen vorher **Database → Extensions → pg_cron** einschalten (
 Die App erkennt selbst, ob das Update eingespielt ist; ohne Update arbeitet sie wie bisher mit MAC + KEY.
 Automatischer Test: `tests/sql/run.sh` („Actions“ → „Datenbank testen“).
 
+## Sichern & Wiederherstellen (Datenbank, November 2026)
+
+`server/sicherung-2026-11.sql` einmal im Supabase SQL-Editor ausführen – **nach** dem Sicherheits-Update
+(wiederholbar, ändert keine bestehenden Daten): neue Tabelle `backups` (pro Gerät höchstens 512 KB, ohne Passwörter),
+Funktionen `app_save_backup`, `app_backup_info`, `app_delete_backup` (App-Token) und `restore_backup` (MAC + KEY, mit
+Fehlversuch-Sperre). Die Sicherung wird mit dem Gerät gelöscht. Ohne das Skript meldet die App beim Sichern
+„Der Online-Dienst kennt diese Funktion noch nicht.“ – alles andere läuft weiter.
+
 ## Verwaltungsbereich einrichten
 
 Adresse nach dem Veröffentlichen: `https://splix66.github.io/lumio-player/admin.html` (nicht verlinkt, `noindex`).

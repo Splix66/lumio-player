@@ -73,9 +73,13 @@
   function normLang(l) { l = String(l || '').slice(0, 2).toLowerCase(); return l === 'bs' || l === 'sr' ? 'hr' : l; }
 
   // Reihenfolge: ?lang= aus der App > zuletzt gewählt > Sprache des Browsers > Deutsch
+  // Werte aus dem QR-Code der App: neu hinter „#“ (wird nie an einen Server geschickt),
+  // ältere App-Versionen schicken sie als ?mac=…&key=… – beides wird gelesen.
   var qs0 = new URLSearchParams(location.search);
+  var hs0 = /(^|&)(mac|key)=/i.test(location.hash.slice(1)) ? new URLSearchParams(location.hash.slice(1)) : null;
+  function qp(k) { return (hs0 && hs0.get(k)) || qs0.get(k) || ''; }
   var lang = '';
-  if (qs0.get('lang')) lang = normLang(qs0.get('lang'));
+  if (qp('lang')) lang = normLang(qp('lang'));
   if (!known(lang)) try { lang = sessionStorage.getItem('lumio.lang') || ''; } catch (e) {}
   if (!known(lang)) lang = normLang((navigator.languages && navigator.languages[0]) || navigator.language);
   if (!known(lang)) lang = 'de';
@@ -561,10 +565,11 @@
   var wantLang = lang; lang = 'de';
   applyLang();
   if (wantLang !== 'de') setLang(wantLang, false);
-  var qm = normMac(qs0.get('mac')), qk = (qs0.get('key') || '').toUpperCase();
+  var qm = normMac(qp('mac')), qk = qp('key').toUpperCase();
   if (qm) $('mac').value = qm;
   if (qk) $('key').value = qk;
-  if (qs0.has('mac') || qs0.has('key') || qs0.has('lang')) history.replaceState(null, '', location.pathname + location.hash);
+  // MAC und KEY sofort aus der Adresszeile entfernen (Verlauf, Lesezeichen, Bildschirmfotos)
+  if (hs0 || qs0.has('mac') || qs0.has('key') || qs0.has('lang')) history.replaceState(null, '', location.pathname + (hs0 ? '' : location.hash));
   var saved = null;
   try { saved = JSON.parse(sessionStorage.getItem('lumio.device') || 'null'); } catch (e) {}
   // Startseite – außer man kommt per QR-Code aus der App, war schon verbunden oder hat einen Bereich verlinkt

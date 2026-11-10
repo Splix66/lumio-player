@@ -53,7 +53,7 @@ Technisch solide und deutlich über dem Durchschnitt vergleichbarer IPTV-Player:
   von 1 MB (Absturz möglich). Lösung: nur die Nachbarn (± 100) übergeben.
 - ✅ A3 (erledigt: fest eingebaut, Versionen festgelegt, Prüfsumme gegen Manipulation – getestet). Video-Bibliotheken wurden notfalls aus dem Internet (jsDelivr) nachgeladen, ohne Versionsbindung und Prüfsumme;
   mpegts.js immer. Lösung: alle Bibliotheken fest einbauen, Versionen festlegen.
-- A4. QR-Code: KEY steht im Adressteil, den Server protokollieren. Lösung: hinter „#“ (Webseite anpassen).
+- ✅ A4 (erledigt: MAC und KEY stehen im QR-Code hinter „#“ – wird nie an einen Server geschickt; Webseite liest beides, alte QR-Codes funktionieren weiter; getestet). QR-Code: KEY stand im Adressteil, den Server protokollieren.
 - A5. Datenschutz: tägliche Update-Prüfung über api.github.com und YouTube-Trailer nicht erwähnt.
 - A6. Windows/Mac: `webSecurity: false` (abgeschaltete Browser-Schutzregel) – nötig für manche Anbieter, aber riskant;
   besser gezielt freigeben.

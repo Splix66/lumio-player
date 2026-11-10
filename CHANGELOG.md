@@ -1,5 +1,179 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## 1.12.0 – 2026-11-10 · Neuer Startbildschirm, Profi-Player, Personen und neue Webseite
+
+**App – Willkommensseite neu angeordnet:** QR-Code in der Mitte · rechts MAC, KEY, „Playlist hinzufügen“, „Demo“ und
+neuer Knopf „Aktualisieren“ (sieht sofort nach, ob auf der Webseite eine Playlist eingetragen wurde) · Begrüßung über der
+Karte · Link zur Webseite als ruhige Schaltfläche statt unterstrichen · eigene kompakte Ansicht für Handys im Querformat
+(alles ohne Scrollen sichtbar; die Android-App läuft weiterhin nur quer).
+
+**Sicherheit:** MAC und KEY stehen im QR-Code jetzt hinter „#“ – dieser Teil der Adresse wird nie an einen Server
+geschickt. Die Webseite liest beides, QR-Codes älterer App-Versionen funktionieren weiter.
+
+**App – „Problem melden“** (Einstellungen → Darstellung & Gerät): Thema wählen, Nachricht schreiben, freiwillig E-Mail
+für eine Antwort. Technische Angaben (Version, Gerät, letzte Fehler) lassen sich abschalten und vorher ansehen – Links,
+Benutzernamen und Passwörter werden nie mitgeschickt. Kommt im Verwaltungsbereich unter „Support“ an.
+
+**App – Open-Source-Lizenzen** (Einstellungen → Über & Updates): alle eingebauten Bausteine mit Lizenz, Urheber und
+vollständigem Lizenztext (Apache 2.0, MIT, OFL 1.1) – auch mit der Fernbedienung lesbar. Pflicht für die Stores.
+
+**Nutzungsbedingungen:** neue Seite auf der Webseite (Fußzeile, Impressum, Datenschutz verlinkt) und einmaliger Hinweis
+beim ersten Start der App („Bevor es losgeht“ → „Verstanden“). Erscheint erneut nur, wenn sich die Bedingungen ändern.
+
+**Neu: „Verpasste Sendungen“ (Catch-up)** für Xtream-Zugänge, wenn der Anbieter aufzeichnet: Sender mit Archiv sind
+in der Senderliste markiert. Rechts neben der Liste und im Player öffnet „Verpasste Sendungen“ die vergangenen Sendungen
+nach Tagen (Heute, Gestern …), die laufende Sendung lässt sich von Anfang an schauen. Startzeit in Serverzeit, Ersatz-
+Adresse als HLS. Vergangene Sendungen landen nicht unter „Weiterschauen“. Im Demo-Modus zum Ausprobieren. Neuer Test.
+Auch für **M3U-Playlists** mit Catch-up-Angaben (catchup, catchup-days, catchup-source – Formate default, append, shift,
+flussonic, xc; auch als Vorgabe in der Kopfzeile). Der Programmführer behält dafür die vergangenen Tage nur bei diesen
+Sendern (Speicher auf schwachen Boxen); ohne Programmdaten erscheinen Stundenblöcke.
+
+**Neu: Programmführer-Zeit** (Einstellungen → Playlist): Zeigt der Anbieter das Programm zu früh oder zu spät, lässt es
+sich je Playlist um bis zu ±5 Stunden verschieben – gilt für Senderliste, Vorschau, Player und „Verpasste Sendungen“.
+
+**Neu: Kategorien verwalten** (Einstellungen → Live-/Film-/Serien-Kategorien verwalten): ausblenden wie bisher, dazu
+mit dem Stern ganz nach oben anheften und mit dem Stift umbenennen. Umbenennen hebt keine Kindersicherung auf.
+**Neu: Sender ausblenden** – bei Live TV rechts neben der Senderliste oder im Player (Auge-Symbol); wieder einblenden
+unter Einstellungen → Ausgeblendete Sender. Favoriten und „Zuletzt gesehen“ bleiben unberührt.
+
+**Neu: Sichern & Wiederherstellen** (Einstellungen → Darstellung & Gerät): Einstellungen, Favoriten, Weiterschauen,
+Verlauf, Kategorien und ausgeblendete Sender online sichern – ohne Passwörter, Links und PINs (Playlists werden über einen
+Prüfwert wiedererkannt). Wiederherstellen auf diesem Gerät (z. B. nach „Alles zurücksetzen“) oder auf einem neuen Gerät mit
+MAC + KEY des alten; Playlists von der Webseite kommen mit, andere übernehmen ihre Daten, sobald man sie einträgt.
+Optional täglich automatisch. Datenbank: `server/sicherung-2026-11.sql` (mit Tests). Datenschutzerklärung ergänzt
+(auch „Problem melden“). „Alles zurücksetzen“ behält jetzt auch den App-Token (gehört wie MAC und KEY zum Gerät).
+
+**Neu: Feedback geben** (Einstellungen → Darstellung & Gerät): 1–5 Sterne (auch mit der Fernbedienung), freiwillig Text und
+E-Mail. Kommt im Verwaltungsbereich unter „Support“ mit dem Thema „Feedback“ an; mitgeschickt werden nur App-Version,
+Gerätetyp und Sprache. Auf der Webseite im Kontaktformular neues Thema „Feedback oder Idee“.
+
+**Neues Logo:** Der Balken des „T“ biegt rechts in einem Bogen nach unten, darunter das lila Play-Zeichen (#b06cff → #7c3aed);
+der gelbe Lichtpunkt entfällt. App-Symbol dunkel mit leichtem Verlauf und feinem hellem Rand. Geändert in der App, auf der
+Webseite (Kopf- und Fußzeile, Verwaltungsbereich, Download-Seite), Favicon, iPhone-Symbol, Vorschaubild für geteilte Links
+und in `scripts/make-icons.py` (Android, Fire TV, Samsung, LG, Windows/Mac, TV-Banner, Startbildschirm).
+
+**Filme & Serien:**
+- **Als gesehen markieren:** jede Folge mit eigenem Häkchen, ganze Staffel mit einem Knopf, Filme in der Detailansicht.
+- **Staffel-Fortschritt** direkt auf den Staffel-Knöpfen („Staffel 1 · 5/8“, Häkchen wenn fertig).
+- **Nächste Folge unter „Weiterschauen“:** ist eine Folge zu Ende, steht die nächste dort bereit (auch auf dem Startbildschirm).
+- **„Neue Folgen“** auf dem Poster, wenn der Anbieter seit dem letzten Schauen Folgen ergänzt hat.
+- **Sortieren:** wie beim Anbieter, Neueste, A–Z, Beste Bewertung, Jahr – für Filme und Serien getrennt gemerkt.
+- **„Gesehene ausblenden“** im selben Menü.
+
+Die neuen Daten gehören zum Profil, werden mitgesichert und von „Verlauf löschen“ entfernt.
+
+**Webseite im Stil der App** (alle Seiten):
+- **Menü als Glas-Leiste** in der Mitte wie die Reiter der App; der gewählte Bereich ist farbig hinterlegt
+  (Start Lavendel, Playlists Himmelblau, Download Sand, Hilfe Rosé). Sprachknopf, Knöpfe und Felder im gleichen Glas.
+- **Startseite:** Abbild des neuen Startbildschirms (Glas-Kacheln, Radio, Favoriten, „Zuletzt angesehen“) mit dem Player im
+  Bild-in-Bild davor; neuer Abschnitt **„Der neue Player“** mit Abbild des Players (Glas-Dock, Auswahl „Bild &
+  Wiedergabe“) und den Funktionen als Chips; „Was die App kann“ in Pastellfarben mit neuen Punkten (Verpasste Sendungen,
+  Erinnerungen, Personen & Kinderprofil, Sichern & Wiederherstellen). Auf dem Handy kompakt (Symbol neben dem Text).
+- **Playlists, Download, Hilfe:** Glas-Karten, Symbole in Pastell, Downloader-Code als lavendelfarbene Tasten, Mini-Fernseher
+  mit dem neuen Startbildschirm, Umschalter M3U/Xtream wie in der App.
+- **Impressum, Datenschutz, Nutzungsbedingungen:** Inhalt auf einer Glas-Karte, Zurück als Glas-Knopf, Überschriften mit
+  Lavendel-Akzent. **404-Seite**, **Download-Seite für Fernseher** und **Verwaltung** im gleichen Stil.
+- 29 neue Texte in allen 13 Sprachen (Wörter aus der App übernommen, damit beides gleich heißt); Arabisch gespiegelt geprüft.
+
+**Player – drei neue Feinheiten:**
+- **Knopf-Hinweis beim ersten Mal:** Eine Glas-Karte zeigt einmal alle Symbole mit ihrem Namen (nur die Knöpfe, die
+  gerade da sind). „Verstanden“, Zurück oder Tippen aufs Bild schließt sie; danach erscheint sie auf dem Gerät nicht mehr.
+- **Großes Senderlogo beim Umschalten:** Logo groß in der Mitte, darunter Nummer, Name und laufende Sendung – drei
+  Sekunden lang; ohne Logo die Anfangsbuchstaben. Der Lade-Kreis rückt so lange darunter.
+- **Pause-Bildschirm:** Steht das Bild 6 Sekunden auf Pause, erscheinen über dem abgedunkelten Bild Titel, Jahr,
+  Bewertung, Genre, Restzeit und Beschreibung (Filme laden fehlende Angaben nach; Folgen mit Serie und Folgenname; Live
+  mit Sendung, Uhrzeit und Beschreibung aus dem Programm). Jede Taste, Maus oder Tippen blendet ihn aus, Abspielen spielt
+  gleich weiter.
+
+**Player im Glas-Stil** (wie Menüleiste, Einstellungen und Live TV), mit deutlich weniger Text:
+- **Oben:** rundes Zurück, Senderlogo, Titel (bei Serien: Serie groß, darunter „S1 E1 · Folgenname“), kleine Chips für
+  LIVE (mit pulsierendem Punkt) und Bildqualität (720p, 1080p, 4K), rechts die Uhrzeit.
+- **Unten:** Sendung mit Uhrzeit-Chip, „Danach“ als Pfeil statt Wort, schmaler lila Balken; die Knöpfe sitzen in zwei
+  Glas-Kapseln und zeigen nur Symbole – der Name erscheint beim Auswählen mit der Fernbedienung oder mit der Maus.
+  Aktive Knöpfe sind getönt (Schlaf-Timer lila, Favorit rosé).
+- **Auswahl** (Bild & Wiedergabe, Ton & Untertitel, Schlaf-Timer) als Glas-Karte mit Chips statt langer Listen:
+  kurze Namen (Strecken, Zoom, Auto, +300 ms), eine Wahl wirkt sofort und die Karte bleibt offen; ohne Bedienung blendet
+  sie sich nach ein paar Sekunden aus. Tippen aufs Bild schließt sie.
+- **Spurnamen kürzer:** steht im Stream nur die Sprache („English“), zeigt die App nur „Englisch“; Zusätze bleiben.
+- Senderwechsel-Hinweis, „Nächste Folge“, Senderliste und „Verpasste Sendungen“ im gleichen Glas.
+
+**Player – Profi-Steuerung:** Das Zahnrad im Player („Bild & Wiedergabe“) zeigt nur, was der Stream wirklich kann:
+- **Bildformat:** Original, 16:9, 4:3, Vollbild (strecken), Zoom (Bild füllen).
+- **Geschwindigkeit** 0,5× bis 2× bei Filmen und Folgen (bei Live TV nicht angeboten).
+- **Qualität** (Automatisch, 1080p, 720p …), wenn ein HLS-Stream mehrere Stufen hat.
+- **Ton verzögern** (100–800 ms), wenn der Ton dem Bild vorauseilt – nur bei Streams, die die App selbst puffert
+  (HLS, MPEG-TS); bleibt beim Umschalten erhalten, „Aus“ stellt den normalen Ton wieder her.
+- **Nächste Folge automatisch** an/aus (auch unter Einstellungen → Wiedergabe). Aus: Am Ende fragt die App nur.
+- **Tonspur und Untertitel** wie bisher über den eigenen Knopf, der nur bei mehreren Spuren erscheint.
+Neu im Player: Knopf **„Nächste Folge“** bei Serien und **Bild-in-Bild** – Film oder Sender läuft klein in der Ecke
+weiter, während man durch Telvo geht (auch beim Wechsel der Reiter). Die Knopfleiste passt sich dem Platz an: bei
+vielen Knöpfen nur Symbole (Name erscheint beim Auswählen), auf dem Handy hochkant zweizeilig. „Letzter Sender“ hat ein
+eigenes Symbol. Android-TV-Player: „Nächste Folge automatisch“ gilt auch dort (aus: am Ende der Folge zurück zur Serie, die nächste
+Folge ist markiert). Neuer Test.
+
+**Neue Menüleiste:** in der Mitte eine Glas-Leiste mit Herz (Favoriten) · Live TV · Filme · Serien · Haus (Start).
+Der gewählte Reiter ist farbig hinterlegt (Lila, Sand, Himmelblau, Rosé) und zeigt die Anzahl; Einstellungen und Profil
+oben rechts im gleichen ruhigen Lila. Auf dem Handy dieselben Farben in der Leiste unten bzw. links.
+
+**Profil neu** (wie die Einstellungen): Bereiche Mein Zugang, Personen (mit einem Druck wechseln), Dieses Gerät
+(MAC/KEY, neuer KEY, QR-Code zur Webseite) und bei M3U Programmführer.
+
+**Ruhigere Farben** in Einstellungen und Profil (Lavendel, Rosé, Himmelblau, Sand, Salbei), dezenteres Leuchten.
+
+**Einstellungen neu aufgebaut** (wie Filme, Serien und Live TV): links fünf Bereiche – Playlist, Personen & Kindersicherung,
+Wiedergabe, Darstellung, Gerät & Hilfe – jeder mit eigener Farbe; rechts die Kacheln des Bereichs im Glas-Look.
+Mit der Fernbedienung genügt es, auf einem Bereich stehen zu bleiben; die App merkt sich den zuletzt offenen Bereich.
+
+**Neu: Personen (Familienprofile):** bis zu 6 Personen pro Gerät, jede mit eigenen Favoriten, Verlauf, „Weiterschauen“,
+„Später ansehen“ und Erinnerungen. Beim Start „Wer schaut?“, oben auf dem Startbildschirm der Personen-Knopf, verwalten
+unter Einstellungen → Personen. **Kinderprofil:** gesperrte Kategorien (Erwachsene und selbst gesperrte) sind ganz ausgeblendet
+und lassen sich nicht entsperren; Wechseln in ein anderes Profil, Einstellungen und Playlists nur mit der PIN der
+Kindersicherung. Personen werden mitgesichert (Datenschutzerklärung ergänzt), beim Löschen verschwinden ihre Daten.
+
+**Neu:**
+- **Schlaf-Timer** (15 Min. bis 2 Std.) im Player und unter Einstellungen → Wiedergabe – beendet auch den Android-TV-Player.
+- **Senderliste im Player:** Pfeil links (oder Knopf „Senderliste“) blendet die Sender mit laufender Sendung ein.
+- **„Später ansehen“:** eigene Merkliste für Filme und Serien (Knopf auf der Detailseite, Liste links bei Filme/Serien);
+  fertig geschaute Filme verschwinden von selbst.
+- **Verbindungstest** (Einstellungen → Darstellung & Gerät): Antwortzeit des Anbieters und Geschwindigkeit mit Einschätzung
+  SD/HD/Full HD/4K. Das letzte Ergebnis steht in „Problem melden“.
+- **Bildschirmschoner** (Aus/5/10/15/30 Min., voreingestellt 10): Uhr und wechselnde Poster, die Uhr wandert (OLED).
+  Die erste Taste beendet ihn nur.
+- Sprachauswahl: Überschrift nur noch in der eingestellten Sprache („Sprache“ statt „Sprache / Language / Dil“).
+- Filme/Serien: „Sortieren“ steht in der Zeile „Weiterschauen“ – keine leere Zeile mehr über den Covern.
+- Serien: Knopf „Trailer“ steht jetzt direkt hinter „Weiter“ (vor „Merken“).
+- **„Trailer suchen“:** Liefert der Anbieter keinen Trailer, öffnet der Knopf die YouTube-Suche „Titel Jahr Trailer“
+  (Android: YouTube-App, PC: Browser; Anbieter-Zusätze wie „DE -“ oder „4K“ fallen weg). Auf Samsung/LG nicht verfügbar.
+- „Alle …“ zählt nur noch sichtbare Kategorien (ausgeblendete und im Kinderprofil gesperrte nicht mehr).
+
+**Live TV:**
+- **Lila statt Rot** wie auf dem Startbildschirm, Vorschau und Programm im Glas-Look (die LIVE-Abzeichen bleiben rot).
+- **Laufende Sendung bei jedem Sender** mit kleinem Fortschrittsbalken. Bei Xtream wird sie nur für die Sender geholt, die gerade
+  zu sehen sind (höchstens 3 Anfragen gleichzeitig).
+- **Sendernummer eintippen:** Ziffern auf der Fernbedienung (oder Tastatur) – der passende Sender erscheint sofort oben rechts,
+  nach kurzer Pause oder mit OK wird umgeschaltet. Auch im Android-TV-Player.
+- **Letzter Sender:** Knopf im Player, Taste „Vorheriger Sender“ (Samsung, Android TV) oder L auf der Tastatur.
+- **TV-Programm:** neues Raster (Sender untereinander, Uhrzeit nebeneinander, 12 Stunden, lila Linie = jetzt) für die gerade
+  gewählte Liste – oben in der Kategorienliste. OK auf laufender Sendung schaut den Sender, auf kommender Sendung „Erinnern“.
+- **Erinnerungen:** auch rechts bei den kommenden Sendungen (Glocke). Eine Minute vor Beginn kommt ein Hinweis mit „Umschalten“.
+
+**Neuer Startbildschirm** (nach Vorlage): oben Logo, Status (Internet, Player, „Playlist aktiv“) und Knöpfe für Suche,
+Aktualisieren, Einstellungen, Hilfe und Sprache. Live TV (lila), Filme (orange) und Serien (blau) als große Glas-Kacheln mit
+Leuchtwelle, rechts **Radio** (neu) und Favoriten. Unten „Zuletzt angesehen“ als breite Bildkarten mit Restzeit bzw. Staffel/Folge
+und Fortschritt, dazu „Alle anzeigen“ – ist nichts angefangen, fehlt der Bereich und die Kacheln werden etwas größer und stehen mittig. Laufzeit der Playlist steht unten in der Fußleiste.
+**Neu: Radio** – sammelt alle Sender aus Radio-Kategorien (Radio, Radyo …) in einer eigenen Liste unter Live TV.
+Folgen bekommen das Hintergrundbild ihrer Serie (für die breiten Karten).
+
+**Status immer sichtbar:** Internet, Player und Playlist stehen nach dem Einrichten klein unten in der Fußleiste neben
+MAC und KEY (grün = in Ordnung, rot = kein Internet) – vorher nur auf der Willkommensseite.
+
+**Sprachauswahl mit Flaggen:** Der Knopf oben rechts zeigt Flagge und gewählte Sprache. Die Liste klappt direkt darunter auf,
+Englisch und Deutsch stehen ganz oben, danach die übrigen Sprachen. Gleiche Reihenfolge in den Einstellungen.
+
+**Behoben:** Quadratische Senderlogos wurden in der Senderliste und bei den Favoriten unten abgeschnitten.
+
+**Android-TV-Player:** Media3 (ExoPlayer) von 1.4.1 auf 1.9.4 – gut ein Jahr Fehlerbehebungen, u. a. für HLS-Livestreams.
+
 ## 1.11.1 – 2026-11-09 · Neue Willkommensseite
 
 **App – Willkommensseite (noch keine Playlist) neu:** dunkles Premium-Design (#0B0B0F, Karten #17171E, Akzent #9B83D5) ·
