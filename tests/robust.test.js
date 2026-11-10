@@ -184,7 +184,7 @@
     return p.items('live', '__all').then(function (l) {
       window.fetch = realFetch; ok(false, 'hätte Fehler melden müssen, kam: ' + l.length + ' Einträge');
     }, function (e) {
-      window.fetch = realFetch; ok(/Expired/.test(e.message), 'Meldung: ' + e.message);
+      window.fetch = realFetch; ok(/abgelaufen/.test(e.message) && !/Expired/.test(e.message), 'Meldung: ' + e.message);
     });
   });
 
@@ -541,5 +541,39 @@
     ok(D.isRadio({ name: 'Radyo Fenomen', catId: 'r' }, ids) && D.isRadio({ name: 'Power FM HD', catId: 'r' }, ids), 'Radiosender in der Radio-Kategorie');
     ok(!D.isRadio({ name: 'Kral Pop TV HD', catId: 'r' }, ids) && !D.isRadio({ name: 'Radio Bremen TV', catId: 'r' }, ids), 'TV-Sender in gemischter Kategorie zählen nicht');
     ok(D.isRadio({ name: 'Irgendwas', catId: 'x', radio: 1 }, ids), 'vom Anbieter als Radio gekennzeichnet');
+  });
+
+  /* QA November 2026 */
+  t('Playlists', 'Jede neue Playlist bekommt eine eigene Kennung – auch während eine andere aktiv ist; doppelte werden repariert', function () {
+    var P = D.Profiles, keep = localStorage.getItem('lumio.profiles'), was = D.App.profile;
+    try {
+      localStorage.removeItem('lumio.profiles');
+      var a = P.add({ type: 'm3u', name: 'A', url: 'http://a.test/a.m3u' });
+      D.App.profile = a;                                  // A ist aktiv (vorher bekam B dann A’s Kennung)
+      var b = P.add({ type: 'm3u', name: 'B', url: 'http://b.test/b.m3u' });
+      ok(a.id && b.id && a.id !== b.id, 'verschiedene Kennungen: ' + a.id + ' / ' + b.id);
+      localStorage.setItem('lumio.profiles', JSON.stringify([{ id: 'x', name: '1' }, { id: 'x', name: '2' }, { name: '3' }]));
+      ok(P.fixIds(), 'Reparatur meldet Änderung');
+      var ids = P.list().map(function (x) { return x.id; });
+      eq(ids[0], 'x', 'erste behält ihre Kennung (und ihre Daten)');
+      ok(ids[1] && ids[1] !== 'x' && ids[2] && ids[2] !== ids[1], 'weitere bekommen eigene: ' + ids.join(','));
+      ok(!P.fixIds(), 'zweiter Lauf ändert nichts');
+    } finally {
+      D.App.profile = was;
+      if (keep === null) localStorage.removeItem('lumio.profiles'); else localStorage.setItem('lumio.profiles', keep);
+    }
+  });
+
+  t('Titel', 'Folgen: Serienname anders geschrieben als in der Liste · Initialen in jeder Schrift · Kontostatus verständlich', function () {
+    eq(D.cleanEpName('Testserie - S01E02 - Folge 2', 'Testserie 1', 2), 'Folge 2', 'Präfix bis S01E02 fällt weg');
+    eq(D.cleanEpName('DE - Dark (2017) - S02E05 - Verloren', 'Dark', 5), 'Verloren');
+    eq(D.cleanEpName('Pilot', 'Dark', 1), 'Pilot', 'normaler Titel bleibt');
+    eq(D.initials('Первый канал'), 'ПК', 'Kyrillisch');
+    eq(D.initials('ΕΡΤ 1'), 'Ε1', 'Griechisch');
+    ok(D.initials('قناة الاختبار').length === 2 && !/[?1]/.test(D.initials('قناة الاختبار')), 'Arabisch: zwei Buchstaben, kein „?“');
+    eq(D.initials('DE: Das Erste HD'), 'DD');
+    ok(!/Expired/.test(D.statusError('Expired').message), 'Expired übersetzt: ' + D.statusError('Expired').message);
+    ok(!/Banned/.test(D.statusError('Banned').message), 'Banned übersetzt');
+    eq(D.statusError('Active'), null, 'aktiv = kein Fehler');
   });
 })();

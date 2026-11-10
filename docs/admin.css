@@ -247,3 +247,8 @@ input, textarea, select { background: rgba(0, 0, 0, .28); border-color: rgba(255
 input:focus, textarea:focus, select:focus { border-color: rgba(167, 139, 250, .8); box-shadow: 0 0 0 3px rgba(167, 139, 250, .18); }
 @media (max-width: 640px) { .nav { flex-basis: 100%; padding: .22rem; } .nav button { height: 2.3rem; } }
 .who { margin-left: auto; }
+
+/* Handy: kleine Knöpfe (u. a. Abmelden) mindestens 44 px hoch */
+@media (max-width: 640px) {
+  button.small { min-height: 44px; }
+}

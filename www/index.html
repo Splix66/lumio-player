@@ -18,8 +18,8 @@
     <div id="toast-layer" aria-live="polite"></div>
   </div>
 
-  <!-- Samsung (Tizen): Fernbedienungs-API. Auf anderen Geräten wird das einfach ignoriert. -->
-  <script src="$WEBAPIS/webapis/webapis.js" onerror="this.remove()"></script>
+  <!-- Samsung (Tizen): Fernbedienungs-API – nur dort laden (überall sonst gab es bei jedem Start einen 404-Fehler) -->
+  <script>if (/Tizen/i.test(navigator.userAgent)) document.write('<script src="$WEBAPIS/webapis/webapis.js" onerror="this.remove()"><\/script>');</script>
   <!-- Videobibliothek für HLS-Streams (wird beim Einrichten nach lib/ kopiert, sonst aus dem Internet geladen) -->
   <script src="lib/hls.min.js" onerror="this.remove()"></script>
   <!-- QR-Code für "Playlist per Handy hinzufügen" -->
