@@ -7190,6 +7190,23 @@
     return hlsLoading;
   }
   function isHlsUrl(u) { return /\.m3u8(\?|$)/i.test(u) || /\/hls\//i.test(u) || /\.ism\/\.m3u8/i.test(u); }
+
+  // Android-App: CapacitorHttp leitet XMLHttpRequest über http://localhost/_capacitor_http_interceptor_?u=… um. Danach meldet responseURL diese
+  // localhost-Adresse, und hls.js löste relative Pfade der Playlist gegen http://localhost auf – Live-Vorschau und eingebauter Player luden nichts.
+  // Abhilfe: Antworten über den Umweg bekommen die angefragte Adresse zurück, und Weiterleitungen (Xtream: Domain → Server-IP) werden vorab aufgelöst.
+  var CAP_ICPT = /\/_capacitor_https?_interceptor_\?/;
+  function capHttpOn() { return !!(Platform.capacitor && window.CapacitorWebXMLHttpRequest); }
+  function capRealUrl(u, ctxUrl) { if (!u || !CAP_ICPT.test(u)) return u; var m = /[?&]u=([^&]*)/.exec(u); return ctxUrl || (m ? decodeURIComponent(m[1]) : u); }
+  function CapLoader(config) { this.inner = new CapLoader.Base(config); }
+  Object.defineProperty(CapLoader.prototype, 'stats', { get: function () { return this.inner.stats; } });
+  Object.defineProperty(CapLoader.prototype, 'context', { get: function () { return this.inner.context; } });
+  CapLoader.prototype.load = function (context, config, callbacks) { var cb = {}; for (var k in callbacks) cb[k] = callbacks[k]; cb.onSuccess = function (r, s, ctx, d) { if (r) r.url = capRealUrl(r.url, ctx && ctx.url); callbacks.onSuccess(r, s, ctx, d); }; this.inner.load(context, config, cb); };
+  CapLoader.prototype.abort = function () { this.inner.abort(); };
+  CapLoader.prototype.destroy = function () { this.inner.destroy(); };
+  CapLoader.prototype.getCacheAge = function () { return this.inner.getCacheAge ? this.inner.getCacheAge() : null; };
+  CapLoader.prototype.getResponseHeader = function (n) { return this.inner.getResponseHeader ? this.inner.getResponseHeader(n) : null; };
+  function capFixLoader(Base) { CapLoader.Base = Base; return CapLoader; }
+  function capResolveUrl(url) { var pl = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.CapacitorHttp; if (!capHttpOn() || !pl || !pl.request || !/^https?:/i.test(url)) return Promise.resolve(url); var done = pl.request({ url: url, method: 'GET', responseType: 'text', connectTimeout: 8000, readTimeout: 8000 }).then(function (r) { return r && r.url && /^https?:/i.test(r.url) ? String(r.url) : url; }, function () { return url; }); return Promise.race([done, new Promise(function (res) { setTimeout(function () { res(url); }, 9000); })]); }
   /* Rohe TV-Signale (MPEG-TS, bei vielen Anbietern „RAW“): kein Browser kann die allein öffnen.
      mpegts.js packt den Datenstrom im Hintergrund so um, dass das Videofenster ihn versteht. */
   function isTsUrl(u) { return /\.ts(\?|$)/i.test(u) || /\/mpegts\//i.test(u); }
@@ -7741,7 +7758,7 @@
             var desktop = !Platform.tv && !Platform.android && !Platform.ios && !Platform.lite;
             var best = Settings.get('quality') === 'best';
             var cushion = !!(self.item && self.item.kind === 'live' && Player.cushion[self.item.id]);
-            var hls = new Hls({
+            var hlsCfg = {
               enableWorker: true, lowLatencyMode: false, backBufferLength: Platform.lite ? 10 : 30,
               // PC: größerer Puffer (genug Speicher) – überbrückt kurze Einbrüche beim Anbieter, statt zu hängen
               maxBufferLength: desktop ? 60 : 30, maxMaxBufferLength: Platform.lite ? 40 : desktop ? 120 : 60,
@@ -7757,7 +7774,9 @@
               // Live: nie schneller abspielen, um aufzuholen. Hakt ein Sender öfter, mehr Abstand zum Live-Rand (= mehr Vorrat)
               maxLiveSyncPlaybackRate: 1,
               liveSyncDurationCount: cushion ? 6 : 3, liveMaxLatencyDurationCount: cushion ? 14 : 8
-            });
+            };
+            if (capHttpOn() && Hls.DefaultConfig && Hls.DefaultConfig.loader) hlsCfg.loader = capFixLoader(Hls.DefaultConfig.loader);
+            var hls = new Hls(hlsCfg);
             self.hls = hls;
             hls.on(Hls.Events.ERROR, function (ev, data) {
               if (!data.fatal || self.hls !== hls) return;
@@ -7785,8 +7804,8 @@
             });
             if (Hls.Events.AUDIO_TRACKS_UPDATED) hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, function () { self.updateTracks(); });
             if (Hls.Events.SUBTITLE_TRACKS_UPDATED) hls.on(Hls.Events.SUBTITLE_TRACKS_UPDATED, function () { self.updateTracks(); });
-            hls.loadSource(url);
             hls.attachMedia(video);
+            capResolveUrl(url).then(function (u) { if (self.hls === hls) hls.loadSource(u); });
           } else {
             video.src = url; self.playSafe();
           }
