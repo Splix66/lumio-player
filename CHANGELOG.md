@@ -43,6 +43,22 @@
   mit Temperatur (Ort unter Einstellungen → Darstellung wählen; Open-Meteo, ohne Konto). Datenschutzerklärung ergänzt.
 - **Bildschirmschoner** mit „Wusstest du schon?“-Tipps.
 - Neue Tests (Titel ohne Jahr, Folgennamen, Dauer, Radio-Erkennung).
+- **Korrekturen nach Durchsicht (Player):** schnelles Umschalten meldet nicht mehr fälschlich „Der Sender stockt“ ·
+  Hoch/Runter schaltet direkt nach einem Senderwechsel weiter (vorher nur einmal) · Zurück bricht eine angefangene
+  Sendernummer ab · die automatische Live-TV-Vorschau zählt erst als „gesehen“, wenn man den Sender wählt (sonst startete
+  er beim nächsten App-Start im Vollbild) · ausgeblendete Sender laufen nicht mehr in der Vorschau · kein Fehlereintrag
+  mehr bei jedem Schließen · offene Senderliste wird beim Schließen sauber beendet · nach der stummen Film-Vorschau
+  wartet der Start kurz (Zugänge mit nur einer Verbindung).
+- **Android-TV-Player:** kein Absturz mehr beim Öffnen großer Senderlisten · hängender Sender versucht es nicht endlos,
+  sondern wechselt nach 3 Versuchen auf das andere Format bzw. zeigt „Wiedergabe nicht möglich“ · endet ein .ts-Sender,
+  wird neu verbunden statt zum nächsten Sender zu springen · Stream wird beim Schließen sofort beendet · Media3-Version
+  wird auch bei „android:aktualisieren“ angeglichen.
+- **Weitere Korrekturen:** Status-Hinweis bleibt nicht mehr stehen · Zurück schließt das Sortier-Menü (auch Android) und
+  aufgeklappte Einstellungen · „Ähnliche Titel“ auch bei arabischen/kyrillischen/griechischen Titeln · abgelaufener
+  Zugang heißt „Playlist abgelaufen“ statt „gesperrt“ · abgelehnte Bewertung wird angezeigt statt „geändert“ ·
+  Wetter: kein veraltetes oder falsches Wetter nach Ortswechsel, Ort nicht mehr in der Online-Sicherung.
+- **Datenbank:** `server/bewertung-2026-11.sql` erneut ausführen – höchstens 10 Änderungen je 24 Stunden (vorher für immer
+  gezählt), `app_get_rating` funktioniert. Neuer Test `tests/sql/bewertung.test.sql`.
 - **Downloads heißen jetzt Telvo:** `telvo-player.apk`, `telvo-player-setup.exe` und `telvo-player-mac.dmg` statt
   „lumio-player…“ – auf der Webseite, der Downloader-Seite (Code 5619512) und bei „Neue Version laden“ in der App.
   Jeder Bau legt dieselbe Datei zusätzlich unter dem alten Namen ab, damit ältere App-Versionen und alte Links

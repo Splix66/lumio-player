@@ -1756,7 +1756,8 @@
      gibt, warten und werden übernommen, sobald man sie einträgt und öffnet.
      ========================================================== */
   var BACKUP_DATA = ['fav', 'resume', 'recent', 'seen', 'seenNew', 'last', 'cats', 'hidech', 'upnext', 'swatch', 'later'];
-  var BACKUP_SKIP = ['parentPin', 'adminPin', 'deviceType', 'engine', 'extPlayer', 'volume', 'muted'];   // Sicherheit / gerätespezifisch
+  // Sicherheit / gerätespezifisch; Wetter-Ort bleibt auf dem Gerät (Datenschutzerklärung: geht nur an Open-Meteo)
+  var BACKUP_SKIP = ['parentPin', 'adminPin', 'deviceType', 'engine', 'extPlayer', 'volume', 'muted', 'weatherLoc'];
   function profileFp(p) {
     if (!p) return '';
     var s = p.type === 'xtream' ? 'x|' + normalizeServer(p.server).toLowerCase() + '|' + String(p.username || '').toLowerCase()
@@ -2653,6 +2654,7 @@
     stack: [],
     top: function () { return this.stack[this.stack.length - 1]; },
     push: function (name, el, opts) {
+      if (typeof StatusTip !== 'undefined') StatusTip.hide();
       opts = opts || {};
       var cur = this.top();
       if (cur) { cur.lastFocus = document.activeElement; if (!opts.overlay) cur.el.classList.add('is-off'); }
@@ -2665,6 +2667,7 @@
       return s;
     },
     pop: function () {
+      if (typeof StatusTip !== 'undefined') StatusTip.hide();
       var s = this.stack.pop();
       if (!s) return;
       if (s.onLeave) s.onLeave();
@@ -2684,6 +2687,7 @@
       document.body.classList.toggle('modal-open', !!(t && t.overlay));
     },
     reset: function (name, el, opts) {
+      if (typeof StatusTip !== 'undefined') StatusTip.hide();
       if (Player.mini) Player.close();
       while (this.stack.length) {
         var s = this.stack.pop();
@@ -2694,9 +2698,17 @@
     }
   };
 
+  /* Zurück – Tastatur, Fernbedienung und Android-Zurück-Taste (backButton) kommen alle hier an */
   function goBack() {
+    // offenes Aufklapp-Menü (z. B. Sortieren) zuerst schließen
+    if (InlineMenu.cur) { var w = InlineMenu.wrap; InlineMenu.close(); var fb = w && $('.f', w); if (fb) Nav.focus(fb); return; }
+    // angefangene Sendernummer abbrechen (sonst schaltete sie 1,8 s später trotzdem um)
+    if (NumEntry.buf) { NumEntry.reset(); return; }
     if (Dialog.open) { Dialog.close(); return; }
     var top = Screens.top();
+    // Einstellungen: aufgeklappte Auswahl zuerst schließen, statt die ganze Seite zu verlassen
+    var openRow = top && $('.st-row.is-open', top.el);
+    if (openRow && openRow._close) { openRow._close(); Nav.focus(openRow); return; }
     if (top && top.onBack && top.onBack() === true) return;
     if (Screens.stack.length > 1) { Screens.pop(); return; }
     askExit();
@@ -3354,8 +3366,9 @@
       var plItem = [pl ? 'ok' : 'none', 'playlist', pl ? T('Playlist hinterlegt') : T('Keine Playlist'), 'playlist'];
       if (active) {
         var a = StatusLine.account(), days = a && a.expires ? Math.ceil((Number(a.expires) * 1000 - Date.now()) / 86400000) : null;
-        if (a && a.status && !/^active$/i.test(String(a.status))) plItem = ['off', 'playlist', T('Zugang gesperrt'), 'playlist'];
-        else if (days !== null && days <= 0) plItem = ['off', 'playlist', T('Playlist abgelaufen'), 'playlist'];
+        // Ablauf zuerst: Xtream meldet abgelaufene Zugänge mit Status „Expired“ – das ist „abgelaufen“, nicht „gesperrt“
+        if ((days !== null && days <= 0) || (a && /^expired$/i.test(String(a.status || '')))) plItem = ['off', 'playlist', T('Playlist abgelaufen'), 'playlist'];
+        else if (a && a.status && !/^active$/i.test(String(a.status))) plItem = ['off', 'playlist', T('Zugang gesperrt'), 'playlist'];
         else if (days !== null && days <= 7) plItem = ['warn', 'playlist', T('Läuft bald ab'), 'playlist'];
         else plItem = ['ok', 'playlist', T('Playlist aktiv'), 'playlist'];
       }
@@ -3501,9 +3514,20 @@
       var top = a.bottom + 8 + ph > H - 8 ? a.top - ph - 8 : a.bottom + 8;
       pop.style.left = Math.round(Math.max(8, Math.min(W - pw - 8, a.left + a.width / 2 - pw / 2))) + 'px';
       pop.style.top = Math.round(Math.max(8, top)) + 'px';
-      this.pop = pop;
+      this.pop = pop; this.anchor = anchor;
+      // Die Status-Knöpfe werden alle 3 s neu gebaut – „mouseleave“/„blur“ des alten Knopfs kommt dann nie.
+      // Darum: bei jeder Bewegung, jedem Tippen und Fokuswechsel prüfen, ob der Hinweis noch zu etwas gehört.
+      if (!this.armed) {
+        this.armed = true;
+        var self = this, check = function (e) {
+          var a = self.anchor;
+          if (!self.pop) return;
+          if (!a || !document.body.contains(a) || (e.target && e.target.nodeType === 1 && !a.contains(e.target))) self.hide();
+        };
+        ['mousemove', 'pointerdown', 'focusin', 'touchstart'].forEach(function (t) { document.addEventListener(t, check, true); });
+      }
     },
-    hide: function () { if (this.pop && this.pop.parentNode) this.pop.parentNode.removeChild(this.pop); this.pop = null; },
+    hide: function () { if (this.pop && this.pop.parentNode) this.pop.parentNode.removeChild(this.pop); this.pop = null; this.anchor = null; },
     wire: function (el, it) {
       var self = this;
       el.addEventListener('mouseenter', function () { self.show(el, it); });
@@ -4546,9 +4570,9 @@
           var top2 = Screens.top();
           if (Player.el || Dialog.open || !top2 || !top2.el.contains(el)) return;
           var i = at;
-          if (i < 0) { i = 0; l = l || []; for (var q = 0; q < l.length; q++) if (String(l[q].id) === String(item.id)) { i = q; item = l[q]; break; } if (!l.length || String(l[i].id) !== String(item.id)) { l = [item]; i = 0; } }
+          if (i < 0) { i = 0; l = l || []; for (var q = 0; q < l.length; q++) if (String(l[q].id) === String(item.id)) { i = q; item = l[q]; break; } if (!l.length || String(l[i].id) !== String(item.id)) return; }   // ausgeblendet oder nicht mehr in der Playlist: keine Vorschau
           panel.show(item);
-          Player.open(item, { list: l, index: i }, { mini: true });
+          Player.open(item, { list: l, index: i }, { mini: true, auto: true });
         }).catch(function () {});
       });
     }
@@ -5171,7 +5195,7 @@
      Mit gewähltem Ort (Einstellungen → Darstellung → Wetter): echtes Wetter von Open-Meteo (kostenlos, ohne Konto).
      Gesendet werden nur die Koordinaten des gewählten Ortes, höchstens alle 30 Minuten. */
   var Sky = {
-    w: null, at: 0, busy: false,
+    w: null, at: 0, okAt: 0, busy: false, seq: 0,   // at = letzter Versuch, okAt = letzte gültige Antwort
     loc: function () { var l = Settings.get('weatherLoc'); return l && typeof l.lat === 'number' && typeof l.lon === 'number' ? l : null; },
     // Sonnenauf-/-untergang: vom Wetterdienst, sonst grob 7:00 / 18:00 Uhr
     sunTimes: function (d) {
@@ -5191,7 +5215,8 @@
       d = d || new Date();
       var ph = this.phase(d), night = ph === 'moon';
       var names = { sunrise: T('Sonnenaufgang'), sunset: T('Sonnenuntergang'), sun: T('Tag'), moon: T('Nacht') };
-      var w = this.loc() && this.w && Date.now() - this.at < 3 * 3600000 ? this.w : null;
+      // nur Wetter zeigen, das wirklich höchstens 3 Std. alt ist – auch wenn die Abfragen seitdem scheitern
+      var w = this.loc() && this.w && Date.now() - this.okAt < 3 * 3600000 ? this.w : null;
       this.refresh();
       if (!w) return [ph, names[ph], ''];
       var c = w.code, ic = ph, txt = names[ph];
@@ -5206,17 +5231,20 @@
     },
     refresh: function (force) {
       var self = this, l = self.loc();
-      if (!l || self.busy || (!force && Date.now() - self.at < 1800000) || navigator.onLine === false) return;
+      if (!l || (self.busy && !force) || (!force && Date.now() - self.at < 1800000) || navigator.onLine === false) return;
+      // neue Abfrage (z. B. anderer Ort) macht eine noch laufende ungültig – sonst stünde kurz das Wetter des alten Orts da
+      var seq = ++self.seq;
       self.busy = true;
       var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + l.lat.toFixed(2) + '&longitude=' + l.lon.toFixed(2) +
         '&current=temperature_2m,weather_code,is_day&daily=sunrise,sunset&timezone=auto&forecast_days=1';
       fetchWithTimeout(url, 10000).then(function (r) { return r.json(); }).then(function (j) {
         var cur = j && j.current, dl = j && j.daily;
+        if (seq !== self.seq) return;
         if (!cur) throw new Error('leer');
         self.w = { code: Number(cur.weather_code), temp: Number(cur.temperature_2m), rise: dl && dl.sunrise && dl.sunrise[0], set: dl && dl.sunset && dl.sunset[0] };
-        self.at = Date.now();
+        self.at = self.okAt = Date.now();
         Sky.paintAll();
-      }).catch(function () { self.at = Date.now() - 1500000; }).then(function () { self.busy = false; });
+      }).catch(function () { if (seq === self.seq) self.at = Date.now() - 1500000; }).then(function () { if (seq === self.seq) self.busy = false; });
     },
     // Symbol (und Temperatur) als Element
     el: function () {
@@ -5239,7 +5267,7 @@
             res.forEach(function (x) {
               list.appendChild(h('button', { class: 'ch-opt f', onclick: function () {
                 Settings.set('weatherLoc', { name: x.name, lat: Number(x.latitude), lon: Number(x.longitude) });
-                Sky.w = null; Sky.at = 0; Sky.refresh(true);
+                Sky.w = null; Sky.at = 0; Sky.okAt = 0; Sky.refresh(true);
                 goBack(); if (done) done();
               } }, h('span', { class: 'ch-txt' }, h('b', { text: x.name }), h('small', { text: [x.admin1, x.country].filter(Boolean).join(', ') }))));
             });
@@ -6017,6 +6045,8 @@
       main.className = 'st-main c-' + sec.c;
       clear(head).appendChild(h('span', { class: 'st-hic' }, icon(sec.ic)));
       head.appendChild(h('div', { class: 'st-htxt' }, h('h2', { text: sec.name }), sec.hint ? h('p', { text: sec.hint }) : null));
+      // aufgeklappte Auswahl schließen – die Zeilen werden beim Zurückkommen wiederverwendet und brauchten sonst zwei Mal OK
+      $all('.st-row.is-open', content).forEach(function (x) { if (x._close) x._close(); });
       clear(content).appendChild(sec.body());
     }
     sections.forEach(function (sec) {
@@ -6294,7 +6324,14 @@
         if (!r || !r.ok) throw new Error(rpcErr(r));
         Cloud.registered = true;
         // Sterne: eine Bewertung pro Gerät auf dem Server (ersetzt die alte). Fehlt die Funktion dort noch, gehen sie wie bisher als Nachricht mit.
-        return changed ? Cloud.call('set_rating', { p_mac: Device.mac(), p_stars: stars }).then(function (x) { return !!(x && x.ok); }, function () { return false; }) : true;
+        // Nur wenn die Funktion fehlt (PGRST202 / keine Antwort im App-Format) oder das Token nicht passt, als Nachricht senden –
+        // eine echte Ablehnung (z. B. zu viele Änderungen) wird angezeigt statt „geändert“ zu melden.
+        return changed ? Cloud.call('set_rating', { p_mac: Device.mac(), p_stars: stars }).then(function (x) {
+          if (x && x.ok) return true;
+          // Sperre durch den Server zeigen; alles andere (Funktion fehlt, Anmeldung) wie bisher als Nachricht
+          if (x && x.ok === false && /Änderungen pro Tag/.test(rpcErr(x))) throw new Error('Du hast deine Bewertung heute schon oft geändert. Versuch es morgen wieder.');
+          return false;
+        }, function () { return false; }) : true;
       }).then(function (rated) {
         var withStars = changed && !rated;
         if (!text && !withStars) return { ok: true };
@@ -6692,11 +6729,12 @@
     function stopPreview() {
       clearTimeout(prevTimer); clearInterval(prevWatch); prevTimer = prevWatch = null;
       if (HeroPreview.stop === stopPreview) HeroPreview.stop = null;
-      if (!prevV) return;
+      if (!prevV) return false;
       var v = prevV; prevV = null;
       top.classList.remove('is-playing');
       try { v.pause(); v.removeAttribute('src'); v.load(); } catch (e) {}
       setTimeout(function () { if (v.parentNode) v.parentNode.removeChild(v); }, 900);
+      return true;   // es lief wirklich eine Vorschau (Verbindung zum Server war offen)
     }
     function startPreview(it) {
       stopPreview();
@@ -6740,7 +6778,7 @@
       return Settings.get('heroPreview') !== false && !Platform.tizen && !Platform.webos && !Platform.lite &&
         !(navigator.connection && navigator.connection.saveData) && !!App.provider && !!App.provider.streamUrl;
     },
-    halt: function () { if (this.stop) this.stop(); }
+    halt: function () { return this.stop ? !!this.stop() : false; }
   };
   function metaLine(d) {
     var m = h('div', { class: 'meta' });
@@ -6772,11 +6810,14 @@
     if (!item.catId) return;
     var kind = item.kind === 'series' ? 'series' : 'movie';
     Promise.all([App.provider.items(kind, item.catId), App.provider.categories(kind).then(null, function () { return []; })]).then(function (r) {
-      var list = r[0] || [], seen = {}, own = titleKey(item.name), cat = null;
+      // Schlüssel ohne 4K/HD-Zusätze; arabische, kyrillische oder griechische Titel haben keinen a-z-Schlüssel –
+      // dann der ganze Name (sonst galten alle als „derselbe Titel“ und die Leiste blieb leer)
+      var key = function (n) { return titleKey(n) || norm(n).replace(/[\s.,:;|_\-()[\]]+/g, ''); };
+      var list = r[0] || [], seen = {}, own = key(item.name), cat = null;
       (r[1] || []).forEach(function (c) { if (String(c.id) === String(item.catId)) cat = c; });
       seen[own] = 1;
       // derselbe Titel in 4K/HD/… nur einmal – und nicht der Titel selbst
-      var pick = list.filter(function (x) { if (x.id === item.id || !x.logo) return false; var k = titleKey(x.name); if (seen[k]) return false; seen[k] = 1; return true; })
+      var pick = list.filter(function (x) { if (x.id === item.id || !x.logo) return false; var k = key(x.name); if (!k) return true; if (seen[k]) return false; seen[k] = 1; return true; })
         .sort(byRating).slice(0, 16);
       if (pick.length < 3 || !panel.parentNode) return;
       var badges = kind === 'series' ? seriesBadges() : null;
@@ -7168,7 +7209,9 @@
   }
   function playItemNow(item, ctx) {
     ctx = ctx || { list: [item], index: 0 };
-    HeroPreview.halt();
+    // Lief stumm die Vorschau im Kopfbild, kurz warten, bis der Server die Verbindung freigegeben hat –
+    // Zugänge mit nur einer erlaubten Verbindung lehnten den Film sonst beim Start ab
+    if (HeroPreview.halt()) { setTimeout(function () { playItemNow(item, ctx); }, 400); return; }
     if (extPlayerOn() && item.kind !== 'series') {
       if (Player.el) Player.close();
       playExternal(item);
@@ -7206,6 +7249,8 @@
       var self = this;
       if (self.el) { self.switchTo(item, ctx); return; }
       self.ctx = ctx;
+      // auto = von selbst gestartete Vorschau (Live TV): zählt erst als „gesehen“, wenn man den Sender wählt
+      self.auto = !!(o && o.auto);
       // poster = durchsichtiges Bild, damit Android nicht sein weißes Standard-Vorschaubild zeigt
       var video = h('video', { playsinline: true, 'webkit-playsinline': true, autoplay: true, preload: 'auto', poster: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7' });
       self.video = video;
@@ -7390,7 +7435,8 @@
       video.addEventListener('resize', paintQuality);
       if (video.audioTracks && video.audioTracks.addEventListener) video.audioTracks.addEventListener('addtrack', function () { self.updateTracks(); });
       if (video.textTracks && video.textTracks.addEventListener) video.textTracks.addEventListener('addtrack', function () { self.updateTracks(); });
-      video.addEventListener('pause', function () { self.paintCtrls(); self.showOsd(true); });
+      // nach dem Schließen kommt „pause“ noch einmal – dann gibt es kein Video/Player-Fenster mehr
+      video.addEventListener('pause', function () { if (self.video !== video || !self.el) return; self.paintCtrls(); self.showOsd(true); });
       video.addEventListener('play', function () { self.hidePause(); });
       video.addEventListener('loadedmetadata', function () {
         if (self.isVod() && self.resumeAt) { try { video.currentTime = self.resumeAt; } catch (e) {} toast(T('Fortgesetzt bei {0}', fmtTime(self.resumeAt))); self.resumeAt = 0; }
@@ -7437,6 +7483,11 @@
     maximize: function () {
       var self = this;
       if (!self.el || !self.mini) return;
+      if (self.auto && self.item) {   // Vorschau groß gemacht = Sender gewählt
+        self.auto = false;
+        if (self.item.kind === 'live') Recent.push(self.item);
+        Last.set(self.item);
+      }
       self.mini = false; self.pip = false;
       self.maxAt = Date.now();
       clearInterval(self.placeTimer);
@@ -7496,6 +7547,7 @@
     },
 
     switchTo: function (item, ctx) {
+      this.auto = false;   // selbst gewählt
       this.saveResume();
       if (ctx) this.ctx = ctx;
       this.load(item);
@@ -7547,9 +7599,9 @@
       var r = Resume.get(item);
       self.resumeAt = self.isVod() && r && !(self.ctx && self.ctx.fromStart) ? r.t : 0;
       if (self.ctx) self.ctx.fromStart = false;
-      if (item.kind === 'live') { Recent.push(item); self.loadEpg(); }
+      if (item.kind === 'live') { if (!self.auto) Recent.push(item); self.loadEpg(); }
       if (item.kind === 'episode') { UpNext.hint(self.ctx && self.ctx.list); SeriesWatch.touch(item.seriesId); }
-      Last.set(item);
+      if (!self.auto) Last.set(item);
 
       var src = App.provider.streamUrl(item);
       self.alt = src.alt;
@@ -7597,6 +7649,11 @@
       var self = this, video = self.video;
       self.destroyHls();
       self.curUrl = url;
+      // Jeder Start zählt neu: das „waiting“ beim Anlaufen ist kein Stocken (sonst meldete schnelles Umschalten
+      // fälschlich „Der Sender stockt“). Laufende Nummer statt Adresse: A→B→A vor dem ersten Laden der
+      // Bibliothek hängte sonst zwei Player an dasselbe Video.
+      self.playedSince = 0; self.stalls = [];
+      var seq = self.attachSeq = (self.attachSeq || 0) + 1;
       self.usingNative = false;
       var nativeHls = !!video.canPlayType('application/vnd.apple.mpegurl');
       // Android-App: zuerst den eingebauten Android-Player nutzen (zuverlässiger für Live-Sender),
@@ -7605,7 +7662,7 @@
       if (isHlsUrl(url) && !(nativeHls && preferNative)) {
         ensureHls().then(function (Hls) {
           // inzwischen umgeschaltet? Dann nicht noch einen zweiten hls.js-Player an dasselbe Video hängen
-          if (self.video !== video || self.curUrl !== url) return;
+          if (self.video !== video || self.attachSeq !== seq) return;
           if (Hls && Hls.isSupported()) {
             // PC (Windows/Mac): gleich in hoher Qualität starten und nicht an die Fenstergröße koppeln –
             // sonst bleibt das Bild nach der kleinen Vorschau lange unscharf. „Beste Qualität“ hält die höchste Stufe fest.
@@ -7667,14 +7724,14 @@
         // Klappt das Umpacken nicht (kein Netz für die Hilfsdatei, oder der Anbieter
         // liefert doch etwas anderes), probieren wir es ganz normal weiter.
         var plain = function () {
-          if (self.video !== video || self.curUrl !== url) return;
+          if (self.video !== video || self.attachSeq !== seq) return;
           self.destroyHls();
           self.rawFail = true;
           video.src = url;
           self.playSafe();
         };
         ensureTs().then(function (mpegts) {
-          if (self.video !== video || self.curUrl !== url) return;
+          if (self.video !== video || self.attachSeq !== seq) return;
           var ok = mpegts && mpegts.getFeatureList && mpegts.getFeatureList().mseLivePlayback;
           if (!ok) { plain(); return; }
           /* Kein „Aufholen“ zum Live-Rand: das sprang immer wieder nach vorn, der Vorrat war danach leer –
@@ -8140,7 +8197,7 @@
 
     paintCtrls: function () {
       var self = this, v = self.video;
-      if (!self.ctrls) return;
+      if (!self.ctrls || !v) return;
       var had = (self.ctrls.contains(document.activeElement) || self.ctrlLeft.contains(document.activeElement)) ? document.activeElement.getAttribute('data-c') : null;
       clear(self.ctrls); clear(self.ctrlLeft);
       function cbtn(c, ic, label, fn, cls, num) {
@@ -8369,7 +8426,7 @@
 
     showOsd: function (stay) {
       var self = this;
-      if (self.mini) return;
+      if (self.mini || !self.el) return;
       if (self.el && Date.now() - (self.zapAt || 0) > 700) self.el.classList.remove('is-zapping');
       self.hidePause();
       if (self.video && self.video.paused && !self.video.ended) self.armPause(); else clearTimeout(self.pauseTimer);
@@ -8381,7 +8438,7 @@
         if (pb && self.err.style.display === 'none') Nav.focus(pb);
       }
       clearTimeout(self.hideTimer);
-      if (!stay) self.hideTimer = setTimeout(function () { if (!self.video.paused) self.hideOsd(); }, 4500);
+      if (!stay) self.hideTimer = setTimeout(function () { if (self.video && !self.video.paused) self.hideOsd(); }, 4500);
     },
     hideOsd: function () {
       if (this.err.style.display !== 'none' || this.trackPanel) return;
@@ -8413,6 +8470,10 @@
       if (k === KEY.CH_UP) { self.zapBy(-1); return true; }
       if (k === KEY.CH_DOWN) { self.zapBy(1); return true; }
       if (errOpen) return false;
+      // Direkt nach dem Umschalten sind die Knöpfe unsichtbar (nur oben links Sender) – Hoch/Runter schaltet weiter
+      if (self.item.kind === 'live' && self.el && self.el.classList.contains('is-zapping') && (k === KEY.UP || k === KEY.DOWN)) {
+        self.zapBy(k === KEY.UP ? -1 : 1); return true;
+      }
       if (hidden) {
         if (self.item.kind === 'live' && k === KEY.UP) { self.zapBy(-1); return true; }
         if (self.item.kind === 'live' && k === KEY.DOWN) { self.zapBy(1); return true; }
@@ -8524,6 +8585,7 @@
     },
 
     teardown: function () {
+      this.closeTracks();   // offene Senderliste: Zeitgeber und Beobachter mit beenden
       this.hidePause();
       this.saveResume();
       clearInterval(this.saveTimer); clearInterval(this.epgTimer); clearTimeout(this.hideTimer); clearTimeout(this.zapTimer);
@@ -8538,7 +8600,7 @@
       this.mini = false;
       document.body.classList.remove('has-mini');
       window.removeEventListener('resize', this.onResize);
-      this.el = null; this.video = null; this.item = null; this.ctx = null;
+      this.el = null; this.video = null; this.item = null; this.ctx = null; this.auto = false;
       markPlaying(null);
     }
   };
@@ -8700,7 +8762,7 @@
     var dirs = { 37: 'left', 38: 'up', 39: 'right', 40: 'down' };
     if (dirs[k] || k === 13) document.body.classList.add('kbd');
 
-    if (isBackKey(e)) { e.preventDefault(); if (InlineMenu.cur) { var w = InlineMenu.wrap; InlineMenu.close(); var fb = w && $('.f', w); if (fb) Nav.focus(fb); return; } goBack(); return; }
+    if (isBackKey(e)) { e.preventDefault(); goBack(); return; }
     if (!Dialog.open && Player.el && Screens.top() && Screens.top().el === Player.el && Player.handleKey(k)) { e.preventDefault(); return; }
     // Live TV: Sendernummer eintippen, letzter Sender
     if (NumEntry.key(e, k)) { e.preventDefault(); return; }

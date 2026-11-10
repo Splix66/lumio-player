@@ -973,6 +973,7 @@ window.LUMIO_I18N["ku"] = {
   "Bewertung ändern": "Nirxandinê biguherîne",
   "Deine Bewertung ist schon gespeichert. Wähle andere Sterne, um sie zu ändern.": "Nirxandina te jixwe hatiye tomarkirin. Ji bo guhertinê stêrkên din hilbijêre.",
   "Deine Bewertung wurde geändert.": "Nirxandina te hate guhertin.",
+  "Du hast deine Bewertung heute schon oft geändert. Versuch es morgen wieder.": "Te îro nirxandina xwe gelek caran guhert. Sibê dîsa biceribîne.",
   "Deine Bewertung – du kannst sie jederzeit ändern.": "Nirxandina te – tu dikarî wê her dem biguherînî.",
   "In Playlists kommen regelmäßig neue Filme und Serien dazu. Die App lädt die Listen dann von selbst neu – im Hintergrund, nie während etwas läuft.": "Fîlm û rêzefîlmên nû bi rêkûpêk tên lîsteyan. Hingê sepan lîsteyan bi xwe ji nû ve bar dike – li paşperdeyê, qet ne dema ku tiştek tê lêdan.",
   "Sender, Filme und Serien": "Kanal, film û rêzefîlm",

@@ -973,6 +973,7 @@ window.LUMIO_I18N["ro"] = {
   "Bewertung ändern": "Schimbă nota",
   "Deine Bewertung ist schon gespeichert. Wähle andere Sterne, um sie zu ändern.": "Nota ta este deja salvată. Alege alte stele ca s-o schimbi.",
   "Deine Bewertung wurde geändert.": "Nota ta a fost schimbată.",
+  "Du hast deine Bewertung heute schon oft geändert. Versuch es morgen wieder.": "Ți-ai schimbat deja nota de mai multe ori azi. Încearcă din nou mâine.",
   "Deine Bewertung – du kannst sie jederzeit ändern.": "Nota ta – o poți schimba oricând.",
   "In Playlists kommen regelmäßig neue Filme und Serien dazu. Die App lädt die Listen dann von selbst neu – im Hintergrund, nie während etwas läuft.": "În playlisturi apar regulat filme și seriale noi. Aplicația reîncarcă atunci singură listele – în fundal, niciodată în timp ce rulează ceva.",
   "Sender, Filme und Serien": "Canale, filme și seriale",

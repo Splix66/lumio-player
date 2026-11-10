@@ -973,6 +973,7 @@ window.LUMIO_I18N["el"] = {
   "Bewertung ändern": "Αλλαγή βαθμολογίας",
   "Deine Bewertung ist schon gespeichert. Wähle andere Sterne, um sie zu ändern.": "Η βαθμολογία σου έχει ήδη αποθηκευτεί. Διάλεξε άλλα αστέρια για να την αλλάξεις.",
   "Deine Bewertung wurde geändert.": "Η βαθμολογία σου άλλαξε.",
+  "Du hast deine Bewertung heute schon oft geändert. Versuch es morgen wieder.": "Έχεις ήδη αλλάξει τη βαθμολογία σου πολλές φορές σήμερα. Δοκίμασε ξανά αύριο.",
   "Deine Bewertung – du kannst sie jederzeit ändern.": "Η βαθμολογία σου – μπορείς να την αλλάξεις όποτε θέλεις.",
   "In Playlists kommen regelmäßig neue Filme und Serien dazu. Die App lädt die Listen dann von selbst neu – im Hintergrund, nie während etwas läuft.": "Στις λίστες προστίθενται τακτικά νέες ταινίες και σειρές. Η εφαρμογή ξαναφορτώνει τις λίστες μόνη της – στο παρασκήνιο, ποτέ ενώ παίζει κάτι.",
   "Sender, Filme und Serien": "Κανάλια, ταινίες και σειρές",

@@ -973,6 +973,7 @@ window.LUMIO_I18N["it"] = {
   "Bewertung ändern": "Cambia valutazione",
   "Deine Bewertung ist schon gespeichert. Wähle andere Sterne, um sie zu ändern.": "La tua valutazione è già salvata. Scegli altre stelle per cambiarla.",
   "Deine Bewertung wurde geändert.": "La tua valutazione è stata modificata.",
+  "Du hast deine Bewertung heute schon oft geändert. Versuch es morgen wieder.": "Oggi hai già modificato la tua valutazione più volte. Riprova domani.",
   "Deine Bewertung – du kannst sie jederzeit ändern.": "La tua valutazione – puoi cambiarla in qualsiasi momento.",
   "In Playlists kommen regelmäßig neue Filme und Serien dazu. Die App lädt die Listen dann von selbst neu – im Hintergrund, nie während etwas läuft.": "Nelle playlist arrivano regolarmente nuovi film e serie. L’app ricarica da sola le liste – in background, mai mentre qualcosa è in riproduzione.",
   "Sender, Filme und Serien": "Canali, film e serie",

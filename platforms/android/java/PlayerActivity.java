@@ -62,8 +62,11 @@ public class PlayerActivity extends Activity {
     private boolean ended;
     private boolean closing;
     private int retries;
+    private int hangs;               // Neuverbindungen wegen Hänger/Ende beim aktuellen Sender
+    private int behindRetries;       // „hinter dem Live-Fenster“ nacheinander
     private boolean triedAlt;
     private long bufferingSince;
+    private long readySince;         // seit wann der Stream ohne Unterbrechung läuft
     private String lastError;
     private String txtReconnect = "Verbindung wird wiederhergestellt …";
     private String txtFailed = "Wiedergabe nicht möglich.";
@@ -106,15 +109,19 @@ public class PlayerActivity extends Activity {
         @Override
         public void run() {
             if (player != null && !closing) {
+                long now = System.currentTimeMillis();
                 if (player.getPlaybackState() == Player.STATE_BUFFERING && player.getPlayWhenReady()) {
-                    long now = System.currentTimeMillis();
                     if (bufferingSince == 0) bufferingSince = now;
                     else if (now - bufferingSince > (live ? 10000 : 20000)) {
                         bufferingSince = 0;
-                        reconnect();
+                        // nicht endlos: nach 3 Hängern anderes Format probieren bzw. Fehler zeigen
+                        if (++hangs > 3) failOver("hang");
+                        else reconnect();
                     }
                 } else {
                     bufferingSince = 0;
+                    // eine Minute flüssig gelaufen: frühere Hänger zählen nicht mehr
+                    if (readySince > 0 && now - readySince > 60000) hangs = 0;
                 }
             }
             handler.postDelayed(this, 2000);
@@ -244,12 +251,18 @@ public class PlayerActivity extends Activity {
         // „Nächste Folge automatisch“ aus: am Ende der Folge anhalten und zurück zur Serie (dort ist die nächste markiert)
         final boolean stopAtEnd = !live && urls.size() > 1 && !in.getBooleanExtra("autoNext", true);
         if (stopAtEnd) player.setPauseAtEndOfMediaItems(true);
+        // Live: beendet der Server die Verbindung (rohes .ts), denselben Sender neu verbinden
+        // statt von selbst zum nächsten Sender der Liste zu springen bzw. beim letzten stehen zu bleiben
+        if (live) player.setRepeatMode(Player.REPEAT_MODE_ONE);
         player.addListener(new Player.Listener() {
             @Override
             public void onPlaybackStateChanged(int state) {
+                if (state != Player.STATE_READY) readySince = 0;
                 if (state == Player.STATE_READY) {
+                    if (readySince == 0) readySince = System.currentTimeMillis();
                     status.setVisibility(View.GONE);
                     retries = 0;
+                    behindRetries = 0;
                 } else if (state == Player.STATE_ENDED && !live && !closing) {
                     ended = true;
                     finishWith();
@@ -271,7 +284,17 @@ public class PlayerActivity extends Activity {
 
             @Override
             public void onMediaItemTransition(MediaItem mediaItem, int reason) {
+                if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_REPEAT) {
+                    // Live-Stream ist zu Ende gegangen und wird neu verbunden – zählt wie ein Hänger
+                    if (live && ++hangs > 3) failOver("ended");
+                    else if (live) showStatus(txtReconnect);
+                    return;
+                }
+                // Austausch gegen das andere Format (PLAYLIST_CHANGED) ist kein neuer Sender – Zähler behalten
+                if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED) return;
                 retries = 0;
+                hangs = 0;
+                behindRetries = 0;
                 triedAlt = false;
                 showInfo();
             }
@@ -336,7 +359,7 @@ public class PlayerActivity extends Activity {
 
     private void handleError(PlaybackException e) {
         if (player == null || closing) return;
-        if (e.errorCode == PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW) {
+        if (e.errorCode == PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW && behindRetries++ < 5) {
             player.seekToDefaultPosition();
             player.prepare();
             return;
@@ -354,18 +377,27 @@ public class PlayerActivity extends Activity {
             }, 1500L * retries);
             return;
         }
+        failOver(e.getErrorCodeName());
+    }
+
+    /* Aufgeben beim aktuellen Sender: einmal das andere Format probieren (HLS ↔ MPEG-TS), sonst Fehler zeigen */
+    private void failOver(String why) {
+        if (player == null || closing) return;
+        final int idx = player.getCurrentMediaItemIndex();
         if (!triedAlt && idx >= 0 && idx < alts.size() && alts.get(idx).length() > 0) {
-            // anderes Format probieren (HLS ↔ MPEG-TS)
             triedAlt = true;
             retries = 0;
+            hangs = 0;
             long pos = live ? C.TIME_UNSET : player.getCurrentPosition();
+            showStatus(txtReconnect);
             player.replaceMediaItem(idx, item(alts.get(idx), titles.get(idx)));
             player.seekTo(idx, pos);
             player.prepare();
             player.play();
             return;
         }
-        lastError = e.getErrorCodeName();
+        lastError = why;
+        player.stop();   // nicht weiter versuchen – Umschalten oder Zurück bleibt möglich
         showStatus(txtFailed);
     }
 
@@ -489,6 +521,9 @@ public class PlayerActivity extends Activity {
             data.putExtra("positionMs", player.getCurrentPosition());
             long d = player.getDuration();
             data.putExtra("durationMs", d == C.TIME_UNSET ? 0L : d);
+            // Verbindung sofort freigeben (release folgt erst in onDestroy, das kann Sekunden dauern) –
+            // sonst lehnen Zugänge mit nur einer Verbindung die Vorschau in der App ab
+            player.stop();
         }
         data.putExtra("ended", ended);
         data.putExtra("sleep", bySleep);

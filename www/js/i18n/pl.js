@@ -973,6 +973,7 @@ window.LUMIO_I18N["pl"] = {
   "Bewertung ändern": "Zmień ocenę",
   "Deine Bewertung ist schon gespeichert. Wähle andere Sterne, um sie zu ändern.": "Twoja ocena jest już zapisana. Wybierz inne gwiazdki, aby ją zmienić.",
   "Deine Bewertung wurde geändert.": "Twoja ocena została zmieniona.",
+  "Du hast deine Bewertung heute schon oft geändert. Versuch es morgen wieder.": "Dziś już kilka razy zmieniłeś ocenę. Spróbuj ponownie jutro.",
   "Deine Bewertung – du kannst sie jederzeit ändern.": "Twoja ocena – możesz ją zmienić w każdej chwili.",
   "In Playlists kommen regelmäßig neue Filme und Serien dazu. Die App lädt die Listen dann von selbst neu – im Hintergrund, nie während etwas läuft.": "Do playlist regularnie dochodzą nowe filmy i seriale. Aplikacja sama wczytuje wtedy listy ponownie – w tle, nigdy podczas odtwarzania.",
   "Sender, Filme und Serien": "Kanały, filmy i seriale",

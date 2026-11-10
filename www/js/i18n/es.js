@@ -973,6 +973,7 @@ window.LUMIO_I18N["es"] = {
   "Bewertung ändern": "Cambiar valoración",
   "Deine Bewertung ist schon gespeichert. Wähle andere Sterne, um sie zu ändern.": "Tu valoración ya está guardada. Elige otras estrellas para cambiarla.",
   "Deine Bewertung wurde geändert.": "Tu valoración se ha cambiado.",
+  "Du hast deine Bewertung heute schon oft geändert. Versuch es morgen wieder.": "Hoy ya has cambiado tu valoración varias veces. Inténtalo de nuevo mañana.",
   "Deine Bewertung – du kannst sie jederzeit ändern.": "Tu valoración – puedes cambiarla cuando quieras.",
   "In Playlists kommen regelmäßig neue Filme und Serien dazu. Die App lädt die Listen dann von selbst neu – im Hintergrund, nie während etwas läuft.": "A las listas llegan con regularidad nuevas películas y series. La app recarga las listas sola – en segundo plano, nunca mientras se reproduce algo.",
   "Sender, Filme und Serien": "Canales, películas y series",

@@ -106,6 +106,16 @@ public class NativePlayerPlugin extends Plugin {
         }
     }
 
+    /**
+     * Nichts im gesicherten Zustand ablegen: Capacitor würde sonst die komplette Senderliste des play()-Aufrufs
+     * (bis zu einige 100 KB) zweimal in den Zustand der App schreiben, sobald der Player sie verdeckt.
+     * Das sprengt bei großen Listen die Größengrenze von Android (TransactionTooLargeException) und beendet die App.
+     */
+    @Override
+    protected android.os.Bundle saveInstanceState() {
+        return null;
+    }
+
     @ActivityCallback
     private void onPlayerResult(PluginCall call, ActivityResult result) {
         if (call == null) return;
