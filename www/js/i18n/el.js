@@ -1,6 +1,8 @@
 /* Telvo Player – Übersetzung: Griechisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["el"] = {
+  "Fehlerberichte senden": "Αποστολή αναφορών σφαλμάτων",
+  "Hilft, Fehler schnell zu beheben – ohne Links, Namen oder Passwörter": "Βοηθά να διορθώνονται γρήγορα τα σφάλματα – χωρίς συνδέσμους, ονόματα ή κωδικούς",
   "Klang": "Ήχος",
   "Ton im TV-Player verbessern": "Βελτίωση ήχου στο TV player",
   "Lautstärke angleichen": "Εξισορρόπηση έντασης",
