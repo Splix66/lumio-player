@@ -361,7 +361,7 @@ window.LUMIO_I18N["hr"] = {
   "Profil": "Profil",
   "Typ": "Vrsta",
   "Server": "Server",
-  "Benutzer": "Korisnik",
+  "Benutzer": "Korisnici",
   "Gültig bis": "Vrijedi do",
   "Status": "Status",
   "Verbindungen": "Veze",
@@ -898,5 +898,15 @@ window.LUMIO_I18N["hr"] = {
   "Die Knöpfe im Player": "Gumbi playera",
   "Gut zu wissen": "Dobro je znati",
   "Telvo ist nur ein Player ohne eigene Sender. Nutze nur Quellen, für die du eine Berechtigung hast.": "Telvo je samo player bez vlastitih kanala. Koristi samo izvore za koje imaš dopuštenje.",
-  "Nutzungsbedingungen": "Uvjeti korištenja"
+  "Nutzungsbedingungen": "Uvjeti korištenja",
+  "Benutzer verwalten": "Upravljaj korisnicima",
+  "Benutzer hinzufügen": "Dodaj korisnika",
+  "{0} Benutzer": "Korisnika: {0}",
+  "Wer auf diesem Gerät schaut – jeder Benutzer hat eigene Favoriten und Listen.": "Tko gleda na ovom uređaju – svaki korisnik ima vlastite favorite i popise.",
+  "Benutzer & Kindersicherung": "Korisnici i roditeljska zaštita",
+  "Nur ein Benutzer": "Samo jedan korisnik",
+  "Jeder Benutzer hat eigene Favoriten, eigenen Verlauf, „Weiterschauen“ und „Später ansehen“. Playlists und Einstellungen gelten für alle.": "Svaki korisnik ima vlastite favorite, povijest, „Nastavi gledati” i „Pogledaj kasnije”. Playliste i postavke su zajedničke.",
+  "Favoriten, Verlauf und Listen dieses Benutzers werden auf diesem Gerät gelöscht.": "Favoriti, povijest i popisi ovog korisnika bit će izbrisani s ovog uređaja.",
+  "Profilbild": "Slika profila",
+  "Anfangsbuchstabe": "Početno slovo"
 };

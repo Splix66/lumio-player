@@ -361,7 +361,7 @@ window.LUMIO_I18N["ar"] = {
   "Profil": "الملف الشخصي",
   "Typ": "النوع",
   "Server": "الخادم",
-  "Benutzer": "المستخدم",
+  "Benutzer": "المستخدمون",
   "Gültig bis": "صالح حتى",
   "Status": "الحالة",
   "Verbindungen": "الاتصالات",
@@ -898,5 +898,15 @@ window.LUMIO_I18N["ar"] = {
   "Die Knöpfe im Player": "أزرار المشغّل",
   "Gut zu wissen": "من المفيد معرفته",
   "Telvo ist nur ein Player ohne eigene Sender. Nutze nur Quellen, für die du eine Berechtigung hast.": "Telvo مجرد مشغّل بدون قنوات خاصة. استخدم فقط المصادر التي يحق لك استخدامها.",
-  "Nutzungsbedingungen": "شروط الاستخدام"
+  "Nutzungsbedingungen": "شروط الاستخدام",
+  "Benutzer verwalten": "إدارة المستخدمين",
+  "Benutzer hinzufügen": "إضافة مستخدم",
+  "{0} Benutzer": "{0} مستخدمين",
+  "Wer auf diesem Gerät schaut – jeder Benutzer hat eigene Favoriten und Listen.": "من يشاهد على هذا الجهاز – لكل مستخدم مفضلاته وقوائمه.",
+  "Benutzer & Kindersicherung": "المستخدمون والرقابة الأبوية",
+  "Nur ein Benutzer": "مستخدم واحد فقط",
+  "Jeder Benutzer hat eigene Favoriten, eigenen Verlauf, „Weiterschauen“ und „Später ansehen“. Playlists und Einstellungen gelten für alle.": "لكل مستخدم مفضلاته وسجله و«متابعة المشاهدة» و«مشاهدة لاحقًا». قوائم التشغيل والإعدادات مشتركة.",
+  "Favoriten, Verlauf und Listen dieses Benutzers werden auf diesem Gerät gelöscht.": "سيتم حذف مفضلات هذا المستخدم وسجله وقوائمه من هذا الجهاز.",
+  "Profilbild": "صورة الملف الشخصي",
+  "Anfangsbuchstabe": "الحرف الأول"
 };

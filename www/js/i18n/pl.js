@@ -361,7 +361,7 @@ window.LUMIO_I18N["pl"] = {
   "Profil": "Profil",
   "Typ": "Typ",
   "Server": "Serwer",
-  "Benutzer": "Użytkownik",
+  "Benutzer": "Użytkownicy",
   "Gültig bis": "Ważne do",
   "Status": "Status",
   "Verbindungen": "Połączenia",
@@ -898,5 +898,15 @@ window.LUMIO_I18N["pl"] = {
   "Die Knöpfe im Player": "Przyciski odtwarzacza",
   "Gut zu wissen": "Warto wiedzieć",
   "Telvo ist nur ein Player ohne eigene Sender. Nutze nur Quellen, für die du eine Berechtigung hast.": "Telvo to tylko odtwarzacz bez własnych kanałów. Korzystaj tylko ze źródeł, do których masz uprawnienia.",
-  "Nutzungsbedingungen": "Warunki korzystania"
+  "Nutzungsbedingungen": "Warunki korzystania",
+  "Benutzer verwalten": "Zarządzaj użytkownikami",
+  "Benutzer hinzufügen": "Dodaj użytkownika",
+  "{0} Benutzer": "Użytkownicy: {0}",
+  "Wer auf diesem Gerät schaut – jeder Benutzer hat eigene Favoriten und Listen.": "Kto ogląda na tym urządzeniu – każdy użytkownik ma własne ulubione i listy.",
+  "Benutzer & Kindersicherung": "Użytkownicy i kontrola rodzicielska",
+  "Nur ein Benutzer": "Tylko jeden użytkownik",
+  "Jeder Benutzer hat eigene Favoriten, eigenen Verlauf, „Weiterschauen“ und „Später ansehen“. Playlists und Einstellungen gelten für alle.": "Każdy użytkownik ma własne ulubione, historię, „Oglądaj dalej” i „Do obejrzenia”. Playlisty i ustawienia są wspólne.",
+  "Favoriten, Verlauf und Listen dieses Benutzers werden auf diesem Gerät gelöscht.": "Ulubione, historia i listy tego użytkownika zostaną usunięte z tego urządzenia.",
+  "Profilbild": "Zdjęcie profilowe",
+  "Anfangsbuchstabe": "Inicjał"
 };

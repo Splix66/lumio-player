@@ -361,7 +361,7 @@ window.LUMIO_I18N["ro"] = {
   "Profil": "Profil",
   "Typ": "Tip",
   "Server": "Server",
-  "Benutzer": "Utilizator",
+  "Benutzer": "Utilizatori",
   "Gültig bis": "Valabil până la",
   "Status": "Stare",
   "Verbindungen": "Conexiuni",
@@ -898,5 +898,15 @@ window.LUMIO_I18N["ro"] = {
   "Die Knöpfe im Player": "Butoanele playerului",
   "Gut zu wissen": "Bine de știut",
   "Telvo ist nur ein Player ohne eigene Sender. Nutze nur Quellen, für die du eine Berechtigung hast.": "Telvo este doar un player fără canale proprii. Folosește doar surse pentru care ai dreptul.",
-  "Nutzungsbedingungen": "Condiții de utilizare"
+  "Nutzungsbedingungen": "Condiții de utilizare",
+  "Benutzer verwalten": "Gestionează utilizatorii",
+  "Benutzer hinzufügen": "Adaugă utilizator",
+  "{0} Benutzer": "{0} utilizatori",
+  "Wer auf diesem Gerät schaut – jeder Benutzer hat eigene Favoriten und Listen.": "Cine se uită pe acest dispozitiv – fiecare utilizator are propriile favorite și liste.",
+  "Benutzer & Kindersicherung": "Utilizatori și control parental",
+  "Nur ein Benutzer": "Un singur utilizator",
+  "Jeder Benutzer hat eigene Favoriten, eigenen Verlauf, „Weiterschauen“ und „Später ansehen“. Playlists und Einstellungen gelten für alle.": "Fiecare utilizator are propriile favorite, istoric, „Continuă vizionarea” și „Vezi mai târziu”. Playlisturile și setările sunt comune.",
+  "Favoriten, Verlauf und Listen dieses Benutzers werden auf diesem Gerät gelöscht.": "Favoritele, istoricul și listele acestui utilizator vor fi șterse de pe acest dispozitiv.",
+  "Profilbild": "Imagine de profil",
+  "Anfangsbuchstabe": "Inițială"
 };

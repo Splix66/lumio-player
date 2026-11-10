@@ -361,7 +361,7 @@ window.LUMIO_I18N["el"] = {
   "Profil": "Προφίλ",
   "Typ": "Τύπος",
   "Server": "Διακομιστής",
-  "Benutzer": "Χρήστης",
+  "Benutzer": "Χρήστες",
   "Gültig bis": "Ισχύει έως",
   "Status": "Κατάσταση",
   "Verbindungen": "Συνδέσεις",
@@ -898,5 +898,15 @@ window.LUMIO_I18N["el"] = {
   "Die Knöpfe im Player": "Τα κουμπιά του player",
   "Gut zu wissen": "Καλό να ξέρεις",
   "Telvo ist nur ein Player ohne eigene Sender. Nutze nur Quellen, für die du eine Berechtigung hast.": "Το Telvo είναι μόνο ένας player χωρίς δικά του κανάλια. Χρησιμοποίησε μόνο πηγές για τις οποίες έχεις δικαίωμα.",
-  "Nutzungsbedingungen": "Όροι χρήσης"
+  "Nutzungsbedingungen": "Όροι χρήσης",
+  "Benutzer verwalten": "Διαχείριση χρηστών",
+  "Benutzer hinzufügen": "Προσθήκη χρήστη",
+  "{0} Benutzer": "{0} χρήστες",
+  "Wer auf diesem Gerät schaut – jeder Benutzer hat eigene Favoriten und Listen.": "Ποιος βλέπει σε αυτή τη συσκευή – κάθε χρήστης έχει δικά του αγαπημένα και λίστες.",
+  "Benutzer & Kindersicherung": "Χρήστες και γονικός έλεγχος",
+  "Nur ein Benutzer": "Μόνο ένας χρήστης",
+  "Jeder Benutzer hat eigene Favoriten, eigenen Verlauf, „Weiterschauen“ und „Später ansehen“. Playlists und Einstellungen gelten für alle.": "Κάθε χρήστης έχει δικά του αγαπημένα, ιστορικό, «Συνέχεια παρακολούθησης» και «Δες αργότερα». Λίστες και ρυθμίσεις είναι κοινές.",
+  "Favoriten, Verlauf und Listen dieses Benutzers werden auf diesem Gerät gelöscht.": "Τα αγαπημένα, το ιστορικό και οι λίστες αυτού του χρήστη θα διαγραφούν από τη συσκευή.",
+  "Profilbild": "Εικόνα προφίλ",
+  "Anfangsbuchstabe": "Αρχικό γράμμα"
 };

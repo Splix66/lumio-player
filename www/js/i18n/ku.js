@@ -898,5 +898,15 @@ window.LUMIO_I18N["ku"] = {
   "Die Knöpfe im Player": "Bişkokên lîstikvanê",
   "Gut zu wissen": "Baş e ku bizanî",
   "Telvo ist nur ein Player ohne eigene Sender. Nutze nur Quellen, für die du eine Berechtigung hast.": "Telvo tenê lîstikvanek e bê kanalên xwe. Tenê çavkaniyên ku destûra te heye bi kar bîne.",
-  "Nutzungsbedingungen": "Mercên bikaranînê"
+  "Nutzungsbedingungen": "Mercên bikaranînê",
+  "Benutzer verwalten": "Bikarhêneran birêve bibe",
+  "Benutzer hinzufügen": "Bikarhêner zêde bike",
+  "{0} Benutzer": "{0} bikarhêner",
+  "Wer auf diesem Gerät schaut – jeder Benutzer hat eigene Favoriten und Listen.": "Kî li ser vê cîhazê temaşe dike – her bikarhêner xwedî bijarte û lîsteyên xwe ye.",
+  "Benutzer & Kindersicherung": "Bikarhêner û kontrola dêûbavan",
+  "Nur ein Benutzer": "Tenê bikarhênerek",
+  "Jeder Benutzer hat eigene Favoriten, eigenen Verlauf, „Weiterschauen“ und „Später ansehen“. Playlists und Einstellungen gelten für alle.": "Her bikarhêner xwedî bijarte, dîrok, “Temaşeyê bidomîne” û “Paşê temaşe bike” ya xwe ye. Lîste û mîheng ji bo hemûyan in.",
+  "Favoriten, Verlauf und Listen dieses Benutzers werden auf diesem Gerät gelöscht.": "Bijarte, dîrok û lîsteyên vî bikarhênerî ji vê cîhazê têne jêbirin.",
+  "Profilbild": "Wêneyê profîlê",
+  "Anfangsbuchstabe": "Tîpa yekem"
 };
