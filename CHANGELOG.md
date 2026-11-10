@@ -1,5 +1,9 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## 1.13.4 – 2026-11-10 · „Weiterschauen“ im TV-Player startete von vorne
+
+- **„Weiter bei …“ (Filme) und „Weiter: S… E…“ (Serien)** starteten im TV-Player (Fire TV, Android-Boxen) immer bei 00:00. Weil der Neustart dann bei wenigen Sekunden beendet wurde, war anschließend auch die gespeicherte Position weg. Ursache: Das Plugin las die Startposition mit `call.getLong()`. Capacitor gibt dort nur bei echten Long-Werten etwas zurück, Startpositionen unter ~24 Tagen kommen aber als Integer an – Ergebnis war immer 0. Jetzt `optLong()`, das jede Zahl übernimmt (der Schlaf-Timer liest seine Uhrzeit vorsorglich genauso). Gefunden beim Gerätetest auf dem Fire TV Stick 4K Max.
+
 ## 1.13.3 – 2026-11-10 · Layout für ältere Fernseher und Android-Boxen
 
 - **Ältere Geräte ohne CSS-Grid** (Browser-Kern vor Chrome 57: LG-Fernseher bis 2019 / webOS 4.x, Samsung 2018,
