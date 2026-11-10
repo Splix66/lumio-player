@@ -28,6 +28,8 @@ import androidx.media3.datasource.DefaultHttpDataSource;
 import androidx.media3.exoplayer.DefaultLoadControl;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
+import androidx.media3.extractor.DefaultExtractorsFactory;
+import androidx.media3.extractor.ts.DefaultTsPayloadReaderFactory;
 import androidx.media3.ui.CaptionStyleCompat;
 import androidx.media3.ui.PlayerView;
 import androidx.media3.ui.SubtitleView;
@@ -222,11 +224,16 @@ public class PlayerActivity extends Activity {
                 .setAllowCrossProtocolRedirects(true)
                 .setConnectTimeoutMs(15000)
                 .setReadTimeoutMs(20000);
+        // Nach einem Hänger etwas mehr Vorrat sammeln (6 s statt 4 s), bevor es weitergeht – sonst stockt es gleich wieder
         DefaultLoadControl load = new DefaultLoadControl.Builder()
-                .setBufferDurationsMs(15000, 50000, 2000, 4000)
+                .setBufferDurationsMs(15000, 50000, 2000, 6000)
                 .build();
+        // Rohe TV-Signale (.ts, „RAW“-Sender): auch ohne IDR-Schlüsselbild einsteigen und Einzelbilder selbst erkennen –
+        // sonst ruckelt oder stockt das Bild bei manchen Satelliten-Sendern
+        DefaultExtractorsFactory extractors = new DefaultExtractorsFactory()
+                .setTsExtractorFlags(DefaultTsPayloadReaderFactory.FLAG_ALLOW_NON_IDR_KEYFRAMES | DefaultTsPayloadReaderFactory.FLAG_DETECT_ACCESS_UNITS);
         player = new ExoPlayer.Builder(this)
-                .setMediaSourceFactory(new DefaultMediaSourceFactory(http))
+                .setMediaSourceFactory(new DefaultMediaSourceFactory(http, extractors))
                 .setLoadControl(load)
                 .build();
         view.setPlayer(player);
@@ -297,6 +304,8 @@ public class PlayerActivity extends Activity {
                 .setUri(Uri.parse(url))
                 .setMediaMetadata(new MediaMetadata.Builder().setTitle(title).build());
         if (url.toLowerCase().contains(".m3u8")) b.setMimeType(MimeTypes.APPLICATION_M3U8);
+        // Live: immer in normaler Geschwindigkeit – kein Beschleunigen, um zum Live-Rand aufzuholen (wirkt wie „läuft zu schnell, dann hakt es“)
+        if (live) b.setLiveConfiguration(new MediaItem.LiveConfiguration.Builder().setMinPlaybackSpeed(1f).setMaxPlaybackSpeed(1f).build());
         return b.build();
     }
 

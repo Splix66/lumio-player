@@ -22,8 +22,8 @@ Deine eigenen Playlists auf Fernseher, Handy und PC – schnell und übersichtli
 Telvo ist ein moderner Player für deine eigenen Playlists – gemacht für die Fernbedienung, genauso gut auf Handy, Tablet
 und PC.
 
-Telvo enthält keine Sender, Filme oder Serien und verkauft keine Zugänge. Du trägst die Playlist ein, die du von deinem
-Anbieter bekommen hast (M3U-Link oder Xtream-Codes-Zugang), und nutzt nur Inhalte, für die du eine Berechtigung hast.
+Telvo enthält keine Sender, Filme oder Serien und verkauft keine Zugänge. Du trägst deine eigene Playlist ein
+(M3U-Link oder Xtream-Codes-Zugang) und nutzt nur Inhalte, für die du eine Berechtigung hast.
 
 Was Telvo kann:
 • Live-TV mit Programmführer, Filme und Serien übersichtlich getrennt
@@ -50,8 +50,8 @@ Your own playlists on TV, phone and PC – fast and easy to use.
 Telvo is a modern player for your own playlists – built for the remote control and just as good on phones, tablets and
 PCs.
 
-Telvo does not contain any channels, movies or series and does not sell subscriptions. You add the playlist you received
-from your provider (M3U link or Xtream Codes login) and only use content you are entitled to.
+Telvo does not contain any channels, movies or series and does not sell subscriptions. You add your own playlist
+(M3U link or Xtream Codes login) and only use content you are entitled to.
 
 What Telvo offers:
 • Live TV with programme guide, movies and series neatly separated

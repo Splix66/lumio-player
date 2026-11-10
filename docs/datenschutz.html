@@ -27,21 +27,21 @@
     <p>[VORNAME NACHNAME]<br>[STRASSE HAUSNUMMER]<br>[PLZ ORT]<br>E-Mail: <a href="mailto:telvo.support@gmail.com">telvo.support@gmail.com</a></p>
 
     <h2>2. Worum es geht</h2>
-    <p>Telvo Player ist eine App zum Abspielen eigener IPTV-Playlists. Die App enthält keine Sender oder Inhalte.
+    <p>Telvo Player ist eine App zum Abspielen eigener Playlists (M3U oder Xtream). Die App enthält keine Sender oder Inhalte.
       Über diese Webseite kannst du eine Playlist an dein Gerät senden, ohne sie mit der Fernbedienung eintippen zu müssen.
       Diese Erklärung beschreibt, welche Daten dabei verarbeitet werden.</p>
 
     <h2>3. Daten in der App</h2>
     <p>Die App speichert deine Playlists, Favoriten, den Wiedergabe-Verlauf und Einstellungen <strong>auf deinem Gerät</strong>.
       Zugangsdaten einer Playlist werden nur dann online gespeichert, wenn du die Playlist über diese Webseite sendest
-      oder in der App ausdrücklich „Auch auf der Webseite verwalten“ einschaltest (siehe Abschnitt 4). Diese Option ist
-      beim Anlegen einer Playlist ausgeschaltet.</p>
+      oder in der App „Auch auf der Webseite verwalten“ eingeschaltet lässt (siehe Abschnitt 4). Diese Option ist beim
+      Anlegen einer Playlist eingeschaltet; schaltest du sie aus, bleiben die Zugangsdaten nur auf deinem Gerät.</p>
     <p>Beim ersten Start erzeugt die App zufällig eine Geräte-Kennung im Format einer MAC-Adresse und einen Geräteschlüssel (Key).
       Das ist nicht die echte Hardware-Adresse deines Geräts. Damit du Playlists per Handy senden kannst, meldet sich die App
       beim Start mit dieser Kennung bei unserem Online-Dienst an und fragt etwa alle 30 Sekunden nach neuen Playlists
       (dabei werden keine Playlist-Daten aus der App übertragen).</p>
-    <p>Beim Abspielen verbindet sich die App direkt mit den Servern des IPTV-Anbieters, den du selbst eingetragen hast.
-      Auf die Datenverarbeitung dieses Anbieters haben wir keinen Einfluss; es gelten dessen Datenschutzbestimmungen.</p>
+    <p>Beim Abspielen verbindet sich die App direkt mit den Servern der Playlist, die du selbst eingetragen hast.
+      Auf die Datenverarbeitung durch deren Betreiber haben wir keinen Einfluss; es gelten dessen Datenschutzbestimmungen.</p>
     <p>Falls Programmbibliotheken nicht in der App enthalten sind, lädt die App sie vom Dienst jsDelivr nach
       (Videowiedergabe, QR-Code). Dabei wird deine IP-Adresse an jsDelivr übermittelt.</p>
     <p><strong>Update-Prüfung:</strong> Einmal täglich fragt die App bei GitHub (api.github.com) nach, ob es eine neue Version gibt.
@@ -50,11 +50,18 @@
       Datenschutzmodus (youtube-nocookie.com, Google Ireland Limited) geladen. Dabei werden u. a. deine IP-Adresse und technische
       Daten an Google übermittelt, möglicherweise auch in die USA (EU-US Data Privacy Framework). Ohne Klick auf „Trailer“
       wird keine Verbindung zu YouTube aufgebaut.</p>
+    <p><strong>Wetter (freiwillig):</strong> Neben der Uhr zeigt die App die Tageszeit an – dafür wird nichts übertragen.
+      Wählst du unter Einstellungen → Darstellung einen Ort für das Wetter, fragt die App beim Wetterdienst Open-Meteo
+      (open-meteo.com) den Ort (bei der Suche) und danach höchstens alle 30 Minuten das Wetter für dessen Koordinaten ab.
+      Dabei wird deine IP-Adresse an Open-Meteo übermittelt; Geräte-Kennung, Playlists oder Nutzungsdaten werden nicht gesendet.
+      Den Ort kannst du jederzeit entfernen („Wetter ausschalten“).</p>
+    <p><strong>Bewertung:</strong> Gibst du in der App eine Sterne-Bewertung ab, speichern wir genau eine Bewertung pro Geräte-Kennung.
+      Bewertest du erneut, wird die alte Bewertung ersetzt.</p>
 
     <h2>4. Playlist per Handy senden und auf der Webseite verwalten</h2>
     <p>Für jedes Gerät speichern wir beim ersten Start der App die Geräte-Kennung, den Prüfwert des Schlüssels und Zeitpunkte –
-      ohne Playlist-Daten. Sendest du eine Playlist über diese Webseite oder schaltest du in der App „Auch auf der Webseite
-      verwalten“ ein, verarbeiten wir zusätzlich:</p>
+      ohne Playlist-Daten. Sendest du eine Playlist über diese Webseite oder ist in der App „Auch auf der Webseite
+      verwalten“ eingeschaltet (Voreinstellung), verarbeiten wir zusätzlich:</p>
     <ul>
       <li>die Geräte-Kennung (MAC-Format) und den Geräteschlüssel – der Schlüssel wird nur als Prüfwert (Hash) gespeichert,</li>
       <li>den Namen der Playlist,</li>
@@ -81,7 +88,7 @@
     <h3>Sichern &amp; Wiederherstellen</h3>
     <p>Wählst du in der App „Jetzt sichern“ (oder schaltest „Täglich automatisch sichern“ ein), speichern wir zu deiner
       Geräte-Kennung eine Sicherung: Einstellungen, Favoriten, „Weiterschauen“, „Später ansehen“, Verlauf, gesehene Titel,
-      Kategorie-Einstellungen, ausgeblendete Sender, die Namen deiner Playlists und – wenn du in der App mehrere Personen
+      Kategorie-Einstellungen, ausgeblendete Sender, die Namen deiner Playlists und – wenn du in der App mehrere Benutzer
       angelegt hast – deren Vornamen bzw. Spitznamen samt ihren eigenen Favoriten und Listen. <strong>Nicht</strong> gespeichert werden Passwörter, Playlist-Links
       und PINs – Playlists werden nur über einen Prüfwert wiedererkannt. Wiederherstellen kann nur, wer Geräte-Kennung
       <em>und</em> Schlüssel kennt (auch auf einem neuen Gerät). <strong>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. b DSGVO.
@@ -105,7 +112,7 @@
       fragt dein Browser beim Öffnen des Download-Bereichs die öffentliche Schnittstelle von GitHub (api.github.com) ab.
       Dabei wird deine IP-Adresse an GitHub übermittelt. Die Downloads selbst werden ebenfalls von GitHub ausgeliefert.
       Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO.</p>
-    <p><strong>Schriften:</strong> Die Schrift „Inter“ wird direkt von dieser Webseite geladen – es besteht keine Verbindung zu Google oder anderen Schrift-Anbietern.</p>
+    <p><strong>Schriften:</strong> Die Schrift „Inter“ wird direkt von dieser Webseite geladen – es besteht keine Verbindung zu Google oder anderen Schriftdiensten.</p>
 
     <h2>6. Cookies und Tracking</h2>
     <p>Wir verwenden keine Cookies, keine Werbung und kein Tracking. Die Webseite merkt sich die Geräte-Kennung

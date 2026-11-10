@@ -62,7 +62,7 @@
     var p = D.makeProvider({ type: 'm3u', url: 'data:text/plain;charset=utf-8,' + encodeURIComponent(m3u) });
     return Promise.all([p.items('live'), p.items('movie'), p.items('series'), p.categories('live')]).then(function (r) {
       eq(r[0].map(function (x) { return x.name; }), ['News 24']);
-      eq(r[1].map(function (x) { return x.name; }), ['Ein Film (2024)']);
+      eq(r[1].map(function (x) { return x.name + '|' + x.year; }), ['Ein Film|2024'], 'Jahr nicht im Titel, aber als Jahr gemerkt');
       eq(r[2].map(function (x) { return x.name; }), ['Meine Serie'], 'Folgen werden zu einer Serie zusammengefasst');
       eq(r[3].map(function (x) { return x.name; }), ['Nachrichten']);
       return p.seriesInfo(r[2][0]).then(function (info) {

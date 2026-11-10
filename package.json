@@ -1,7 +1,7 @@
 {
   "name": "lumio-player",
   "version": "1.0.0",
-  "description": "IPTV-Player für Handy, Tablet und Fernseher (Xtream Codes & M3U)",
+  "description": "Player für Live TV, Filme und Serien auf Handy, Tablet, PC und Fernseher (Xtream Codes & M3U)",
   "private": true,
   "scripts": {
     "postinstall": "node scripts/copy-libs.js",
