@@ -1,6 +1,8 @@
 /* Telvo Player – Übersetzung: Bosnisch / Kroatisch / Serbisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["hr"] = {
+  "Fehlerberichte senden": "Šalji izvješća o greškama",
+  "Hilft, Fehler schnell zu beheben – ohne Links, Namen oder Passwörter": "Pomaže brzo ispraviti greške – bez linkova, imena i lozinki",
   "Klang": "Zvuk",
   "Ton im TV-Player verbessern": "Poboljšaj zvuk u TV playeru",
   "Lautstärke angleichen": "Izjednači glasnoću",
