@@ -2965,3 +2965,16 @@ body.lite .d-similar .poster .art, body.lite .d-prev { transition: none; }
 }
 .d-hero.is-playing + .detail-main .detail-info h1, .detail-info h1 { text-shadow: 0 .15rem 1.2rem rgba(0, 0, 0, .45); }
 :root[data-theme="light"] .detail-info h1 { text-shadow: none; }
+
+/* ===== Player: Senderwechsel nur oben links, offene Karte am Knopf sichtbar, Stumm = Regler auf 0 ===== */
+.player .zap { display: none; }
+.player.is-zapping .loading { padding-top: 0; }
+.osd-bottom { transition: opacity .25s ease; }
+.player.is-zapping .osd-bottom { opacity: 0; pointer-events: none; }
+.ch-num { flex: none; min-width: 2.3rem; padding: .2rem .6rem; border-radius: 999px; text-align: center; font-size: .95rem; font-weight: 750; font-variant-numeric: tabular-nums; color: #ece6ff; background: rgba(167, 139, 250, .3); box-shadow: inset 0 0 0 1px rgba(167, 139, 250, .6); }
+.player.is-zapping .ch-num { background: rgba(167, 139, 250, .55); box-shadow: inset 0 0 0 1px rgba(196, 181, 253, .9), 0 0 1.2rem rgba(167, 139, 250, .55); }
+.player.is-zapping .pt-logo { box-shadow: inset 0 0 0 1px rgba(196, 181, 253, .55), 0 0 1.4rem rgba(167, 139, 250, .35); }
+.ctrl-side .cbtn.is-open { color: #fff; background: rgba(255, 255, 255, .18); box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .55); }
+.vol-range.is-muted { opacity: .55; }
+.pt-now { display: none; margin-top: .2rem; max-width: 40rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .95rem; font-weight: 600; color: rgba(255, 255, 255, .72); }
+.player.is-zapping .pt-now:not(:empty) { display: block; }

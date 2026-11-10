@@ -6922,6 +6922,7 @@
 
   var Player = {
     el: null, video: null, hls: null, item: null, ctx: null, osd: null, hideTimer: null, saveTimer: null, epgTimer: null,
+    cushion: {},   // Live-Sender, die mehr Puffer brauchen (Kennung → 1)
     rate: 1, audioDelay: 0, pip: false, actx: null, adelay: null,
     triedAlt: false, retried: false,
 
@@ -6967,7 +6968,7 @@
         h('div', { class: 'osd-top' },
           h('button', { class: 'cbtn f p-back', title: T('Zurück'), 'aria-label': T('Zurück'), onclick: goBack }, icon('back')),
           self.logoBox,
-          h('div', { class: 'pt-txt' }, h('div', { class: 'pt-row' }, self.title, self.liveTag, self.qTag), self.sub),
+          h('div', { class: 'pt-txt' }, h('div', { class: 'pt-row' }, self.numTag = h('span', { class: 'ch-num' }), self.title, self.liveTag, self.qTag), self.sub, self.zapNow = h('div', { class: 'pt-now' })),
           self.clock),
         h('div', { class: 'osd-bottom' }, self.info, self.barWrap, self.times,
           h('div', { class: 'ctrl-row' }, self.ctrlLeft, self.ctrls, h('div', { class: 'ctrl-side right' }, self.hideBtn, self.pipBtn, self.sleepBtn, self.fmtBtn, self.tracksBtn, self.fsBtn, self.volumeUi()))));
@@ -7093,7 +7094,11 @@
     /* Ereignisse des <video>-Elements (eigene Funktion: bei der Ton-Verzögerung wird das Element ausgetauscht) */
     bindVideo: function (video) {
       var self = this;
-      video.addEventListener('waiting', function () { if (!self.reconnect) self.loadTxt.textContent = T('Wird geladen …'); self.spinner.style.display = ''; });
+      video.addEventListener('waiting', function () {
+        if (!self.reconnect) self.loadTxt.textContent = T('Wird geladen …');
+        self.spinner.style.display = '';
+        self.noteStall();
+      });
       video.addEventListener('playing', function () {
         self.spinner.style.display = 'none'; self.err.style.display = 'none'; self.reconnect = false;
         self.netRetries = 0; self.playedSince = Date.now();
@@ -7241,6 +7246,9 @@
       self.lastPlace = '';
       var isEp = item.kind === 'episode';
       self.title.textContent = isEp ? (item.seriesName || item.name) : item.name;
+      var cn = item.kind === 'live' ? (item.num || (self.ctx && self.ctx.list && self.ctx.list[self.ctx.index] === item ? self.ctx.index + 1 : '')) : '';
+      self.numTag.textContent = cn ? String(cn) : '';
+      self.numTag.style.display = cn ? '' : 'none';
       self.sub.textContent = isEp ? 'S' + item.season + ' E' + item.num + (item.seriesName && item.name ? ' · ' + item.name : '') : '';
       clear(self.logoBox);
       var lg = item.kind === 'live' && item.logo ? img(item.logo, '', function () { self.logoBox.style.display = 'none'; }) : null;
@@ -7278,6 +7286,18 @@
       self.wdTimer = setInterval(function () { self.watchdog(); }, 2000);
     },
 
+    /* Hakt ein Live-Sender (hls.js) dreimal innerhalb von 40 Sekunden, mit mehr Abstand zum Live-Rand neu verbinden */
+    noteStall: function () {
+      var it = this.item, now = Date.now();
+      if (!it || it.kind !== 'live' || !this.hls || Player.cushion[it.id] || !this.playedSince || now - this.playedSince < 1500) return;
+      this.stalls = (this.stalls || []).filter(function (t) { return now - t < 40000; });
+      this.stalls.push(now);
+      if (this.stalls.length < 3) return;
+      this.stalls = [];
+      Player.cushion[it.id] = 1;
+      toast(T('Der Sender stockt – mehr Puffer wird genutzt.'), 3500);
+      this.attach(this.curUrl);
+    },
     watchdog: function () {
       var v = this.video;
       if (!v || v.paused || v.ended || this.err.style.display !== 'none') { this.wdStill = 0; return; }
@@ -7315,6 +7335,7 @@
             // sonst bleibt das Bild nach der kleinen Vorschau lange unscharf. „Beste Qualität“ hält die höchste Stufe fest.
             var desktop = !Platform.tv && !Platform.android && !Platform.ios && !Platform.lite;
             var best = Settings.get('quality') === 'best';
+            var cushion = !!(self.item && self.item.kind === 'live' && Player.cushion[self.item.id]);
             var hls = new Hls({
               enableWorker: true, lowLatencyMode: false, backBufferLength: Platform.lite ? 10 : 30,
               // PC: größerer Puffer (genug Speicher) – überbrückt kurze Einbrüche beim Anbieter, statt zu hängen
@@ -7328,7 +7349,9 @@
               // Gegen Hänger bei Live-Sendern: kleine Lücken im Stream überspringen und nach einem Hänger
               // wieder an die aktuelle Stelle springen statt immer weiter hinterherzulaufen
               maxBufferHole: 0.5, nudgeMaxRetry: 6, highBufferWatchdogPeriod: 2,
-              liveSyncDurationCount: 3, liveMaxLatencyDurationCount: 8
+              // Live: nie schneller abspielen, um aufzuholen. Hakt ein Sender öfter, mehr Abstand zum Live-Rand (= mehr Vorrat)
+              maxLiveSyncPlaybackRate: 1,
+              liveSyncDurationCount: cushion ? 6 : 3, liveMaxLatencyDurationCount: cushion ? 14 : 8
             });
             self.hls = hls;
             hls.on(Hls.Events.ERROR, function (ev, data) {
@@ -7378,8 +7401,12 @@
           if (self.video !== video || self.curUrl !== url) return;
           var ok = mpegts && mpegts.getFeatureList && mpegts.getFeatureList().mseLivePlayback;
           if (!ok) { plain(); return; }
+          /* Kein „Aufholen“ zum Live-Rand: das sprang immer wieder nach vorn, der Vorrat war danach leer –
+             Bild lief kurz zu schnell, stockte und hakte dauernd (z. B. RAW-Sender). Lieber ein paar Sekunden
+             hinter dem Live-Bild, dafür flüssig. Größerer Startpuffer gleicht ungleichmäßig liefernde Server aus. */
           var p = mpegts.createPlayer({ type: 'mpegts', isLive: self.item && self.item.kind === 'live', url: url },
-            { enableWorker: true, liveBufferLatencyChasing: true, lazyLoad: false, stashInitialSize: 128 });
+            { enableWorker: true, liveBufferLatencyChasing: false, liveSync: false, lazyLoad: false,
+              enableStashBuffer: true, stashInitialSize: 384 * 1024, autoCleanupSourceBuffer: true });
           self.ts = p;
           p.on(mpegts.Events.ERROR, function () { if (self.ts === p) plain(); });
           try {
@@ -7491,17 +7518,28 @@
       this.tracksBtn.classList.toggle('is-gone', !(t.audio.length > 1 || t.subs.length > 1));
     },
     openTracks: function () {
+      if (this.togglePanel('tracks')) return;
       var t = this.tracks();
-      this.openPanel([[T('Tonspur'), t.audio, 'vol'], [T('Untertitel'), t.subs, 'cc']], 'is-tracks');
+      this.openPanel([[T('Tonspur'), t.audio, 'vol'], [T('Untertitel'), t.subs, 'cc']], 'is-tracks', 'tracks');
+    },
+    // Ist die Karte dieses Knopfs schon offen, schließt ein zweiter Druck sie wieder
+    togglePanel: function (key) {
+      if (!this.trackPanel || this.trackPanel._key !== key) return false;
+      this.closeTracks();
+      this.showOsd();
+      var b = $('.cbtn[data-c="' + key + '"]', this.el);
+      if (b) Nav.focus(b);
+      return true;
     },
     /* Auswahlfenster im Player (Ton & Untertitel, Format). Abschnitte mit nur einer Möglichkeit werden weggelassen. */
     /* Auswahl im Player: Glas-Karte mit Abschnitten (Symbol + kurzer Titel) und Chips.
        sections: [Titel, Möglichkeiten, Symbol, schließen?] – Abschnitte mit nur einer Möglichkeit fehlen.
        Eine Wahl wirkt sofort und die Karte bleibt offen; nur was den Stream neu lädt, schließt sie. */
-    openPanel: function (sections, cls) {
+    openPanel: function (sections, cls, key) {
       var self = this;
       self.closeTracks();
       var box = h('div', { class: 'track-panel is-chips' + (cls ? ' ' + cls : '') });
+      box._key = key || '';
       sections.forEach(function (s) {
         if (!s || s[1].length < 2) return;
         var row = h('div', { class: 'tp-chips' });
@@ -7531,6 +7569,8 @@
       box._dispose = function () { clearTimeout(self.panelTimer); };
       self.trackPanel = box;
       self.el.appendChild(box);
+      var kb = key && $('.cbtn[data-c="' + key + '"]', self.el);
+      if (kb) kb.classList.add('is-open');
       clearTimeout(self.hideTimer);
       idle(12000);
       setTimeout(function () { Nav.focus($('.tp-opt.is-on', box) || $('.tp-opt', box)); }, 30);
@@ -7626,9 +7666,10 @@
     },
     openSleep: function () {
       var self = this;
+      if (self.togglePanel('sleep')) return;
       self.openPanel([[T('Schlaf-Timer'), Sleep.options().map(function (o) {
         return { label: o[1], on: Sleep.min === o[0], again: true, pick: function () { Sleep.set(o[0]); } };
-      }), 'timer', true]]);
+      }), 'timer', true]], '', 'sleep');
     },
     paintSleep: function () {
       if (!this.sleepBtn) return;
@@ -7701,6 +7742,7 @@
       });
     },
     openFormat: function () {
+      if (this.togglePanel('format')) return;
       var self = this, cur = Settings.get('aspect') || 'fit';
       var aspects = [['fit', T('Original')], ['16:9', '16:9'], ['4:3', '4:3'], ['stretch', T('Strecken'), T('Vollbild (strecken)')], ['fill', T('Zoom'), T('Zoom (Bild füllen)')]].map(function (a) {
         return { label: a[1], title: a[2], on: cur === a[0], pick: function () { Settings.set('aspect', a[0]); self.applyAspect(); } };
@@ -7745,7 +7787,7 @@
           } };
         }), 'player', true]);
       }
-      self.openPanel(sections);
+      self.openPanel(sections, '', 'format');
     },
     /* Bildformat anwenden. Im kleinen Vorschaufenster immer „Original“. */
     applyAspect: function () {
@@ -7762,6 +7804,7 @@
     },
     closeTracks: function () {
       var had = !!this.trackPanel;
+      if (this.el) $all('.cbtn.is-open', this.el).forEach(function (b) { b.classList.remove('is-open'); });
       if (had && this.trackPanel._dispose) this.trackPanel._dispose();
       if (had && this.trackPanel.parentNode) this.trackPanel.parentNode.removeChild(this.trackPanel);
       this.trackPanel = null;
@@ -8015,20 +8058,16 @@
     // Kurz einblenden, welcher Sender gerade kommt (Nummer und Name)
     /* Senderwechsel: Logo groß in der Mitte, darunter Nummer, Name und laufende Sendung */
     showZap: function (it, index) {
-      var self = this, z = self.zap;
+      var self = this;
       if (self.mini) return;
-      clear(z);
-      var box = h('div', { class: 'zp-logo' }, h('span', { class: 'zp-ini', text: initials(it.name) }));
-      var lg = it.logo ? img(it.logo, '', function (i) { i.style.display = 'none'; box.classList.remove('has-img'); }) : null;
-      if (lg) { box.classList.add('has-img'); box.appendChild(lg); }
+      self.showOsd();
+      // nur die Kopfzeile zeigen (Logo, Nummer, Name, laufende Sendung) – die Knöpfe unten erst bei Bedienung
       var now = epgNowOf(it);
-      z.appendChild(box);
-      z.appendChild(h('div', { class: 'zp-name' }, h('span', { class: 'num', text: String(it.num || index + 1) }), h('b', { text: it.name })));
-      if (now && now.title) z.appendChild(h('div', { class: 'zp-now', text: now.title }));
-      z.classList.remove('is-hidden');
+      self.zapNow.textContent = now && now.title ? now.title : '';
+      self.zapAt = Date.now();
       self.el.classList.add('is-zapping');
       clearTimeout(self.zapTimer);
-      self.zapTimer = setTimeout(function () { z.classList.add('is-hidden'); if (self.el) self.el.classList.remove('is-zapping'); }, 3000);
+      self.zapTimer = setTimeout(function () { if (self.el) self.el.classList.remove('is-zapping'); }, 3500);
     },
     /* Direkt zu einem Sender (Nummer eingetippt, letzter Sender): in der aktuellen Liste, sonst in allen Sendern */
     zapTo: function (it) {
@@ -8055,6 +8094,7 @@
     showOsd: function (stay) {
       var self = this;
       if (self.mini) return;
+      if (self.el && Date.now() - (self.zapAt || 0) > 700) self.el.classList.remove('is-zapping');
       self.hidePause();
       if (self.video && self.video.paused && !self.video.ended) self.armPause(); else clearTimeout(self.pauseTimer);
       var wasHidden = self.osd.classList.contains('is-hidden');
@@ -8167,6 +8207,8 @@
       this.paintVol();
     },
     setMuted: function (m) {
+      // Ton wieder an, aber die gespeicherte Lautstärke ist 0 → auf eine hörbare Stärke springen
+      if (!m && this.video.volume === 0) { this.video.volume = 0.5; Settings.set('volume', 0.5); }
       this.video.muted = m;
       Settings.set('muted', m);
       this.paintVol();
@@ -8174,6 +8216,7 @@
     },
     paintVol: function () {
       var off = this.video && (this.video.muted || this.video.volume === 0);
+      if (this.range && this.video) { this.range.value = off ? '0' : String(Math.round(this.video.volume * 100)); this.range.classList.toggle('is-muted', !!off); }
       [this.muteBtn, this.miniMute].forEach(function (b) {
         if (!b) return;
         clear(b);
