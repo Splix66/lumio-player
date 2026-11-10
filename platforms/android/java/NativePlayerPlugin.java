@@ -56,6 +56,8 @@ public class NativePlayerPlugin extends Plugin {
         intent.putExtra("subScale", subScale == null ? 1f : subScale.floatValue());
         intent.putExtra("subColor", call.getString("subColor", "#FFFFFFFF"));
         intent.putExtra("subBg", call.getString("subBg", "#00000000"));
+        // Klang: off | balance (Lautstärke angleichen) | voice (klare Sprache) | night (Nachtmodus)
+        intent.putExtra("sound", call.getString("sound", "off"));
         startActivityForResult(call, intent, "onPlayerResult");
     }
 

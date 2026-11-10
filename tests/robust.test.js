@@ -583,4 +583,53 @@
     ok(D.isVisible({ intersectionRatio: 0.3 }), 'alter Browser: sichtbar über intersectionRatio');
     ok(!D.isVisible({ intersectionRatio: 0 }), 'alter Browser: nicht sichtbar');
   });
+
+  t('Startseite', '„Top Sender“: ein Sender zählt innerhalb von 10 Minuten nur einmal, „Verlauf löschen“ setzt zurück', function () {
+    var k = D.ChanCount.key(), u = k.slice('chcount.'.length), keepC = D.Store.get(k, null), keepR = D.Store.get('recent.' + u, null), keepL = D.Store.get('last.' + u, null);
+    var a = { kind: 'live', id: 'tst-ch-a', name: 'Test A' }, b = { kind: 'live', id: 'tst-ch-b', name: 'Test B' }, T0 = Date.now();
+    function restore() {
+      if (keepC === null) D.Store.del(k); else D.Store.set(k, keepC);
+      if (keepR === null) D.Store.del('recent.' + u); else D.Store.set('recent.' + u, keepR);
+      if (keepL !== null) D.Store.set('last.' + u, keepL);
+    }
+    D.Store.del(k);
+    return Test.withTime(T0, function () {
+      D.ChanCount.add(a); D.ChanCount.add(a); D.ChanCount.add(b);   // Start und Schließen melden denselben Sender doppelt
+      D.ChanCount.add({ kind: 'movie', id: 'm1', name: 'Film' });    // Filme zählen nicht
+    }).then(function () {
+      return Test.withTime(T0 + 11 * 60000, function () { D.ChanCount.add(a); });
+    }).then(function () {
+      var all = D.ChanCount.all();
+      eq(all['tst-ch-a'].n, 2, 'A: zweimal geschaut (nicht dreimal)');
+      eq(all['tst-ch-b'].n, 1);
+      eq(all.m1, undefined, 'Filme zählen nicht');
+      eq(D.ChanCount.top(5).map(function (x) { return x.id; }), ['tst-ch-a', 'tst-ch-b'], 'meistgeschaut zuerst');
+      D.clearHistory('live');
+      eq(D.ChanCount.top(5).length, 0, '„Verlauf löschen“ (Live TV) leert auch „Top Sender“');
+    }).then(restore, function (e) { restore(); throw e; });
+  });
+
+  t('Startseite', '„App beim Start“: bisheriger Schalter „Letzten Sender beim Start“ bleibt gültig', function () {
+    var s = D.Settings, keepV = s.get('startView'), keepA = s.get('autoLast');
+    try {
+      s.set('startView', null); s.set('autoLast', undefined);
+      eq(D.startView(), 'last', 'Standard wie bisher: letzter Sender');
+      s.set('autoLast', false);
+      eq(D.startView(), 'home', 'Schalter war aus → Startseite');
+      s.set('startView', 'movie');
+      eq(D.startView(), 'movie', 'neue Einstellung hat Vorrang');
+      s.set('startView', 'quatsch');
+      eq(D.startView(), 'home', 'unbekannter Wert → zurück zum Schalter');
+    } finally { s.set('startView', keepV === undefined ? null : keepV); s.set('autoLast', keepA); }
+  });
+
+  t('Programmführer', 'Beschreibung: „\\n“ als Text wird zum echten Zeilenumbruch', function () {
+    eq(D.epgText('Leben hinter Stacheldraht.\\n\\nManch ein Gefangener'), 'Leben hinter Stacheldraht.\n\nManch ein Gefangener');
+    eq(D.epgText('Zeile 1\\r\\nZeile 2'), 'Zeile 1\nZeile 2', 'Windows-Umbruch');
+    eq(D.epgText('A\\tB'), 'A B', 'Tabulator wird Leerzeichen');
+    eq(D.epgText('  Text  \\n'), 'Text', 'Ränder weg');
+    eq(D.epgText('Echter\nUmbruch bleibt'), 'Echter\nUmbruch bleibt');
+    eq(D.epgText(''), '');
+    eq(D.epgText(null), '');
+  });
 })();

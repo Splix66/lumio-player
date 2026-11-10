@@ -342,7 +342,7 @@ body.kbd .chip.f:focus, body.is-tv .chip.f:focus { transform: scale(1.06); }
 .mv-head .mv-sort { margin-left: auto; padding: .5rem .95rem; font-size: .88rem; color: var(--muted); }
 .mv-head .mv-sort.is-on { color: var(--text); box-shadow: inset 0 0 0 1px var(--accent); }
 .mv-head .mv-sort .i { width: 1.05rem; height: 1.05rem; }
-.mv-grid { padding: 0 var(--pad); grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr)); grid-gap: 1.8rem 1.3rem; gap: 1.8rem 1.3rem; }
+.poster-grid.mv-grid { padding: 0 var(--pad); grid-template-columns: repeat(auto-fill, minmax(9.4rem, 1fr)); grid-gap: 1.5rem 1.1rem; gap: 1.5rem 1.1rem; }
 .mv-grid > .state { grid-column: 1 / -1; }
 .cat-special .i { width: 1rem; height: 1rem; margin-right: .55rem; flex: none; color: var(--k, var(--accent-2)); }
 
@@ -549,7 +549,7 @@ body.kbd .cw.f:focus, body.is-tv .cw.f:focus { transform: scale(1.03); box-shado
 /* Zurück zu den Sprachen bleibt immer oben sichtbar, auch wenn man weit nach unten scrollt */
 .cat-back { color: var(--text); font-weight: 700; background: var(--surface-2); margin-bottom: .6rem; position: sticky; top: 0; z-index: 3; box-shadow: 0 -.5rem 0 .3rem var(--bg), 0 .7rem 1rem .45rem var(--bg); }
 body.kbd .cat-back.f:focus, body.is-tv .cat-back.f:focus { position: sticky; z-index: 3; }
-.cat-back .i { flex: none; width: 1.1rem; height: 1.1rem; margin-right: .5rem; }
+.cat-back .i { flex: none; width: 1.1rem; height: 1.1rem; margin-left: .5rem; opacity: .75; }
 .cat-back .lc-code { margin-right: .55rem; }
 /* Sprachknopf: zeigt nur die aktuelle Sprache, Auswahl erst nach dem Drücken */
 .lang-btn { padding: .5rem .95rem; font-size: .9rem; }
@@ -1069,7 +1069,7 @@ body.lite .fh-title { text-shadow: none; }
 /* ==========================================================
    Startbildschirm: Live TV / Filme / Serien, Favoriten, Playlist, zuletzt geschaut
    ========================================================== */
-.shell.is-launcher .topnav { display: none; }
+/* Seit 1.14 hat die Startseite die normale Menüleiste oben (Entwurf vom 10.11.2026) */
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* Startbildschirm im dunklen Modus etwas heller: violetter Lichtschein statt reinem Schwarz */
@@ -1080,7 +1080,6 @@ body.lite .fh-title { text-shadow: none; }
 /* Fußleiste auf dem Startbildschirm: MAC und KEY groß, Uhr und Datum rechts */
 .sb-clock { display: none; }
 .shell.is-launcher .statusbar { padding: .85rem var(--pad) 1.05rem; }
-.shell.is-launcher .statusbar .sb-status { display: none; }   /* Status steht auf dem Startbildschirm oben */
 .shell.is-launcher .sb-days:not(:empty) + .sb-clock { margin-left: 2.4rem; }
 .shell.is-launcher .sb-clock { display: flex; align-items: baseline; margin-left: auto; color: var(--muted); font-size: 1.05rem; }
 .shell.is-launcher .sb-clock b { color: var(--text); font-size: 1.3rem; font-weight: 700; font-variant-numeric: tabular-nums; margin-right: .7rem; }
@@ -1396,8 +1395,8 @@ body.kbd .cp-row.f:focus .cp-name, body.is-tv .cp-row.f:focus .cp-name, body.kbd
 .sh-remote .remote { padding: .3rem 0; }
 
 /* Größe der Cover (Einstellungen → Darstellung) */
-html[data-poster="s"] .mv-grid { grid-template-columns: repeat(auto-fill, minmax(8.8rem, 1fr)); grid-gap: 1.4rem 1rem; gap: 1.4rem 1rem; }
-html[data-poster="l"] .mv-grid { grid-template-columns: repeat(auto-fill, minmax(14.5rem, 1fr)); }
+html[data-poster="s"] .poster-grid.mv-grid { grid-template-columns: repeat(auto-fill, minmax(7.6rem, 1fr)); grid-gap: 1.3rem .9rem; gap: 1.3rem .9rem; }
+html[data-poster="l"] .poster-grid.mv-grid { grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr)); }
 html[data-poster="s"] .poster-grid { grid-template-columns: repeat(auto-fill, minmax(8.2rem, 1fr)); }
 html[data-poster="l"] .poster-grid { grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr)); }
 
@@ -1575,7 +1574,7 @@ html[data-poster="l"] .poster-grid { grid-template-columns: repeat(auto-fill, mi
 .mv2 .mv-top .rail-track > * + * { margin-left: .9rem; }
 .mv2 .mv-top:empty { display: none; }
 .mv-body { display: flex; align-items: flex-start; margin-top: 1.5rem; }
-.mv-side { position: sticky; top: 0; z-index: 2; flex: none; width: 17rem; max-height: calc(100vh - var(--head-h) - 2.8rem); overflow-y: auto; padding: .3rem 1rem 1.5rem var(--pad); scrollbar-width: thin; background: var(--bg); }
+.mv-side { position: sticky; top: 0; z-index: 2; flex: none; width: 19.5rem; max-height: calc(100vh - var(--head-h) - 2.8rem); overflow-y: auto; padding: .3rem 1rem 1.5rem var(--pad); scrollbar-width: thin; background: var(--bg); }
 .mv-cats { display: flex; flex-direction: column; }
 .mv-main { flex: 1; min-width: 0; padding: 0 var(--pad) 0 .4rem; }
 .mv2 .mv-head { padding: .3rem 0 1rem; }
@@ -3160,11 +3159,11 @@ html.no-grid .ln-grid > .ln-side { flex: .7 1 0; min-width: 0; }
 /* Cover- und Kachel-Raster: feste Breite je Karte, so viele wie in die Zeile passen */
 html.no-grid .poster-grid, html.no-grid .tile-grid { flex-direction: row; flex-wrap: wrap; align-items: flex-start; }
 html.no-grid .poster-grid > * { flex: 0 0 10.5rem; width: 10.5rem; margin: 0 1.2rem 1.6rem 0; }
-html.no-grid .mv-grid > * { flex-basis: 11.5rem; width: 11.5rem; margin: 0 1.3rem 1.8rem 0; }
+html.no-grid .mv-grid > * { flex-basis: 9.4rem; width: 9.4rem; margin: 0 1.1rem 1.5rem 0; }
 html.no-grid[data-poster="s"] .poster-grid > * { flex-basis: 8.2rem; width: 8.2rem; }
-html.no-grid[data-poster="s"] .mv-grid > * { flex-basis: 8.8rem; width: 8.8rem; margin: 0 1rem 1.4rem 0; }
+html.no-grid[data-poster="s"] .mv-grid > * { flex-basis: 7.6rem; width: 7.6rem; margin: 0 .9rem 1.3rem 0; }
 html.no-grid[data-poster="l"] .poster-grid > * { flex-basis: 13.5rem; width: 13.5rem; }
-html.no-grid[data-poster="l"] .mv-grid > * { flex-basis: 14.5rem; width: 14.5rem; }
+html.no-grid[data-poster="l"] .mv-grid > * { flex-basis: 12.5rem; width: 12.5rem; }
 html.no-grid .poster-grid > .state { flex: 0 0 100%; width: 100%; margin-right: 0; }
 html.no-grid .tile-grid > * { flex: 0 0 11.5rem; width: 11.5rem; margin: 0 1.1rem 1.4rem 0; }
 
@@ -3192,3 +3191,127 @@ html.no-flexgap .tr-bar > * + * { margin-left: .8rem; }
 html.no-flexgap .av-pick > * { margin: 0 .55rem .55rem 0; }
 html.no-flexgap .st-opts > * { margin: 0 .45rem .45rem 0; }
 html.no-flexgap .st-row .st-txt > * + * { margin-left: .65rem; }
+
+/* ==========================================================
+   Neues Design (1.14): Startseite, Einstellungen, Filme & Serien
+   ========================================================== */
+/* Kategorien links (Filme, Serien, Live TV): gewählte Kategorie leuchtet violett, Sprache oben wie ein Auswahlfeld */
+.mv-side .cat, .section .cats .cat { color: var(--text-2); font-weight: 600; padding: .6rem .95rem; border-radius: .8rem; margin-bottom: .2rem; }
+.mv-side .cat .lc-n, .section .cats .cat .lc-n { color: var(--muted); font-weight: 600; font-size: .78rem; margin-left: .4rem; }
+/* Sprachen: Flagge, Name, Zahl und Pfeil enger, damit „Deutsch“, „Italienisch“ … ganz zu lesen sind */
+.mv-side .cat, .section .cats .cat { padding-left: .8rem; padding-right: .7rem; }
+.mv-side .cat .flag, .section .cats .cat .flag { width: 1.6rem; height: 1.07rem; margin-right: .55rem; }
+.mv-side .lang-cat .i, .section .cats .lang-cat .i { width: .85rem; height: .85rem; margin-left: .2rem; }
+.mv-side .cat.is-on, .section .cats .cat.is-on {
+  background: linear-gradient(90deg, rgba(139, 92, 246, .62), rgba(124, 58, 237, .3)); color: #fff; font-weight: 700;
+  box-shadow: inset 0 0 0 1.5px rgba(196, 167, 255, .75), 0 0 1.3rem rgba(139, 92, 246, .32);
+}
+.mv-side .cat.is-on .lc-n, .section .cats .cat.is-on .lc-n { color: rgba(255, 255, 255, .85); }
+.mv-side .cat-back, .section .cats .cat-back {
+  padding: .7rem .95rem; margin-bottom: .8rem; border-radius: .9rem; background: var(--surface-2); color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--line-2), 0 -.5rem 0 .3rem var(--bg), 0 .7rem 1rem .45rem var(--bg);
+}
+body.kbd .mv-side .cat.f:focus, body.is-tv .mv-side .cat.f:focus, body.kbd .section .cats .cat.f:focus, body.is-tv .section .cats .cat.f:focus { background: var(--text); color: var(--bg); box-shadow: 0 0 1.4rem rgba(139, 92, 246, .45); }
+body.kbd .mv-side .cat.f:focus .lc-n, body.is-tv .mv-side .cat.f:focus .lc-n, body.kbd .section .cats .cat.f:focus .lc-n, body.is-tv .section .cats .cat.f:focus .lc-n { color: var(--dim); }
+:root[data-theme="light"] .mv-side .cat.is-on, :root[data-theme="light"] .section .cats .cat.is-on { color: #fff; }
+
+/* Einstellungen: acht Bereiche links, rechts Überschrift mit leuchtendem Symbol und Zeilen mit Erklärung darunter */
+.c-teal { --cr: 94, 200, 200; --c1: #a7e6e3; --c2: #2f9e9a; }
+.c-slate { --cr: 165, 170, 195; --c1: #d3d6e6; --c2: #6b7090; }
+:root[data-theme="light"] .c-teal { --c1: #23716e; }
+:root[data-theme="light"] .c-slate { --c1: #4b4f6b; }
+:root[data-theme="dark"] .st2 { background: radial-gradient(55% 60% at 100% 0%, rgba(139, 92, 246, .13), transparent 62%), radial-gradient(45% 55% at 0% 100%, rgba(139, 92, 246, .1), transparent 60%); min-height: 100%; }
+.st2 .st-side { width: 19.5rem; margin-right: 1.8rem; padding-right: 1.4rem; box-shadow: 1px 0 0 var(--line); }
+.st2 .st-title { font-size: 1.9rem; margin-bottom: 1.5rem; }
+.st2 .st-sec { padding: .55rem .8rem; margin-bottom: .35rem; border-radius: .9rem; font-size: 1.04rem; font-weight: 600; color: var(--text-2); }
+.st2 .st-sic { width: 2.35rem; height: 2.35rem; border-radius: .75rem; background: rgba(var(--cr), .16); }
+.st2 .st-sec.is-on {
+  background: linear-gradient(90deg, rgba(139, 92, 246, .6), rgba(124, 58, 237, .28)); color: #fff; font-weight: 700;
+  box-shadow: inset 0 0 0 1.5px rgba(196, 167, 255, .75), 0 0 1.3rem rgba(139, 92, 246, .3);
+}
+.st2 .st-sec.is-on .st-sic { background: rgba(255, 255, 255, .16); color: #fff; }
+/* gewählt mit der Fernbedienung (weiße Fläche): Symbol dunkel, sonst ist es weiß auf weiß unsichtbar */
+body.kbd .st2 .st-sec.f:focus .st-sic, body.is-tv .st2 .st-sec.f:focus .st-sic { background: rgba(var(--cr), .22); color: var(--c2); }
+.st2 .st-hic { width: 3.9rem; height: 3.9rem; border-radius: 1.1rem; background: linear-gradient(160deg, rgba(var(--cr), .4), rgba(var(--cr), .12)); box-shadow: inset 0 0 0 1.5px rgba(var(--cr), .6), 0 0 1.8rem rgba(var(--cr), .28); color: #fff; }
+.st2 .st-htxt h2 { font-size: 1.95rem; }
+.st2 .st-htxt p { font-size: 1rem; color: var(--text-2); }
+.st2 .st-list { border-radius: 1.2rem; background: rgba(255, 255, 255, .035); box-shadow: inset 0 0 0 1px rgba(196, 167, 255, .2); }
+.st2 .st-row { min-height: 4.3rem; padding: .75rem 1.2rem; }
+.st2 .st-row .st-ic { width: 2.5rem; height: 2.5rem; background: rgba(255, 255, 255, .07); color: var(--text); }
+.st2 .st-row .st-txt { flex-direction: column; align-items: flex-start; flex-wrap: nowrap; }
+.st2 .st-row .st-txt b { font-size: 1.06rem; }
+.st2 .st-row .st-desc { margin-top: .15rem; font-size: .86rem; color: var(--muted); }
+.st2 .st-row .st-val { color: var(--text-2); font-size: .95rem; }
+.st2 .st-row.st-switch.is-on .switch { background: var(--accent); }
+html.no-flexgap .st2 .st-row .st-txt > * + * { margin-left: 0; }
+:root[data-theme="light"] .st2 .st-list { background: rgba(255, 255, 255, .5); box-shadow: inset 0 0 0 1px rgba(109, 61, 240, .18); }
+:root[data-theme="light"] .st2 .st-row .st-ic { background: rgba(20, 20, 40, .06); }
+
+/* Startseite: Titelbild oben, darunter Reihen (nur Flexbox – läuft auch auf alten Fernsehern ohne Grid) */
+.launcher.hm { display: block; padding: 0; overflow-x: hidden; overflow-y: auto; scrollbar-width: none; }
+.launcher.hm::-webkit-scrollbar { display: none; }
+.hm-heroslot { position: relative; }
+.fhero.is-home { height: 15.6rem; min-height: 0; max-height: none; align-items: center; background: transparent; }
+.fhero.is-home .fh-bg { left: 28%; background-position: center 25%; }
+:root[data-theme="dark"] .fhero.is-home .fh-shade { background: linear-gradient(90deg, #15141f 0%, rgba(21, 20, 31, .94) 30%, rgba(21, 20, 31, .5) 52%, rgba(21, 20, 31, 0) 75%), linear-gradient(0deg, #15141f 0%, rgba(21, 20, 31, 0) 38%); }
+.fhero.is-home .fh-in { padding: 1rem var(--pad) .6rem; max-width: 46rem; }
+.fhero.is-home .fh-title { font-size: 2.8rem; margin-top: .35rem; }
+.fhero.is-home .fh-plot { font-size: 1.08rem; -webkit-line-clamp: 2; color: var(--text-2); }
+.fhero.is-home .fh-actions { margin-top: 1.1rem; }
+.fhero.is-home .btn.primary { background: linear-gradient(90deg, #8b5cf6, #a855f7); color: #fff; box-shadow: 0 .5rem 1.6rem -.4rem rgba(139, 92, 246, .7); }
+/* gewählt mit der Fernbedienung: weiß mit violettem Leuchten (vorher war der Fokus auf dem violetten Knopf nicht zu sehen) */
+body.kbd .fhero.is-home .btn.f:focus, body.is-tv .fhero.is-home .btn.f:focus { background: #fff; color: #120f1a; transform: scale(1.05); box-shadow: 0 0 0 .2rem rgba(168, 85, 247, .65), 0 .6rem 1.8rem -.3rem rgba(139, 92, 246, .8); }
+.hm-kick { color: var(--text-2); font-size: 1.02rem; font-weight: 600; letter-spacing: 0; white-space: pre; }
+.hm-kick:empty { display: none; }
+.hm-dots { display: flex; margin-top: 1.1rem; }
+.hm-dots i { display: block; width: .5rem; height: .5rem; margin-right: .5rem; border-radius: 1rem; background: rgba(255, 255, 255, .3); transition: width .3s ease, background-color .3s ease; }
+.hm-dots i.is-on { width: 1.5rem; background: var(--accent); }
+.hm-rows { padding: 0 var(--pad) 1rem; }
+.hm-row { margin-top: .9rem; }
+.hm-row:first-child { margin-top: .4rem; }
+.hm-rhead { display: flex; align-items: center; justify-content: space-between; margin-bottom: .5rem; }
+.hm-rtitle { display: flex; align-items: center; font-size: 1.25rem; font-weight: 800; letter-spacing: -.02em; }
+.hm-rtitle .i { width: 1.3rem; height: 1.3rem; margin-right: .6rem; color: var(--accent-2); }
+.hm-track { display: flex; overflow-x: auto; overflow-y: hidden; padding: .55rem; margin: -.55rem; scrollbar-width: none; }
+.hm-track::-webkit-scrollbar { display: none; }
+.hm-track > * + * { margin-left: 1.1rem; }
+.hm .lr-card { width: calc((100% - 2.2rem) / 3); height: 5.9rem; }
+.hm .lr-info { right: 4.6rem; bottom: 1.15rem; flex-direction: column; align-items: flex-start; }
+.hm .lr-info b { max-width: 100%; }
+.hm .lr-info small { margin: .1rem 0 0; font-size: .85rem; color: rgba(255, 255, 255, .78); }
+.hm .lr-bar { bottom: .65rem; }
+.hm-play { position: absolute; right: 1.1rem; top: 50%; z-index: 2; width: 2.7rem; height: 2.7rem; margin-top: -1.35rem; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(0, 0, 0, .35); box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .85); color: #fff; }
+.hm-play .i { width: 1.05rem; height: 1.05rem; margin-left: .15rem; }
+.hm-ch { flex: none; width: 11.4rem; height: 5.1rem; padding: .45rem .7rem; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 1rem; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); color: var(--text); }
+.hm-ch .logo-box { width: 4.8rem; height: 2.3rem; background: transparent; }
+.hm-chname { display: block; max-width: 100%; margin-top: .35rem; line-height: 1.3; font-size: .88rem; font-weight: 600; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hm-top { flex: none; width: calc((100% - 4.4rem) / 5); height: 3.3rem; padding: 0 .9rem; display: flex; align-items: center; border-radius: .9rem; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); color: var(--text); text-align: left; }
+.hm-num { flex: none; width: 1.9rem; height: 1.9rem; margin-right: .75rem; display: flex; align-items: center; justify-content: center; border-radius: .5rem; background: var(--surface-3); font-size: .95rem; font-weight: 800; }
+.hm-top .logo-box { flex: none; width: 3.3rem; height: 2.1rem; margin-right: .7rem; background: transparent; }
+.hm-top .hm-chname { flex: 1; min-width: 0; margin-top: 0; color: var(--text); }
+body.kbd .hm-ch.f:focus, body.is-tv .hm-ch.f:focus, body.kbd .hm-top.f:focus, body.is-tv .hm-top.f:focus { transform: scale(1.05); background: var(--surface-2); box-shadow: 0 0 0 .2rem var(--bg), 0 0 0 .42rem #c084fc, 0 0 1.8rem rgba(168, 85, 247, .45); }
+body.kbd .hm .lr-card.f:focus .hm-play, body.is-tv .hm .lr-card.f:focus .hm-play { background: #fff; color: #120f1a; }
+/* Fußleiste der Startseite: seit dem Status dort steht, etwas kompakter – und der Status überlappt nie die Laufzeit */
+.shell.is-launcher .statusbar .mac-tag { font-size: 1.02rem; }
+.shell.is-launcher .statusbar .mac-tag b + span, .shell.is-launcher .statusbar .mac-tag .copy-btn + span { margin-left: 1.15rem; }
+.shell.is-launcher .sb-status { flex: 0 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; margin-left: 1.15rem; padding-left: 1.15rem; margin-right: 1.4rem; }
+.shell.is-launcher .sb-days { flex: none; }
+.hm-quickrow { display: flex; padding: 2.4rem var(--pad) 0; }
+.hm-quick { flex: 1 1 0; min-width: 0; height: 13rem; margin-right: 1.2rem; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 1.3rem; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); color: var(--text); }
+.hm-quick:last-child { margin-right: 0; }
+.hm-qic .i { width: 3.2rem; height: 3.2rem; color: var(--k, var(--accent-2)); }
+.hm-quick b { margin-top: .8rem; font-size: 1.7rem; font-weight: 800; }
+.hm-quick small { margin-top: .3rem; color: var(--muted); font-size: 1rem; }
+body.kbd .hm-quick.f:focus, body.is-tv .hm-quick.f:focus { transform: scale(1.03); box-shadow: 0 0 0 .2rem var(--bg), 0 0 0 .42rem #c084fc, 0 0 1.8rem rgba(168, 85, 247, .45); }
+:root[data-theme="light"] .hm-dots i { background: rgba(20, 20, 40, .2); }
+:root[data-theme="light"] .hm-dots i.is-on { background: var(--accent); }
+@media (max-width: 900px) {
+  html:not(.tv) .launcher.hm { padding: 0; }
+  html:not(.tv) .fhero.is-home { height: auto; min-height: 20rem; }
+  html:not(.tv) .fhero.is-home .fh-bg { left: 0; }
+  html:not(.tv) .fhero.is-home .fh-title { font-size: 2rem; }
+  html:not(.tv) .hm .lr-card { width: 16rem; height: 7rem; }
+  html:not(.tv) .hm-top { width: 13rem; }
+  html:not(.tv) .hm-quick { height: 8rem; }
+  html:not(.tv) .hm-quick b { font-size: 1.15rem; }
+}

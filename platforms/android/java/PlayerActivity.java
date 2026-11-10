@@ -2,10 +2,15 @@ package de.lumio.player;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.StateListDrawable;
+import android.media.AudioManager;
+import android.media.audiofx.DynamicsProcessing;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -14,8 +19,10 @@ import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.ViewGroup;
 import android.webkit.WebSettings;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.media3.common.C;
@@ -31,6 +38,7 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
 import androidx.media3.extractor.DefaultExtractorsFactory;
 import androidx.media3.extractor.ts.DefaultTsPayloadReaderFactory;
 import androidx.media3.ui.CaptionStyleCompat;
+import androidx.media3.ui.DefaultTimeBar;
 import androidx.media3.ui.PlayerView;
 import androidx.media3.ui.SubtitleView;
 
@@ -50,6 +58,7 @@ import java.util.List;
 public class PlayerActivity extends Activity {
 
     private ExoPlayer player;
+    private DynamicsProcessing sound;
     private PlayerView view;
     private TextView info;
     private TextView status;
@@ -201,6 +210,7 @@ public class PlayerActivity extends Activity {
             view.setShowFastForwardButton(false);
         }
         root.addView(view, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+        styleControls();
         applySubtitleStyle(in);
 
         info = makeLabel(24);
@@ -305,10 +315,50 @@ public class PlayerActivity extends Activity {
                 showInfo();
             }
         });
+        applySound(in.getStringExtra("sound"));
         player.setPlayWhenReady(true);
         player.prepare();
         showInfo();
         handler.postDelayed(watchdog, 2000);
+    }
+
+    /* Klang (Einstellungen → Wiedergabe → Klang): Android-Klangbearbeitung am Ton dieses Players (ab Android 9).
+       balance: Lautstärke angleichen – leise Sender lauter, laute Werbung und Spitzen leiser
+       voice:   klare Sprache – Stimmen (1–4 kHz) anheben, Bässe etwas zurück, dazu leichte Angleichung
+       night:   Nachtmodus – starke Angleichung, Explosionen leiser, Flüstern lauter
+       Geht etwas nicht (Gerät ohne Klangbearbeitung, Dolby-Ton direkt an die Soundbar), bleibt der Ton einfach original. */
+    private void applySound(String mode) {
+        if (mode == null || "off".equals(mode) || player == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.P) return;
+        try {
+            AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+            int sid = am.generateAudioSessionId();
+            if (sid == AudioManager.ERROR) return;
+            player.setAudioSessionId(sid);
+            boolean voice = "voice".equals(mode), night = "night".equals(mode);
+            DynamicsProcessing.Config.Builder b = new DynamicsProcessing.Config.Builder(
+                    DynamicsProcessing.VARIANT_FAVOR_FREQUENCY_RESOLUTION, 2,
+                    voice, voice ? 4 : 1, true, 1, false, 1, true);
+            if (voice) {
+                DynamicsProcessing.Eq eq = new DynamicsProcessing.Eq(true, true, 4);
+                eq.setBand(0, new DynamicsProcessing.EqBand(true, 160f, -3f));     // Bässe etwas zurück
+                eq.setBand(1, new DynamicsProcessing.EqBand(true, 1000f, 0f));
+                eq.setBand(2, new DynamicsProcessing.EqBand(true, 4000f, 5f));     // Sprachverständlichkeit
+                eq.setBand(3, new DynamicsProcessing.EqBand(true, 20000f, 1.5f));
+                b.setPreEqAllChannelsTo(eq);
+            }
+            DynamicsProcessing.Mbc mbc = new DynamicsProcessing.Mbc(true, true, 1);
+            // ein Band über alles: Angriff, Abklingen (ms), Verhältnis, Schwelle (dB), Knie, Rauschsperre, Expander, Vor-/Nachverstärkung
+            mbc.setBand(0, new DynamicsProcessing.MbcBand(true, 20000f,
+                    night ? 5f : 10f, night ? 250f : 300f, night ? 6f : 3f, night ? -34f : -26f,
+                    6f, -90f, 1f, 0f, night ? 12f : 7f));
+            b.setMbcAllChannelsTo(mbc);
+            // Begrenzer am Ende: durch die Anhebung nie übersteuern
+            b.setLimiterAllChannelsTo(new DynamicsProcessing.Limiter(true, true, 0, 1f, 60f, 10f, -2f, 0f));
+            sound = new DynamicsProcessing(0, sid, b.build());
+            sound.setEnabled(true);
+        } catch (Throwable t) {
+            sound = null;
+        }
     }
 
     private TextView makeLabel(int sp) {
@@ -322,6 +372,85 @@ public class PlayerActivity extends Activity {
         bg.setCornerRadius(dp(14));
         t.setBackground(bg);
         return t;
+    }
+
+    /* Bedienleiste im Telvo-Design statt der Media3-Standardoptik (grauer Schleier, eckiger grüner Fokusrahmen):
+       Verlauf oben/unten, runde Glas-Knöpfe – gewählt weiß mit dunklem Symbol –, violette Zeitleiste.
+       Die Elemente werden über ihren Namen gesucht: fehlt eines in einer anderen Media3-Version, bleibt es einfach Standard. */
+    private View exo(String name) {
+        int id = getResources().getIdentifier(name, "id", getPackageName());
+        return id == 0 || view == null ? null : view.findViewById(id);
+    }
+
+    private StateListDrawable roundBg(boolean big) {
+        StateListDrawable s = new StateListDrawable();
+        GradientDrawable on = new GradientDrawable();
+        on.setShape(GradientDrawable.OVAL);
+        on.setColor(Color.WHITE);
+        GradientDrawable off = new GradientDrawable();
+        off.setShape(GradientDrawable.OVAL);
+        off.setColor(big ? 0x40FFFFFF : 0x24FFFFFF);
+        off.setStroke(dp(1), 0x33FFFFFF);
+        s.addState(new int[] { android.R.attr.state_focused }, on);
+        s.addState(new int[] { android.R.attr.state_pressed }, on);
+        s.addState(new int[] {}, off);
+        return s;
+    }
+
+    private void styleButton(View v, boolean big) {
+        if (v == null) return;
+        if (!v.isFocusable() && v instanceof ViewGroup) {
+            ViewGroup g = (ViewGroup) v;
+            for (int i = 0; i < g.getChildCount(); i++) styleButton(g.getChildAt(i), big);
+            return;
+        }
+        if (!v.isFocusable()) return;
+        ColorStateList ink = new ColorStateList(
+                new int[][] { new int[] { android.R.attr.state_focused }, new int[] { android.R.attr.state_pressed }, new int[] {} },
+                new int[] { 0xFF120F1A, 0xFF120F1A, Color.WHITE });
+        v.setBackground(roundBg(big));
+        if (v instanceof ImageView) ((ImageView) v).setImageTintList(ink);
+        if (v instanceof TextView) {
+            ((TextView) v).setTextColor(ink);
+            ((TextView) v).setCompoundDrawableTintList(ink);
+        }
+    }
+
+    private void styleControls() {
+        try {
+            View bg = exo("exo_controls_background");
+            if (bg != null) bg.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
+                    new int[] { 0xB3000000, 0x1A000000, 0x00000000, 0x59000000, 0xF2000000 }));
+            View bottom = exo("exo_bottom_bar");
+            if (bottom != null) bottom.setBackgroundColor(Color.TRANSPARENT);
+            // Abstand zum Bildschirmrand – sonst wird der runde Knopf ganz rechts (Einstellungen) angeschnitten.
+            // Padding am Balken setzt Media3 selbst zurück, darum die Knopfgruppen verschieben (wirkt nur auf die Darstellung).
+            for (String n : new String[] { "exo_basic_controls", "exo_extra_controls", "exo_overflow_show" }) {
+                View g = exo(n);
+                if (g != null) { g.setTranslationX(-dp(28)); g.setTranslationY(-dp(10)); }
+            }
+            View time = exo("exo_time");
+            if (time != null) { time.setTranslationX(dp(12)); time.setTranslationY(-dp(10)); }
+            View tb = exo("exo_progress");
+            if (tb instanceof DefaultTimeBar) {
+                DefaultTimeBar t = (DefaultTimeBar) tb;
+                t.setPlayedColor(0xFFA855F7);
+                t.setScrubberColor(Color.WHITE);
+                t.setBufferedColor(0x59FFFFFF);
+                t.setUnplayedColor(0x2EFFFFFF);
+            }
+            View pos = exo("exo_position");
+            if (pos instanceof TextView) { ((TextView) pos).setTextColor(Color.WHITE); ((TextView) pos).setTypeface(Typeface.DEFAULT_BOLD); }
+            View dur = exo("exo_duration");
+            if (dur instanceof TextView) ((TextView) dur).setTextColor(0xB3FFFFFF);
+            styleButton(exo("exo_play_pause"), true);
+            for (String n : new String[] { "exo_prev", "exo_rew_with_amount", "exo_ffwd_with_amount", "exo_next",
+                    "exo_subtitle", "exo_settings", "exo_overflow_show", "exo_overflow_hide", "exo_fullscreen" }) {
+                styleButton(exo(n), false);
+            }
+        } catch (Exception e) {
+            // Optik ist Nebensache – der Player muss in jedem Fall laufen
+        }
     }
 
     private int dp(int v) {
@@ -566,6 +695,10 @@ public class PlayerActivity extends Activity {
     @Override
     protected void onDestroy() {
         handler.removeCallbacksAndMessages(null);
+        if (sound != null) {
+            try { sound.release(); } catch (Exception ignored) { }
+            sound = null;
+        }
         if (player != null) {
             player.release();
             player = null;
