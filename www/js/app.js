@@ -300,7 +300,44 @@
         else l.push(e);
         if (l.length > this.max) l = l.slice(l.length - this.max);
         Store.set('errlog', l);
+        ErrReport.soon();
       } catch (x) {}
+    }
+  };
+  /* ---------- Fehlerberichte (automatisch, abschaltbar) ----------
+     Neue Einträge des Fehlerprotokolls gehen gesammelt an den Online-Dienst (server/fehler-2026-11.sql) – nur Stelle,
+     bereinigte Meldung und Anzahl, dazu App-Version und Gerätetyp. Keine Links, Namen, Passwörter, Sender oder Playlists.
+     Einstellung „Fehlerberichte senden“ (Standard: an). Fehlt die Funktion auf dem Server, versucht die App es nicht weiter. */
+  var ErrReport = {
+    timer: null, off: false,
+    enabled: function () { return !this.off && !!CONFIG.cloudUrl && Settings.get('errReport') !== false; },
+    platform: function () {
+      return Platform.androidTV ? (/AFT/.test(UA) ? 'firetv' : 'androidtv') : Platform.android ? 'android' : Platform.ios ? 'ios'
+        : Platform.tizen ? 'tizen' : Platform.webos ? 'webos' : 'web';
+    },
+    soon: function (ms) {
+      var self = this;
+      if (!self.enabled()) return;
+      clearTimeout(self.timer);
+      self.timer = setTimeout(function () { self.flush(); }, ms || 60000);   // mehrere Fehler kurz hintereinander: ein Bericht
+    },
+    flush: function () {
+      var self = this;
+      if (!self.enabled() || navigator.onLine === false) return;
+      var since = Store.get('errSent', 0), items = ErrLog.list().filter(function (e) { return e.t > since; }).slice(-10);
+      if (!items.length) return;
+      var last = items[items.length - 1], prev = Store.get('errSentLast', null);
+      // Gleiche Fehler hintereinander stehen im Protokoll als ein Eintrag mit Zähler – schon gemeldete nicht doppelt zählen
+      var out = items.map(function (e, i) {
+        var n = e.n || 1;
+        if (i === 0 && prev && prev.w === e.w && prev.m === e.m) n = Math.max(0, n - (prev.n || 1));
+        return { w: e.w, m: e.m, n: n };
+      }).filter(function (x) { return x.n > 0; });
+      if (!out.length) { Store.set('errSent', last.t); return; }
+      Cloud.call('report_errors', { p_mac: Device.mac(), p_items: out, p_version: CONFIG.version, p_platform: self.platform() }).then(function (r) {
+        if (r && r.ok) { Store.set('errSent', last.t); Store.set('errSentLast', { w: last.w, m: last.m, n: last.n || 1 }); }
+        else if (r && (r.code === 'PGRST202' || r.code === '42883')) self.off = true;   // Server kennt die Funktion (noch) nicht
+      }, function () {});
     }
   };
   window.addEventListener('error', function (e) {
@@ -6880,6 +6917,8 @@
         EpgStore.clear().then(function () { toast(T('Zwischenspeicher geleert')); });
       });
     });
+    var tErrRep = switchTile('info', T('Fehlerberichte senden'), T('Hilft, Fehler schnell zu beheben – ohne Links, Namen oder Passwörter'),
+      function () { return Settings.get('errReport') !== false; }, function (v) { Settings.set('errReport', v); if (v) ErrReport.soon(5000); });
     var tHelp = tile('help', T('Hilfe'), T('Antworten auf häufige Fragen'), showWelcomeHelp);
     var tPersons = tile('users', T('Benutzer'), function () { var l = Persons.list(); return l.length > 1 ? T('{0} Benutzer', l.length) + ' · ' + Persons.cur().name : T('Nur ein Benutzer'); }, function () { showPersons(paint); });
     var tPrev = switchTile('pip', T('Vorschau bei Live TV'), T('Beim Öffnen läuft der letzte Sender klein rechts'),
@@ -6961,7 +7000,7 @@
       { id: 'content', ic: 'series', c: 'teal', name: T('Inhalte & Listen'), hint: T('Playlists, Kategorien und Sender.'), body: grid([tAdd, tPl, tUpd, tAuto, tSort, tHideL, tHideM, tHideS, tHideCh]) },
       { id: 'users', ic: 'lock', c: 'pink', name: T('Benutzer & Sicherheit'), hint: T('Wer schaut, Kindersicherung und Verlauf.'), body: grid([tPersons, tPar, tHis]) },
       { id: 'devices', ic: 'device', c: 'slate', name: T('Geräte & Verbindungen'), hint: T('Gerätetyp, Verbindung, Sicherung und externe Player.'), body: grid([tDev, tSpeed, tBackup, tExt]) },
-      { id: 'advanced', ic: 'settings', c: 'slate', name: T('Erweitert'), hint: T('Zeitschaltungen, Programmführer und Zwischenspeicher.'), body: grid([tFmt, tShift, tSleep, tIdle, tCache]) },
+      { id: 'advanced', ic: 'settings', c: 'slate', name: T('Erweitert'), hint: T('Zeitschaltungen, Programmführer und Zwischenspeicher.'), body: grid([tFmt, tShift, tSleep, tIdle, tCache, tErrRep]) },
       { id: 'help', ic: 'help', c: 'green', name: T('Hilfe & Support'), hint: T('Hilfe, Kontakt, Feedback und Updates.'), body: grid([tHelp, tReport, tFeedback, tAbout]) }
     ], 'settings');
     settingsPaint = paint;
@@ -7527,6 +7566,8 @@
       }).then(function (res) {
         res = res || {};
         if (res.sleep) Sleep.fire(true);
+        // TV-Player hat aufgegeben (z. B. „stuck“ = Quelle liefert kein Bild): ins Fehlerprotokoll
+        if (res.error) ErrLog.add('TV-Player', String(res.error) + ' | ' + (item.kind || '?') + (item.ext ? ' .' + item.ext : ''));
         var i = typeof res.index === 'number' ? res.index : idx, cur = list[i] || item;
         if (live) { Recent.push(cur); Last.set(cur); markPlaying(null); }
         else {
@@ -9208,6 +9249,14 @@
       if (ln && ln._wake) ln._wake();
     });
     registerTvKeys();
+
+    // Ist die App beim letzten Mal abgestürzt (Android-Teil, z. B. TV-Player)? Ins Fehlerprotokoll übernehmen.
+    // Danach liegengebliebene Fehlerberichte schicken (kurz warten, bis die Anmeldung beim Online-Dienst durch ist).
+    var np = NativePlayer.plugin();
+    if (np && typeof np.takeCrash === 'function') {
+      try { np.takeCrash().then(function (r) { if (r && r.crash) ErrLog.add('Absturz', r.crash); }, function () {}); } catch (e) {}
+    }
+    setTimeout(function () { ErrReport.flush(); }, 30000);
 
     SubStyle.apply();
     var active = Profiles.get(Store.get('active'));
