@@ -4144,7 +4144,7 @@
 
   /* ==========================================================
      Startseite (Entwurf vom 10.11.2026): oben die Menüleiste, darunter ein großes Titelbild mit den
-     bestbewerteten Filmen und Serien (wechselt von selbst), „Weiterschauen“, „Zuletzt gesehene Sender“ und „Top Sender“.
+     bestbewerteten Filmen und Serien (wechselt von selbst), „Weiterschauen“ und „Zuletzt gesehene Sender“.
      ========================================================== */
   /* Auswahl fürs Titelbild: wird beim Aktualisieren der Listen berechnet (catCounts) und klein gespeichert –
      die Startseite muss die großen Film- und Serienlisten dafür nicht selbst laden. */
@@ -4245,10 +4245,6 @@
       return h('button', { class: 'hm-ch f', 'data-key': 'ch:' + ch.id, title: ch.name, onclick: function () { playChannel(ch); } },
         logoBox(ch), h('span', { class: 'hm-chname', text: ch.name }));
     }
-    function topTile(ch, n) {
-      return h('button', { class: 'hm-top f', 'data-key': 'top:' + ch.id, title: ch.name, 'aria-label': n + '. ' + ch.name, onclick: function () { playChannel(ch); } },
-        h('span', { class: 'hm-num', text: String(n) }), logoBox(ch), h('span', { class: 'hm-chname', text: ch.name }));
-    }
     // Schnellzugriff, solange es noch nichts zu zeigen gibt (neue Playlist, erster Start)
     function quickRow() {
       function q(kind, label, unit) {
@@ -4304,15 +4300,11 @@
           return c;
         }), h('button', { class: 'lr-all f', 'data-key': 'lr:all', onclick: showAllRecent }, h('span', { text: T('Alle anzeigen') }), icon('next'))));
       }
-      var recent = Recent.list(), top = ChanCount.top(5);
-      // „Top Sender“ mit Favoriten und zuletzt gesehenen auffüllen, bis es fünf sind
-      // (erst nach dem Filtern auf fünf kürzen – ausgeblendete/gesperrte Sender fallen sonst als Lücke weg)
-      var seen = {}, topList = [];
-      top.concat(Favs.list('live'), recent).forEach(function (c) { if (c && !seen[c.id]) { seen[c.id] = 1; topList.push(c); } });
-      function done(rc, tp) {
+      // „Top Sender“ steht nicht mehr auf der Startseite (gewünscht) – die Zählung (ChanCount) läuft weiter
+      var recent = Recent.list();
+      function done(rc) {
         if (my !== rowsReq) return;
         if (rc.length) out.push(row(T('Zuletzt gesehene Sender'), null, rc.map(function (c) { return chanTile(c); })));
-        if (tp.length) out.push(row(T('Top Sender'), 'bolt', tp.map(function (c, i) { return topTile(c, i + 1); })));
         clear(rows); out.forEach(function (x) { rows.appendChild(x); });
         el.classList.toggle('is-empty', !out.length);
         var k = fkey || wantKey, top0 = Screens.top();
@@ -4328,8 +4320,8 @@
           }
         }
       }
-      Promise.all([visibleItems('live', Promise.resolve(recent.slice(0, 12))), visibleItems('live', Promise.resolve(topList))])
-        .then(function (r) { done(r[0] || [], (r[1] || []).slice(0, 5)); }, function () { done([], []); });
+      Promise.all([visibleItems('live', Promise.resolve(recent.slice(0, 12)))])
+        .then(function (r) { done(r[0] || []); }, function () { done([]); });
     }
 
     // byUser: Knopf gedrückt (mit Bestätigung). quiet: automatisch im Hintergrund (ohne Fehlermeldung)
