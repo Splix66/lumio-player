@@ -1,6 +1,22 @@
 /* Telvo Player – Übersetzung: Ukrainisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["uk"] = {
+  "Ändern oder neues Feedback geben kannst du ab dem {0}.": "Змінити відгук або залишити новий можна з {0}.",
+  "Beliebt auf Handys und Tablets.": "Популярний на телефонах і планшетах.",
+  "Bitte schreib kurz, warum du deine Bewertung änderst.": "Будь ласка, коротко напишіть, чому ви змінюєте оцінку.",
+  "Danke – dein Feedback ist angekommen.": "Дякуємо – ваш відгук отримано.",
+  "Deine Bewertung – beim Ändern bitte kurz begründen.": "Ваша оцінка – у разі зміни коротко вкажіть причину.",
+  "Empfohlen für Fire TV Stick und Cube, Chromecast mit Google TV, Nvidia Shield, Xiaomi Mi Box und andere Android-TV-Boxen.": "Рекомендовано для Fire TV Stick і Cube, Chromecast з Google TV, Nvidia Shield, Xiaomi Mi Box та інших приставок Android TV.",
+  "Fire TV, Android TV, Handy – spielt fast alles ab.": "Fire TV, Android TV, телефон – відтворює майже все.",
+  "Für ältere oder schwache Boxen und für Sender, die mit den anderen Playern hängen.": "Для старих або слабких приставок і для каналів, які зависають в інших програвачах.",
+  "Für Android TV und Google TV.": "Для Android TV і Google TV.",
+  "Für Android-Boxen und Nvidia Shield.": "Для приставок на Android і Nvidia Shield.",
+  "Für Android-Handys und Tablets (Samsung, Xiaomi, Pixel) – oder wenn der TV-Player hakt.": "Для телефонів і планшетів на Android (Samsung, Xiaomi, Pixel) – або якщо ТВ-програвач пригальмовує.",
+  "Für Technik-Fans mit vielen Einstellungen.": "Для поціновувачів техніки, з багатьма налаштуваннями.",
+  "OK öffnet den Sender im Vollbild.": "OK відкриває канал на весь екран.",
+  "Schlank, gut für Fire TV und Android-Boxen.": "Легкий, добре підходить для Fire TV і приставок на Android.",
+  "Telvo ist nur ein Player – nutze nur Quellen, für die du berechtigt bist.": "Telvo – це лише програвач. Використовуйте лише джерела, на які маєте право.",
+  "Warum änderst du deine Bewertung?": "Чому ви змінюєте оцінку?",
   "Dein Zugang ist abgelaufen": "Ваш доступ завершився",
   "Dein Zugang läuft bald ab": "Ваш доступ скоро завершиться",
   "Verstanden": "Зрозуміло",

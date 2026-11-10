@@ -35,19 +35,19 @@ public class NativePlayerPlugin extends Plugin {
             return;
         }
         Integer index = call.getInt("index", 0);
-        Long startMs = call.getLong("startMs", 0L);
+        long startMs = call.getData().optLong("startMs", 0L); // nicht getLong(): liefert bei Integer-Werten immer 0
         Boolean live = call.getBoolean("live", false);
         Intent intent = new Intent(getContext(), PlayerActivity.class);
         intent.putExtra("items", items.toString());
         intent.putExtra("index", index == null ? 0 : index.intValue());
-        intent.putExtra("startMs", startMs == null ? 0L : startMs.longValue());
+        intent.putExtra("startMs", Math.max(0L, startMs));
         intent.putExtra("live", live != null && live.booleanValue());
         intent.putExtra("txtReconnect", call.getString("txtReconnect", "Verbindung wird wiederhergestellt …"));
         intent.putExtra("txtFailed", call.getString("txtFailed", "Wiedergabe nicht möglich."));
         intent.putExtra("txtNoChannel", call.getString("txtNoChannel", "Sender {0} nicht gefunden"));
         // Schlaf-Timer: Uhrzeit (ms seit 1970), zu der sich der Player schließt – 0 = aus
-        Long sleepAt = call.getLong("sleepAt", 0L);
-        intent.putExtra("sleepAt", sleepAt == null ? 0L : sleepAt.longValue());
+        long sleepAt = call.getData().optLong("sleepAt", 0L);
+        intent.putExtra("sleepAt", sleepAt);
         // Serien: nächste Folge automatisch (aus = am Ende der Folge anhalten)
         Boolean autoNext = call.getBoolean("autoNext", true);
         intent.putExtra("autoNext", autoNext == null || autoNext.booleanValue());

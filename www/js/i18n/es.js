@@ -1,6 +1,22 @@
 /* Telvo Player – Übersetzung: Spanisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["es"] = {
+  "Ändern oder neues Feedback geben kannst du ab dem {0}.": "Podrás cambiarla o dar una nueva opinión a partir del {0}.",
+  "Beliebt auf Handys und Tablets.": "Popular en móviles y tabletas.",
+  "Bitte schreib kurz, warum du deine Bewertung änderst.": "Escribe brevemente por qué cambias tu valoración.",
+  "Danke – dein Feedback ist angekommen.": "Gracias – tu opinión ha llegado.",
+  "Deine Bewertung – beim Ändern bitte kurz begründen.": "Tu valoración – si la cambias, indica brevemente el motivo.",
+  "Empfohlen für Fire TV Stick und Cube, Chromecast mit Google TV, Nvidia Shield, Xiaomi Mi Box und andere Android-TV-Boxen.": "Recomendado para Fire TV Stick y Cube, Chromecast con Google TV, Nvidia Shield, Xiaomi Mi Box y otros boxes Android TV.",
+  "Fire TV, Android TV, Handy – spielt fast alles ab.": "Fire TV, Android TV, móvil – reproduce casi todo.",
+  "Für ältere oder schwache Boxen und für Sender, die mit den anderen Playern hängen.": "Para boxes antiguos o poco potentes y para canales que se cuelgan con los otros reproductores.",
+  "Für Android TV und Google TV.": "Para Android TV y Google TV.",
+  "Für Android-Boxen und Nvidia Shield.": "Para boxes Android y Nvidia Shield.",
+  "Für Android-Handys und Tablets (Samsung, Xiaomi, Pixel) – oder wenn der TV-Player hakt.": "Para móviles y tabletas Android (Samsung, Xiaomi, Pixel) – o si el Reproductor TV se traba.",
+  "Für Technik-Fans mit vielen Einstellungen.": "Para fans de la tecnología, con muchos ajustes.",
+  "OK öffnet den Sender im Vollbild.": "OK abre el canal en pantalla completa.",
+  "Schlank, gut für Fire TV und Android-Boxen.": "Ligero, ideal para Fire TV y boxes Android.",
+  "Telvo ist nur ein Player – nutze nur Quellen, für die du berechtigt bist.": "Telvo es solo un reproductor – usa solo fuentes para las que tengas autorización.",
+  "Warum änderst du deine Bewertung?": "¿Por qué cambias tu valoración?",
   "Dein Zugang ist abgelaufen": "Tu acceso ha caducado",
   "Dein Zugang läuft bald ab": "Tu acceso caducará pronto",
   "Verstanden": "Entendido",

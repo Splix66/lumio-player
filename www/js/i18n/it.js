@@ -1,6 +1,22 @@
 /* Telvo Player – Übersetzung: Italienisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["it"] = {
+  "Ändern oder neues Feedback geben kannst du ab dem {0}.": "Potrai modificarlo o lasciare un nuovo feedback dal {0}.",
+  "Beliebt auf Handys und Tablets.": "Popolare su smartphone e tablet.",
+  "Bitte schreib kurz, warum du deine Bewertung änderst.": "Scrivi in breve perché cambi la valutazione.",
+  "Danke – dein Feedback ist angekommen.": "Grazie – il tuo feedback è arrivato.",
+  "Deine Bewertung – beim Ändern bitte kurz begründen.": "La tua valutazione – se la cambi, indica brevemente il motivo.",
+  "Empfohlen für Fire TV Stick und Cube, Chromecast mit Google TV, Nvidia Shield, Xiaomi Mi Box und andere Android-TV-Boxen.": "Consigliato per Fire TV Stick e Cube, Chromecast con Google TV, Nvidia Shield, Xiaomi Mi Box e altri box Android TV.",
+  "Fire TV, Android TV, Handy – spielt fast alles ab.": "Fire TV, Android TV, smartphone – riproduce quasi tutto.",
+  "Für ältere oder schwache Boxen und für Sender, die mit den anderen Playern hängen.": "Per box più vecchi o meno potenti e per i canali che si bloccano con gli altri player.",
+  "Für Android TV und Google TV.": "Per Android TV e Google TV.",
+  "Für Android-Boxen und Nvidia Shield.": "Per box Android e Nvidia Shield.",
+  "Für Android-Handys und Tablets (Samsung, Xiaomi, Pixel) – oder wenn der TV-Player hakt.": "Per smartphone e tablet Android (Samsung, Xiaomi, Pixel) – o se il Player TV scatta.",
+  "Für Technik-Fans mit vielen Einstellungen.": "Per gli appassionati di tecnica, con tante impostazioni.",
+  "OK öffnet den Sender im Vollbild.": "OK apre il canale a schermo intero.",
+  "Schlank, gut für Fire TV und Android-Boxen.": "Leggero, adatto a Fire TV e box Android.",
+  "Telvo ist nur ein Player – nutze nur Quellen, für die du berechtigt bist.": "Telvo è solo un player – usa solo fonti per cui hai l’autorizzazione.",
+  "Warum änderst du deine Bewertung?": "Perché cambi la valutazione?",
   "Dein Zugang ist abgelaufen": "Il tuo abbonamento è scaduto",
   "Dein Zugang läuft bald ab": "Il tuo abbonamento scade presto",
   "Verstanden": "Ho capito",

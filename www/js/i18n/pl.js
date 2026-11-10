@@ -1,6 +1,22 @@
 /* Telvo Player – Übersetzung: Polnisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["pl"] = {
+  "Ändern oder neues Feedback geben kannst du ab dem {0}.": "Zmienić opinię lub dodać nową możesz od {0}.",
+  "Beliebt auf Handys und Tablets.": "Popularny na telefonach i tabletach.",
+  "Bitte schreib kurz, warum du deine Bewertung änderst.": "Napisz krótko, dlaczego zmieniasz ocenę.",
+  "Danke – dein Feedback ist angekommen.": "Dziękujemy – twoja opinia dotarła.",
+  "Deine Bewertung – beim Ändern bitte kurz begründen.": "Twoja ocena – przy zmianie podaj krótko powód.",
+  "Empfohlen für Fire TV Stick und Cube, Chromecast mit Google TV, Nvidia Shield, Xiaomi Mi Box und andere Android-TV-Boxen.": "Polecany dla Fire TV Stick i Cube, Chromecast z Google TV, Nvidia Shield, Xiaomi Mi Box i innych przystawek Android TV.",
+  "Fire TV, Android TV, Handy – spielt fast alles ab.": "Fire TV, Android TV, telefon – odtwarza prawie wszystko.",
+  "Für ältere oder schwache Boxen und für Sender, die mit den anderen Playern hängen.": "Dla starszych lub słabszych przystawek i dla kanałów, które zacinają się w innych odtwarzaczach.",
+  "Für Android TV und Google TV.": "Dla Android TV i Google TV.",
+  "Für Android-Boxen und Nvidia Shield.": "Dla przystawek z Androidem i Nvidia Shield.",
+  "Für Android-Handys und Tablets (Samsung, Xiaomi, Pixel) – oder wenn der TV-Player hakt.": "Dla telefonów i tabletów z Androidem (Samsung, Xiaomi, Pixel) – lub gdy Odtwarzacz TV się zacina.",
+  "Für Technik-Fans mit vielen Einstellungen.": "Dla fanów techniki, z wieloma ustawieniami.",
+  "OK öffnet den Sender im Vollbild.": "OK otwiera kanał na pełnym ekranie.",
+  "Schlank, gut für Fire TV und Android-Boxen.": "Lekki, dobry dla Fire TV i przystawek z Androidem.",
+  "Telvo ist nur ein Player – nutze nur Quellen, für die du berechtigt bist.": "Telvo to tylko odtwarzacz – korzystaj wyłącznie ze źródeł, do których masz uprawnienia.",
+  "Warum änderst du deine Bewertung?": "Dlaczego zmieniasz ocenę?",
   "Dein Zugang ist abgelaufen": "Twój dostęp wygasł",
   "Dein Zugang läuft bald ab": "Twój dostęp wkrótce wygaśnie",
   "Verstanden": "Rozumiem",

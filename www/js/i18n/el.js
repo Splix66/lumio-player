@@ -1,6 +1,22 @@
 /* Telvo Player – Übersetzung: Griechisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["el"] = {
+  "Ändern oder neues Feedback geben kannst du ab dem {0}.": "Μπορείς να το αλλάξεις ή να στείλεις νέα σχόλια από {0}.",
+  "Beliebt auf Handys und Tablets.": "Δημοφιλές σε κινητά και tablet.",
+  "Bitte schreib kurz, warum du deine Bewertung änderst.": "Γράψε σύντομα γιατί αλλάζεις τη βαθμολογία σου.",
+  "Danke – dein Feedback ist angekommen.": "Ευχαριστούμε – τα σχόλιά σου ελήφθησαν.",
+  "Deine Bewertung – beim Ändern bitte kurz begründen.": "Η βαθμολογία σου – αν την αλλάξεις, γράψε σύντομα τον λόγο.",
+  "Empfohlen für Fire TV Stick und Cube, Chromecast mit Google TV, Nvidia Shield, Xiaomi Mi Box und andere Android-TV-Boxen.": "Προτείνεται για Fire TV Stick και Cube, Chromecast με Google TV, Nvidia Shield, Xiaomi Mi Box και άλλα κουτιά Android TV.",
+  "Fire TV, Android TV, Handy – spielt fast alles ab.": "Fire TV, Android TV, κινητό – παίζει σχεδόν τα πάντα.",
+  "Für ältere oder schwache Boxen und für Sender, die mit den anderen Playern hängen.": "Για παλαιότερα ή πιο αδύναμα κουτιά και για κανάλια που κολλάνε με τα άλλα προγράμματα.",
+  "Für Android TV und Google TV.": "Για Android TV και Google TV.",
+  "Für Android-Boxen und Nvidia Shield.": "Για κουτιά Android και Nvidia Shield.",
+  "Für Android-Handys und Tablets (Samsung, Xiaomi, Pixel) – oder wenn der TV-Player hakt.": "Για κινητά και tablet Android (Samsung, Xiaomi, Pixel) – ή αν το Πρόγραμμα TV κολλάει.",
+  "Für Technik-Fans mit vielen Einstellungen.": "Για λάτρεις της τεχνολογίας, με πολλές ρυθμίσεις.",
+  "OK öffnet den Sender im Vollbild.": "Το OK ανοίγει το κανάλι σε πλήρη οθόνη.",
+  "Schlank, gut für Fire TV und Android-Boxen.": "Ελαφρύ, καλό για Fire TV και κουτιά Android.",
+  "Telvo ist nur ein Player – nutze nur Quellen, für die du berechtigt bist.": "Το Telvo είναι μόνο πρόγραμμα αναπαραγωγής – χρησιμοποίησε μόνο πηγές για τις οποίες έχεις δικαίωμα.",
+  "Warum änderst du deine Bewertung?": "Γιατί αλλάζεις τη βαθμολογία σου;",
   "Dein Zugang ist abgelaufen": "Η συνδρομή σου έχει λήξει",
   "Dein Zugang läuft bald ab": "Η συνδρομή σου λήγει σύντομα",
   "Verstanden": "Κατάλαβα",

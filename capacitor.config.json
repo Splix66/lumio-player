@@ -2,6 +2,7 @@
   "appId": "de.lumio.player",
   "appName": "Telvo Player",
   "webDir": "www",
+  "loggingBehavior": "none",
   "backgroundColor": "#0b0a1a",
   "server": {
     "androidScheme": "http",

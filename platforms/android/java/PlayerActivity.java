@@ -195,6 +195,11 @@ public class PlayerActivity extends Activity {
         view.setShowSubtitleButton(true);
         view.setControllerShowTimeoutMs(4000);
         view.setControllerAutoShow(false);
+        // Live: kein Spulen um 5/15 s (ergibt bei Sendern keinen Sinn) – ⏮/⏭ schalten den Sender um
+        if (live) {
+            view.setShowRewindButton(false);
+            view.setShowFastForwardButton(false);
+        }
         root.addView(view, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
         applySubtitleStyle(in);
 
@@ -211,6 +216,7 @@ public class PlayerActivity extends Activity {
         hideSystemUi();
 
         view.setControllerVisibilityListener((PlayerView.ControllerVisibilityListener) visibility -> {
+            osd = visibility == View.VISIBLE;
             if (visibility == View.VISIBLE) {
                 handler.removeCallbacks(hideInfo);
                 info.setVisibility(View.VISIBLE);
@@ -458,25 +464,50 @@ public class PlayerActivity extends Activity {
         view.showController();
     }
 
+    /* Taste, deren Drücken der Player selbst verarbeitet hat (Umschalten, Spulen, Ziffern). Auch das Loslassen
+       wird dann geschluckt: Der PlayerView blendet sonst bei jedem Steuerkreuz-Ereignis die Bedienleiste ein,
+       und solange sie sichtbar ist, schaltet hoch/runter nicht mehr um (nur jeder zweite Druck wirkte). */
+    private int consumedKey = -1;
+    /* Bedienleiste sichtbar (auch während sie sich gerade aus- oder einblendet). isControllerFullyVisible() ist in
+       dieser Phase false – dann wurde RECHTS als „+30 s spulen“ abgefangen statt zum nächsten Knopf (⏭) zu springen. */
+    private boolean osd = false;
+
     @Override
     public boolean dispatchKeyEvent(KeyEvent ev) {
-        if (ev.getAction() == KeyEvent.ACTION_DOWN && view != null) {
-            int k = ev.getKeyCode();
-            boolean controls = view.isControllerFullyVisible();
-            if (live) {
-                if (k >= KeyEvent.KEYCODE_0 && k <= KeyEvent.KEYCODE_9) { typeDigit(k - KeyEvent.KEYCODE_0); return true; }
-                if (k >= KeyEvent.KEYCODE_NUMPAD_0 && k <= KeyEvent.KEYCODE_NUMPAD_9) { typeDigit(k - KeyEvent.KEYCODE_NUMPAD_0); return true; }
-                if (!digits.isEmpty() && (k == KeyEvent.KEYCODE_DPAD_CENTER || k == KeyEvent.KEYCODE_ENTER)) { jumpToNumber(); return true; }
-                if (k == KeyEvent.KEYCODE_LAST_CHANNEL) { if (lastIdx >= 0) jumpTo(lastIdx); return true; }
-                if (k == KeyEvent.KEYCODE_CHANNEL_UP || (!controls && k == KeyEvent.KEYCODE_DPAD_UP)) { zap(-1); return true; }
-                if (k == KeyEvent.KEYCODE_CHANNEL_DOWN || (!controls && k == KeyEvent.KEYCODE_DPAD_DOWN)) { zap(1); return true; }
-            } else if (!controls) {
-                if (k == KeyEvent.KEYCODE_DPAD_RIGHT || k == KeyEvent.KEYCODE_MEDIA_FAST_FORWARD) { seekBy(30000); return true; }
-                if (k == KeyEvent.KEYCODE_DPAD_LEFT || k == KeyEvent.KEYCODE_MEDIA_REWIND) { seekBy(-10000); return true; }
-            }
-            if (k == KeyEvent.KEYCODE_INFO || k == KeyEvent.KEYCODE_GUIDE) { showInfo(); return true; }
+        int k = ev.getKeyCode();
+        if (ev.getAction() == KeyEvent.ACTION_UP && k == consumedKey) {
+            consumedKey = -1;
+            return true;
         }
+        if (ev.getAction() == KeyEvent.ACTION_DOWN && view != null && handleKey(k)) {
+            consumedKey = k;
+            return true;
+        }
+        // In der Leiste navigieren: Ausblende-Zeit neu starten, sonst verschwindet sie mitten im Wählen (nach 4 s)
+        if (ev.getAction() == KeyEvent.ACTION_DOWN && view != null && osd && isNavKey(k)) view.showController();
         return super.dispatchKeyEvent(ev);
+    }
+
+    private static boolean isNavKey(int k) {
+        return k == KeyEvent.KEYCODE_DPAD_LEFT || k == KeyEvent.KEYCODE_DPAD_RIGHT || k == KeyEvent.KEYCODE_DPAD_UP
+                || k == KeyEvent.KEYCODE_DPAD_DOWN || k == KeyEvent.KEYCODE_DPAD_CENTER || k == KeyEvent.KEYCODE_ENTER;
+    }
+
+    private boolean handleKey(int k) {
+        boolean controls = osd || view.isControllerFullyVisible();
+        if (live) {
+            if (k >= KeyEvent.KEYCODE_0 && k <= KeyEvent.KEYCODE_9) { typeDigit(k - KeyEvent.KEYCODE_0); return true; }
+            if (k >= KeyEvent.KEYCODE_NUMPAD_0 && k <= KeyEvent.KEYCODE_NUMPAD_9) { typeDigit(k - KeyEvent.KEYCODE_NUMPAD_0); return true; }
+            if (!digits.isEmpty() && (k == KeyEvent.KEYCODE_DPAD_CENTER || k == KeyEvent.KEYCODE_ENTER)) { jumpToNumber(); return true; }
+            if (k == KeyEvent.KEYCODE_LAST_CHANNEL) { if (lastIdx >= 0) jumpTo(lastIdx); return true; }
+            if (k == KeyEvent.KEYCODE_CHANNEL_UP || (!controls && k == KeyEvent.KEYCODE_DPAD_UP)) { zap(-1); return true; }
+            if (k == KeyEvent.KEYCODE_CHANNEL_DOWN || (!controls && k == KeyEvent.KEYCODE_DPAD_DOWN)) { zap(1); return true; }
+        } else if (!controls) {
+            if (k == KeyEvent.KEYCODE_DPAD_RIGHT || k == KeyEvent.KEYCODE_MEDIA_FAST_FORWARD) { seekBy(30000); return true; }
+            if (k == KeyEvent.KEYCODE_DPAD_LEFT || k == KeyEvent.KEYCODE_MEDIA_REWIND) { seekBy(-10000); return true; }
+        }
+        if (k == KeyEvent.KEYCODE_INFO || k == KeyEvent.KEYCODE_GUIDE) { showInfo(); return true; }
+        return false;
     }
 
     @Override

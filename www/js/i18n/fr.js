@@ -1,6 +1,22 @@
 /* Telvo Player – Übersetzung: Französisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["fr"] = {
+  "Ändern oder neues Feedback geben kannst du ab dem {0}.": "Vous pourrez le modifier ou donner un nouvel avis à partir du {0}.",
+  "Beliebt auf Handys und Tablets.": "Populaire sur smartphones et tablettes.",
+  "Bitte schreib kurz, warum du deine Bewertung änderst.": "Veuillez indiquer brièvement pourquoi vous modifiez votre note.",
+  "Danke – dein Feedback ist angekommen.": "Merci – votre avis est bien arrivé.",
+  "Deine Bewertung – beim Ändern bitte kurz begründen.": "Votre note – si vous la modifiez, indiquez brièvement pourquoi.",
+  "Empfohlen für Fire TV Stick und Cube, Chromecast mit Google TV, Nvidia Shield, Xiaomi Mi Box und andere Android-TV-Boxen.": "Recommandé pour Fire TV Stick et Cube, Chromecast avec Google TV, Nvidia Shield, Xiaomi Mi Box et autres box Android TV.",
+  "Fire TV, Android TV, Handy – spielt fast alles ab.": "Fire TV, Android TV, smartphone – lit presque tout.",
+  "Für ältere oder schwache Boxen und für Sender, die mit den anderen Playern hängen.": "Pour les box anciennes ou peu puissantes et pour les chaînes qui bloquent avec les autres lecteurs.",
+  "Für Android TV und Google TV.": "Pour Android TV et Google TV.",
+  "Für Android-Boxen und Nvidia Shield.": "Pour les box Android et Nvidia Shield.",
+  "Für Android-Handys und Tablets (Samsung, Xiaomi, Pixel) – oder wenn der TV-Player hakt.": "Pour smartphones et tablettes Android (Samsung, Xiaomi, Pixel) – ou si le Lecteur TV saccade.",
+  "Für Technik-Fans mit vielen Einstellungen.": "Pour les passionnés de technique, avec de nombreux réglages.",
+  "OK öffnet den Sender im Vollbild.": "OK ouvre la chaîne en plein écran.",
+  "Schlank, gut für Fire TV und Android-Boxen.": "Léger, idéal pour Fire TV et les box Android.",
+  "Telvo ist nur ein Player – nutze nur Quellen, für die du berechtigt bist.": "Telvo n’est qu’un lecteur – utilisez uniquement des sources pour lesquelles vous avez une autorisation.",
+  "Warum änderst du deine Bewertung?": "Pourquoi modifiez-vous votre note ?",
   "Dein Zugang ist abgelaufen": "Votre accès a expiré",
   "Dein Zugang läuft bald ab": "Votre accès expire bientôt",
   "Verstanden": "Compris",

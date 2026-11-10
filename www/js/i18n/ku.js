@@ -1,6 +1,22 @@
 /* Telvo Player – Übersetzung: Kurdisch (Kurmandschi). Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["ku"] = {
+  "Ändern oder neues Feedback geben kannst du ab dem {0}.": "Tu dikarî ji {0} û pê ve biguherînî an nêrîneke nû bidî.",
+  "Beliebt auf Handys und Tablets.": "Li ser telefon û tabletan populer e.",
+  "Bitte schreib kurz, warum du deine Bewertung änderst.": "Ji kerema xwe bi kurtî binivîse ka tu çima nirxandina xwe diguherînî.",
+  "Danke – dein Feedback ist angekommen.": "Spas – nêrîna te gihîşt.",
+  "Deine Bewertung – beim Ändern bitte kurz begründen.": "Nirxandina te – dema tu biguherînî, ji kerema xwe sedemê bi kurtî binivîse.",
+  "Empfohlen für Fire TV Stick und Cube, Chromecast mit Google TV, Nvidia Shield, Xiaomi Mi Box und andere Android-TV-Boxen.": "Ji bo Fire TV Stick û Cube, Chromecast bi Google TV, Nvidia Shield, Xiaomi Mi Box û qutiyên din ên Android TV tê pêşniyarkirin.",
+  "Fire TV, Android TV, Handy – spielt fast alles ab.": "Fire TV, Android TV, telefon – hema hema her tiştî lê dide.",
+  "Für ältere oder schwache Boxen und für Sender, die mit den anderen Playern hängen.": "Ji bo qutiyên kevn an qels û ji bo kanalên ku bi lêderên din re disekinin.",
+  "Für Android TV und Google TV.": "Ji bo Android TV û Google TV.",
+  "Für Android-Boxen und Nvidia Shield.": "Ji bo qutiyên Android û Nvidia Shield.",
+  "Für Android-Handys und Tablets (Samsung, Xiaomi, Pixel) – oder wenn der TV-Player hakt.": "Ji bo telefon û tabletên Android (Samsung, Xiaomi, Pixel) – an jî heke Lêdana TV bi pirsgirêk be.",
+  "Für Technik-Fans mit vielen Einstellungen.": "Ji bo hezkiriyên teknîkê, bi gelek mîhengan.",
+  "OK öffnet den Sender im Vollbild.": "OK kanalê bi ekrana tijî vedike.",
+  "Schlank, gut für Fire TV und Android-Boxen.": "Sivik, ji bo Fire TV û qutiyên Android baş e.",
+  "Telvo ist nur ein Player – nutze nur Quellen, für die du berechtigt bist.": "Telvo tenê lêderek e – tenê çavkaniyên ku mafê te heye bi kar bîne.",
+  "Warum änderst du deine Bewertung?": "Tu çima nirxandina xwe diguherînî?",
   "Dein Zugang ist abgelaufen": "Gihîştina te qediya",
   "Dein Zugang läuft bald ab": "Gihîştina te di demek nêz de diqede",
   "Verstanden": "Fêm kir",
