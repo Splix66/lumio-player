@@ -8,6 +8,7 @@
 - **Startseite:** Die Reihe „Top Sender“ ist weg – „Zuletzt gesehene Sender“ reicht.
 - **„App beim Start“** gilt nur noch beim Start der App – nicht mehr nach Personen- oder Playlist-Wechsel oder Sprachwechsel. Bei mehreren Personen erst nach „Wer schaut?“ (vorher wurde alles doppelt geladen).
 - **TV-Player:** Klangverbesserung, die ein Gerät nicht einschalten kann, wird sauber wieder freigegeben.
+- **TV-Player:** Liefert eine Quelle kein Bild (schwarz, Zeit bleibt bei 00:00 stehen), probiert der Player nach 20 Sekunden das andere Format und zeigt sonst „Wiedergabe nicht möglich“ – statt endlos schwarz.
 
 ## 1.14.0 – 2026-11-10 · Neues Design: Startseite, Einstellungen, Filme & Serien
 
