@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Telvo Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.13.1',
+    version: '1.13.2',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     /* Bibliotheken: werden beim Bauen nach www/lib kopiert (scripts/copy-libs.js) und von dort geladen.
        Nur wenn sie fehlen, aus dem Internet – mit fester Version und Prüfsumme (SRI): eine veränderte Datei
@@ -226,6 +226,9 @@
   var NON_LETTER = (function () {
     try { return new RegExp('[^\\p{L}\\p{N} ]', 'gu'); } catch (e) { return /[^\w\u00C0-\u024F\u0370-\u03FF\u0400-\u04FF\u0590-\u05FF\u0600-\u06FF ]/g; }
   })();
+  // Sichtbar? „isIntersecting“ gibt es erst ab Chrome 58 – auf LG-Fernsehern bis 2019 (Chrome 53) und älteren
+  // Android-Boxen war es immer leer: die laufende Sendung und das TV-Programm wurden dort nie geladen
+  function isVisible(e) { return typeof e.isIntersecting === 'boolean' ? e.isIntersecting : e.intersectionRatio > 0; }
   function initials(s) {
     var parts = String(s || '?').replace(NON_LETTER, ' ').trim().split(/\s+/);
     return ((parts[0] || '?').charAt(0) + (parts[1] ? parts[1].charAt(0) : '')).toUpperCase();
@@ -2907,8 +2910,9 @@
     if (needFetch && window.IntersectionObserver) {
       obs = new IntersectionObserver(function (entries) {
         entries.forEach(function (e) {
-          e.target._vis = e.isIntersecting;
-          if (e.isIntersecting && !e.target._nowDone) queue.push(e.target);
+          var vis = isVisible(e);
+          e.target._vis = vis;
+          if (vis && !e.target._nowDone) queue.push(e.target);
         });
         pump();
       }, { root: scroller, rootMargin: '200px 0px' });
@@ -5030,7 +5034,7 @@
     }
     if (window.IntersectionObserver) {
       obs = new IntersectionObserver(function (entries) {
-        entries.forEach(function (e) { e.target._vis = e.isIntersecting; if (e.isIntersecting && !e.target._loaded) queue.push(e.target); });
+        entries.forEach(function (e) { var vis = isVisible(e); e.target._vis = vis; if (vis && !e.target._loaded) queue.push(e.target); });
         pump();
       }, { root: body, rootMargin: '300px 0px' });
     }
@@ -8953,7 +8957,7 @@
     Xmltv: Xmltv, chanKey: chanKey, trackLabel: trackLabel, cleanTitle: cleanTitle, cleanEpName: cleanEpName, fmtDur: fmtDur, isRadio: isRadio, Sky: Sky, icon: icon, Terms: Terms, editPerson: editPerson, EpgStore: EpgStore, makeProvider: makeProvider, Profiles: Profiles, PinGuard: PinGuard, Store: Store, Cloud: Cloud,
     decodeBytes: decodeBytes, readText: readText, fetchText: fetchText, sameConnection: sameConnection, NativePlayer: NativePlayer, App: App, ensureTs: ensureTs, migrateM3uIds: migrateM3uIds,
     ErrLog: ErrLog, techInfo: techInfo,
-    CatPrefs: CatPrefs, visibleCats: visibleCats, Parental: Parental, ChanHide: ChanHide, initials: initials, statusError: statusError,
+    CatPrefs: CatPrefs, visibleCats: visibleCats, Parental: Parental, ChanHide: ChanHide, initials: initials, statusError: statusError, isVisible: isVisible,
     Backup: Backup, profileFp: profileFp, Settings: Settings,
     Seen: Seen, Resume: Resume, UpNext: UpNext, SeriesWatch: SeriesWatch, sortVod: sortVod,
     Reminders: Reminders, NumEntry: NumEntry, Sleep: Sleep, Later: Later, Saver: Saver, trailerQuery: trailerQuery, Persons: Persons, Favs: Favs, Recent: Recent, showGuide: showGuide, Player: Player, Dialog: Dialog,

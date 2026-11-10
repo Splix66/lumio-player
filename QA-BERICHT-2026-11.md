@@ -68,6 +68,20 @@ Passwort: Geräte melden sich automatisch mit MAC + KEY an. Login/Logout gibt es
 Zusätzlich vor diesem Durchgang (gleicher Tag, ebenfalls 1.13.1, siehe CHANGELOG): weitere Korrekturen im Web-Player,
 Android-TV-Player, bei Einstellungen, Wetter und Bewertung.
 
+## Nachtrag: Geräte-Kompatibilität (ohne echte Geräte geprüft)
+
+- **APK** (veröffentlichte Datei zerlegt): erscheint im TV-Startmenü (Leanback), Banner vorhanden, kein Touchscreen nötig,
+  Querformat, eigener TV-Player und Bibliotheken enthalten, mit festem Schlüssel signiert. Mindestens Android 6.
+  **Behoben (1.13.2):** Paketversion stand immer auf „1.0 (1)“.
+- **JavaScript:** gesamter App-Code und alle Bibliotheken sind ES5 – auch sehr alte Browser-Kerne können ihn lesen.
+- **Behoben (1.13.2):** Auf Browser-Kernen bis Chrome 57 wurden laufende Sendung und TV-Programm nie geladen
+  (`isIntersecting` fehlt). Nachgestellt: vorher 0 von 14 Programmzeilen, danach 14.
+- **Offen – Risiko für sehr alte Geräte:** Das Layout nutzt CSS-Grid (52 Stellen, erst ab Chrome 57) und Abstände
+  mit `gap` in Flex-Zeilen (erst ab Chrome 84). Auf LG-Fernsehern bis 2019 (webOS 4.x, Chrome 53), Samsung 2018 und
+  Android-Boxen mit nie aktualisiertem Browser-Kern fällt das Layout deshalb vermutlich zusammen bzw. Abstände fehlen.
+  Fire TV und aktuelle Android-TV-Geräte sind nicht betroffen. Ein Test in alten Browser-Kernen (Electron 1.4/2/3)
+  wurde vorbereitet, durfte in der Testumgebung aber nicht ausgeführt werden (Programme aus externer Quelle).
+
 ## Noch offene Punkte
 
 | Bereich | Problem | Warum offen |

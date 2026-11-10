@@ -106,4 +106,20 @@ if (!g.includes('media3-exoplayer')) {
   if (g2 !== g) fs.writeFileSync(gradlePath, g2);
 }
 
+// Versionsnummer des Pakets aus der App-Version (www/js/app.js), z. B. 1.13.1 → versionName "1.13.1", versionCode 11301.
+// Vorher blieb sie immer „1.0 (1)“: Android zeigte bei jedem Kunden 1.0, und App-Stores (Amazon, Google) verlangen
+// einen steigenden versionCode. 11301 > 1 – Updates über ältere Installationen bleiben ohne Deinstallieren möglich.
+{
+  const appJs = fs.readFileSync(path.join(base, 'www', 'js', 'app.js'), 'utf8');
+  const m = /version: '(\d+)\.(\d+)\.(\d+)'/.exec(appJs);
+  if (m) {
+    const name = m[1] + '.' + m[2] + '.' + m[3];
+    const code = Number(m[1]) * 10000 + Number(m[2]) * 100 + Number(m[3]);
+    let g3 = fs.readFileSync(gradlePath, 'utf8');
+    const g4 = g3.replace(/versionCode\s+\d+/, 'versionCode ' + code).replace(/versionName\s+"[^"]*"/, 'versionName "' + name + '"');
+    if (g4 !== g3) fs.writeFileSync(gradlePath, g4);
+    console.log('Android-Version: ' + name + ' (' + code + ')');
+  }
+}
+
 console.log('Android fuer TV und Handy vorbereitet (Leanback, Banner, http-Streams, dunkler Start, TV-Player)');
