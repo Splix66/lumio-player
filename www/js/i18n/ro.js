@@ -1,6 +1,8 @@
 /* Telvo Player – Übersetzung: Rumänisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["ro"] = {
+  "Fehlerberichte senden": "Trimite rapoarte de erori",
+  "Hilft, Fehler schnell zu beheben – ohne Links, Namen oder Passwörter": "Ajută la remedierea rapidă a erorilor – fără linkuri, nume sau parole",
   "Klang": "Sunet",
   "Ton im TV-Player verbessern": "Îmbunătățește sunetul în playerul TV",
   "Lautstärke angleichen": "Egalizează volumul",

@@ -1,6 +1,8 @@
 /* Telvo Player – Übersetzung: Französisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["fr"] = {
+  "Fehlerberichte senden": "Envoyer les rapports d’erreur",
+  "Hilft, Fehler schnell zu beheben – ohne Links, Namen oder Passwörter": "Aide à corriger rapidement les problèmes – sans liens, noms ni mots de passe",
   "Klang": "Son",
   "Ton im TV-Player verbessern": "Améliorer le son du lecteur TV",
   "Lautstärke angleichen": "Égaliser le volume",

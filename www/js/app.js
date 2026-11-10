@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Telvo Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.14.0',
+    version: '1.14.1',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     /* Bibliotheken: werden beim Bauen nach www/lib kopiert (scripts/copy-libs.js) und von dort geladen.
        Nur wenn sie fehlen, aus dem Internet – mit fester Version und Prüfsumme (SRI): eine veränderte Datei
@@ -300,7 +300,44 @@
         else l.push(e);
         if (l.length > this.max) l = l.slice(l.length - this.max);
         Store.set('errlog', l);
+        ErrReport.soon();
       } catch (x) {}
+    }
+  };
+  /* ---------- Fehlerberichte (automatisch, abschaltbar) ----------
+     Neue Einträge des Fehlerprotokolls gehen gesammelt an den Online-Dienst (server/fehler-2026-11.sql) – nur Stelle,
+     bereinigte Meldung und Anzahl, dazu App-Version und Gerätetyp. Keine Links, Namen, Passwörter, Sender oder Playlists.
+     Einstellung „Fehlerberichte senden“ (Standard: an). Fehlt die Funktion auf dem Server, versucht die App es nicht weiter. */
+  var ErrReport = {
+    timer: null, off: false,
+    enabled: function () { return !this.off && !!CONFIG.cloudUrl && Settings.get('errReport') !== false; },
+    platform: function () {
+      return Platform.androidTV ? (/AFT/.test(UA) ? 'firetv' : 'androidtv') : Platform.android ? 'android' : Platform.ios ? 'ios'
+        : Platform.tizen ? 'tizen' : Platform.webos ? 'webos' : 'web';
+    },
+    soon: function (ms) {
+      var self = this;
+      if (!self.enabled()) return;
+      clearTimeout(self.timer);
+      self.timer = setTimeout(function () { self.flush(); }, ms || 60000);   // mehrere Fehler kurz hintereinander: ein Bericht
+    },
+    flush: function () {
+      var self = this;
+      if (!self.enabled() || navigator.onLine === false) return;
+      var since = Store.get('errSent', 0), items = ErrLog.list().filter(function (e) { return e.t > since; }).slice(-10);
+      if (!items.length) return;
+      var last = items[items.length - 1], prev = Store.get('errSentLast', null);
+      // Gleiche Fehler hintereinander stehen im Protokoll als ein Eintrag mit Zähler – schon gemeldete nicht doppelt zählen
+      var out = items.map(function (e, i) {
+        var n = e.n || 1;
+        if (i === 0 && prev && prev.w === e.w && prev.m === e.m) n = Math.max(0, n - (prev.n || 1));
+        return { w: e.w, m: e.m, n: n };
+      }).filter(function (x) { return x.n > 0; });
+      if (!out.length) { Store.set('errSent', last.t); return; }
+      Cloud.call('report_errors', { p_mac: Device.mac(), p_items: out, p_version: CONFIG.version, p_platform: self.platform() }).then(function (r) {
+        if (r && r.ok) { Store.set('errSent', last.t); Store.set('errSentLast', { w: last.w, m: last.m, n: last.n || 1 }); }
+        else if (r && (r.code === 'PGRST202' || r.code === '42883')) self.off = true;   // Server kennt die Funktion (noch) nicht
+      }, function () {});
     }
   };
   window.addEventListener('error', function (e) {
@@ -2313,7 +2350,16 @@
         if (App.profile) Shell.open();
         toast(T('Hallo {0}!', to.name));
       }
-      if (id === from.id) { if (Screens.top() && Screens.top().name === 'who') goBack(); return; }
+      if (id === from.id) {
+        if (Screens.top() && Screens.top().name === 'who') goBack();
+        // Beim App-Start dieselbe Person gewählt: jetzt die eingestellte Ansicht („App beim Start“) öffnen
+        if (startPending > 0 && Date.now() <= startPendingUntil) {
+          startPending = 0;
+          var sv = startView();
+          if (sv === 'live' || sv === 'movie' || sv === 'series') Shell.show(sv);
+        }
+        return;
+      }
       if (from.kids && !to.kids && Settings.get('parentPin')) Parental.ask(go, { keep: true, text: T('Zum Wechseln aus dem Kinderprofil bitte die PIN der Kindersicherung eingeben.') });
       else go();
     },
@@ -3919,6 +3965,8 @@
     if (v === 'home' || v === 'last' || v === 'live' || v === 'movie' || v === 'series') return v;
     return Settings.get('autoLast') !== false ? 'last' : 'home';
   }
+  // Wie viele Shell.open() noch bis zur eingestellten Startansicht (nur beim App-Start gesetzt, s. boot)
+  var startPending = 0, startPendingUntil = 0;
 
   var Shell = {
     el: null, view: null, current: null, buttons: {}, pendingFocus: null,
@@ -3987,8 +4035,10 @@
           else if (self.current === 'home') self.show('home', false, true);
         }
       });
-      // Start: Startseite – oder Live TV / Filme / Serien, wenn so eingestellt („App beim Start“)
-      var sv = startView();
+      // Start: Startseite – oder Live TV / Filme / Serien, wenn so eingestellt („App beim Start“).
+      // Nur beim echten App-Start – nicht nach Personen-/Playlist-Wechsel oder Neustart wegen Sprachwechsel
+      if (Date.now() > startPendingUntil) startPending = 0;
+      var sv = startPending > 0 && --startPending === 0 ? startView() : 'home';
       self.show(sv === 'live' || sv === 'movie' || sv === 'series' ? sv : 'home');
     },
     show: function (name, focusContent, keepFocus) {
@@ -4131,7 +4181,7 @@
 
   /* ==========================================================
      Startseite (Entwurf vom 10.11.2026): oben die Menüleiste, darunter ein großes Titelbild mit den
-     bestbewerteten Filmen und Serien (wechselt von selbst), „Weiterschauen“, „Zuletzt gesehene Sender“ und „Top Sender“.
+     bestbewerteten Filmen und Serien (wechselt von selbst), „Weiterschauen“ und „Zuletzt gesehene Sender“.
      ========================================================== */
   /* Auswahl fürs Titelbild: wird beim Aktualisieren der Listen berechnet (catCounts) und klein gespeichert –
      die Startseite muss die großen Film- und Serienlisten dafür nicht selbst laden. */
@@ -4232,17 +4282,14 @@
       return h('button', { class: 'hm-ch f', 'data-key': 'ch:' + ch.id, title: ch.name, onclick: function () { playChannel(ch); } },
         logoBox(ch), h('span', { class: 'hm-chname', text: ch.name }));
     }
-    function topTile(ch, n) {
-      return h('button', { class: 'hm-top f', 'data-key': 'top:' + ch.id, title: ch.name, 'aria-label': n + '. ' + ch.name, onclick: function () { playChannel(ch); } },
-        h('span', { class: 'hm-num', text: String(n) }), logoBox(ch), h('span', { class: 'hm-chname', text: ch.name }));
-    }
     // Schnellzugriff, solange es noch nichts zu zeigen gibt (neue Playlist, erster Start)
     function quickRow() {
-      var st = Stats.get();
       function q(kind, label, unit) {
-        var x = st[kind];
-        return h('button', { class: 'hm-quick f k-' + kind, 'data-key': 'q:' + kind, onclick: function () { Shell.show(kind, true); } },
-          h('span', { class: 'hm-qic' }, icon(kind)), h('b', { text: label }), h('small', { text: x ? T(unit, fmtCount(x.n)) : '…' }));
+        function count() { var x = Stats.get()[kind]; return x ? T(unit, fmtCount(x.n)) : '…'; }
+        var b = h('button', { class: 'hm-quick f k-' + kind, 'data-key': 'q:' + kind, onclick: function () { Shell.show(kind, true); } },
+          h('span', { class: 'hm-qic' }, icon(kind)), h('b', { text: label }), h('small', { text: count() }));
+        b._count = count;
+        return b;
       }
       return h('div', { class: 'hm-quickrow' }, q('live', T('Live TV'), '{0} Sender'), q('movie', T('Filme'), '{0} Titel'), q('series', T('Serien'), '{0} Serien'));
     }
@@ -4255,7 +4302,11 @@
         // im Titelbild unterwegs: nicht austauschen
         if (inside && had.classList.contains('hm-hero')) return;
         // weiterhin kein Titelbild und die Ersatzkacheln stehen schon: so lassen (sonst springt der Fokus auf „Live TV“ zurück)
-        if (!items.length && had && had.classList.contains('hm-quickrow')) return;
+        // (nur die Zahlen darunter auffrischen – nach dem ersten Laden stand sonst dauerhaft „…“)
+        if (!items.length && had && had.classList.contains('hm-quickrow')) {
+          $all('.hm-quick', had).forEach(function (b) { var s = $('small', b); if (s && b._count) s.textContent = b._count(); });
+          return;
+        }
         var fkey = inside && document.activeElement.getAttribute('data-key');
         if (had && had._dispose) had._dispose();
         clear(heroSlot);
@@ -4286,20 +4337,19 @@
           return c;
         }), h('button', { class: 'lr-all f', 'data-key': 'lr:all', onclick: showAllRecent }, h('span', { text: T('Alle anzeigen') }), icon('next'))));
       }
-      var recent = Recent.list(), top = ChanCount.top(5);
-      // „Top Sender“ mit Favoriten und zuletzt gesehenen auffüllen, bis es fünf sind
-      var seen = {}, topList = [];
-      top.concat(Favs.list('live'), recent).forEach(function (c) { if (c && !seen[c.id] && topList.length < 5) { seen[c.id] = 1; topList.push(c); } });
-      function done(rc, tp) {
+      // „Top Sender“ steht nicht mehr auf der Startseite (gewünscht) – die Zählung (ChanCount) läuft weiter
+      var recent = Recent.list();
+      function done(rc) {
         if (my !== rowsReq) return;
         if (rc.length) out.push(row(T('Zuletzt gesehene Sender'), null, rc.map(function (c) { return chanTile(c); })));
-        if (tp.length) out.push(row(T('Top Sender'), 'bolt', tp.map(function (c, i) { return topTile(c, i + 1); })));
         clear(rows); out.forEach(function (x) { rows.appendChild(x); });
         el.classList.toggle('is-empty', !out.length);
         var k = fkey || wantKey, top0 = Screens.top();
         wantKey = null;
         if (k && top0 && top0.el.contains(el)) {
           var t = $('[data-key="' + k + '"]', rows);
+          // Karte gibt es nicht mehr (z. B. Film zu Ende geschaut → nicht mehr in „Weiterschauen“): erste Karte statt Menüleiste
+          if (!t) t = $('.f', rows) || $('.f', heroSlot);
           if (t) {
             Nav.focus(t);
             // Screens.pop() setzt den Fokus 20 ms nach dem Zurückkommen selbst – danach noch einmal hierher
@@ -4307,8 +4357,8 @@
           }
         }
       }
-      Promise.all([visibleItems('live', Promise.resolve(recent.slice(0, 12))), visibleItems('live', Promise.resolve(topList))])
-        .then(function (r) { done(r[0] || [], r[1] || []); }, function () { done([], []); });
+      Promise.all([visibleItems('live', Promise.resolve(recent.slice(0, 12)))])
+        .then(function (r) { done(r[0] || []); }, function () { done([]); });
     }
 
     // byUser: Knopf gedrückt (mit Bestätigung). quiet: automatisch im Hintergrund (ohne Fehlermeldung)
@@ -4366,6 +4416,19 @@
       paintRows();
       // noch kein Titelbild (z. B. gerade erst die Listen aktualisiert): jetzt nachholen
       if (!$('.hm-hero', heroSlot)) paintHero();
+      else {
+        // Titelbild-Knöpfe auffrischen („Jetzt ansehen“ → „Weiter bei …“) – Fokus bleibt auf demselben Knopf
+        var fh = $('.fhero', heroSlot), a0 = document.activeElement;
+        var hk = (lf && heroSlot.contains(lf) && key) || (a0 && heroSlot.contains(a0) && a0.getAttribute('data-key'));
+        if (fh && fh._refresh) {
+          fh._refresh();
+          var hb = hk && $('[data-key="' + hk + '"]', heroSlot);
+          if (hb) {
+            if (sc && lf && !document.body.contains(lf)) sc.lastFocus = hb;     // Screens.pop() fokussiert gleich danach
+            if (a0 && !document.body.contains(a0)) Nav.focus(hb);               // TV-Player (kein eigener Bildschirm)
+          }
+        }
+      }
       setTimeout(autoCheck, 1500);
     };
     // App kommt aus dem Hintergrund zurück (z. B. Box-Fernbedienung, Handy entsperrt)
@@ -6854,6 +6917,8 @@
         EpgStore.clear().then(function () { toast(T('Zwischenspeicher geleert')); });
       });
     });
+    var tErrRep = switchTile('info', T('Fehlerberichte senden'), T('Hilft, Fehler schnell zu beheben – ohne Links, Namen oder Passwörter'),
+      function () { return Settings.get('errReport') !== false; }, function (v) { Settings.set('errReport', v); if (v) ErrReport.soon(5000); });
     var tHelp = tile('help', T('Hilfe'), T('Antworten auf häufige Fragen'), showWelcomeHelp);
     var tPersons = tile('users', T('Benutzer'), function () { var l = Persons.list(); return l.length > 1 ? T('{0} Benutzer', l.length) + ' · ' + Persons.cur().name : T('Nur ein Benutzer'); }, function () { showPersons(paint); });
     var tPrev = switchTile('pip', T('Vorschau bei Live TV'), T('Beim Öffnen läuft der letzte Sender klein rechts'),
@@ -6935,7 +7000,7 @@
       { id: 'content', ic: 'series', c: 'teal', name: T('Inhalte & Listen'), hint: T('Playlists, Kategorien und Sender.'), body: grid([tAdd, tPl, tUpd, tAuto, tSort, tHideL, tHideM, tHideS, tHideCh]) },
       { id: 'users', ic: 'lock', c: 'pink', name: T('Benutzer & Sicherheit'), hint: T('Wer schaut, Kindersicherung und Verlauf.'), body: grid([tPersons, tPar, tHis]) },
       { id: 'devices', ic: 'device', c: 'slate', name: T('Geräte & Verbindungen'), hint: T('Gerätetyp, Verbindung, Sicherung und externe Player.'), body: grid([tDev, tSpeed, tBackup, tExt]) },
-      { id: 'advanced', ic: 'settings', c: 'slate', name: T('Erweitert'), hint: T('Zeitschaltungen, Programmführer und Zwischenspeicher.'), body: grid([tFmt, tShift, tSleep, tIdle, tCache]) },
+      { id: 'advanced', ic: 'settings', c: 'slate', name: T('Erweitert'), hint: T('Zeitschaltungen, Programmführer und Zwischenspeicher.'), body: grid([tFmt, tShift, tSleep, tIdle, tCache, tErrRep]) },
       { id: 'help', ic: 'help', c: 'green', name: T('Hilfe & Support'), hint: T('Hilfe, Kontakt, Feedback und Updates.'), body: grid([tHelp, tReport, tFeedback, tAbout]) }
     ], 'settings');
     settingsPaint = paint;
@@ -7501,6 +7566,8 @@
       }).then(function (res) {
         res = res || {};
         if (res.sleep) Sleep.fire(true);
+        // TV-Player hat aufgegeben (z. B. „stuck“ = Quelle liefert kein Bild): ins Fehlerprotokoll
+        if (res.error) ErrLog.add('TV-Player', String(res.error) + ' | ' + (item.kind || '?') + (item.ext ? ' .' + item.ext : ''));
         var i = typeof res.index === 'number' ? res.index : idx, cur = list[i] || item;
         if (live) { Recent.push(cur); Last.set(cur); markPlaying(null); }
         else {
@@ -9183,15 +9250,26 @@
     });
     registerTvKeys();
 
+    // Ist die App beim letzten Mal abgestürzt (Android-Teil, z. B. TV-Player)? Ins Fehlerprotokoll übernehmen.
+    // Danach liegengebliebene Fehlerberichte schicken (kurz warten, bis die Anmeldung beim Online-Dienst durch ist).
+    var np = NativePlayer.plugin();
+    if (np && typeof np.takeCrash === 'function') {
+      try { np.takeCrash().then(function (r) { if (r && r.crash) ErrLog.add('Absturz', r.crash); }, function () {}); } catch (e) {}
+    }
+    setTimeout(function () { ErrReport.flush(); }, 30000);
+
     SubStyle.apply();
     var active = Profiles.get(Store.get('active'));
     if (active) {
-      activateProfile(active, false);
-      if (Persons.multi()) setTimeout(function () { if (App.profile === active) showWhoWatches(); }, 300);
-      // Einstellung „Letzten Sender beim Start abspielen“
-      // nicht nach einem Neustart aus der App heraus (z. B. Sprache gewechselt)
+      // Neustart aus der App heraus (z. B. Sprache gewechselt)? Dann weder „App beim Start“ noch letzten Sender
       var soft = false;
       try { soft = sessionStorage.getItem('lumio.soft') === '1'; sessionStorage.removeItem('lumio.soft'); } catch (e) {}
+      // „App beim Start“ (Live TV / Filme / Serien): bei mehreren Personen erst nach „Wer schaut?“ – sonst wird alles doppelt geladen
+      startPending = soft ? 0 : Persons.multi() ? 2 : 1;
+      startPendingUntil = Date.now() + 120000;   // „Wer schaut?“ nur weggeklickt: später nicht mehr umspringen
+      activateProfile(active, false);
+      if (Persons.multi()) setTimeout(function () { if (App.profile === active) showWhoWatches(); }, 300);
+      // Einstellung „Letzten Sender beim Start abspielen“ (nicht nach einem Neustart aus der App heraus)
       var lastLive = !soft && startView() === 'last' && Recent.list()[0];
       if (lastLive) setTimeout(function () {
         function ok() { var top = Screens.top(); return !Player.el && App.profile === active && top && top.name === 'shell' && !Dialog.open; }

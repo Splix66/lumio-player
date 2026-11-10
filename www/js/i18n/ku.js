@@ -1,6 +1,8 @@
 /* Telvo Player – Übersetzung: Kurdisch (Kurmandschi). Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["ku"] = {
+  "Fehlerberichte senden": "Raporên çewtiyan bişîne",
+  "Hilft, Fehler schnell zu beheben – ohne Links, Namen oder Passwörter": "Alîkarî dike ku çewtî zû werin rastkirin – bê girêdan, nav an şîfre",
   "Klang": "Deng",
   "Ton im TV-Player verbessern": "Dengê di TV-playerê de baştir bike",
   "Lautstärke angleichen": "Asta dengê wekhev bike",
