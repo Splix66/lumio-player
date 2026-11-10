@@ -1,6 +1,15 @@
 /* Telvo Player – Übersetzung: Spanisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["es"] = {
+  "Klang": "Sonido",
+  "Ton im TV-Player verbessern": "Mejorar el sonido en el reproductor TV",
+  "Lautstärke angleichen": "Igualar volumen",
+  "Leise Sender lauter, laute Werbung leiser – weniger Nachregeln.": "Canales bajos más altos, anuncios fuertes más bajos – menos ajustes.",
+  "Klare Sprache": "Voz clara",
+  "Stimmen werden hervorgehoben – gut bei leisen Dialogen.": "Las voces se realzan – ideal para diálogos bajos.",
+  "Nachtmodus": "Modo nocturno",
+  "Laute Stellen gedämpft, leise angehoben – für abends.": "Partes fuertes suavizadas, partes bajas realzadas – para la noche.",
+  "Gilt ab dem nächsten Sender oder Film. Dolby-Ton, der direkt an eine Soundbar oder einen Receiver geht, bleibt unverändert.": "Se aplica desde el siguiente canal o película. El sonido Dolby enviado directamente a una barra de sonido o receptor no cambia.",
   "Top Sender": "Canales más vistos",
   "Für Live TV, Filme und Serien": "Para Live TV, películas y series",
   "Qualität beim Start der Wiedergabe": "Calidad al iniciar la reproducción",

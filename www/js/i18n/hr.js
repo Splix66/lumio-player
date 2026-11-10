@@ -1,6 +1,15 @@
 /* Telvo Player – Übersetzung: Bosnisch / Kroatisch / Serbisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["hr"] = {
+  "Klang": "Zvuk",
+  "Ton im TV-Player verbessern": "Poboljšaj zvuk u TV playeru",
+  "Lautstärke angleichen": "Izjednači glasnoću",
+  "Leise Sender lauter, laute Werbung leiser – weniger Nachregeln.": "Tihi kanali glasniji, glasne reklame tiše – manje podešavanja.",
+  "Klare Sprache": "Jasan govor",
+  "Stimmen werden hervorgehoben – gut bei leisen Dialogen.": "Glasovi se ističu – dobro za tihe dijaloge.",
+  "Nachtmodus": "Noćni način",
+  "Laute Stellen gedämpft, leise angehoben – für abends.": "Glasni dijelovi prigušeni, tihi pojačani – za večer.",
+  "Gilt ab dem nächsten Sender oder Film. Dolby-Ton, der direkt an eine Soundbar oder einen Receiver geht, bleibt unverändert.": "Vrijedi od sljedećeg kanala ili filma. Dolby zvuk koji ide izravno na soundbar ili prijemnik ostaje nepromijenjen.",
   "Top Sender": "Najgledaniji kanali",
   "Für Live TV, Filme und Serien": "Za Live TV, filmove i serije",
   "Qualität beim Start der Wiedergabe": "Kvaliteta pri pokretanju reprodukcije",

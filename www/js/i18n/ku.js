@@ -1,6 +1,15 @@
 /* Telvo Player – Übersetzung: Kurdisch (Kurmandschi). Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["ku"] = {
+  "Klang": "Deng",
+  "Ton im TV-Player verbessern": "Dengê di TV-playerê de baştir bike",
+  "Lautstärke angleichen": "Asta dengê wekhev bike",
+  "Leise Sender lauter, laute Werbung leiser – weniger Nachregeln.": "Kanalên bêdeng bilindtir, reklamên bilind nizmtir – kêmtir rêkxistin.",
+  "Klare Sprache": "Axaftina zelal",
+  "Stimmen werden hervorgehoben – gut bei leisen Dialogen.": "Deng têne pêşxistin – ji bo diyalogên nizm baş e.",
+  "Nachtmodus": "Moda şevê",
+  "Laute Stellen gedämpft, leise angehoben – für abends.": "Cihên bilind nerm dibin, yên nizm bilind dibin – ji bo êvarê.",
+  "Gilt ab dem nächsten Sender oder Film. Dolby-Ton, der direkt an eine Soundbar oder einen Receiver geht, bleibt unverändert.": "Ji kanal an fîlma din pê ve derbasdar e. Dengê Dolby yê rasterast diçe soundbar an wergirê nayê guhertin.",
   "Top Sender": "Kanalên herî zêde têne temaşekirin",
   "Für Live TV, Filme und Serien": "Ji bo Live TV, fîlm û rêzefîlman",
   "Qualität beim Start der Wiedergabe": "Kalîte dema lêdan dest pê dike",

@@ -7,7 +7,10 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.StateListDrawable;
+import android.media.AudioManager;
+import android.media.audiofx.DynamicsProcessing;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -55,6 +58,7 @@ import java.util.List;
 public class PlayerActivity extends Activity {
 
     private ExoPlayer player;
+    private DynamicsProcessing sound;
     private PlayerView view;
     private TextView info;
     private TextView status;
@@ -311,10 +315,50 @@ public class PlayerActivity extends Activity {
                 showInfo();
             }
         });
+        applySound(in.getStringExtra("sound"));
         player.setPlayWhenReady(true);
         player.prepare();
         showInfo();
         handler.postDelayed(watchdog, 2000);
+    }
+
+    /* Klang (Einstellungen → Wiedergabe → Klang): Android-Klangbearbeitung am Ton dieses Players (ab Android 9).
+       balance: Lautstärke angleichen – leise Sender lauter, laute Werbung und Spitzen leiser
+       voice:   klare Sprache – Stimmen (1–4 kHz) anheben, Bässe etwas zurück, dazu leichte Angleichung
+       night:   Nachtmodus – starke Angleichung, Explosionen leiser, Flüstern lauter
+       Geht etwas nicht (Gerät ohne Klangbearbeitung, Dolby-Ton direkt an die Soundbar), bleibt der Ton einfach original. */
+    private void applySound(String mode) {
+        if (mode == null || "off".equals(mode) || player == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.P) return;
+        try {
+            AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+            int sid = am.generateAudioSessionId();
+            if (sid == AudioManager.ERROR) return;
+            player.setAudioSessionId(sid);
+            boolean voice = "voice".equals(mode), night = "night".equals(mode);
+            DynamicsProcessing.Config.Builder b = new DynamicsProcessing.Config.Builder(
+                    DynamicsProcessing.VARIANT_FAVOR_FREQUENCY_RESOLUTION, 2,
+                    voice, voice ? 4 : 1, true, 1, false, 1, true);
+            if (voice) {
+                DynamicsProcessing.Eq eq = new DynamicsProcessing.Eq(true, true, 4);
+                eq.setBand(0, new DynamicsProcessing.EqBand(true, 160f, -3f));     // Bässe etwas zurück
+                eq.setBand(1, new DynamicsProcessing.EqBand(true, 1000f, 0f));
+                eq.setBand(2, new DynamicsProcessing.EqBand(true, 4000f, 5f));     // Sprachverständlichkeit
+                eq.setBand(3, new DynamicsProcessing.EqBand(true, 20000f, 1.5f));
+                b.setPreEqAllChannelsTo(eq);
+            }
+            DynamicsProcessing.Mbc mbc = new DynamicsProcessing.Mbc(true, true, 1);
+            // ein Band über alles: Angriff, Abklingen (ms), Verhältnis, Schwelle (dB), Knie, Rauschsperre, Expander, Vor-/Nachverstärkung
+            mbc.setBand(0, new DynamicsProcessing.MbcBand(true, 20000f,
+                    night ? 5f : 10f, night ? 250f : 300f, night ? 6f : 3f, night ? -34f : -26f,
+                    6f, -90f, 1f, 0f, night ? 12f : 7f));
+            b.setMbcAllChannelsTo(mbc);
+            // Begrenzer am Ende: durch die Anhebung nie übersteuern
+            b.setLimiterAllChannelsTo(new DynamicsProcessing.Limiter(true, true, 0, 1f, 60f, 10f, -2f, 0f));
+            sound = new DynamicsProcessing(0, sid, b.build());
+            sound.setEnabled(true);
+        } catch (Throwable t) {
+            sound = null;
+        }
     }
 
     private TextView makeLabel(int sp) {
@@ -651,6 +695,10 @@ public class PlayerActivity extends Activity {
     @Override
     protected void onDestroy() {
         handler.removeCallbacksAndMessages(null);
+        if (sound != null) {
+            try { sound.release(); } catch (Exception ignored) { }
+            sound = null;
+        }
         if (player != null) {
             player.release();
             player = null;

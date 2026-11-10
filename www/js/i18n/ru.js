@@ -1,6 +1,15 @@
 /* Telvo Player – Übersetzung: Russisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["ru"] = {
+  "Klang": "Звук",
+  "Ton im TV-Player verbessern": "Улучшить звук в ТВ-плеере",
+  "Lautstärke angleichen": "Выравнивание громкости",
+  "Leise Sender lauter, laute Werbung leiser – weniger Nachregeln.": "Тихие каналы громче, громкая реклама тише – меньше подстраивать.",
+  "Klare Sprache": "Чёткая речь",
+  "Stimmen werden hervorgehoben – gut bei leisen Dialogen.": "Голоса выделяются – удобно при тихих диалогах.",
+  "Nachtmodus": "Ночной режим",
+  "Laute Stellen gedämpft, leise angehoben – für abends.": "Громкие места тише, тихие громче – для вечера.",
+  "Gilt ab dem nächsten Sender oder Film. Dolby-Ton, der direkt an eine Soundbar oder einen Receiver geht, bleibt unverändert.": "Действует со следующего канала или фильма. Звук Dolby, идущий напрямую на саундбар или ресивер, не меняется.",
   "Top Sender": "Самые просматриваемые каналы",
   "Für Live TV, Filme und Serien": "Для Live TV, фильмов и сериалов",
   "Qualität beim Start der Wiedergabe": "Качество при начале воспроизведения",

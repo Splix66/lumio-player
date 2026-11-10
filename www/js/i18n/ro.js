@@ -1,6 +1,15 @@
 /* Telvo Player – Übersetzung: Rumänisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["ro"] = {
+  "Klang": "Sunet",
+  "Ton im TV-Player verbessern": "Îmbunătățește sunetul în playerul TV",
+  "Lautstärke angleichen": "Egalizează volumul",
+  "Leise Sender lauter, laute Werbung leiser – weniger Nachregeln.": "Canalele încete mai tare, reclamele zgomotoase mai încet – mai puține reglaje.",
+  "Klare Sprache": "Voce clară",
+  "Stimmen werden hervorgehoben – gut bei leisen Dialogen.": "Vocile sunt evidențiate – bine pentru dialoguri încete.",
+  "Nachtmodus": "Mod noapte",
+  "Laute Stellen gedämpft, leise angehoben – für abends.": "Părțile puternice atenuate, cele încete ridicate – pentru seară.",
+  "Gilt ab dem nächsten Sender oder Film. Dolby-Ton, der direkt an eine Soundbar oder einen Receiver geht, bleibt unverändert.": "Se aplică de la următorul canal sau film. Sunetul Dolby trimis direct la un soundbar sau receiver rămâne neschimbat.",
   "Top Sender": "Cele mai vizionate canale",
   "Für Live TV, Filme und Serien": "Pentru Live TV, filme și seriale",
   "Qualität beim Start der Wiedergabe": "Calitatea la pornirea redării",

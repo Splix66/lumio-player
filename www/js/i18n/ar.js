@@ -1,6 +1,15 @@
 /* Telvo Player – Übersetzung: Arabisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["ar"] = {
+  "Klang": "الصوت",
+  "Ton im TV-Player verbessern": "تحسين الصوت في مشغل التلفاز",
+  "Lautstärke angleichen": "موازنة مستوى الصوت",
+  "Leise Sender lauter, laute Werbung leiser – weniger Nachregeln.": "القنوات الهادئة أعلى والإعلانات الصاخبة أخفض – تعديل أقل.",
+  "Klare Sprache": "كلام واضح",
+  "Stimmen werden hervorgehoben – gut bei leisen Dialogen.": "إبراز الأصوات – مناسب للحوارات الهادئة.",
+  "Nachtmodus": "الوضع الليلي",
+  "Laute Stellen gedämpft, leise angehoben – für abends.": "تخفيف المقاطع العالية ورفع الهادئة – للمساء.",
+  "Gilt ab dem nächsten Sender oder Film. Dolby-Ton, der direkt an eine Soundbar oder einen Receiver geht, bleibt unverändert.": "يسري من القناة أو الفيلم التالي. صوت Dolby المرسل مباشرة إلى مكبر الصوت أو جهاز الاستقبال يبقى دون تغيير.",
   "Top Sender": "القنوات الأكثر مشاهدة",
   "Für Live TV, Filme und Serien": "للبث المباشر والأفلام والمسلسلات",
   "Qualität beim Start der Wiedergabe": "الجودة عند بدء التشغيل",

@@ -1,6 +1,15 @@
 /* Telvo Player – Übersetzung: Griechisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["el"] = {
+  "Klang": "Ήχος",
+  "Ton im TV-Player verbessern": "Βελτίωση ήχου στο TV player",
+  "Lautstärke angleichen": "Εξισορρόπηση έντασης",
+  "Leise Sender lauter, laute Werbung leiser – weniger Nachregeln.": "Τα ήσυχα κανάλια πιο δυνατά, οι δυνατές διαφημίσεις πιο σιγά – λιγότερες ρυθμίσεις.",
+  "Klare Sprache": "Καθαρή ομιλία",
+  "Stimmen werden hervorgehoben – gut bei leisen Dialogen.": "Οι φωνές ακούγονται πιο καθαρά – καλό για χαμηλούς διαλόγους.",
+  "Nachtmodus": "Νυχτερινή λειτουργία",
+  "Laute Stellen gedämpft, leise angehoben – für abends.": "Τα δυνατά σημεία μαλακώνουν, τα σιγανά ανεβαίνουν – για το βράδυ.",
+  "Gilt ab dem nächsten Sender oder Film. Dolby-Ton, der direkt an eine Soundbar oder einen Receiver geht, bleibt unverändert.": "Ισχύει από το επόμενο κανάλι ή ταινία. Ο ήχος Dolby που πηγαίνει απευθείας σε soundbar ή ενισχυτή μένει αμετάβλητος.",
   "Top Sender": "Κορυφαία κανάλια",
   "Für Live TV, Filme und Serien": "Για Live TV, ταινίες και σειρές",
   "Qualität beim Start der Wiedergabe": "Ποιότητα στην έναρξη αναπαραγωγής",

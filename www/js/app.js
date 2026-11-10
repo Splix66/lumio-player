@@ -6812,6 +6812,15 @@
       T('Hängen Sender oder Filme, probiere einen anderen Player.'), null, T('Für Live TV, Filme und Serien'));
     var tExt = !(Platform.android && NativePlayer.plugin()) ? null : choiceTile('ext', T('Externer Player'), EXTS, function () { return Settings.get('extPlayer') || 'off'; }, function (v) { Settings.set('extPlayer', v); },
       T('Sender, Filme und Serien in einer anderen App abspielen. Die App muss auf dem Gerät installiert sein.'));
+    // Klang im TV-Player (Android-Klangbearbeitung, siehe PlayerActivity.applySound)
+    var SOUNDS = [['off', T('Original')],
+      ['balance', T('Lautstärke angleichen'), T('Leise Sender lauter, laute Werbung leiser – weniger Nachregeln.')],
+      ['voice', T('Klare Sprache'), T('Stimmen werden hervorgehoben – gut bei leisen Dialogen.')],
+      ['night', T('Nachtmodus'), T('Laute Stellen gedämpft, leise angehoben – für abends.')]];
+    var tSound = !(Platform.android && NativePlayer.available()) ? null : choiceTile('vol', T('Klang'), SOUNDS,
+      function () { return Settings.get('sound') || 'off'; }, function (v) { Settings.set('sound', v); },
+      T('Gilt ab dem nächsten Sender oder Film. Dolby-Ton, der direkt an eine Soundbar oder einen Receiver geht, bleibt unverändert.'),
+      null, T('Ton im TV-Player verbessern'));
     var QUALS = [['auto', T('Automatisch'), T('Passt sich der Internetverbindung an.')], ['best', T('Immer beste Qualität'), T('Braucht schnelles Internet. Gut für PC und große Fernseher.')]];
     var tQual = choiceTile('player', T('Bildqualität'), QUALS, function () { return Settings.get('quality') || 'auto'; }, function (v) { Settings.set('quality', v); },
       T('Gilt für Streams, die es in mehreren Qualitäten gibt. Welche Qualität gerade läuft, steht im Player oben rechts.'), null, T('Qualität beim Start der Wiedergabe'));
@@ -6921,7 +6930,7 @@
     // Acht Bereiche wie im Entwurf vom 10.11.2026 – nur Einstellungen, die es wirklich gibt
     var el = sidePage('settings st-page', T('Einstellungen'), 'settings', [
       { id: 'general', ic: 'home', c: 'violet', name: T('Allgemein'), hint: T('Grundlegende Einstellungen für dein Telvo-Erlebnis.'), body: grid([tLang, tClock, tStart, tUpdChk]) },
-      { id: 'play', ic: 'play', c: 'blue', name: T('Wiedergabe'), hint: T('Player, Bildqualität, Untertitel und Vorschau.'), body: grid([tEng, tQual, tSub, tNext, tPrev, tHero]) },
+      { id: 'play', ic: 'play', c: 'blue', name: T('Wiedergabe'), hint: T('Player, Bildqualität, Untertitel und Vorschau.'), body: grid([tEng, tQual, tSound, tSub, tNext, tPrev, tHero]) },
       { id: 'look', ic: 'sun', c: 'amber', name: T('Darstellung'), hint: T('Farben, Cover, Wetter und Bildschirmschoner.'), body: grid([tTheme, tPoster, tSky, tSaver]) },
       { id: 'content', ic: 'series', c: 'teal', name: T('Inhalte & Listen'), hint: T('Playlists, Kategorien und Sender.'), body: grid([tAdd, tPl, tUpd, tAuto, tSort, tHideL, tHideM, tHideS, tHideCh]) },
       { id: 'users', ic: 'lock', c: 'pink', name: T('Benutzer & Sicherheit'), hint: T('Wer schaut, Kindersicherung und Verlauf.'), body: grid([tPersons, tPar, tHis]) },
@@ -7487,7 +7496,8 @@
         txtFailed: T('Wiedergabe nicht möglich. Mit „Zurück“ schließen.'),
         txtNoChannel: T('Sender {0} nicht gefunden'),
         sleepAt: Sleep.at || 0,
-        autoNext: Settings.get('autoNext') !== false
+        autoNext: Settings.get('autoNext') !== false,
+        sound: Settings.get('sound') || 'off'
       }).then(function (res) {
         res = res || {};
         if (res.sleep) Sleep.fire(true);

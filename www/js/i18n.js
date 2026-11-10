@@ -7,6 +7,15 @@
 window.LUMIO_I18N = {
   /* ---------------- English ---------------- */
   en: {
+    "Klang": "Sound",
+    "Ton im TV-Player verbessern": "Improve sound in the TV player",
+    "Lautstärke angleichen": "Even out volume",
+    "Leise Sender lauter, laute Werbung leiser – weniger Nachregeln.": "Quiet channels louder, loud ads quieter – less adjusting.",
+    "Klare Sprache": "Clear speech",
+    "Stimmen werden hervorgehoben – gut bei leisen Dialogen.": "Voices are brought forward – good for quiet dialogue.",
+    "Nachtmodus": "Night mode",
+    "Laute Stellen gedämpft, leise angehoben – für abends.": "Loud parts softened, quiet parts raised – for the evening.",
+    "Gilt ab dem nächsten Sender oder Film. Dolby-Ton, der direkt an eine Soundbar oder einen Receiver geht, bleibt unverändert.": "Applies from the next channel or movie. Dolby sound sent directly to a soundbar or receiver stays unchanged.",
     "Top Sender": "Top channels",
     "Für Live TV, Filme und Serien": "For Live TV, movies and series",
     "Qualität beim Start der Wiedergabe": "Quality when playback starts",
@@ -1048,6 +1057,15 @@ window.LUMIO_I18N = {
 
   /* ---------------- Türkçe ---------------- */
   tr: {
+    "Klang": "Ses",
+    "Ton im TV-Player verbessern": "TV oynatıcısında sesi iyileştir",
+    "Lautstärke angleichen": "Ses seviyesini dengele",
+    "Leise Sender lauter, laute Werbung leiser – weniger Nachregeln.": "Sessiz kanallar daha yüksek, yüksek reklamlar daha alçak – daha az ayar.",
+    "Klare Sprache": "Net konuşma",
+    "Stimmen werden hervorgehoben – gut bei leisen Dialogen.": "Sesler öne çıkarılır – alçak diyaloglar için iyi.",
+    "Nachtmodus": "Gece modu",
+    "Laute Stellen gedämpft, leise angehoben – für abends.": "Yüksek yerler kısılır, alçak yerler yükseltilir – akşamlar için.",
+    "Gilt ab dem nächsten Sender oder Film. Dolby-Ton, der direkt an eine Soundbar oder einen Receiver geht, bleibt unverändert.": "Bir sonraki kanal veya filmden itibaren geçerlidir. Doğrudan soundbar veya alıcıya giden Dolby ses değişmez.",
     "Top Sender": "En çok izlenen kanallar",
     "Für Live TV, Filme und Serien": "Canlı TV, filmler ve diziler için",
     "Qualität beim Start der Wiedergabe": "Oynatma başlarken kalite",
