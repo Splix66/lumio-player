@@ -895,5 +895,8 @@ window.LUMIO_I18N["hr"] = {
   "Zoom": "Zum",
   "Ton-Verzögerung": "Odgoda zvuka",
   "Pausiert": "Pauzirano",
-  "Die Knöpfe im Player": "Gumbi playera"
+  "Die Knöpfe im Player": "Gumbi playera",
+  "Gut zu wissen": "Dobro je znati",
+  "Telvo ist nur ein Player ohne eigene Sender. Nutze nur Quellen, für die du eine Berechtigung hast.": "Telvo je samo player bez vlastitih kanala. Koristi samo izvore za koje imaš dopuštenje.",
+  "Nutzungsbedingungen": "Uvjeti korištenja"
 };

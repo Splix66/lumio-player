@@ -485,6 +485,23 @@
     eq(D.trailerQuery('|EN| Moonlight [Multi-Sub] (2016)', '2016'), 'Moonlight (2016) Trailer', 'Jahr steht schon im Namen');
     eq(D.trailerQuery('Nacht & Sturm', ''), 'Nacht & Sturm Trailer', 'ohne Jahr');
   });
+  t('Start', 'Hinweis zu den Nutzungsbedingungen: klein, blockiert nichts, erscheint nur einmal je Fassung', function () {
+    var before = localStorage.getItem('lumio.terms');
+    try {
+      localStorage.removeItem('lumio.terms');
+      Array.prototype.forEach.call(document.querySelectorAll('.terms-note'), function (x) { x.parentNode.removeChild(x); });
+      D.Terms.show();
+      var n = document.querySelector('.terms-note');
+      ok(n, 'Hinweis erscheint');
+      ok(!D.Dialog.open, 'kein Dialog, der die App blockiert');
+      eq(JSON.parse(localStorage.getItem('lumio.terms')), D.Terms.version, 'gilt als gesehen');
+      D.Terms.show();
+      eq(document.querySelectorAll('.terms-note').length, 1, 'nicht doppelt');
+      if (n && n.parentNode) n.parentNode.removeChild(n);
+    } finally {
+      if (before == null) localStorage.removeItem('lumio.terms'); else localStorage.setItem('lumio.terms', before);
+    }
+  });
   t('Player', 'Qualität, Tempo und Ton-Verzögerung erscheinen nur, wenn der Stream sie wirklich kann', function () {
     var P = D.Player;
     // Qualität: nur mit mehreren Stufen, gleiche Höhe einmal, die beste oben

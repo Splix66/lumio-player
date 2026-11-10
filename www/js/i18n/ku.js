@@ -895,5 +895,8 @@ window.LUMIO_I18N["ku"] = {
   "Zoom": "Zoom",
   "Ton-Verzögerung": "Derengiya deng",
   "Pausiert": "Rawestiyayî",
-  "Die Knöpfe im Player": "Bişkokên lîstikvanê"
+  "Die Knöpfe im Player": "Bişkokên lîstikvanê",
+  "Gut zu wissen": "Baş e ku bizanî",
+  "Telvo ist nur ein Player ohne eigene Sender. Nutze nur Quellen, für die du eine Berechtigung hast.": "Telvo tenê lîstikvanek e bê kanalên xwe. Tenê çavkaniyên ku destûra te heye bi kar bîne.",
+  "Nutzungsbedingungen": "Mercên bikaranînê"
 };

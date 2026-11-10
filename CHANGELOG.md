@@ -1,5 +1,15 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## Noch nicht veröffentlicht
+
+- **Hinweis beim ersten Start** jetzt klein unten statt als Fenster: „Gut zu wissen – Telvo ist nur ein Player ohne eigene
+  Sender …“ mit Link zu den Nutzungsbedingungen (auf dem Fernseher die Adresse). Verschwindet nach 9 Sekunden von selbst
+  (Balken zeigt die Zeit) oder per Klick, blockiert nichts und erscheint nur einmal je Fassung der Bedingungen.
+- **Sprachauswahl** oben rechts kompakt in zwei Spalten – alle 14 Sprachen auf einen Blick, ohne Scrollen; gewählte Sprache
+  lavendelfarben. Auf dem Handy als Karte statt Vollbild. (Drei Varianten verglichen: Liste, 2 und 3 Spalten.)
+- **Playlist von Hand einrichten:** Knopf „Zurück“ oben in der Karte.
+- Neuer Test.
+
 ## 1.12.0 – 2026-11-10 · Neuer Startbildschirm, Profi-Player, Personen und neue Webseite
 
 **App – Willkommensseite neu angeordnet:** QR-Code in der Mitte · rechts MAC, KEY, „Playlist hinzufügen“, „Demo“ und

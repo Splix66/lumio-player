@@ -2003,21 +2003,38 @@
 
   /* Erinnert 30 Tage, 7 Tage und 24 Stunden vor Ablauf des Zugangs (und nach Ablauf) – jeweils einmal.
      Später kann hier auch eine eigene Nachricht, ein Bild oder Video des Anbieters erscheinen. */
-  /* ---------- Nutzungsbedingungen: einmaliger Hinweis beim ersten Start ----------
+  /* ---------- Nutzungsbedingungen: kleiner Hinweis beim ersten Start ----------
+     Unten eingeblendet, verschwindet nach ein paar Sekunden von selbst (oder per Klick) und blockiert nichts.
      Erscheint erneut nur, wenn sich die Bedingungen ändern (dann „version“ erhöhen). */
   var Terms = {
     version: '2026-11',
     check: function () {
       if (Store.get('terms') === this.version) return;
+      var self = this;
+      setTimeout(function () { self.show(); }, 900);
+    },
+    show: function () {
       var self = this, url = CONFIG.portalUrl + 'nutzungsbedingungen.html';
-      var show = function () {
-        if (Dialog.open) { setTimeout(show, 1500); return; }
-        var btns = [{ label: T('Verstanden'), primary: true, action: function () { Store.set('terms', self.version); } }];
-        // Auf dem Fernseher gibt es keinen Browser – dort steht die Adresse im Text
-        if (!Platform.tv) btns.unshift({ label: T('Nutzungsbedingungen lesen'), action: function () { openExternal(url); } });
-        Dialog.show(T('Bevor es losgeht'), T('Telvo ist ein Player ohne eigene Sender oder Inhalte. Du trägst deine eigene Playlist ein und nutzt nur Quellen, für die du eine Berechtigung hast. Mit „Verstanden“ stimmst du den Nutzungsbedingungen zu: {0}', url.replace(/^https?:\/\//, '')), btns);
-      };
-      setTimeout(show, 600);
+      if (document.querySelector('.terms-note')) return;
+      Store.set('terms', self.version);
+      var timer = null, note;
+      function close() {
+        clearTimeout(timer);
+        note.classList.add('is-out');
+        setTimeout(function () { if (note.parentNode) note.parentNode.removeChild(note); }, 350);
+      }
+      note = h('div', { class: 'terms-note', role: 'status' },
+        icon('info'),
+        h('span', { class: 'tn-txt' },
+          h('b', { text: T('Gut zu wissen') }),
+          h('span', { text: T('Telvo ist nur ein Player ohne eigene Sender. Nutze nur Quellen, für die du eine Berechtigung hast.') }),
+          // Auf dem Fernseher gibt es keinen Browser – dort steht die Adresse klein darunter
+          Platform.tv ? h('span', { class: 'tn-url', text: T('Nutzungsbedingungen') + ': ' + url.replace(/^https?:\/\//, '') }) : null),
+        Platform.tv ? null : h('button', { class: 'tn-link', onclick: function (e) { e.stopPropagation(); openExternal(url); } }, T('Nutzungsbedingungen')),
+        h('i', { class: 'tn-bar' }));
+      note.addEventListener('click', close);
+      document.body.appendChild(note);
+      timer = setTimeout(close, 9000);
     }
   };
 
@@ -3504,6 +3521,8 @@
 
     var el = h('div', { class: 'form-wrap' }, heroArt(),
       h('div', { class: 'form form-card' },
+        // Zurück oben: wer sich doch für das Einrichten per Handy entscheidet, kommt sofort zurück
+        h('button', { class: 'btn f ghost small form-back', onclick: goBack }, icon('back'), h('span', { text: T('Zurück') })),
         h('h1', { text: T('Playlist hinzufügen') }),
         h('div', null, macTag()),
         h('div', { class: 'tabs' }, tX, tM),
@@ -8193,7 +8212,7 @@
   // Für automatische Tests von außen erreichbar
   window.LumioDebug = {
     parseM3U: parseM3U, catchupUrl: catchupUrl, parseXtreamLink: parseXtreamLink, normalizeServer: normalizeServer, Nav: Nav, Screens: Screens, StillWatching: StillWatching,
-    Xmltv: Xmltv, chanKey: chanKey, trackLabel: trackLabel, EpgStore: EpgStore, makeProvider: makeProvider, Profiles: Profiles, PinGuard: PinGuard, Store: Store, Cloud: Cloud,
+    Xmltv: Xmltv, chanKey: chanKey, trackLabel: trackLabel, Terms: Terms, EpgStore: EpgStore, makeProvider: makeProvider, Profiles: Profiles, PinGuard: PinGuard, Store: Store, Cloud: Cloud,
     decodeBytes: decodeBytes, readText: readText, fetchText: fetchText, sameConnection: sameConnection, NativePlayer: NativePlayer, App: App, ensureTs: ensureTs, migrateM3uIds: migrateM3uIds,
     ErrLog: ErrLog, techInfo: techInfo,
     CatPrefs: CatPrefs, visibleCats: visibleCats, Parental: Parental, ChanHide: ChanHide,

@@ -895,5 +895,8 @@ window.LUMIO_I18N["el"] = {
   "Zoom": "Ζουμ",
   "Ton-Verzögerung": "Καθυστέρηση ήχου",
   "Pausiert": "Σε παύση",
-  "Die Knöpfe im Player": "Τα κουμπιά του player"
+  "Die Knöpfe im Player": "Τα κουμπιά του player",
+  "Gut zu wissen": "Καλό να ξέρεις",
+  "Telvo ist nur ein Player ohne eigene Sender. Nutze nur Quellen, für die du eine Berechtigung hast.": "Το Telvo είναι μόνο ένας player χωρίς δικά του κανάλια. Χρησιμοποίησε μόνο πηγές για τις οποίες έχεις δικαίωμα.",
+  "Nutzungsbedingungen": "Όροι χρήσης"
 };

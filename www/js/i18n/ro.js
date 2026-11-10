@@ -895,5 +895,8 @@ window.LUMIO_I18N["ro"] = {
   "Zoom": "Zoom",
   "Ton-Verzögerung": "Întârziere sunet",
   "Pausiert": "Pauză",
-  "Die Knöpfe im Player": "Butoanele playerului"
+  "Die Knöpfe im Player": "Butoanele playerului",
+  "Gut zu wissen": "Bine de știut",
+  "Telvo ist nur ein Player ohne eigene Sender. Nutze nur Quellen, für die du eine Berechtigung hast.": "Telvo este doar un player fără canale proprii. Folosește doar surse pentru care ai dreptul.",
+  "Nutzungsbedingungen": "Condiții de utilizare"
 };

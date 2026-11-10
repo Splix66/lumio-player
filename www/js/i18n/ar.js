@@ -895,5 +895,8 @@ window.LUMIO_I18N["ar"] = {
   "Zoom": "تكبير",
   "Ton-Verzögerung": "تأخير الصوت",
   "Pausiert": "متوقف مؤقتًا",
-  "Die Knöpfe im Player": "أزرار المشغّل"
+  "Die Knöpfe im Player": "أزرار المشغّل",
+  "Gut zu wissen": "من المفيد معرفته",
+  "Telvo ist nur ein Player ohne eigene Sender. Nutze nur Quellen, für die du eine Berechtigung hast.": "Telvo مجرد مشغّل بدون قنوات خاصة. استخدم فقط المصادر التي يحق لك استخدامها.",
+  "Nutzungsbedingungen": "شروط الاستخدام"
 };

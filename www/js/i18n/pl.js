@@ -895,5 +895,8 @@ window.LUMIO_I18N["pl"] = {
   "Zoom": "Powiększ",
   "Ton-Verzögerung": "Opóźnienie dźwięku",
   "Pausiert": "Wstrzymano",
-  "Die Knöpfe im Player": "Przyciski odtwarzacza"
+  "Die Knöpfe im Player": "Przyciski odtwarzacza",
+  "Gut zu wissen": "Warto wiedzieć",
+  "Telvo ist nur ein Player ohne eigene Sender. Nutze nur Quellen, für die du eine Berechtigung hast.": "Telvo to tylko odtwarzacz bez własnych kanałów. Korzystaj tylko ze źródeł, do których masz uprawnienia.",
+  "Nutzungsbedingungen": "Warunki korzystania"
 };

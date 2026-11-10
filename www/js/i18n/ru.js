@@ -895,5 +895,8 @@ window.LUMIO_I18N["ru"] = {
   "Zoom": "Масштаб",
   "Ton-Verzögerung": "Задержка звука",
   "Pausiert": "Пауза",
-  "Die Knöpfe im Player": "Кнопки плеера"
+  "Die Knöpfe im Player": "Кнопки плеера",
+  "Gut zu wissen": "Полезно знать",
+  "Telvo ist nur ein Player ohne eigene Sender. Nutze nur Quellen, für die du eine Berechtigung hast.": "Telvo – это только плеер без собственных каналов. Используй только источники, на которые у тебя есть право.",
+  "Nutzungsbedingungen": "Условия использования"
 };
