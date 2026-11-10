@@ -4,7 +4,7 @@
 # Aufruf: python3 scripts/make-icons.py   (benötigt: pip install pillow)
 # Farben unten anpassen, um das Logo zu ändern.
 import os
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 BG_TOP = (45, 39, 69)       # Hintergrund oben    (#2d2745)
 BG_MID = (21, 19, 31)       # Hintergrund Mitte   (#15131f)
@@ -105,9 +105,12 @@ def icon(size, rounded=False, scale=0.8):
     return bg
 
 
-def font(size):
-    for f in ['/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 'DejaVuSans-Bold.ttf', 'arialbd.ttf',
-              '/System/Library/Fonts/Supplemental/Arial Bold.ttf']:
+def font(size, bold=True):
+    names = (['/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 'DejaVuSans-Bold.ttf', 'arialbd.ttf',
+              '/System/Library/Fonts/Supplemental/Arial Bold.ttf'] if bold else
+             ['/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', 'DejaVuSans.ttf', 'arial.ttf',
+              '/System/Library/Fonts/Supplemental/Arial.ttf'])
+    for f in names:
         try:
             return ImageFont.truetype(f, size)
         except OSError:
@@ -124,22 +127,36 @@ fg.alpha_composite(m, (202, 202))
 fg.save(p('assets', 'icon-foreground.png'))
 background(1024, 1024).save(p('assets', 'icon-background.png'))
 
-# Startbildschirm
+# Startbildschirm: Logo und darunter „Telvo Player“
 sp = Image.new('RGBA', (2732, 2732), (11, 10, 26, 255))
-sm = mark(520)
-sp.alpha_composite(sm, ((2732 - 520) // 2, (2732 - 520) // 2))
+sm = mark(440)
+sp.alpha_composite(sm, ((2732 - 440) // 2, (2732 - 440) // 2 - 110))
+sd = ImageDraw.Draw(sp)
+f_b, f_r = font(150), font(150, bold=False)
+w_b = sd.textlength(NAME + ' ', font=f_b)
+w_r = sd.textlength('Player', font=f_r)
+sx = (2732 - (w_b + w_r)) / 2
+sd.text((sx, 1366 + 260), NAME + ' ', font=f_b, fill=(244, 244, 246), anchor='ls')
+sd.text((sx + w_b, 1366 + 260), 'Player', font=f_r, fill=(201, 184, 251), anchor='ls')
 sp.convert('RGB').save(p('assets', 'splash.png'))
 sp.convert('RGB').save(p('assets', 'splash-dark.png'))
 
-# Android-TV-Banner 320x180
+# Android-TV-/Fire-TV-Banner 320x180: gefüllte Kachel mit Namen (wie Netflix oder YouTube im Startmenü) –
+# dunkler Verlauf mit lila Lichtschein, Logo links, daneben „Telvo“ groß und „Player“ darunter
 S = 4
 W, H = 320, 180
 ban = background(W * S, H * S).convert('RGBA')
-bm = mark(int(H * 0.62) * S)
-x0 = int(W * 0.12) * S
+glow = Image.new('L', (W * S, H * S), 0)
+ImageDraw.Draw(glow).ellipse([int(W * .18) * S, int(-H * .35) * S, int(W * 1.15) * S, int(H * 1.05) * S], fill=150)
+glow = glow.filter(ImageFilter.GaussianBlur(34 * S))
+ban.paste(Image.new('RGBA', (W * S, H * S), (124, 58, 237, 255)), (0, 0), glow)
+bm = mark(int(H * 0.5) * S)
+x0 = int(W * 0.07) * S
 ban.alpha_composite(bm, (x0, (H * S - bm.height) // 2))
-ImageDraw.Draw(ban).text((x0 + bm.width + int(H * 0.07) * S, H * S // 2), NAME,
-                         font=font(46 * S), fill=(243, 245, 249), anchor='lm')
+tx = x0 + bm.width + int(W * 0.035) * S
+dr = ImageDraw.Draw(ban)
+dr.text((tx, int(H * 0.55) * S), NAME, font=font(44 * S), fill=(246, 245, 250), anchor='ls')
+dr.text((tx + 2 * S, int(H * 0.6) * S), 'Player', font=font(28 * S, bold=False), fill=(214, 200, 255), anchor='lt')
 ban.resize((W, H), Image.LANCZOS).convert('RGB').save(p('assets', 'banner.png'))
 
 # Samsung (512x423), LG (80x80, 130x130), Webseite/App (192x192)
