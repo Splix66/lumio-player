@@ -1395,8 +1395,8 @@ body.kbd .cp-row.f:focus .cp-name, body.is-tv .cp-row.f:focus .cp-name, body.kbd
 .sh-remote .remote { padding: .3rem 0; }
 
 /* Größe der Cover (Einstellungen → Darstellung) */
-html[data-poster="s"] .mv-grid { grid-template-columns: repeat(auto-fill, minmax(7.6rem, 1fr)); grid-gap: 1.3rem .9rem; gap: 1.3rem .9rem; }
-html[data-poster="l"] .mv-grid { grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr)); }
+html[data-poster="s"] .poster-grid.mv-grid { grid-template-columns: repeat(auto-fill, minmax(7.6rem, 1fr)); grid-gap: 1.3rem .9rem; gap: 1.3rem .9rem; }
+html[data-poster="l"] .poster-grid.mv-grid { grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr)); }
 html[data-poster="s"] .poster-grid { grid-template-columns: repeat(auto-fill, minmax(8.2rem, 1fr)); }
 html[data-poster="l"] .poster-grid { grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr)); }
 
@@ -1574,7 +1574,7 @@ html[data-poster="l"] .poster-grid { grid-template-columns: repeat(auto-fill, mi
 .mv2 .mv-top .rail-track > * + * { margin-left: .9rem; }
 .mv2 .mv-top:empty { display: none; }
 .mv-body { display: flex; align-items: flex-start; margin-top: 1.5rem; }
-.mv-side { position: sticky; top: 0; z-index: 2; flex: none; width: 15.5rem; max-height: calc(100vh - var(--head-h) - 2.8rem); overflow-y: auto; padding: .3rem 1rem 1.5rem var(--pad); scrollbar-width: thin; background: var(--bg); }
+.mv-side { position: sticky; top: 0; z-index: 2; flex: none; width: 17rem; max-height: calc(100vh - var(--head-h) - 2.8rem); overflow-y: auto; padding: .3rem 1rem 1.5rem var(--pad); scrollbar-width: thin; background: var(--bg); }
 .mv-cats { display: flex; flex-direction: column; }
 .mv-main { flex: 1; min-width: 0; padding: 0 var(--pad) 0 .4rem; }
 .mv2 .mv-head { padding: .3rem 0 1rem; }
@@ -3197,7 +3197,11 @@ html.no-flexgap .st-row .st-txt > * + * { margin-left: .65rem; }
    ========================================================== */
 /* Kategorien links (Filme, Serien, Live TV): gewählte Kategorie leuchtet violett, Sprache oben wie ein Auswahlfeld */
 .mv-side .cat, .section .cats .cat { color: var(--text-2); font-weight: 600; padding: .6rem .95rem; border-radius: .8rem; margin-bottom: .2rem; }
-.mv-side .cat .lc-n, .section .cats .cat .lc-n { color: var(--muted); font-weight: 600; font-size: .82rem; }
+.mv-side .cat .lc-n, .section .cats .cat .lc-n { color: var(--muted); font-weight: 600; font-size: .78rem; margin-left: .4rem; }
+/* Sprachen: Flagge, Name, Zahl und Pfeil enger, damit „Deutsch“, „Italienisch“ … ganz zu lesen sind */
+.mv-side .cat, .section .cats .cat { padding-left: .8rem; padding-right: .7rem; }
+.mv-side .cat .flag, .section .cats .cat .flag { width: 1.6rem; height: 1.07rem; margin-right: .55rem; }
+.mv-side .lang-cat .i, .section .cats .lang-cat .i { width: .85rem; height: .85rem; margin-left: .2rem; }
 .mv-side .cat.is-on, .section .cats .cat.is-on {
   background: linear-gradient(90deg, rgba(139, 92, 246, .62), rgba(124, 58, 237, .3)); color: #fff; font-weight: 700;
   box-shadow: inset 0 0 0 1.5px rgba(196, 167, 255, .75), 0 0 1.3rem rgba(139, 92, 246, .32);
@@ -3226,6 +3230,8 @@ body.kbd .mv-side .cat.f:focus .lc-n, body.is-tv .mv-side .cat.f:focus .lc-n, bo
   box-shadow: inset 0 0 0 1.5px rgba(196, 167, 255, .75), 0 0 1.3rem rgba(139, 92, 246, .3);
 }
 .st2 .st-sec.is-on .st-sic { background: rgba(255, 255, 255, .16); color: #fff; }
+/* gewählt mit der Fernbedienung (weiße Fläche): Symbol dunkel, sonst ist es weiß auf weiß unsichtbar */
+body.kbd .st2 .st-sec.f:focus .st-sic, body.is-tv .st2 .st-sec.f:focus .st-sic { background: rgba(var(--cr), .22); color: var(--c2); }
 .st2 .st-hic { width: 3.9rem; height: 3.9rem; border-radius: 1.1rem; background: linear-gradient(160deg, rgba(var(--cr), .4), rgba(var(--cr), .12)); box-shadow: inset 0 0 0 1.5px rgba(var(--cr), .6), 0 0 1.8rem rgba(var(--cr), .28); color: #fff; }
 .st2 .st-htxt h2 { font-size: 1.95rem; }
 .st2 .st-htxt p { font-size: 1rem; color: var(--text-2); }
@@ -3253,6 +3259,8 @@ html.no-flexgap .st2 .st-row .st-txt > * + * { margin-left: 0; }
 .fhero.is-home .fh-plot { font-size: 1.08rem; -webkit-line-clamp: 2; color: var(--text-2); }
 .fhero.is-home .fh-actions { margin-top: 1.1rem; }
 .fhero.is-home .btn.primary { background: linear-gradient(90deg, #8b5cf6, #a855f7); color: #fff; box-shadow: 0 .5rem 1.6rem -.4rem rgba(139, 92, 246, .7); }
+/* gewählt mit der Fernbedienung: weiß mit violettem Leuchten (vorher war der Fokus auf dem violetten Knopf nicht zu sehen) */
+body.kbd .fhero.is-home .btn.f:focus, body.is-tv .fhero.is-home .btn.f:focus { background: #fff; color: #120f1a; transform: scale(1.05); box-shadow: 0 0 0 .2rem rgba(168, 85, 247, .65), 0 .6rem 1.8rem -.3rem rgba(139, 92, 246, .8); }
 .hm-kick { color: var(--text-2); font-size: 1.02rem; font-weight: 600; letter-spacing: 0; white-space: pre; }
 .hm-kick:empty { display: none; }
 .hm-dots { display: flex; margin-top: 1.1rem; }

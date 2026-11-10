@@ -376,9 +376,13 @@ public class PlayerActivity extends Activity {
         try {
             View bg = exo("exo_controls_background");
             if (bg != null) bg.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
-                    new int[] { 0xB3000000, 0x00000000, 0x00000000, 0x26000000, 0xE6000000 }));
+                    new int[] { 0xB3000000, 0x1A000000, 0x00000000, 0x59000000, 0xF2000000 }));
             View bottom = exo("exo_bottom_bar");
-            if (bottom != null) bottom.setBackgroundColor(Color.TRANSPARENT);
+            if (bottom != null) {
+                bottom.setBackgroundColor(Color.TRANSPARENT);
+                // Abstand zum Bildschirmrand – sonst wird der runde Knopf ganz rechts (Einstellungen) angeschnitten
+                bottom.setPadding(dp(20), bottom.getPaddingTop(), dp(24), dp(10));
+            }
             View tb = exo("exo_progress");
             if (tb instanceof DefaultTimeBar) {
                 DefaultTimeBar t = (DefaultTimeBar) tb;

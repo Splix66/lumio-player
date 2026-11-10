@@ -1396,7 +1396,9 @@
       },
       streamUrl: function (item) { return { url: item.url }; },
       // „Playlist aktualisieren“: auch den Programmführer frisch holen
-      reset: function () { data = null; loading = null; epgData = null; epgFail = null; epgFresh = true; }
+      reset: function () { data = null; loading = null; epgData = null; epgFail = null; epgFresh = true; },
+      // „Zwischenspeicher leeren“: Programmführer beim nächsten Bedarf neu laden (nicht erst nach 12 Stunden)
+      dropEpg: function () { epgData = null; epgFail = null; epgFresh = true; }
     };
   }
 
@@ -1495,9 +1497,10 @@
       this.dropData(id);
     },
     /* Alles löschen, was zu einer Playlist auf dem Gerät gespeichert ist (Datenschutz: keine Reste) */
-    DATA_KEYS: ['fav', 'resume', 'recent', 'seen', 'last', 'stats', 'seenNew', 'cats', 'expiry', 'idv', 'hidech', 'upnext', 'swatch', 'remind', 'later'],
+    DATA_KEYS: ['fav', 'resume', 'recent', 'seen', 'last', 'stats', 'seenNew', 'cats', 'expiry', 'idv', 'hidech', 'upnext', 'swatch', 'remind', 'later', 'chcount'],
     dropData: function (id) {
       this.DATA_KEYS.forEach(function (k) { Store.del(k + '.' + id); });
+      Store.del('hero.' + id + '.movie'); Store.del('hero.' + id + '.series');   // Auswahl fürs Titelbild der Startseite
       Persons.list().forEach(function (pe) { PERSONAL_KEYS.forEach(function (k) { Store.del(k + '.' + id + '~' + pe.id); }); });
       EpgStore.del('epg.' + id);   // zwischengespeicherter Programmführer
       if (Store.get('active') === id) Store.del('active');
@@ -2262,7 +2265,7 @@
   var PERSON_COLORS = ['#a855f7', '#f97316', '#0ea5e9', '#22c55e', '#ec4899', '#eab308'];
   // Profilbilder: Symbol statt Anfangsbuchstabe (frei wählbar beim Anlegen/Bearbeiten)
   var AVATAR_ICONS = ['avSmile', 'avCat', 'avDog', 'avGhost', 'avRocket', 'avCrown', 'avGame', 'avMusic', 'star', 'heart', 'ball', 'moon'];
-  var PERSONAL_KEYS = ['fav', 'resume', 'recent', 'seen', 'last', 'upnext', 'swatch', 'remind', 'later'];
+  var PERSONAL_KEYS = ['fav', 'resume', 'recent', 'seen', 'last', 'upnext', 'swatch', 'remind', 'later', 'chcount'];
   var Persons = {
     MAX: 6, pinOk: false,
     list: function () {
@@ -4129,16 +4132,32 @@
   var HeroPicks = {
     key: function (kind, owner) { return 'hero.' + (owner || pid()) + '.' + kind; },
     get: function (kind) { return Store.get(this.key(kind), []); },
+    // schon einmal berechnet (auch leer, z. B. M3U ohne Bewertungen) – dann nicht bei jedem Öffnen neu rechnen
+    computed: function (kind) { return Store.get(this.key(kind), null) !== null; },
+    /* Streng: ausgeblendete und gesperrte Kategorien fallen IMMER heraus – auch wenn die PIN gerade eingegeben wurde.
+       Lässt sich die Kategorienliste nicht laden, obwohl etwas zu filtern wäre: Fehler (lieber kein Titelbild als ein falsches). */
+    blocked: function (kind) {
+      var hid = CatPrefs.map(kind, 'hide'), lockOn = Parental.on();
+      if (!Object.keys(hid).length && !lockOn) return Promise.resolve({});
+      return App.provider.categories(kind).then(function (cats) {
+        var m = {};
+        (cats || []).forEach(function (c) { if (hid[String(c.id)] || (lockOn && Parental.isLocked(kind, c))) m[String(c.id)] = 1; });
+        return m;
+      });
+    },
     save: function (kind, list, owner) {
       var self = this;
-      visibleItems(kind, Promise.resolve(list)).then(function (vis) {
+      return this.blocked(kind).then(function (bad) {
+        var vis = list.filter(function (x) { return !bad[String(x.catId)]; });
         var top = topTen(vis, some(vis, function (x) { return Number(x.added) > 0; })).slice(0, 4);
         Store.set(self.key(kind, owner), top.map(slim));
       }).catch(function () {});
     },
-    // abwechselnd Film und Serie; gesperrte oder ausgeblendete Kategorien fallen heraus (Kindersicherung)
+    // abwechselnd Film und Serie
     load: function () {
-      return Promise.all([visibleItems('movie', Promise.resolve(this.get('movie'))), visibleItems('series', Promise.resolve(this.get('series')))]).then(function (r) {
+      var self = this;
+      function one(kind) { return self.blocked(kind).then(function (bad) { return self.get(kind).filter(function (x) { return !bad[String(x.catId)]; }); }); }
+      return Promise.all([one('movie'), one('series')]).then(function (r) {
         var m = r[0] || [], s = r[1] || [], out = [];
         for (var i = 0; i < 4; i++) { if (m[i]) out.push(m[i]); if (s[i] && i < 2) out.push(s[i]); }
         return out.slice(0, 5);
@@ -4152,8 +4171,8 @@
     add: function (item) {
       if (!item || item.kind !== 'live' || !item.id) return;
       var a = this.all(), k = String(item.id), e = a[k] || { n: 0 }, now = Date.now();
-      // derselbe Sender wird beim Start mehrfach gemeldet – innerhalb einer Minute nur einmal zählen
-      if (!(e.at && now - e.at < 60000)) e.n++;
+      // derselbe Sender wird beim Start und beim Schließen gemeldet – innerhalb von 10 Minuten nur einmal zählen
+      if (!(e.last && now - e.last < 600000)) { e.n++; e.last = now; }
       e.at = now; e.item = slim(item); a[k] = e;
       var ks = Object.keys(a);
       if (ks.length > 80) ks.sort(function (x, y) { return a[y].n - a[x].n || a[y].at - a[x].at; }).slice(60).forEach(function (x) { delete a[x]; });
@@ -4178,7 +4197,10 @@
     show(0);
     if (items.length > 1) timer = setInterval(function () {
       if (!document.body.contains(box)) { clearInterval(timer); return; }
-      if (box.contains(document.activeElement) || Player.el || Dialog.open) return;
+      // nicht wechseln, solange man dort steht, etwas darüber offen ist (Details, Player, Dialog) oder die App im Hintergrund ist –
+      // sonst verschwindet der gemerkte Knopf und der Fokus springt beim Zurückkommen in die Menüleiste
+      var top = Screens.top();
+      if (box.contains(document.activeElement) || Player.el || Dialog.open || document.hidden || !top || !top.el.contains(box)) return;
       show(idx + 1);
     }, 9000);
     box._dispose = function () { clearInterval(timer); };
@@ -4219,19 +4241,22 @@
       return h('div', { class: 'hm-quickrow' }, q('live', T('Live TV'), '{0} Sender'), q('movie', T('Filme'), '{0} Titel'), q('series', T('Serien'), '{0} Serien'));
     }
 
-    var firstHero = true;
+    var firstHero = true, disposed = false;
     function paintHero() {
       HeroPicks.load().then(function (items) {
-        if (!document.body.contains(el) && el.parentNode) return;
+        if (disposed) return;      // Startseite schon verlassen: kein Titelbild mehr bauen (Timer, Bilder, Anfragen)
         var had = heroSlot.firstChild, inside = had && had.contains(document.activeElement);
-        // im Titelbild unterwegs: nicht austauschen. Die Ersatzkacheln (noch kein Titelbild) dürfen ersetzt werden.
+        // im Titelbild unterwegs: nicht austauschen
         if (inside && had.classList.contains('hm-hero')) return;
+        // weiterhin kein Titelbild und die Ersatzkacheln stehen schon: so lassen (sonst springt der Fokus auf „Live TV“ zurück)
+        if (!items.length && had && had.classList.contains('hm-quickrow')) return;
+        var fkey = inside && document.activeElement.getAttribute('data-key');
         if (had && had._dispose) had._dispose();
         clear(heroSlot);
         if (items.length) heroSlot.appendChild(homeHero(items));
         el.classList.toggle('no-hero', !items.length);
         if (!items.length) heroSlot.appendChild(quickRow());
-        if (inside) { var fq = $('.f', heroSlot); if (fq) Nav.focus(fq); }
+        if (inside) { var fq = (fkey && $('[data-key="' + fkey + '"]', heroSlot)) || $('.f', heroSlot); if (fq) Nav.focus(fq); }
         // Beim Öffnen steht der Fokus auf „Jetzt ansehen“ (das Titelbild kommt erst kurz nach dem Aufbau dazu)
         // (erst nach den 20/30 ms, nach denen Screens/Shell selbst den ersten Knopf wählen)
         if (firstHero) setTimeout(function () {
@@ -4303,7 +4328,7 @@
 
     paintHero(); paintRows();
     // Nach einem Update ist noch keine Auswahl fürs Titelbild gespeichert: einmal im Hintergrund berechnen
-    if (!HeroPicks.get('movie').length && !HeroPicks.get('series').length && (Stats.get().movie || Stats.get().series)) {
+    if (!HeroPicks.computed('movie') && !HeroPicks.computed('series') && (Stats.get().movie || Stats.get().series)) {
       var pickT = setTimeout(function () {
         if (!document.body.contains(el) || busy) return;
         Promise.all([catCounts('movie'), catCounts('series')].map(function (p) { return p.then(null, function () {}); })).then(function () { if (document.body.contains(el)) setTimeout(paintHero, 300); });
@@ -4340,6 +4365,7 @@
     // App kommt aus dem Hintergrund zurück (z. B. Box-Fernbedienung, Handy entsperrt)
     el._wake = function () { setTimeout(autoCheck, 800); };
     el._dispose = function () {
+      disposed = true;
       clearInterval(timer);
       var hb = heroSlot.firstChild; if (hb && hb._dispose) hb._dispose();
       disposers.forEach(function (f) { f(); });
@@ -4691,7 +4717,7 @@
         list.forEach(function (x) { var c = String(x.catId); by[c] = (by[c] || 0) + 1; var a = Number(x.added) || 0; if (a > newest) newest = a; });
         // Ergebnis gehört zur Playlist, die beim Start aktiv war (Wechsel während des Ladens → keine falschen Zahlen)
         Stats.set(kind, list.length, newest, owner);
-        if (kind !== 'live') HeroPicks.save(kind, list, owner);   // Auswahl fürs Titelbild der Startseite
+        var heroSaved = kind !== 'live' ? HeroPicks.save(kind, list, owner) : null;   // Auswahl fürs Titelbild der Startseite
         var out = { by: by, total: list.length, kind: kind };
         if (r[1]) {
           var ids = radioIds(r[1]), n = 0;
@@ -4699,7 +4725,8 @@
           Stats.set('radio', n, 0, owner);
           out.radio = n;
         }
-        return out;
+        // erst fertig, wenn auch die Auswahl fürs Titelbild gespeichert ist (Startseite zeichnet danach neu)
+        return heroSaved ? heroSaved.then(function () { return out; }) : out;
       });
       countCache[k].catch(function () { delete countCache[k]; });
     }
@@ -6090,7 +6117,7 @@
 
   /* ---------- Verlauf löschen ---------- */
   function clearHistory(kind) {
-    if (kind === 'live') { Store.del('recent.' + uid()); }
+    if (kind === 'live') { Store.del('recent.' + uid()); Store.del('chcount.' + uid()); }   // auch „Top Sender“ der Startseite
     else {
       var want = kind === 'movie' ? 'movie' : 'episode';
       var r = Resume.all();
@@ -6808,6 +6835,7 @@
     var tCache = tile('trash', T('Zwischenspeicher leeren'), T('Programmführer und Suche – wird bei Bedarf neu geladen'), function () {
       confirmBox(T('Zwischenspeicher leeren?'), T('Gespeicherte Programmdaten und Suchergebnisse werden gelöscht und bei Bedarf neu geladen. Playlists, Favoriten und Einstellungen bleiben erhalten.'), T('Leeren'), function () {
         EpgCache.data = {}; searchCache = {};
+        if (App.provider && App.provider.dropEpg) App.provider.dropEpg();
         EpgStore.clear().then(function () { toast(T('Zwischenspeicher geleert')); });
       });
     });
@@ -9192,7 +9220,7 @@
     parseM3U: parseM3U, catchupUrl: catchupUrl, parseXtreamLink: parseXtreamLink, normalizeServer: normalizeServer, Nav: Nav, Screens: Screens, StillWatching: StillWatching,
     Xmltv: Xmltv, chanKey: chanKey, trackLabel: trackLabel, cleanTitle: cleanTitle, cleanEpName: cleanEpName, fmtDur: fmtDur, isRadio: isRadio, Sky: Sky, icon: icon, Terms: Terms, editPerson: editPerson, EpgStore: EpgStore, makeProvider: makeProvider, Profiles: Profiles, PinGuard: PinGuard, Store: Store, Cloud: Cloud,
     decodeBytes: decodeBytes, readText: readText, fetchText: fetchText, sameConnection: sameConnection, NativePlayer: NativePlayer, App: App, ensureTs: ensureTs, migrateM3uIds: migrateM3uIds,
-    ErrLog: ErrLog, techInfo: techInfo, epgText: epgText,
+    ErrLog: ErrLog, techInfo: techInfo, epgText: epgText, ChanCount: ChanCount, clearHistory: clearHistory, startView: startView,
     CatPrefs: CatPrefs, visibleCats: visibleCats, Parental: Parental, ChanHide: ChanHide, initials: initials, statusError: statusError, isVisible: isVisible,
     Backup: Backup, profileFp: profileFp, Settings: Settings,
     Seen: Seen, Resume: Resume, UpNext: UpNext, SeriesWatch: SeriesWatch, sortVod: sortVod,
