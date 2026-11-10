@@ -1,6 +1,8 @@
 /* Telvo Player – Übersetzung: Ukrainisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["uk"] = {
+  "Fehlerberichte senden": "Надсилати звіти про помилки",
+  "Hilft, Fehler schnell zu beheben – ohne Links, Namen oder Passwörter": "Допомагає швидко виправляти помилки – без посилань, імен і паролів",
   "Klang": "Звук",
   "Ton im TV-Player verbessern": "Покращити звук у ТВ-плеєрі",
   "Lautstärke angleichen": "Вирівнювання гучності",
