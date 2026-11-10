@@ -20,22 +20,22 @@
       'Die App fragt alle 30 Sekunden nach neuen Playlists, solange sie geöffnet und mit dem Internet verbunden ist. Warte kurz oder starte die App neu.',
       'Prüfe, ob MAC und KEY hier genau mit denen in der App übereinstimmen. Jedes Gerät hat eigene Werte.']],
     ['Sender oder Filme starten nicht', [
-      'Prüfe zuerst, ob dein Zugang noch läuft: Die Restlaufzeit steht in der App unten rechts. Bei abgelaufenem Zugang hilft nur dein Anbieter.',
+      'Prüfe zuerst, ob dein Zugang noch läuft: Die Restlaufzeit steht in der App unten rechts. Ist er abgelaufen, muss er verlängert werden.',
       'Bei Live-Sendern hilft oft ein anderes Format: In der App unter Einstellungen → Live-Stream-Format zwischen HLS und MPEG-TS wechseln.',
       'Hat sich das Passwort geändert, kannst du die Playlist hier unter „Playlists“ bearbeiten.']],
     ['Das Bild ruckelt oder bleibt hängen', [
-      'Meist liegt es an der Internetverbindung oder am Server des Anbieters. Ein Netzwerkkabel statt WLAN hilft beim Fernseher oft spürbar.',
+      'Meist liegt es an der Internetverbindung oder am Server der Playlist. Ein Netzwerkkabel statt WLAN hilft beim Fernseher oft spürbar.',
       'Viele Zugänge erlauben nur eine Verbindung gleichzeitig. Läuft derselbe Zugang auf einem zweiten Gerät, bricht das Bild ab.']],
     ['Was ist der Unterschied zwischen M3U und Xtream?', [
       'Ein M3U-Link ist eine einzelne Adresse mit allen Sendern. Xtream Codes besteht aus Server-Adresse, Benutzername und Passwort.',
-      'Wenn dein Anbieter beides anbietet, nimm Xtream: Kategorien laden schneller und Filme und Serien bekommen Beschreibungen, Cover und Staffeln.']],
+      'Wenn du beides hast, nimm Xtream: Kategorien laden schneller und Filme und Serien bekommen Beschreibungen, Cover und Staffeln.']],
     ['Gehen Favoriten verloren, wenn ich eine Playlist bearbeite?', [
       'Nein. Beim Bearbeiten bleibt die Playlist dieselbe – Favoriten und „Weiterschauen“ bleiben in der App erhalten. Nur beim Löschen werden sie mit entfernt.']],
     ['Sind meine Zugangsdaten sicher?', [
       'Alle Daten werden verschlüsselt übertragen. Abrufen kann sie nur, wer MAC-Adresse und KEY deines Geräts kennt. Nach 20 falschen Versuchen wird das Gerät für eine Stunde gesperrt.',
       'Gib MAC und KEY deshalb nicht an Fremde weiter.']],
     ['Woher bekomme ich Sender?', [
-      'Telvo Player ist nur der Player und enthält keine Sender oder Inhalte. Die Playlist bekommst du von deinem IPTV-Anbieter.']]
+      'Telvo Player ist nur der Player und enthält keine Sender oder Inhalte. Die Playlist bringst du selbst mit.']]
   ];
 
   /* ---------- Download: feste Links, die immer auf die neueste Version zeigen ---------- */

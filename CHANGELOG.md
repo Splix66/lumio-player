@@ -1,6 +1,6 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
-## Noch nicht veröffentlicht
+## 1.13.0 – 2026-11-10 · Live-Vorschau, neue Film-/Serienseite, ruhigerer Live-Player, Wetter neben der Uhr
 
 - **Hinweis beim ersten Start** jetzt klein unten statt als Fenster: „Gut zu wissen – Telvo ist nur ein Player ohne eigene
   Sender …“ mit Link zu den Nutzungsbedingungen (auf dem Fernseher die Adresse). Verschwindet nach 9 Sekunden von selbst
@@ -37,7 +37,8 @@
 - **Bewertung** einmal pro Gerät, später änderbar (Sterne sind vorausgewählt). Neue Datei
   `server/bewertung-2026-11.sql` (einmal im Supabase SQL-Editor ausführen) – bis dahin gehen die Sterne wie bisher als
   Feedback-Nachricht ein.
-- **Keine Texte mit „IPTV“ oder „Anbieter“** mehr in der App (14 Texte neutral formuliert, alle Sprachen).
+- **Keine Texte mit „IPTV“ oder „Anbieter“** mehr – weder in der App (14 Texte, alle Sprachen) noch auf der Webseite
+  (Startseite, Hilfe, Datenschutz, Nutzungsbedingungen, alle 14 Sprachen) und in den Store-Texten.
 - **Neben der Uhr:** Symbol für die Tageszeit (Sonnenaufgang, Sonne, Sonnenuntergang, Mond) – auf Wunsch echtes Wetter
   mit Temperatur (Ort unter Einstellungen → Darstellung wählen; Open-Meteo, ohne Konto). Datenschutzerklärung ergänzt.
 - **Bildschirmschoner** mit „Wusstest du schon?“-Tipps.
