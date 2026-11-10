@@ -1,6 +1,22 @@
 /* Telvo Player – Übersetzung: Rumänisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["ro"] = {
+  "Ändern oder neues Feedback geben kannst du ab dem {0}.": "Poți schimba sau trimite feedback nou începând cu {0}.",
+  "Beliebt auf Handys und Tablets.": "Popular pe telefoane și tablete.",
+  "Bitte schreib kurz, warum du deine Bewertung änderst.": "Scrie pe scurt de ce schimbi nota.",
+  "Danke – dein Feedback ist angekommen.": "Mulțumim – feedbackul tău a ajuns.",
+  "Deine Bewertung – beim Ändern bitte kurz begründen.": "Nota ta – dacă o schimbi, spune pe scurt de ce.",
+  "Empfohlen für Fire TV Stick und Cube, Chromecast mit Google TV, Nvidia Shield, Xiaomi Mi Box und andere Android-TV-Boxen.": "Recomandat pentru Fire TV Stick și Cube, Chromecast cu Google TV, Nvidia Shield, Xiaomi Mi Box și alte boxe Android TV.",
+  "Fire TV, Android TV, Handy – spielt fast alles ab.": "Fire TV, Android TV, telefon – redă aproape orice.",
+  "Für ältere oder schwache Boxen und für Sender, die mit den anderen Playern hängen.": "Pentru boxe mai vechi sau mai slabe și pentru canalele care se blochează cu ceilalți playeri.",
+  "Für Android TV und Google TV.": "Pentru Android TV și Google TV.",
+  "Für Android-Boxen und Nvidia Shield.": "Pentru boxe Android și Nvidia Shield.",
+  "Für Android-Handys und Tablets (Samsung, Xiaomi, Pixel) – oder wenn der TV-Player hakt.": "Pentru telefoane și tablete Android (Samsung, Xiaomi, Pixel) – sau dacă Playerul TV sacadează.",
+  "Für Technik-Fans mit vielen Einstellungen.": "Pentru pasionații de tehnică, cu multe setări.",
+  "OK öffnet den Sender im Vollbild.": "OK deschide canalul pe tot ecranul.",
+  "Schlank, gut für Fire TV und Android-Boxen.": "Ușor, potrivit pentru Fire TV și boxe Android.",
+  "Telvo ist nur ein Player – nutze nur Quellen, für die du berechtigt bist.": "Telvo este doar un player – folosește doar surse pentru care ai drepturi.",
+  "Warum änderst du deine Bewertung?": "De ce îți schimbi nota?",
   "Dein Zugang ist abgelaufen": "Accesul tău a expirat",
   "Dein Zugang läuft bald ab": "Accesul tău expiră în curând",
   "Verstanden": "Am înțeles",
