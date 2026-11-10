@@ -5,7 +5,7 @@
 - **Startseite:** Nach einem zu Ende geschauten Film aus „Weiterschauen“ springt der Fokus nicht mehr in die Menüleiste, sondern auf die erste Karte.
 - **Startseite:** Die Knöpfe im Titelbild zeigen nach dem Schauen gleich „Weiter bei …“ statt weiter „Jetzt ansehen“.
 - **Startseite:** Beim ersten Start erscheinen die Zahlen unter Live TV / Filme / Serien, sobald die Listen geladen sind (vorher blieb „…“ stehen).
-- **Startseite:** „Top Sender“ zeigt wieder fünf Sender, auch wenn einige ausgeblendet oder gesperrt sind.
+- **Startseite:** Die Reihe „Top Sender“ ist weg – „Zuletzt gesehene Sender“ reicht.
 - **„App beim Start“** gilt nur noch beim Start der App – nicht mehr nach Personen- oder Playlist-Wechsel oder Sprachwechsel. Bei mehreren Personen erst nach „Wer schaut?“ (vorher wurde alles doppelt geladen).
 - **TV-Player:** Klangverbesserung, die ein Gerät nicht einschalten kann, wird sauber wieder freigegeben.
 
