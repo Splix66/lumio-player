@@ -1937,7 +1937,7 @@
       var keys = [];
       for (var i = 0; i < localStorage.length; i++) keys.push(localStorage.key(i));
       // Geräte-Kennung bleibt: MAC, KEY und der App-Token (sonst könnte das Gerät danach nichts mehr online sichern)
-      keys.forEach(function (k) { if (k.indexOf('lumio.') === 0 && k !== 'lumio.mac' && k !== 'lumio.devkey' && k !== 'lumio.devtoken') localStorage.removeItem(k); });
+      keys.forEach(function (k) { if (k.indexOf('lumio.') === 0 && k !== 'lumio.mac' && k !== 'lumio.devkey' && k !== 'lumio.devtoken' && k !== 'lumio.rating') localStorage.removeItem(k); });
     } catch (e) {}
     // auch den zwischengespeicherten Programmführer löschen, dann neu starten
     var done = false;
@@ -2115,9 +2115,9 @@
         Store.set(key, seen);
         var when = fmtDate(a.expires), days = Math.max(1, Math.ceil(left / day));
         var title = stage === 'over' ? T('Dein Zugang ist abgelaufen') : T('Dein Zugang läuft bald ab');
-        var text = stage === 'over' ? T('„{0}“ ist am {1} abgelaufen. Bitte melde dich bei deinem Anbieter, um den Zugang zu verlängern.', p.name, when)
-          : stage === 'd1' ? T('„{0}“ läuft in weniger als 24 Stunden ab ({1}). Bitte melde dich bei deinem Anbieter, um den Zugang zu verlängern.', p.name, when)
-          : T('„{0}“ läuft in {1} Tagen ab ({2}). Bitte melde dich rechtzeitig bei deinem Anbieter, um den Zugang zu verlängern.', p.name, days, when);
+        var text = stage === 'over' ? T('„{0}“ ist am {1} abgelaufen. Verlängere den Zugang, damit Sender, Filme und Serien wieder laufen.', p.name, when)
+          : stage === 'd1' ? T('„{0}“ läuft in weniger als 24 Stunden ab ({1}). Verlängere den Zugang rechtzeitig, damit alles weiterläuft.', p.name, when)
+          : T('„{0}“ läuft in {1} Tagen ab ({2}). Verlängere den Zugang rechtzeitig, damit alles weiterläuft.', p.name, days, when);
         var show = function () {
           if (Dialog.open || (Screens.top() && Screens.top().name === 'player')) { setTimeout(show, 5000); return; }
           Dialog.show(title, text, [{ label: T('Verstanden'), primary: true }]);
@@ -3039,7 +3039,7 @@
      Serien zeigen zusätzlich „Weiterschauen“ und den Stand pro Serie („S2 E5“).
      ========================================================== */
   /* Filme/Serien sortieren und Gesehene ausblenden (Einstellung pro Art: vodSort = { movie: 'new', … }, vodHide = { … }) */
-  var VOD_SORTS = function () { return [['default', T('Wie beim Anbieter')], ['new', T('Neueste zuerst')], ['az', T('Name A–Z')], ['rating', T('Beste Bewertung')], ['year', T('Jahr (neueste zuerst)')]]; };
+  var VOD_SORTS = function () { return [['default', T('Wie in der Playlist')], ['new', T('Neueste zuerst')], ['az', T('Name A–Z')], ['rating', T('Beste Bewertung')], ['year', T('Jahr (neueste zuerst)')]]; };
   function vodPref(name, kind, def) { var o = Settings.get(name) || {}; return o[kind] !== undefined ? o[kind] : def; }
   function setVodPref(name, kind, v) { var o = Settings.get(name) || {}; o[kind] = v; Settings.set(name, o); }
   function yearOf(it) {
@@ -3333,22 +3333,35 @@
       self.player = 'wait';
       ensureHls().then(function (Hls) { self.player = Hls && Hls.isSupported() ? 'ok' : 'off'; self.paint(); StatusLine.paint(); }, function () { self.player = 'off'; self.paint(); StatusLine.paint(); });
     },
-    // [Zustand, Symbol, Text] für Internet, Player und Playlist. active: eine Playlist ist gerade geöffnet
+    // [Zustand, Symbol, Text, Schlüssel] für Internet, Player und Playlist. active: eine Playlist ist gerade geöffnet
     items: function (active) {
       this.checkPlayer();
       var n = this.net(), pl = Profiles.list().length;
-      return [
-        [n[0], 'wifi', n[1]],
-        [this.player, 'player', this.player === 'ok' ? T('Player bereit') : this.player === 'wait' ? T('Player wird geprüft …') : T('Player eingeschränkt')],
-        active ? ['ok', 'playlist', T('Playlist aktiv')] : [pl ? 'ok' : 'none', 'playlist', pl ? T('Playlist hinterlegt') : T('Keine Playlist')]
-      ];
+      // Internet: zuletzt gemessene Geschwindigkeit (letzte 24 Std.) unter 5 Mbit/s = langsam
+      var nt = Store.get('nettest', null);
+      if (n[0] === 'ok' && nt && nt.mbps != null && nt.mbps < 5 && Date.now() - nt.at < 86400000) n = ['warn', T('Internet langsam')];
+      var pState = this.player, pText = pState === 'ok' ? T('Player bereit') : pState === 'wait' ? T('Player wird geprüft …') : T('Player eingeschränkt');
+      if (pState === 'ok' && playErrors() >= 2) { pState = 'warn'; pText = T('Wiedergabe gestört'); }
+      var plItem = [pl ? 'ok' : 'none', 'playlist', pl ? T('Playlist hinterlegt') : T('Keine Playlist'), 'playlist'];
+      if (active) {
+        var a = StatusLine.account(), days = a && a.expires ? Math.ceil((Number(a.expires) * 1000 - Date.now()) / 86400000) : null;
+        if (a && a.status && !/^active$/i.test(String(a.status))) plItem = ['off', 'playlist', T('Zugang gesperrt'), 'playlist'];
+        else if (days !== null && days <= 0) plItem = ['off', 'playlist', T('Playlist abgelaufen'), 'playlist'];
+        else if (days !== null && days <= 7) plItem = ['warn', 'playlist', T('Läuft bald ab'), 'playlist'];
+        else plItem = ['ok', 'playlist', T('Playlist aktiv'), 'playlist'];
+      }
+      return [[n[0], 'wifi', n[1], 'net'], [pState, 'player', pText, 'player'], plItem];
     },
     paint: function () {
       if (!this.box) return;
       var items = this.items();
       clear(this.box);
       var box = this.box;
-      items.forEach(function (it) { box.appendChild(h('span', { class: 'wl-chip is-' + it[0] }, h('i', { 'aria-hidden': 'true' }), icon(it[1]), h('span', { text: it[2] }))); });
+      items.forEach(function (it) {
+        var c = h('span', { class: 'wl-chip is-' + it[0] }, h('i', { 'aria-hidden': 'true' }), icon(it[1]), h('span', { text: it[2] }));
+        StatusTip.wire(c, it);
+        box.appendChild(c);
+      });
     },
     start: function (screenEl) {
       var self = this;
@@ -3383,19 +3396,125 @@
     paintBox: function (box) {
       var items = WelcomeStatus.items(true), sig = items.map(function (it) { return it[0] + it[2]; }).join('|');
       if (sig === box._sig) return;
+      var hadFocus = box.contains(document.activeElement);
       box._sig = sig; clear(box);
       items.forEach(function (it) {
-        box.appendChild(box._chips
-          ? h('span', { class: 'ln-chip is-' + it[0] }, h('i', { 'aria-hidden': 'true' }), icon(it[1]), h('span', { text: it[2] }))
-          : h('span', { class: 'sb-st is-' + it[0], title: it[2] }, h('i', { 'aria-hidden': 'true' }), h('span', { text: it[2] })));
+        var bad = it[0] === 'warn' || it[0] === 'off', c;
+        if (box._chips) {
+          // Problem: als Knopf – OK/Tippen zeigt Grund und Zahlen (auch auf dem Fernseher ohne Maus)
+          c = h(bad ? 'button' : 'span', { class: 'ln-chip is-' + it[0] + (bad ? ' f' : ''), onclick: bad ? function () { showStatusInfo(it); } : null },
+            h('i', { 'aria-hidden': 'true' }), icon(it[1]), h('span', { text: it[2] }));
+        } else c = h('span', { class: 'sb-st is-' + it[0] }, h('i', { 'aria-hidden': 'true' }), h('span', { text: it[2] }));
+        StatusTip.wire(c, it);
+        box.appendChild(c);
       });
+      if (hadFocus) Nav.focusFirst(box);
+    },
+    // Zugangsdaten der Playlist (Laufzeit, Verbindungen) – höchstens alle 10 Minuten neu fragen
+    acct: null, acctAt: 0, acctPid: null,
+    account: function () {
+      var self = this, id = pid();
+      if (self.acctPid !== id) { self.acct = null; self.acctAt = 0; self.acctPid = id; }
+      if (App.provider && App.provider.account && Date.now() - self.acctAt > 600000) {
+        self.acctAt = Date.now();
+        App.provider.account().then(function (a) { if (self.acctPid === id) { self.acct = a || null; self.paint(); } }, function () {});
+      }
+      return self.acct;
     }
   };
+  /* Wiedergabefehler der letzten 30 Minuten */
+  function playErrors() {
+    var n = 0, since = Date.now() - 1800000;
+    ErrLog.list().forEach(function (e) { if (e.t > since && (e.w === 'Wiedergabe' || e.w === 'TV-Player')) n += e.n || 1; });
+    return n;
+  }
+  /* Grund und Zahlen zu einem Status-Punkt: [Bezeichnung, Wert] */
+  function statusRows(it) {
+    var rows = [], key = it[3];
+    function num(x) { return String(x).replace('.', Lang.cur === 'en' ? '.' : ','); }
+    if (key === 'net') {
+      var on = !(typeof navigator.onLine === 'boolean' && !navigator.onLine);
+      rows.push([T('Gerät'), on ? T('online') : T('offline')]);
+      if (CONFIG.cloudUrl) rows.push([T('Online-Dienst'), Cloud.lastOk && (!Cloud.lastFail || Cloud.lastOk > Cloud.lastFail) ? T('erreichbar') + ' · ' + ago(Cloud.lastOk)
+        : Cloud.lastFail ? T('nicht erreichbar') + ' · ' + ago(Cloud.lastFail) : T('wird geprüft …')]);
+      var nt = Store.get('nettest', null);
+      rows.push([T('Geschwindigkeit'), nt && nt.mbps != null ? num(nt.mbps) + ' Mbit/s' + (nt.ping != null ? ' · ' + T('Ping {0} ms', nt.ping) : '') + ' · ' + ago(nt.at) : T('noch nicht gemessen')]);
+      var c = navigator.connection;
+      if (c && c.downlink) rows.push([T('Laut Gerät'), '≈ ' + num(c.downlink) + ' Mbit/s' + (c.rtt ? ' · ' + T('Ping {0} ms', c.rtt) : '')]);
+      if (it[0] !== 'ok') rows.push([T('Tipp'), it[0] === 'off' ? T('WLAN oder Kabel prüfen.') : T('Unter Einstellungen → Verbindung testen neu messen.')]);
+    } else if (key === 'player') {
+      var en = NativePlayer.available() && NativePlayer.engine() === 'native' ? T('TV-Player') : Platform.android && Settings.get('engine') !== 'hlsjs' ? T('Android-Player') : T('Telvo-Player');
+      rows.push([T('Wiedergabe über'), en]);
+      rows.push([T('Fehler (30 Min.)'), String(playErrors())]);
+      var v = Player.video, pi = Player.item;
+      if (v && pi) {
+        var ahead = 0;
+        try { for (var i = 0; i < v.buffered.length; i++) if (v.buffered.start(i) <= v.currentTime + .5 && v.buffered.end(i) > v.currentTime) ahead = v.buffered.end(i) - v.currentTime; } catch (e) {}
+        rows.push([T('Läuft gerade'), pi.name]);
+        if (v.videoHeight) rows.push([T('Bild'), v.videoHeight + 'p']);
+        rows.push([T('Puffer'), T('{0} s', Math.round(ahead))]);
+        var q = v.getVideoPlaybackQuality ? v.getVideoPlaybackQuality() : null;
+        if (q && q.totalVideoFrames) rows.push([T('Verlorene Bilder'), q.droppedVideoFrames + ' / ' + q.totalVideoFrames]);
+      }
+      var last = ErrLog.list().filter(function (e) { return e.w === 'Wiedergabe' || e.w === 'TV-Player'; }).pop();
+      if (it[0] !== 'ok' && last) rows.push([T('Letzter Fehler'), last.m.split(' | ')[0] + ' · ' + ago(last.t)]);
+    } else {
+      var a = StatusLine.account(), st = Stats.get();
+      if (App.profile) rows.push([T('Playlist'), App.profile.name || '']);
+      else rows.push([T('Gespeichert'), String(Profiles.list().length)]);
+      var parts = [];
+      if (st.live) parts.push(T('{0} Sender', fmtCount(st.live.n)));
+      if (st.movie) parts.push(T('{0} Filme', fmtCount(st.movie.n)));
+      if (st.series) parts.push(T('{0} Serien', fmtCount(st.series.n)));
+      if (App.profile && parts.length) rows.push([T('Inhalt'), parts.join(' · ')]);
+      if (a && a.expires !== undefined) {
+        var d = a.expires ? Math.ceil((Number(a.expires) * 1000 - Date.now()) / 86400000) : null;
+        rows.push([T('Laufzeit'), d === null ? T('unbegrenzt') : d <= 0 ? T('abgelaufen') : d === 1 ? T('1 Tag') : T('{0} Tage', d)]);
+      }
+      if (a && a.maxCons) rows.push([T('Verbindungen'), (a.activeCons != null ? a.activeCons : '?') + ' / ' + a.maxCons]);
+      if (a && a.status && !/^active$/i.test(String(a.status))) rows.push([T('Zugang'), String(a.status)]);
+      var oldest = 0;
+      ['live', 'movie', 'series'].forEach(function (k) { if (st[k] && (!oldest || st[k].at < oldest)) oldest = st[k].at; });
+      if (App.profile && oldest) rows.push([T('Zuletzt geladen'), ago(oldest)]);
+    }
+    return rows;
+  }
+  /* Beim Drüberfahren (PC) oder Fokus: kleine Karte mit Grund und Zahlen */
+  var StatusTip = {
+    pop: null,
+    show: function (anchor, it) {
+      this.hide();
+      if (!document.body.contains(anchor)) return;
+      var pop = h('div', { class: 'st-pop is-' + it[0], role: 'tooltip' }, h('b', null, h('i', { 'aria-hidden': 'true' }), h('span', { text: it[2] })));
+      statusRows(it).forEach(function (r) { pop.appendChild(h('div', { class: 'st-pop-row' }, h('span', { text: r[0] }), h('em', { text: r[1] }))); });
+      document.body.appendChild(pop);
+      var a = anchor.getBoundingClientRect(), W = window.innerWidth, H = window.innerHeight, pw = pop.offsetWidth, ph = pop.offsetHeight;
+      var top = a.bottom + 8 + ph > H - 8 ? a.top - ph - 8 : a.bottom + 8;
+      pop.style.left = Math.round(Math.max(8, Math.min(W - pw - 8, a.left + a.width / 2 - pw / 2))) + 'px';
+      pop.style.top = Math.round(Math.max(8, top)) + 'px';
+      this.pop = pop;
+    },
+    hide: function () { if (this.pop && this.pop.parentNode) this.pop.parentNode.removeChild(this.pop); this.pop = null; },
+    wire: function (el, it) {
+      var self = this;
+      el.addEventListener('mouseenter', function () { self.show(el, it); });
+      el.addEventListener('mouseleave', function () { self.hide(); });
+      el.addEventListener('focus', function () { self.show(el, it); });
+      el.addEventListener('blur', function () { self.hide(); });
+    }
+  };
+  function showStatusInfo(it) {
+    StatusTip.hide();
+    var body = h('div', { class: 'st-info' });
+    statusRows(it).forEach(function (r) { body.appendChild(h('div', { class: 'st-pop-row' }, h('span', { text: r[0] }), h('em', { text: r[1] }))); });
+    if (it[3] === 'net') body.appendChild(h('div', { class: 'row' }, sheetBtn('wifi', T('Verbindung testen'), function () { goBack(); setTimeout(function () { showSpeedTest(); }, 80); })));
+    openSheet(it[2], it[1], body);
+  }
   /* Kurze Hilfe auf der Willkommensseite */
   function showWelcomeHelp() {
     var qa = [
       [T('Wo finde ich MAC und KEY?'), T('Hier auf dieser Seite. Später auch unter „Profil“ und unten am Bildschirmrand.')],
-      [T('Woher bekomme ich eine Playlist?'), T('Von deinem IPTV-Anbieter: ein M3U-Link oder ein Xtream-Zugang. Telvo enthält selbst keine Sender.')],
+      [T('Woher bekomme ich eine Playlist?'), T('Du bekommst sie zusammen mit deinem Zugang – als M3U-Link oder Xtream-Daten. Telvo enthält selbst keine Sender.')],
       [T('Die Playlist erscheint nicht?'), T('Die App prüft alle 30 Sekunden. Stimmen MAC und KEY auf der Webseite genau? Ist das Gerät online?')],
       [T('Kein Handy zur Hand?'), T('„Playlist hinzufügen“ wählen und die Daten direkt hier eingeben.')]
     ];
@@ -3491,7 +3610,7 @@
                 h('button', { class: 'wl-btn wl-primary f', onclick: showAddProfile, 'data-autofocus': touchOnly ? null : true }, icon('plus'), h('span', { text: T('Playlist hinzufügen') })),
                 h('button', { class: 'wl-btn wl-ghost f', onclick: startDemo, title: T('Mit freien Test-Videos – ohne Zugang.') }, icon('play'), h('span', { text: T('Demo') })),
                 refreshBtn))),
-          h('p', { class: 'wl-legal', text: T('Diese App enthält keine Sender oder Inhalte. Du benötigst einen eigenen Zugang von deinem Anbieter.') })));
+          h('p', { class: 'wl-legal', text: T('Diese App enthält keine Sender oder Inhalte. Du brauchst eine eigene Playlist (M3U-Link oder Xtream-Zugang).') })));
       WelcomeStatus.start(welcome);
       Screens.reset('profiles', welcome);
       return;
@@ -3621,7 +3740,7 @@
         h('div', { class: 'tabs' }, tX, tM),
         fName.wrap, xBox, mBox, webRow, err,
         h('div', { class: 'row' }, saveBtn, h('button', { class: 'btn f ghost', onclick: goBack }, T('Abbrechen'))),
-        h('p', { class: 'hint', text: T('Diese App enthält keine Sender oder Inhalte. Du benötigst einen eigenen Zugang von deinem Anbieter.') })));
+        h('p', { class: 'hint', text: T('Diese App enthält keine Sender oder Inhalte. Du brauchst eine eigene Playlist (M3U-Link oder Xtream-Zugang).') })));
     Screens.push('add', el);
     setTimeout(function () { Nav.focus(tX); }, 30);
   }
@@ -4256,7 +4375,7 @@
     var logo = h('div', { class: 'rl-logo' });
     logo.innerHTML = RL_LOGO;
     var title = h('h2', { class: 'rl-title' }, h('span', { class: 'rl-ok' }, icon('check')), h('span', { text: T('Playlist wird aktualisiert …') }));
-    var sub = h('p', { class: 'rl-sub', text: T('Neue Sender, Filme und Serien werden vom Anbieter geladen.') });
+    var sub = h('p', { class: 'rl-sub', text: T('Neue Sender, Filme und Serien werden geladen.') });
     var rows = {}, steps = h('div', { class: 'rl-steps' });
     [['live', T('Live TV')], ['movie', T('Filme')], ['series', T('Serien')]].forEach(function (k) {
       var st = h('span', { class: 'rl-st' }, h('i', { class: 'rl-spin' }));
@@ -5243,7 +5362,7 @@
       state.textContent = s.state === 'ok' ? T('{0} Sender mit Programmdaten · geladen {1}', fmtCount(s.channels || 0), fmtDate(s.at / 1000) + ' ' + fmtClock(s.at / 1000))
         : s.state === 'loading' ? T('Programmführer wird geladen …')
         : s.state === 'error' ? T('Programmführer konnte nicht geladen werden: {0}', s.error || '')
-        : s.state === 'none' ? T('Deine Playlist bringt keinen Programmführer mit. Trage eine EPG-Adresse ein, wenn dein Anbieter eine hat.')
+        : s.state === 'none' ? T('Deine Playlist bringt keinen Programmführer mit. Trage eine EPG-Adresse ein, falls du eine hast.')
         : T('Wird automatisch geladen, sobald du Live TV öffnest.');
     }
     function reload() {
@@ -5271,7 +5390,7 @@
       }
       f.input.addEventListener('keydown', function (e) { if (e.keyCode === 13) save(f.input.value); });
       openSheet(T('EPG-Adresse'), 'clock', [
-        h('p', { class: 'hint', text: T('Adresse einer XMLTV-Datei (.xml oder .xml.gz) von deinem Anbieter. Leer lassen, um die Adresse aus der Playlist zu verwenden.') }),
+        h('p', { class: 'hint', text: T('Adresse einer XMLTV-Datei (.xml oder .xml.gz). Leer lassen, um die Adresse aus der Playlist zu verwenden.') }),
         f.wrap, err,
         h('div', { class: 'row' },
           sheetBtn('check', T('Speichern'), function () { save(f.input.value); }, 'primary'),
@@ -5851,10 +5970,10 @@
     var pingEl = h('b', { text: '…' }), speedEl = h('b', { class: 'nt-big', text: '…' }), verdict = h('p', { class: 'nt-verdict' });
     var again = sheetBtn('refresh', T('Erneut testen'), run);
     var body = [
-      h('p', { class: 'hint', text: T('Misst, wie schnell dein Anbieter antwortet und wie schnell Sender bei dir ankommen. Dauert etwa 10 Sekunden.') }),
+      h('p', { class: 'hint', text: T('Misst, wie schnell der Server deiner Playlist antwortet und wie schnell Sender bei dir ankommen. Dauert etwa 10 Sekunden.') }),
       h('div', { class: 'nt-box' },
         h('div', { class: 'nt-row' }, h('span', { text: T('Internet') }), h('b', { text: navigator.onLine === false ? T('Kein Internet') : T('verbunden') })),
-        h('div', { class: 'nt-row' }, h('span', { text: T('Antwortzeit des Anbieters') }), pingEl),
+        h('div', { class: 'nt-row' }, h('span', { text: T('Antwortzeit des Servers') }), pingEl),
         h('div', { class: 'nt-row nt-speed' }, h('span', { text: T('Geschwindigkeit') }), speedEl)),
       verdict, h('div', { class: 'row nt-act' }, again)];
     openSheet(T('Verbindung testen'), 'wifi', body, { onClose: onDone });
@@ -5996,13 +6115,20 @@
   /* ---------- Feedback geben ----------
      Sterne (1–5) und/oder Text. Geht wie „Problem melden“ über send_support (Thema „Feedback“) und erscheint im
      Verwaltungsbereich. Mitgeschickt werden nur App-Version, Gerätetyp und Sprache – steht so im Fenster. */
+  /* Eigene Bewertung dieses Geräts: eine pro MAC, jederzeit änderbar */
+  var MyRating = {
+    get: function () { var r = Store.get('rating', null); return r && r.mac === Device.mac() && r.stars ? r : null; },
+    set: function (stars) { Store.set('rating', { mac: Device.mac(), stars: stars, at: Date.now() }); }
+  };
   function showFeedback() {
-    var stars = 0, starBtns = [], label = h('p', { class: 'fb-label' });
+    var mine = MyRating.get();
+    var stars = mine ? mine.stars : 0, starBtns = [], label = h('p', { class: 'fb-label' });
     var LABELS = ['', T('Gefällt mir nicht'), T('Geht so'), T('Ganz okay'), T('Gefällt mir'), T('Gefällt mir sehr')];
     var row = h('div', { class: 'fb-stars', role: 'radiogroup', 'aria-label': T('Wie gefällt dir Telvo?') });
     function paint() {
       starBtns.forEach(function (b, i) { var on = i < stars; b.classList.toggle('is-on', on); clear(b).appendChild(icon(on ? 'starFill' : 'star')); b.setAttribute('aria-checked', i + 1 === stars ? 'true' : 'false'); });
       label.textContent = stars ? LABELS[stars] : T('Tippe auf die Sterne');
+      send.lastChild.textContent = mine && stars && stars !== mine.stars && !msg.value.trim() ? T('Bewertung ändern') : T('Senden');
     }
     for (var i = 1; i <= 5; i++) (function (n) {
       var b = h('button', { class: 'fb-star f', role: 'radio', title: T('{0} von 5 Sternen', n), 'aria-label': T('{0} von 5 Sternen', n), onclick: function () { stars = n; paint(); } });
@@ -6010,27 +6136,38 @@
     })(i);
     starBtns[0].setAttribute('data-autofocus', '');
     var msg = h('textarea', { class: 'f', rows: 3, maxlength: 1500, placeholder: T('Was gefällt dir – und was können wir besser machen?') });
+    msg.addEventListener('input', function () { paint(); });
     var mail = inputField(T('E-Mail für eine Antwort (freiwillig)'), '', 'email');
     mail.wrap.className += ' rep-mail';
     var err = h('div', { class: 'error' });
     var send = sheetBtn('send', T('Senden'), go, 'primary');
     function go() {
-      var text = msg.value.trim();
+      var text = msg.value.trim(), changed = !!stars && (!mine || mine.stars !== stars);
       if (!stars && text.length < 5) { err.textContent = T('Bitte wähle Sterne oder schreib ein paar Worte.'); return; }
+      if (!changed && text.length < 5) { err.textContent = T('Deine Bewertung ist schon gespeichert. Wähle andere Sterne, um sie zu ändern.'); return; }
       if (!CONFIG.cloudUrl) { err.textContent = T('Online-Dienst nicht erreichbar'); return; }
       var kind = Platform.tizen ? 'Samsung' : Platform.webos ? 'LG' : /Electron/.test(UA) ? 'PC-App' : Platform.capacitor ? (Platform.androidTV ? 'Android-TV' : 'Android') : 'Browser';
-      var body = (stars ? 'Bewertung: ' + stars + ' von 5 ' + new Array(stars + 1).join('★') + new Array(6 - stars).join('☆') + '\n' : '') + (text || '') +
-        '\n\n— Telvo ' + CONFIG.version + ' · ' + kind + ' · ' + Lang.cur;
+      function starLine() {
+        var bar = new Array(stars + 1).join('★') + new Array(6 - stars).join('☆');
+        return mine && changed ? 'Bewertung geändert: ' + mine.stars + ' → ' + stars + ' von 5 ' + bar : 'Bewertung: ' + stars + ' von 5 ' + bar;
+      }
       err.textContent = ''; send.disabled = true; send.lastChild.textContent = T('Wird gesendet …');
       (Cloud.registered ? Promise.resolve({ ok: true }) : Cloud.register()).then(function (r) {
         if (!r || !r.ok) throw new Error(rpcErr(r));
         Cloud.registered = true;
+        // Sterne: eine Bewertung pro Gerät auf dem Server (ersetzt die alte). Fehlt die Funktion dort noch, gehen sie wie bisher als Nachricht mit.
+        return changed ? Cloud.call('set_rating', { p_mac: Device.mac(), p_stars: stars }).then(function (x) { return !!(x && x.ok); }, function () { return false; }) : true;
+      }).then(function (rated) {
+        var withStars = changed && !rated;
+        if (!text && !withStars) return { ok: true };
+        var body = (changed ? starLine() + '\n' : '') + (text || '') + '\n\n— Telvo ' + CONFIG.version + ' · ' + kind + ' · ' + Lang.cur;
         return Cloud.rpc('send_support', { p_mac: Device.mac(), p_key: Device.key(), p_topic: 'Feedback', p_message: body.slice(0, 2000), p_contact: mail.input.value.trim() || null });
       }).then(function (r) {
         if (!r || !r.ok) throw new Error(rpcErr(r));
         Store.set('feedbackAt', Date.now());
+        if (changed) MyRating.set(stars);
         goBack();
-        toast(T('Danke für dein Feedback!'), 3500);
+        toast(mine && changed ? T('Deine Bewertung wurde geändert.') : T('Danke für dein Feedback!'), 3500);
       }).catch(function (e) {
         send.disabled = false; send.lastChild.textContent = T('Senden');
         err.textContent = (e && e.message && e.message !== 'timeout' && e.message !== 'offline') ? T(e.message)
@@ -6039,7 +6176,7 @@
     }
     paint();
     openSheet(T('Feedback geben'), 'star', [
-      h('p', { class: 'fb-q', text: T('Wie gefällt dir Telvo?') }), row, label,
+      h('p', { class: 'fb-q', text: mine ? T('Deine Bewertung – du kannst sie jederzeit ändern.') : T('Wie gefällt dir Telvo?') }), row, label,
       h('label', { class: 'field rep-msg' }, h('span', { text: T('Lob, Kritik oder Ideen (freiwillig)') }), msg),
       mail.wrap,
       h('p', { class: 'hint fb-note', text: T('Mitgeschickt werden nur App-Version, Gerätetyp und Sprache.') }),
@@ -6120,7 +6257,7 @@
     // Auswahl-Listen
     var THEMES = [['dark', T('Dunkel')], ['light', T('Hell')], ['auto', T('Automatisch'), T('Richtet sich nach dem Gerät. Fernseher bleiben dunkel.')]];
     var POSTERS = [['s', T('Klein'), T('Mehr Cover auf einmal')], ['m', T('Normal')], ['l', T('Groß'), T('Besser lesbar aus der Entfernung')]];
-    var SORTS = [['default', T('Wie beim Anbieter')], ['num', T('Nach Sendernummer')], ['az', T('Name A–Z')], ['za', T('Name Z–A')]];
+    var SORTS = [['default', T('Wie in der Playlist')], ['num', T('Nach Sendernummer')], ['az', T('Name A–Z')], ['za', T('Name Z–A')]];
     var FORMATS = [['m3u8', 'HLS (.m3u8)', T('Funktioniert auf den meisten Geräten am besten.')], ['ts', 'MPEG-TS (.ts)', T('Probiere das, wenn Sender nicht starten oder ruckeln.')]];
     var EXTS = [['off', T('Aus – Telvo-Player verwenden')], ['ask', T('Jedes Mal fragen'), T('Android zeigt eine Auswahl deiner Player-Apps.')], ['vlc', 'VLC'], ['mx', 'MX Player'], ['just', 'Just Player']];
     var AUTOS = [[6, T('Alle 6 Stunden')], [12, T('Alle 12 Stunden'), T('Empfohlen')], [24, T('Einmal am Tag')], [0, T('Aus – nur von Hand')]];
@@ -6162,7 +6299,7 @@
         var v = Shell.view && Shell.view.firstChild; if (v && v._refresh) v._refresh();
       }, T('Zeigt der Programmführer die Sendungen zu früh oder zu spät an? Dann hier die Zeit verschieben. Gilt nur für diese Playlist.'));
     var tAuto = choiceTile('bolt', T('Automatisch aktualisieren'), AUTOS, autoH, function (v) { Settings.set('autoRefresh', v); },
-      T('Dein Anbieter fügt regelmäßig neue Filme und Serien hinzu. Die App lädt die Listen dann von selbst neu – im Hintergrund, nie während etwas läuft.'));
+      T('In Playlists kommen regelmäßig neue Filme und Serien dazu. Die App lädt die Listen dann von selbst neu – im Hintergrund, nie während etwas läuft.'));
 
     // ---- Kindersicherung & Kategorien ----
     function parentalSheet() {
@@ -6237,7 +6374,7 @@
       T('Sender, Filme und Serien in einer anderen App abspielen. Die App muss auf dem Gerät installiert sein.'));
     var QUALS = [['auto', T('Automatisch'), T('Passt sich der Internetverbindung an.')], ['best', T('Immer beste Qualität'), T('Braucht schnelles Internet. Gut für PC und große Fernseher.')]];
     var tQual = choiceTile('player', T('Bildqualität'), QUALS, function () { return Settings.get('quality') || 'auto'; }, function (v) { Settings.set('quality', v); },
-      T('Gilt für Streams, die der Anbieter in mehreren Qualitäten liefert. Welche Qualität gerade läuft, steht im Player oben rechts.'));
+      T('Gilt für Streams, die es in mehreren Qualitäten gibt. Welche Qualität gerade läuft, steht im Player oben rechts.'));
     var tSub = tile('cc', T('Untertitel'), function () { var s = SubStyle.get(); return opt(SIZES, s.size) + ', ' + opt(SCOLORS, s.color); }, function () {
       var demo = h('div', { class: 'sub-demo' }, h('span', { text: T('So sehen deine Untertitel aus.') }));
       function upd() {
@@ -7442,7 +7579,7 @@
       self.err.appendChild(h('h3', { text: T('Wiedergabe nicht möglich') }));
       self.err.appendChild(h('p', { text: msg }));
       var ext = String((self.item && self.item.ext) || '').toLowerCase();
-      if (self.rawFail) self.err.appendChild(h('p', { class: 'hint', text: T('Solche Sender heißen beim Anbieter oft „RAW“. Sie werden unverändert durchgeleitet. Auf einer Android-TV-Box oder einem Fire TV Stick laufen sie meist – notfalls über einen externen Player wie VLC (Einstellungen → Wiedergabe).') }));
+      if (self.rawFail) self.err.appendChild(h('p', { class: 'hint', text: T('Solche Sender heißen in der Liste oft „RAW“. Sie werden unverändert durchgeleitet. Auf einer Android-TV-Box oder einem Fire TV Stick laufen sie meist – notfalls über einen externen Player wie VLC (Einstellungen → Wiedergabe).') }));
       else if (self.isVod() && /^(mkv|avi|wmv|flv)$/.test(ext)) self.err.appendChild(h('p', { class: 'hint', text: T('Dieser Film liegt im Format {0} vor. Nicht jedes Gerät kann dieses Format abspielen.', ext.toUpperCase()) }));
       else if (typeof navigator.onLine === 'boolean' && !navigator.onLine) self.err.appendChild(h('p', { class: 'hint', text: T('Dein Gerät ist gerade offline. Sobald das Internet wieder da ist, geht es automatisch weiter.') }));
       self.err.appendChild(h('div', { class: 'row', style: 'justify-content:center' },

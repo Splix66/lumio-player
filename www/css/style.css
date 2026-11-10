@@ -2978,3 +2978,27 @@ body.lite .d-similar .poster .art, body.lite .d-prev { transition: none; }
 .vol-range.is-muted { opacity: .55; }
 .pt-now { display: none; margin-top: .2rem; max-width: 40rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .95rem; font-weight: 600; color: rgba(255, 255, 255, .72); }
 .player.is-zapping .pt-now:not(:empty) { display: block; }
+
+/* ===== Status: Grund und Zahlen beim Drüberfahren, Probleme als Knopf ===== */
+.st-pop { position: fixed; z-index: 90; min-width: 15rem; max-width: 22rem; padding: .8rem .95rem .7rem; border-radius: 1rem; pointer-events: none;
+  background: rgba(18, 18, 26, .94); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12), 0 1rem 2.4rem rgba(0, 0, 0, .55); color: var(--text); font-size: .8rem; }
+.st-pop > b { display: flex; align-items: center; margin-bottom: .45rem; font-size: .88rem; font-weight: 750; }
+.st-pop > b i { width: .5rem; height: .5rem; margin-right: .5rem; border-radius: 50%; background: var(--dim); flex: none; }
+.st-pop.is-ok > b i { background: #4ade80; }
+.st-pop.is-warn > b i { background: #fbbf24; }
+.st-pop.is-off > b i { background: #f87171; }
+.st-pop-row { display: flex; justify-content: space-between; align-items: baseline; padding: .28rem 0; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06); }
+.st-pop-row span { color: var(--muted); margin-right: 1rem; flex: none; }
+.st-pop-row em { font-style: normal; font-weight: 600; text-align: right; min-width: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.st-info { min-width: min(26rem, 80vw); }
+.st-info .st-pop-row { padding: .65rem 0; font-size: .95rem; }
+.st-info .row { margin-top: 1rem; }
+:root[data-theme="light"] .st-pop { background: rgba(255, 255, 255, .97); box-shadow: inset 0 0 0 1px var(--line-2), 0 1rem 2.4rem rgba(0, 0, 0, .18); }
+:root[data-theme="light"] .st-pop-row { box-shadow: inset 0 1px 0 var(--line); }
+.ln-chip.is-warn { color: #fcd34d; box-shadow: inset 0 0 0 1px rgba(251, 191, 36, .35); }
+.ln-chip.is-off { box-shadow: inset 0 0 0 1px rgba(248, 113, 113, .4); }
+button.ln-chip { cursor: pointer; font: inherit; font-size: .8rem; font-weight: 650; }
+button.ln-chip:hover { background: rgba(255, 255, 255, .1); }
+body.kbd .ln-chip.f:focus, body.is-tv .ln-chip.f:focus { background: #fff; color: #0b0b0f; box-shadow: none; }
+.sb-st { cursor: default; }
+.sb-st.is-warn { color: #fcd34d; }
