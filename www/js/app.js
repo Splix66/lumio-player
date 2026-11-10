@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Telvo Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.14.0',
+    version: '1.14.1',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     /* Bibliotheken: werden beim Bauen nach www/lib kopiert (scripts/copy-libs.js) und von dort geladen.
        Nur wenn sie fehlen, aus dem Internet – mit fester Version und Prüfsumme (SRI): eine veränderte Datei
@@ -2313,7 +2313,16 @@
         if (App.profile) Shell.open();
         toast(T('Hallo {0}!', to.name));
       }
-      if (id === from.id) { if (Screens.top() && Screens.top().name === 'who') goBack(); return; }
+      if (id === from.id) {
+        if (Screens.top() && Screens.top().name === 'who') goBack();
+        // Beim App-Start dieselbe Person gewählt: jetzt die eingestellte Ansicht („App beim Start“) öffnen
+        if (startPending > 0 && Date.now() <= startPendingUntil) {
+          startPending = 0;
+          var sv = startView();
+          if (sv === 'live' || sv === 'movie' || sv === 'series') Shell.show(sv);
+        }
+        return;
+      }
       if (from.kids && !to.kids && Settings.get('parentPin')) Parental.ask(go, { keep: true, text: T('Zum Wechseln aus dem Kinderprofil bitte die PIN der Kindersicherung eingeben.') });
       else go();
     },
@@ -3919,6 +3928,8 @@
     if (v === 'home' || v === 'last' || v === 'live' || v === 'movie' || v === 'series') return v;
     return Settings.get('autoLast') !== false ? 'last' : 'home';
   }
+  // Wie viele Shell.open() noch bis zur eingestellten Startansicht (nur beim App-Start gesetzt, s. boot)
+  var startPending = 0, startPendingUntil = 0;
 
   var Shell = {
     el: null, view: null, current: null, buttons: {}, pendingFocus: null,
@@ -3987,8 +3998,10 @@
           else if (self.current === 'home') self.show('home', false, true);
         }
       });
-      // Start: Startseite – oder Live TV / Filme / Serien, wenn so eingestellt („App beim Start“)
-      var sv = startView();
+      // Start: Startseite – oder Live TV / Filme / Serien, wenn so eingestellt („App beim Start“).
+      // Nur beim echten App-Start – nicht nach Personen-/Playlist-Wechsel oder Neustart wegen Sprachwechsel
+      if (Date.now() > startPendingUntil) startPending = 0;
+      var sv = startPending > 0 && --startPending === 0 ? startView() : 'home';
       self.show(sv === 'live' || sv === 'movie' || sv === 'series' ? sv : 'home');
     },
     show: function (name, focusContent, keepFocus) {
@@ -4238,11 +4251,12 @@
     }
     // Schnellzugriff, solange es noch nichts zu zeigen gibt (neue Playlist, erster Start)
     function quickRow() {
-      var st = Stats.get();
       function q(kind, label, unit) {
-        var x = st[kind];
-        return h('button', { class: 'hm-quick f k-' + kind, 'data-key': 'q:' + kind, onclick: function () { Shell.show(kind, true); } },
-          h('span', { class: 'hm-qic' }, icon(kind)), h('b', { text: label }), h('small', { text: x ? T(unit, fmtCount(x.n)) : '…' }));
+        function count() { var x = Stats.get()[kind]; return x ? T(unit, fmtCount(x.n)) : '…'; }
+        var b = h('button', { class: 'hm-quick f k-' + kind, 'data-key': 'q:' + kind, onclick: function () { Shell.show(kind, true); } },
+          h('span', { class: 'hm-qic' }, icon(kind)), h('b', { text: label }), h('small', { text: count() }));
+        b._count = count;
+        return b;
       }
       return h('div', { class: 'hm-quickrow' }, q('live', T('Live TV'), '{0} Sender'), q('movie', T('Filme'), '{0} Titel'), q('series', T('Serien'), '{0} Serien'));
     }
@@ -4255,7 +4269,11 @@
         // im Titelbild unterwegs: nicht austauschen
         if (inside && had.classList.contains('hm-hero')) return;
         // weiterhin kein Titelbild und die Ersatzkacheln stehen schon: so lassen (sonst springt der Fokus auf „Live TV“ zurück)
-        if (!items.length && had && had.classList.contains('hm-quickrow')) return;
+        // (nur die Zahlen darunter auffrischen – nach dem ersten Laden stand sonst dauerhaft „…“)
+        if (!items.length && had && had.classList.contains('hm-quickrow')) {
+          $all('.hm-quick', had).forEach(function (b) { var s = $('small', b); if (s && b._count) s.textContent = b._count(); });
+          return;
+        }
         var fkey = inside && document.activeElement.getAttribute('data-key');
         if (had && had._dispose) had._dispose();
         clear(heroSlot);
@@ -4288,8 +4306,9 @@
       }
       var recent = Recent.list(), top = ChanCount.top(5);
       // „Top Sender“ mit Favoriten und zuletzt gesehenen auffüllen, bis es fünf sind
+      // (erst nach dem Filtern auf fünf kürzen – ausgeblendete/gesperrte Sender fallen sonst als Lücke weg)
       var seen = {}, topList = [];
-      top.concat(Favs.list('live'), recent).forEach(function (c) { if (c && !seen[c.id] && topList.length < 5) { seen[c.id] = 1; topList.push(c); } });
+      top.concat(Favs.list('live'), recent).forEach(function (c) { if (c && !seen[c.id]) { seen[c.id] = 1; topList.push(c); } });
       function done(rc, tp) {
         if (my !== rowsReq) return;
         if (rc.length) out.push(row(T('Zuletzt gesehene Sender'), null, rc.map(function (c) { return chanTile(c); })));
@@ -4300,6 +4319,8 @@
         wantKey = null;
         if (k && top0 && top0.el.contains(el)) {
           var t = $('[data-key="' + k + '"]', rows);
+          // Karte gibt es nicht mehr (z. B. Film zu Ende geschaut → nicht mehr in „Weiterschauen“): erste Karte statt Menüleiste
+          if (!t) t = $('.f', rows) || $('.f', heroSlot);
           if (t) {
             Nav.focus(t);
             // Screens.pop() setzt den Fokus 20 ms nach dem Zurückkommen selbst – danach noch einmal hierher
@@ -4308,7 +4329,7 @@
         }
       }
       Promise.all([visibleItems('live', Promise.resolve(recent.slice(0, 12))), visibleItems('live', Promise.resolve(topList))])
-        .then(function (r) { done(r[0] || [], r[1] || []); }, function () { done([], []); });
+        .then(function (r) { done(r[0] || [], (r[1] || []).slice(0, 5)); }, function () { done([], []); });
     }
 
     // byUser: Knopf gedrückt (mit Bestätigung). quiet: automatisch im Hintergrund (ohne Fehlermeldung)
@@ -4366,6 +4387,19 @@
       paintRows();
       // noch kein Titelbild (z. B. gerade erst die Listen aktualisiert): jetzt nachholen
       if (!$('.hm-hero', heroSlot)) paintHero();
+      else {
+        // Titelbild-Knöpfe auffrischen („Jetzt ansehen“ → „Weiter bei …“) – Fokus bleibt auf demselben Knopf
+        var fh = $('.fhero', heroSlot), a0 = document.activeElement;
+        var hk = (lf && heroSlot.contains(lf) && key) || (a0 && heroSlot.contains(a0) && a0.getAttribute('data-key'));
+        if (fh && fh._refresh) {
+          fh._refresh();
+          var hb = hk && $('[data-key="' + hk + '"]', heroSlot);
+          if (hb) {
+            if (sc && lf && !document.body.contains(lf)) sc.lastFocus = hb;     // Screens.pop() fokussiert gleich danach
+            if (a0 && !document.body.contains(a0)) Nav.focus(hb);               // TV-Player (kein eigener Bildschirm)
+          }
+        }
+      }
       setTimeout(autoCheck, 1500);
     };
     // App kommt aus dem Hintergrund zurück (z. B. Box-Fernbedienung, Handy entsperrt)
@@ -9186,12 +9220,15 @@
     SubStyle.apply();
     var active = Profiles.get(Store.get('active'));
     if (active) {
-      activateProfile(active, false);
-      if (Persons.multi()) setTimeout(function () { if (App.profile === active) showWhoWatches(); }, 300);
-      // Einstellung „Letzten Sender beim Start abspielen“
-      // nicht nach einem Neustart aus der App heraus (z. B. Sprache gewechselt)
+      // Neustart aus der App heraus (z. B. Sprache gewechselt)? Dann weder „App beim Start“ noch letzten Sender
       var soft = false;
       try { soft = sessionStorage.getItem('lumio.soft') === '1'; sessionStorage.removeItem('lumio.soft'); } catch (e) {}
+      // „App beim Start“ (Live TV / Filme / Serien): bei mehreren Personen erst nach „Wer schaut?“ – sonst wird alles doppelt geladen
+      startPending = soft ? 0 : Persons.multi() ? 2 : 1;
+      startPendingUntil = Date.now() + 120000;   // „Wer schaut?“ nur weggeklickt: später nicht mehr umspringen
+      activateProfile(active, false);
+      if (Persons.multi()) setTimeout(function () { if (App.profile === active) showWhoWatches(); }, 300);
+      // Einstellung „Letzten Sender beim Start abspielen“ (nicht nach einem Neustart aus der App heraus)
       var lastLive = !soft && startView() === 'last' && Recent.list()[0];
       if (lastLive) setTimeout(function () {
         function ok() { var top = Screens.top(); return !Player.el && App.profile === active && top && top.name === 'shell' && !Dialog.open; }
