@@ -1,6 +1,13 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
-## 1.13.5 – 2026-11-10 · Zwei Kleinigkeiten aus dem Gerätetest
+## 1.14.0 – 2026-11-10 · Neues Design: Startseite, Einstellungen, Filme & Serien
+
+- **Neue Startseite** (nach Entwurf): Menüleiste oben wie überall, darunter ein großes Titelbild mit den bestbewerteten Filmen und Serien (Bewertung · Genre · Jahr, „Jetzt ansehen“ und „Details“, wechselt alle 9 Sekunden, aber nie, während man dort steht). Darunter „Weiterschauen“, „Zuletzt gesehene Sender“ und „Top Sender“ (die meistgeschauten Sender der Person, aufgefüllt mit Favoriten). Die Auswahl fürs Titelbild wird beim Aktualisieren der Listen berechnet und klein gespeichert – die Startseite lädt die großen Film- und Serienlisten nicht selbst. Gesperrte und ausgeblendete Kategorien (Kindersicherung) erscheinen nie im Titelbild oder bei den Sendern. Status (Internet, Player, Laufzeit) steht jetzt unten in der Fußleiste; Radio über Live TV → Radio, Hilfe unter Einstellungen → Hilfe & Support.
+- **Einstellungen in acht Bereichen** (nach Entwurf): Allgemein, Wiedergabe, Darstellung, Inhalte & Listen, Benutzer & Sicherheit, Geräte & Verbindungen, Erweitert, Hilfe & Support. Gewählter Bereich leuchtet violett, große Überschrift mit Symbol, kurze Erklärung unter den wichtigsten Zeilen.
+- **Neu in den Einstellungen:** „App beim Start“ (Startseite, letzter Sender, Live TV, Filme oder Serien – ersetzt den Schalter „Letzten Sender beim Start“, die bisherige Wahl bleibt erhalten), „Automatisch nach Updates suchen“ (Android-App, einmal am Tag), „Zwischenspeicher leeren“ (Programmführer und Suche) und „Hilfe“. Nicht übernommen aus dem Entwurf: Puffergröße und feste Videoqualität SD/HD/4K – das kann der Player nicht steuern, ein Schalter ohne Wirkung wäre irreführend.
+- **Filme & Serien:** kleinere Cover, sechs statt fünf pro Reihe (die Regel für die Größe griff vorher gar nicht – eine allgemeinere Regel weiter hinten gewann). Top 10 nur noch bei „Alle“, in einer Kategorie beginnt das Raster direkt oben. Kategorien links: schmaler, gewählte Kategorie violett hervorgehoben, gewählte Sprache oben wie ein Auswahlfeld (gilt auch für Live TV).
+- **Startseite, Navigation:** Hoch aus den Reihen führt erst ins Titelbild, nicht gleich in die Menüleiste; beim Öffnen steht der Fokus auf „Jetzt ansehen“.
+- **Übersetzungen:** 31 neue Texte in allen 13 Sprachen.
 
 - **Filme/Serien (Fernseher):** Rechts aus der Kategorienliste landete auf „Sortieren“ statt auf der ersten Kachel, sobald „Weiterschauen“ zu sehen war – „Sortieren“ sitzt dann in dessen Überschrift. Jetzt geht es direkt zur ersten Weiterschauen-Kachel.
 - **Programmbeschreibungen:** Manche Anbieter liefern Zeilenumbrüche als Text, dann stand z. B. „Stacheldraht.\n\nManch ein …“ in der Live-Vorschau. Jetzt echte Absätze (im Programm-Fenster) bzw. ein Leerzeichen (in der kurzen Vorschau). Gilt für Xtream und XMLTV, auch für schon gespeicherte Programmdaten. Neuer Test.
