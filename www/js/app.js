@@ -369,7 +369,7 @@
   // Sprachliste mit Flaggen (Willkommensseite: klappt oben rechts unter dem Knopf auf; Einstellungen: normales Fenster)
   function langChoice() {
     var list = choiceList(langsSorted().map(function (l) { return [l[0], l[1], null, flagFor(l[0])]; }),
-      function () { return Lang.cur; }, function (v) { if (v !== Lang.cur) Lang.set(v); });
+      function () { return Lang.cur; }, function (v) { if (v !== Lang.cur) Lang.set(v); else goBack(); });   // gleiche Sprache = Menü schließen
     list.classList.add('lang-choice');
     return list;
   }
@@ -2134,18 +2134,15 @@
         note.classList.add('is-out');
         setTimeout(function () { if (note.parentNode) note.parentNode.removeChild(note); }, 350);
       }
+      // Bewusst knapp: eine Zeile, 5 Sekunden (vorher Überschrift, zwei Zeilen und 9 Sekunden – wirkte auf dem Fernseher zu groß)
       note = h('div', { class: 'terms-note', role: 'status' },
         icon('info'),
-        h('span', { class: 'tn-txt' },
-          h('b', { text: T('Gut zu wissen') }),
-          h('span', { text: T('Telvo ist nur ein Player ohne eigene Sender. Nutze nur Quellen, für die du eine Berechtigung hast.') }),
-          // Auf dem Fernseher gibt es keinen Browser – dort steht die Adresse klein darunter
-          Platform.tv ? h('span', { class: 'tn-url', text: T('Nutzungsbedingungen') + ': ' + url.replace(/^https?:\/\//, '') }) : null),
+        h('span', { class: 'tn-txt' }, h('span', { text: T('Telvo ist nur ein Player – nutze nur Quellen, für die du berechtigt bist.') })),
         Platform.tv ? null : h('button', { class: 'tn-link', onclick: function (e) { e.stopPropagation(); openExternal(url); } }, T('Nutzungsbedingungen')),
         h('i', { class: 'tn-bar' }));
       note.addEventListener('click', close);
       document.body.appendChild(note);
-      timer = setTimeout(close, 9000);
+      timer = setTimeout(close, 5000);
     }
   };
 
@@ -2694,12 +2691,15 @@
   }
   function ensureVisible(el) {
     var p = scrollParent(el);
+    // „Ähnliche Titel“ als Schublade: klappt selbst hoch – das Fenster darum herum nicht nach unten rollen
+    var drawer = el.closest ? el.closest('.d-similar.is-drawer') : null;
     while (p) {
       var r = el.getBoundingClientRect(), pr = p.getBoundingClientRect(), pad = 24;
       // feststehende Leiste oben (z. B. Genre-Leiste) nicht über das gewählte Element legen
       var sticky = p._stickyTop && !(el.closest && el.closest('.chipbar-wrap')) ? p._stickyTop() : 0;
       var top = pad + sticky;
-      if (r.top < pr.top + top) p.scrollTop -= (pr.top + top - r.top);
+      if (drawer && !drawer.contains(p)) { /* senkrecht nichts tun */ }
+      else if (r.top < pr.top + top) p.scrollTop -= (pr.top + top - r.top);
       else if (r.bottom > pr.bottom - pad) p.scrollTop += (r.bottom - pr.bottom + pad);
       var stickyL = p._stickyLeft && !(el.closest && el.closest('.gd-ch')) ? p._stickyLeft() : 0;
       if (r.left < pr.left + pad + stickyL) p.scrollLeft -= (pr.left + pad + stickyL - r.left);
@@ -3621,7 +3621,7 @@
     var body = h('div', { class: 'wl-faq' });
     qa.forEach(function (x) { body.appendChild(h('div', { class: 'wl-faq-item' }, h('b', { text: x[0] }), h('p', { text: x[1] }))); });
     body.appendChild(h('p', { class: 'hint wl-faq-more' }, h('span', { text: T('Mehr Hilfe:') + ' ' }), portalLinkBtn()));
-    openSheet(T('Hilfe'), 'help', body);
+    openSheet(T('Hilfe'), 'help', body, { focusClose: true });
   }
   /* „Auch auf der Webseite verwalten“: an = Playlist liegt online (von der Webseite gesendet oder freigegeben) */
   function onWeb(p) { return !!p.remoteId || p.cloud === true; }
@@ -5650,11 +5650,11 @@
     opts = opts || {};
     var panel = h('div', { class: 'modal-panel set-sheet' + (opts.wide ? ' is-wide' : '') },
       h('div', { class: 'sh-head' }, h('span', { class: 'sh-ic' }, icon(ic)), h('h2', { text: title }),
-        h('button', { class: 'sh-close f', title: T('Schließen'), 'aria-label': T('Schließen'), onclick: goBack }, icon('close'))),
+        h('button', { class: 'sh-close f', title: T('Schließen'), 'aria-label': T('Schließen'), 'data-autofocus': opts.focusClose ? true : null, onclick: goBack }, icon('close'))),
       h('div', { class: 'sh-body' }, body));
-    // Fokus auf den ersten Knopf im Inhalt (nicht auf „Schließen“)
+    // Fokus auf den ersten Knopf im Inhalt (nicht auf „Schließen“) – außer bei reinen Lese-Fenstern wie der Hilfe (opts.focusClose)
     var body = panel.lastChild;
-    if (!$('[data-autofocus]', body)) { var first = $('.f', body); if (first) first.setAttribute('data-autofocus', ''); }
+    if (!opts.focusClose && !$('[data-autofocus]', body)) { var first = $('.f', body); if (first) first.setAttribute('data-autofocus', ''); }
     Screens.push('sheet', h('div', { class: 'modal set-modal' + (opts.cls ? ' ' + opts.cls : '') }, h('div', { class: 'modal-backdrop', onclick: goBack }), panel), { overlay: true, onLeave: opts.onClose });
     return panel;
   }
@@ -6023,7 +6023,8 @@
   };
 
   /* ---------- Externer Player (Android): VLC, MX Player, Just Player oder Auswahl ---------- */
-  var EXT_PLAYERS = { vlc: ['org.videolan.vlc'], mx: ['com.mxtech.videoplayer.ad', 'com.mxtech.videoplayer.pro'], just: ['com.brouken.player'] };
+  var EXT_PLAYERS = { vlc: ['org.videolan.vlc'], mx: ['com.mxtech.videoplayer.ad', 'com.mxtech.videoplayer.pro'], just: ['com.brouken.player'],
+    kodi: ['org.xbmc.kodi'], nova: ['org.courville.nova'], mpv: ['is.xyz.mpv'] };
   var EXT_NAMES = { vlc: 'VLC', mx: 'MX Player', just: 'Just Player' };
   function extPlayerOn() { var e = Settings.get('extPlayer'); return !!(e && e !== 'off' && Platform.android && NativePlayer.plugin()); }
   function playExternal(item) {
@@ -6154,8 +6155,11 @@
     if (rel.charAt(0) === '/') return m[1] + rel;
     return m[1] + String(m[2] || '/').replace(/[^\/]*$/, '') + rel;
   }
+  // Android-App: res.url ist hinter CapacitorHttp die localhost-Umleitung – Segmente landeten dann bei http://localhost (HTTP 404)
   function fetchPlaylist(url) {
-    return fetchWithTimeout(url, 12000).then(function (res) { return readText(res, 12000).then(function (t) { return { text: t, url: res.url || url }; }); });
+    return capResolveUrl(url).then(function (u) {
+      return fetchWithTimeout(u, 12000).then(function (res) { return readText(res, 12000).then(function (t) { return { text: t, url: capRealUrl(res.url || u, u) }; }); });
+    });
   }
   function speedTest(onStep) {
     var p = App.profile || {}, out = { ping: null, mbps: null, at: Date.now() };
@@ -6362,6 +6366,20 @@
   };
   function showFeedback() {
     var mine = MyRating.get();
+    // Nach dem Senden ist das Feedback 30 Tage gesperrt (nicht ständig umbewerten); danach nur mit Begründung änderbar
+    var FB_LOCK = 30 * 86400000, lastFb = Store.get('feedbackAt', 0);
+    if (lastFb && Date.now() - lastFb < FB_LOCK) {
+      var until = new Date(lastFb + FB_LOCK).toLocaleDateString(locale());
+      var shown = h('div', { class: 'fb-stars is-locked', 'aria-label': mine ? T('{0} von 5 Sternen', mine.stars) : '' });
+      if (mine) for (var s = 1; s <= 5; s++) shown.appendChild(h('span', { class: 'fb-star' + (s <= mine.stars ? ' is-on' : '') }, icon(s <= mine.stars ? 'starFill' : 'star')));
+      var close = sheetBtn('check', T('Schließen'), goBack, 'primary');
+      close.setAttribute('data-autofocus', '');
+      openSheet(T('Feedback geben'), 'star', [
+        h('p', { class: 'fb-q', text: T('Danke – dein Feedback ist angekommen.') }), mine ? shown : null,
+        h('p', { class: 'hint', text: T('Ändern oder neues Feedback geben kannst du ab dem {0}.', until) }),
+        h('div', { class: 'row' }, close)], { wide: true });
+      return;
+    }
     var stars = mine ? mine.stars : 0, starBtns = [], label = h('p', { class: 'fb-label' });
     var LABELS = ['', T('Gefällt mir nicht'), T('Geht so'), T('Ganz okay'), T('Gefällt mir'), T('Gefällt mir sehr')];
     var row = h('div', { class: 'fb-stars', role: 'radiogroup', 'aria-label': T('Wie gefällt dir Telvo?') });
@@ -6385,6 +6403,7 @@
       var text = msg.value.trim(), changed = !!stars && (!mine || mine.stars !== stars);
       if (!stars && text.length < 5) { err.textContent = T('Bitte wähle Sterne oder schreib ein paar Worte.'); return; }
       if (!changed && text.length < 5) { err.textContent = T('Deine Bewertung ist schon gespeichert. Wähle andere Sterne, um sie zu ändern.'); return; }
+      if (mine && changed && text.length < 10) { err.textContent = T('Bitte schreib kurz, warum du deine Bewertung änderst.'); msg.focus(); return; }
       if (!CONFIG.cloudUrl) { err.textContent = T('Online-Dienst nicht erreichbar'); return; }
       var kind = Platform.tizen ? 'Samsung' : Platform.webos ? 'LG' : /Electron/.test(UA) ? 'PC-App' : Platform.capacitor ? (Platform.androidTV ? 'Android-TV' : 'Android') : 'Browser';
       function starLine() {
@@ -6423,8 +6442,8 @@
     }
     paint();
     openSheet(T('Feedback geben'), 'star', [
-      h('p', { class: 'fb-q', text: mine ? T('Deine Bewertung – du kannst sie jederzeit ändern.') : T('Wie gefällt dir Telvo?') }), row, label,
-      h('label', { class: 'field rep-msg' }, h('span', { text: T('Lob, Kritik oder Ideen (freiwillig)') }), msg),
+      h('p', { class: 'fb-q', text: mine ? T('Deine Bewertung – beim Ändern bitte kurz begründen.') : T('Wie gefällt dir Telvo?') }), row, label,
+      h('label', { class: 'field rep-msg' }, h('span', { text: mine ? T('Warum änderst du deine Bewertung?') : T('Lob, Kritik oder Ideen (freiwillig)') }), msg),
       mail.wrap,
       h('p', { class: 'hint fb-note', text: T('Mitgeschickt werden nur App-Version, Gerätetyp und Sprache.') }),
       err, h('div', { class: 'row' }, send)], { wide: true });
@@ -6506,7 +6525,9 @@
     var POSTERS = [['s', T('Klein'), T('Mehr Cover auf einmal')], ['m', T('Normal')], ['l', T('Groß'), T('Besser lesbar aus der Entfernung')]];
     var SORTS = [['default', T('Wie in der Playlist')], ['num', T('Nach Sendernummer')], ['az', T('Name A–Z')], ['za', T('Name Z–A')]];
     var FORMATS = [['m3u8', 'HLS (.m3u8)', T('Funktioniert auf den meisten Geräten am besten.')], ['ts', 'MPEG-TS (.ts)', T('Probiere das, wenn Sender nicht starten oder ruckeln.')]];
-    var EXTS = [['off', T('Aus – Telvo-Player verwenden')], ['ask', T('Jedes Mal fragen'), T('Android zeigt eine Auswahl deiner Player-Apps.')], ['vlc', 'VLC'], ['mx', 'MX Player'], ['just', 'Just Player']];
+    var EXTS = [['off', T('Aus – Telvo-Player verwenden')], ['ask', T('Jedes Mal fragen'), T('Android zeigt eine Auswahl deiner Player-Apps.')], ['vlc', 'VLC', T('Fire TV, Android TV, Handy – spielt fast alles ab.')], ['mx', 'MX Player', T('Beliebt auf Handys und Tablets.')],
+      ['just', 'Just Player', T('Schlank, gut für Fire TV und Android-Boxen.')], ['kodi', 'Kodi', T('Für Android-Boxen und Nvidia Shield.')],
+      ['nova', 'Nova Video Player', T('Für Android TV und Google TV.')], ['mpv', 'mpv', T('Für Technik-Fans mit vielen Einstellungen.')]];
     var AUTOS = [[6, T('Alle 6 Stunden')], [12, T('Alle 12 Stunden'), T('Empfohlen')], [24, T('Einmal am Tag')], [0, T('Aus – nur von Hand')]];
     var IDLES = [[0, T('Aus')], [2, T('Nach {0} Stunden', 2)], [3, T('Nach {0} Stunden', 3)], [4, T('Nach {0} Stunden', 4)]];
     var CLOCKS = [[false, T('24 Stunden'), '20:15'], [true, T('12 Stunden'), '8:15 PM']];
@@ -6516,8 +6537,10 @@
     var SBGS = [['none', T('Ohne (mit Schatten)')], ['half', T('Halb durchsichtig')], ['black', T('Schwarz')]];
     function autoH() { var v = Settings.get('autoRefresh'); return typeof v === 'number' ? v : 12; }
     function engines() {
-      var o = [['auto', T('Android-Player'), T('Der eingebaute Player von Android.')], ['hlsjs', T('Telvo-Player'), T('Hilft bei manchen Sendern, die sonst hängen.')]];
-      if (NativePlayer.available()) o.unshift(['native', T('TV-Player'), T('Für Android-Boxen gemacht: stabil und sparsam.')]);
+      // Bei jeder Option die Geräte nennen, für die sie gedacht ist (vorher nur technische Namen)
+      var o = [['auto', T('Android-Player'), T('Für Android-Handys und Tablets (Samsung, Xiaomi, Pixel) – oder wenn der TV-Player hakt.')],
+        ['hlsjs', T('Telvo-Player'), T('Für ältere oder schwache Boxen und für Sender, die mit den anderen Playern hängen.')]];
+      if (NativePlayer.available()) o.unshift(['native', T('TV-Player'), T('Empfohlen für Fire TV Stick und Cube, Chromecast mit Google TV, Nvidia Shield, Xiaomi Mi Box und andere Android-TV-Boxen.')]);
       return o;
     }
 
@@ -6878,7 +6901,7 @@
   }
 
   /* „Ähnliche Titel“ unter Film- und Serienseiten: aus derselben Kategorie, die bestbewerteten zuerst */
-  function similarRail(item, panel) {
+  function similarRail(item, panel, drawer) {
     if (!item.catId) return;
     var kind = item.kind === 'series' ? 'series' : 'movie';
     Promise.all([App.provider.items(kind, item.catId), App.provider.categories(kind).then(null, function () { return []; })]).then(function (r) {
@@ -6898,7 +6921,15 @@
       }), kind);
       var cn = cat && (cat.name || cat.full);
       if (cn) rail.firstChild.appendChild(h('small', { class: 'sim-sub', text: T('Mehr aus „{0}“', cn) }));
-      panel.appendChild(h('div', { class: 'd-similar' }, rail));
+      var box;
+      if (drawer && Platform.tv) {
+        // Fernseher, Filmseite: als Schublade unten angedockt – mit dem Fokus klappt sie hoch, nach oben wieder zu.
+        // Die Seite selbst rollt dabei nicht (vorher scrollte das ganze Fenster wie im Browser).
+        box = h('div', { class: 'd-similar is-drawer' }, h('div', { class: 'sim-in' }, rail));
+        box.addEventListener('focusin', function () { box.classList.add('is-open'); });
+        box.addEventListener('focusout', function (e) { if (!e.relatedTarget || !box.contains(e.relatedTarget)) box.classList.remove('is-open'); });
+      } else box = h('div', { class: 'd-similar' }, rail);
+      panel.appendChild(box);
     }).catch(function () {});
   }
 
@@ -7012,7 +7043,7 @@
       if (d.backdrop) { item.backdrop = d.backdrop; f.setBackdrop(d.backdrop); }
       f.startPreview(item);
     }).catch(function () { if (!infoDone) infoReady(); f.startPreview(item); });
-    similarRail(item, f.panel);
+    similarRail(item, f.panel, true);
     Screens.push('movie', f.el, { overlay: true, onLeave: f.stopPreview, onShow: function () { var had = document.activeElement; paintActions(); if (!document.body.contains(had)) Nav.focusFirst(actions); f.startPreview(item); } });
   }
 
@@ -8963,8 +8994,18 @@
       try { soft = sessionStorage.getItem('lumio.soft') === '1'; sessionStorage.removeItem('lumio.soft'); } catch (e) {}
       var lastLive = !soft && Settings.get('autoLast') !== false && Recent.list()[0];
       if (lastLive) setTimeout(function () {
-        var top = Screens.top();
-        if (!Player.el && App.profile === active && top && top.name === 'shell' && !Dialog.open) playItem(lastLive, { list: [lastLive], index: 0 });
+        function ok() { var top = Screens.top(); return !Player.el && App.profile === active && top && top.name === 'shell' && !Dialog.open; }
+        if (!ok()) return;
+        // Mit der Senderliste der Kategorie starten – sonst kannte der Player nur diesen einen Sender und hoch/runter schaltete nicht um
+        var cat = lastLive.catId !== undefined && lastLive.catId !== null && lastLive.catId !== '' ? lastLive.catId : '__all';
+        var load = App.provider && App.provider.items ? App.provider.items('live', cat).then(null, function () { return null; }) : Promise.resolve(null);
+        Promise.race([load, new Promise(function (res) { setTimeout(function () { res(null); }, 3000); })]).then(function (list) {
+          if (!ok()) return;
+          var idx = -1;
+          for (var i = 0; list && i < list.length; i++) if (String(list[i].id) === String(lastLive.id)) { idx = i; break; }
+          if (idx < 0) playItem(lastLive, { list: [lastLive], index: 0 });
+          else playItem(list[idx], { list: list, index: idx });
+        });
       }, 1200);
     }
     else showProfiles();
@@ -8975,6 +9016,9 @@
     StillWatching.start();
     Reminders.start();
     Saver.start();
+    // Startbild mit Namen (index.html) ausblenden – die erste Seite steht jetzt
+    var bootEl = document.getElementById('boot');
+    if (bootEl) setTimeout(function () { bootEl.classList.add('is-out'); setTimeout(function () { if (bootEl.parentNode) bootEl.parentNode.removeChild(bootEl); }, 500); }, 350);
     // Internet wieder da: hängengebliebene Wiedergabe automatisch neu starten
     window.addEventListener('online', function () { if (Player.el && Player.err && Player.err.style.display !== 'none' && Player.item) Player.load(Player.item); });
     var reloaded = false;
