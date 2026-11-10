@@ -2,9 +2,11 @@ package de.lumio.player;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.StateListDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -14,8 +16,10 @@ import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.ViewGroup;
 import android.webkit.WebSettings;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.media3.common.C;
@@ -31,6 +35,7 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
 import androidx.media3.extractor.DefaultExtractorsFactory;
 import androidx.media3.extractor.ts.DefaultTsPayloadReaderFactory;
 import androidx.media3.ui.CaptionStyleCompat;
+import androidx.media3.ui.DefaultTimeBar;
 import androidx.media3.ui.PlayerView;
 import androidx.media3.ui.SubtitleView;
 
@@ -201,6 +206,7 @@ public class PlayerActivity extends Activity {
             view.setShowFastForwardButton(false);
         }
         root.addView(view, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+        styleControls();
         applySubtitleStyle(in);
 
         info = makeLabel(24);
@@ -322,6 +328,77 @@ public class PlayerActivity extends Activity {
         bg.setCornerRadius(dp(14));
         t.setBackground(bg);
         return t;
+    }
+
+    /* Bedienleiste im Telvo-Design statt der Media3-Standardoptik (grauer Schleier, eckiger grüner Fokusrahmen):
+       Verlauf oben/unten, runde Glas-Knöpfe – gewählt weiß mit dunklem Symbol –, violette Zeitleiste.
+       Die Elemente werden über ihren Namen gesucht: fehlt eines in einer anderen Media3-Version, bleibt es einfach Standard. */
+    private View exo(String name) {
+        int id = getResources().getIdentifier(name, "id", getPackageName());
+        return id == 0 || view == null ? null : view.findViewById(id);
+    }
+
+    private StateListDrawable roundBg(boolean big) {
+        StateListDrawable s = new StateListDrawable();
+        GradientDrawable on = new GradientDrawable();
+        on.setShape(GradientDrawable.OVAL);
+        on.setColor(Color.WHITE);
+        GradientDrawable off = new GradientDrawable();
+        off.setShape(GradientDrawable.OVAL);
+        off.setColor(big ? 0x40FFFFFF : 0x24FFFFFF);
+        off.setStroke(dp(1), 0x33FFFFFF);
+        s.addState(new int[] { android.R.attr.state_focused }, on);
+        s.addState(new int[] { android.R.attr.state_pressed }, on);
+        s.addState(new int[] {}, off);
+        return s;
+    }
+
+    private void styleButton(View v, boolean big) {
+        if (v == null) return;
+        if (!v.isFocusable() && v instanceof ViewGroup) {
+            ViewGroup g = (ViewGroup) v;
+            for (int i = 0; i < g.getChildCount(); i++) styleButton(g.getChildAt(i), big);
+            return;
+        }
+        if (!v.isFocusable()) return;
+        ColorStateList ink = new ColorStateList(
+                new int[][] { new int[] { android.R.attr.state_focused }, new int[] { android.R.attr.state_pressed }, new int[] {} },
+                new int[] { 0xFF120F1A, 0xFF120F1A, Color.WHITE });
+        v.setBackground(roundBg(big));
+        if (v instanceof ImageView) ((ImageView) v).setImageTintList(ink);
+        if (v instanceof TextView) {
+            ((TextView) v).setTextColor(ink);
+            ((TextView) v).setCompoundDrawableTintList(ink);
+        }
+    }
+
+    private void styleControls() {
+        try {
+            View bg = exo("exo_controls_background");
+            if (bg != null) bg.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
+                    new int[] { 0xB3000000, 0x00000000, 0x00000000, 0x26000000, 0xE6000000 }));
+            View bottom = exo("exo_bottom_bar");
+            if (bottom != null) bottom.setBackgroundColor(Color.TRANSPARENT);
+            View tb = exo("exo_progress");
+            if (tb instanceof DefaultTimeBar) {
+                DefaultTimeBar t = (DefaultTimeBar) tb;
+                t.setPlayedColor(0xFFA855F7);
+                t.setScrubberColor(Color.WHITE);
+                t.setBufferedColor(0x59FFFFFF);
+                t.setUnplayedColor(0x2EFFFFFF);
+            }
+            View pos = exo("exo_position");
+            if (pos instanceof TextView) { ((TextView) pos).setTextColor(Color.WHITE); ((TextView) pos).setTypeface(Typeface.DEFAULT_BOLD); }
+            View dur = exo("exo_duration");
+            if (dur instanceof TextView) ((TextView) dur).setTextColor(0xB3FFFFFF);
+            styleButton(exo("exo_play_pause"), true);
+            for (String n : new String[] { "exo_prev", "exo_rew_with_amount", "exo_ffwd_with_amount", "exo_next",
+                    "exo_subtitle", "exo_settings", "exo_overflow_show", "exo_overflow_hide", "exo_fullscreen" }) {
+                styleButton(exo(n), false);
+            }
+        } catch (Exception e) {
+            // Optik ist Nebensache – der Player muss in jedem Fall laufen
+        }
     }
 
     private int dp(int v) {
