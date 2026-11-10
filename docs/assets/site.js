@@ -41,7 +41,7 @@
   /* ---------- Download: feste Links, die immer auf die neueste Version zeigen ---------- */
   var DL_BASE = 'https://github.com/Splix66/lumio-player/releases/download/';
   var DL = [
-    { id: 'apk', icon: 'phone', name: 'Android', sub: 'Handy, Tablet und TV-Box', tag: 'neueste', file: 'lumio-player.apk', share: 'https://splix66.github.io/lumio-player/app' },
+    { id: 'apk', icon: 'phone', name: 'Android', sub: 'Handy, Tablet und TV-Box', tag: 'neueste', file: 'telvo-player.apk', old: 'lumio-player.apk', share: 'https://splix66.github.io/lumio-player/app' },
     // old: früherer Dateiname – wird nur verlinkt, solange auf GitHub noch keine Datei mit neuem Namen liegt
     { id: 'win', icon: 'monitor', name: 'Windows', sub: 'Windows 10 und 11', tag: 'pc', file: 'telvo-player-setup.exe', old: 'lumio-player-setup.exe' },
     { id: 'mac', icon: 'laptop', name: 'Mac', sub: 'Apple-Chip und Intel', tag: 'pc', file: 'telvo-player-mac.dmg', old: 'lumio-player-mac.dmg' }

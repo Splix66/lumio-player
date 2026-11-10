@@ -63,16 +63,16 @@ jobs:
         env:
           LUMIO_SIGNING: ${{ secrets.LUMIO_SIGNING }}
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk lumio-player.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk telvo-player.apk
           if [ -n "$LUMIO_SIGNING" ]; then
             S=$(printf '%s' "$LUMIO_SIGNING" | tr -d ' \r\n')
             export LUMIO_KS_PW="${S%%:*}"
             printf '%s' "${S#*:}" | base64 -d > "$RUNNER_TEMP/lumio.p12"
             BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
             "$BT/apksigner" sign --ks "$RUNNER_TEMP/lumio.p12" --ks-key-alias lumio \
-              --ks-pass env:LUMIO_KS_PW --key-pass env:LUMIO_KS_PW lumio-player.apk
+              --ks-pass env:LUMIO_KS_PW --key-pass env:LUMIO_KS_PW telvo-player.apk
             rm -f "$RUNNER_TEMP/lumio.p12"
-            "$BT/apksigner" verify --print-certs lumio-player.apk | head -n 3
+            "$BT/apksigner" verify --print-certs telvo-player.apk | head -n 3
             echo "🔑 Mit dem festen Telvo-Schlüssel signiert – Updates ohne Deinstallieren möglich." >> $GITHUB_STEP_SUMMARY
           else
             echo "⚠️ Secret LUMIO_SIGNING fehlt – APK hat einen wechselnden Test-Schlüssel (Updates nur nach Deinstallieren)." >> $GITHUB_STEP_SUMMARY
@@ -90,8 +90,13 @@ jobs:
         if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master'
         uses: actions/upload-artifact@v4
         with:
-          name: lumio-player-test-apk
-          path: lumio-player.apk
+          name: telvo-player-test-apk
+          path: telvo-player.apk
+
+      # Ältere App-Versionen holen Updates unter dem früheren Namen – dieselbe Datei auch so ablegen
+      - name: Kopie unter früherem Namen (lumio-player.apk)
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        run: cp telvo-player.apk lumio-player.apk
 
       - name: APK unter "Releases" bereitstellen
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
@@ -101,19 +106,22 @@ jobs:
           name: Telvo Player ${{ steps.ver.outputs.v }} – neueste Version
           body: |
             Version ${{ steps.ver.outputs.v }}, automatisch gebaut aus ${{ github.sha }}.
-            Download: lumio-player.apk (Handy, Tablet, Fire TV, Android TV)
-          files: lumio-player.apk
+            Download: telvo-player.apk (Handy, Tablet, Fire TV, Android TV)
+            lumio-player.apk ist dieselbe Datei unter dem früheren Namen (für Updates aus älteren App-Versionen).
+          files: |
+            telvo-player.apk
+            lumio-player.apk
           make_latest: true
 
       - name: Hinweis für Test-Zweige
         if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master'
         run: |
           echo "## 🧪 Test-APK fertig (nicht veröffentlicht)" >> $GITHUB_STEP_SUMMARY
-          echo "Download unten unter „Artifacts“ → lumio-player-test-apk. Die Version für Kunden wurde nicht verändert." >> $GITHUB_STEP_SUMMARY
+          echo "Download unten unter „Artifacts“ → telvo-player-test-apk. Die Version für Kunden wurde nicht verändert." >> $GITHUB_STEP_SUMMARY
 
       - name: Download-Link anzeigen
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         run: |
           echo "## ✅ APK fertig" >> $GITHUB_STEP_SUMMARY
           echo "Direkter Download-Link (auch für die Downloader-App auf dem Fire TV):" >> $GITHUB_STEP_SUMMARY
-          echo "https://github.com/${{ github.repository }}/releases/latest/download/lumio-player.apk" >> $GITHUB_STEP_SUMMARY
+          echo "https://github.com/${{ github.repository }}/releases/latest/download/telvo-player.apk" >> $GITHUB_STEP_SUMMARY

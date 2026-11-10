@@ -43,8 +43,10 @@
   mit Temperatur (Ort unter Einstellungen → Darstellung wählen; Open-Meteo, ohne Konto). Datenschutzerklärung ergänzt.
 - **Bildschirmschoner** mit „Wusstest du schon?“-Tipps.
 - Neue Tests (Titel ohne Jahr, Folgennamen, Dauer, Radio-Erkennung).
-- **PC-Download heißt jetzt Telvo:** `telvo-player-setup.exe` (Windows) und `telvo-player-mac.dmg` (Mac) statt
-  „lumio-player-…“. Die Webseite verlinkt die alte Datei nur so lange, bis die neue auf GitHub liegt.
+- **Downloads heißen jetzt Telvo:** `telvo-player.apk`, `telvo-player-setup.exe` und `telvo-player-mac.dmg` statt
+  „lumio-player…“ – auf der Webseite, der Downloader-Seite (Code 5619512) und bei „Neue Version laden“ in der App.
+  Jeder Bau legt dieselbe Datei zusätzlich unter dem alten Namen ab, damit ältere App-Versionen und alte Links
+  weiterhin die neueste Version bekommen. Bis die erste Telvo-Datei auf GitHub liegt, verlinkt die Webseite die alte.
 
 ## 1.12.0 – 2026-11-10 · Neuer Startbildschirm, Profi-Player, Personen und neue Webseite
 

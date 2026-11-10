@@ -5984,8 +5984,8 @@
     },
     url: function () {
       var base = 'https://github.com/Splix66/lumio-player/releases/download/';
-      if (/Electron/.test(UA)) return base + 'pc/' + (/Mac/.test(UA) ? 'lumio-player-mac.dmg' : 'lumio-player-setup.exe');
-      return base + 'neueste/lumio-player.apk';
+      if (/Electron/.test(UA)) return base + 'pc/' + (/Mac/.test(UA) ? 'telvo-player-mac.dmg' : 'telvo-player-setup.exe');
+      return base + 'neueste/telvo-player.apk';
     },
     download: function () {
       var url = this.url(), pl = NativePlayer.plugin();

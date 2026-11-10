@@ -86,6 +86,9 @@ jobs:
       - name: Gibt es etwas zu veröffentlichen?
         id: files
         run: |
+          # Ältere App-Versionen holen Updates unter dem früheren Namen – dieselbe Datei auch so ablegen
+          [ -f out/telvo-player-setup.exe ] && cp out/telvo-player-setup.exe out/lumio-player-setup.exe
+          [ -f out/telvo-player-mac.dmg ] && cp out/telvo-player-mac.dmg out/lumio-player-mac.dmg
           ls -la out || true
           if ls out/* >/dev/null 2>&1; then echo "any=true" >> "$GITHUB_OUTPUT"; else echo "any=false" >> "$GITHUB_OUTPUT"; fi
           echo "win=$([ -f out/telvo-player-setup.exe ] && echo ja || echo 'nicht neu gebaut')" >> "$GITHUB_OUTPUT"
