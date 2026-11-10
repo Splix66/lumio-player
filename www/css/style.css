@@ -2721,6 +2721,10 @@ body.lite .pause-scr, body.lite .ps-in { animation: none; }
 .is-drop .ch-mark { display: none; }
 .is-drop .ch-opt.is-on { background: linear-gradient(180deg, rgba(167, 139, 250, .32), rgba(167, 139, 250, .14)); box-shadow: inset 0 0 0 1.5px rgba(167, 139, 250, .7); }
 :root[data-theme="light"] .is-drop .ch-opt.is-on { color: var(--text); }
+/* Fernbedienung: Fokus im Sprachmenü als Glas statt weißer Fläche (die gewählte Sprache wirkte sonst grell weiß) */
+body.kbd .is-drop .ch-opt.f:focus, body.is-tv .is-drop .ch-opt.f:focus { color: var(--text); background: linear-gradient(180deg, rgba(255, 255, 255, .2), rgba(255, 255, 255, .07)); box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .85), 0 .5rem 1.4rem -.6rem rgba(0, 0, 0, .7); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+body.kbd .is-drop .ch-opt.is-on.f:focus, body.is-tv .is-drop .ch-opt.is-on.f:focus { background: linear-gradient(180deg, rgba(167, 139, 250, .5), rgba(167, 139, 250, .22)); box-shadow: inset 0 0 0 2px #ddd1ff, 0 .5rem 1.4rem -.6rem rgba(124, 79, 240, .75); }
+:root[data-theme="light"] body.is-tv .is-drop .ch-opt.f:focus, :root[data-theme="light"] body.kbd .is-drop .ch-opt.f:focus { background: rgba(124, 79, 240, .14); box-shadow: inset 0 0 0 2px var(--accent); }
 /* Handy: als Karte unter dem Knopf statt Vollbild */
 @media (max-width: 760px) {
   html:not(.tv) .screen.set-modal.is-drop { padding: calc(4.2rem + env(safe-area-inset-top)) .8rem 1rem; align-items: stretch; }
@@ -2736,19 +2740,19 @@ body.lite .pause-scr, body.lite .ps-in { animation: none; }
 /* Hinweis beim ersten Start: klein unten, verschwindet von selbst (Balken zeigt die verbleibende Zeit) */
 .terms-note {
   position: fixed; left: 50%; bottom: calc(4.4rem + env(safe-area-inset-bottom)); z-index: 90; transform: translateX(-50%);
-  display: flex; align-items: center; width: max-content; max-width: min(40rem, calc(100% - 2rem)); padding: .75rem 1rem .85rem .9rem; overflow: hidden;
-  border-radius: 1.1rem; background: rgba(20, 20, 28, .95); box-shadow: 0 1rem 2.6rem -1rem rgba(0, 0, 0, .8), inset 0 0 0 1px rgba(167, 139, 250, .3);
-  font-size: .85rem; color: var(--text-2); cursor: pointer; animation: tnIn .35s cubic-bezier(.2, .9, .25, 1);
+  display: flex; align-items: center; width: max-content; max-width: min(36rem, calc(100% - 2rem)); padding: .45rem .9rem .5rem .7rem; overflow: hidden;
+  border-radius: 999px; background: rgba(20, 20, 28, .9); box-shadow: 0 .8rem 2rem -1rem rgba(0, 0, 0, .8), inset 0 0 0 1px rgba(167, 139, 250, .25);
+  font-size: .74rem; color: var(--text-2); cursor: pointer; animation: tnIn .35s cubic-bezier(.2, .9, .25, 1);
   transition: opacity .3s ease, transform .3s ease;
 }
 .terms-note.is-out { opacity: 0; transform: translate(-50%, .6rem); }
 @keyframes tnIn { from { opacity: 0; transform: translate(-50%, .8rem); } }
-.terms-note > .i { flex: none; width: 1.15rem; height: 1.15rem; margin-right: .7rem; color: #c9b8fb; }
+.terms-note > .i { flex: none; width: .95rem; height: .95rem; margin-right: .5rem; color: #c9b8fb; }
 .tn-txt { display: flex; flex-direction: column; min-width: 0; line-height: 1.4; }
 .tn-txt b { color: var(--text); font-size: .88rem; }
 .tn-link { flex: none; margin-left: 1rem; padding: .35rem .75rem; border-radius: 999px; font-size: .78rem; font-weight: 650; color: #e4dcff; background: rgba(167, 139, 250, .16); box-shadow: inset 0 0 0 1px rgba(167, 139, 250, .4); }
 .tn-url { margin-top: .15rem; font-size: .75rem; color: var(--muted); }
-.tn-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: linear-gradient(90deg, #8b5cf6, #c9b8fb); transform-origin: left; animation: tnBar 9s linear forwards; }
+.tn-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: linear-gradient(90deg, #8b5cf6, #c9b8fb); transform-origin: left; animation: tnBar 5s linear forwards; }
 @keyframes tnBar { to { transform: scaleX(0); } }
 @keyframes tnInM { from { opacity: 0; transform: translateY(.8rem); } }
 :root[data-theme="light"] .terms-note { background: rgba(255, 255, 255, .97); box-shadow: 0 1rem 2.6rem -1rem rgba(0, 0, 0, .25), inset 0 0 0 1px rgba(124, 79, 240, .3); }
@@ -2964,6 +2968,19 @@ body.kbd .seasons .season-mark.f:focus, body.is-tv .seasons .season-mark.f:focus
 .d-similar .poster .art { transition: transform .25s ease, box-shadow .25s ease; }
 .d-similar .poster:hover .art { transform: translateY(-.35rem) scale(1.03); box-shadow: 0 1rem 2rem rgba(0, 0, 0, .45), 0 0 0 1px rgba(167, 139, 250, .55); }
 body.lite .d-similar .poster .art, body.lite .d-prev { transition: none; }
+/* Fernseher, Filmseite: „Ähnliche Titel“ als Glas-Schublade unten. Zu: nur die Überschrift schaut heraus (4rem).
+   Mit dem Fokus fährt sie über den unteren Teil der Seite hoch, nach oben wieder zu – die Seite selbst rollt nicht.
+   Außen: feste Höhe und overflow:hidden (sonst verlängert das Verschieben die Bildlaufleiste). */
+html.tv .d-similar.is-drawer { position: -webkit-sticky; position: sticky; bottom: 0; z-index: 5; height: 24rem; margin: -20rem 0 0; padding: 0; overflow: hidden;
+  border-radius: 0; background: none; box-shadow: none; pointer-events: none; }
+html.tv .d-similar.is-drawer .sim-in { pointer-events: auto; height: 100%; margin: 0 1.6rem; padding: 1rem 0 1.2rem; border-radius: 1.4rem 1.4rem 0 0;
+  background: linear-gradient(180deg, rgba(34, 27, 60, .8), rgba(12, 11, 20, .97) 40%); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), inset 0 0 0 1px rgba(167, 139, 250, .25), 0 -1.2rem 2.4rem -1rem rgba(0, 0, 0, .75);
+  transform: translateY(20rem); transition: transform .38s cubic-bezier(.2, .9, .25, 1); }
+html.tv .d-similar.is-drawer.is-open .sim-in { transform: none; }
+html.tv .d-similar.is-drawer .rail { margin-top: 0; }
+body.lite .d-similar.is-drawer .sim-in { transition: none; -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(12, 11, 20, .98); }
+:root[data-theme="light"] .d-similar.is-drawer .sim-in { background: rgba(255, 255, 255, .94); }
 @media (max-width: 960px) and (orientation: portrait) {
   html:not(.tv) .seasons { padding: .2rem 1.1rem 0; }
   html:not(.tv) .sn-count { display: none; }
