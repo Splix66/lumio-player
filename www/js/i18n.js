@@ -7,6 +7,8 @@
 window.LUMIO_I18N = {
   /* ---------------- English ---------------- */
   en: {
+    "Fehlerberichte senden": "Send error reports",
+    "Hilft, Fehler schnell zu beheben – ohne Links, Namen oder Passwörter": "Helps fix problems quickly – without links, names or passwords",
     "Klang": "Sound",
     "Ton im TV-Player verbessern": "Improve sound in the TV player",
     "Lautstärke angleichen": "Even out volume",
@@ -1057,6 +1059,8 @@ window.LUMIO_I18N = {
 
   /* ---------------- Türkçe ---------------- */
   tr: {
+    "Fehlerberichte senden": "Hata raporları gönder",
+    "Hilft, Fehler schnell zu beheben – ohne Links, Namen oder Passwörter": "Hataların hızla giderilmesine yardımcı olur – bağlantı, ad veya şifre olmadan",
     "Klang": "Ses",
     "Ton im TV-Player verbessern": "TV oynatıcısında sesi iyileştir",
     "Lautstärke angleichen": "Ses seviyesini dengele",
