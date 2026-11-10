@@ -62,6 +62,19 @@ und in `scripts/make-icons.py` (Android, Fire TV, Samsung, LG, Windows/Mac, TV-B
 
 Die neuen Daten gehören zum Profil, werden mitgesichert und von „Verlauf löschen“ entfernt.
 
+**Webseite im Stil der App** (alle Seiten):
+- **Menü als Glas-Leiste** in der Mitte wie die Reiter der App; der gewählte Bereich ist farbig hinterlegt
+  (Start Lavendel, Playlists Himmelblau, Download Sand, Hilfe Rosé). Sprachknopf, Knöpfe und Felder im gleichen Glas.
+- **Startseite:** Abbild des neuen Startbildschirms (Glas-Kacheln, Radio, Favoriten, „Zuletzt angesehen“) mit dem Player im
+  Bild-in-Bild davor; neuer Abschnitt **„Der neue Player“** mit Abbild des Players (Glas-Dock, Auswahl „Bild &
+  Wiedergabe“) und den Funktionen als Chips; „Was die App kann“ in Pastellfarben mit neuen Punkten (Verpasste Sendungen,
+  Erinnerungen, Personen & Kinderprofil, Sichern & Wiederherstellen). Auf dem Handy kompakt (Symbol neben dem Text).
+- **Playlists, Download, Hilfe:** Glas-Karten, Symbole in Pastell, Downloader-Code als lavendelfarbene Tasten, Mini-Fernseher
+  mit dem neuen Startbildschirm, Umschalter M3U/Xtream wie in der App.
+- **Impressum, Datenschutz, Nutzungsbedingungen:** Inhalt auf einer Glas-Karte, Zurück als Glas-Knopf, Überschriften mit
+  Lavendel-Akzent. **404-Seite**, **Download-Seite für Fernseher** und **Verwaltung** im gleichen Stil.
+- 29 neue Texte in allen 13 Sprachen (Wörter aus der App übernommen, damit beides gleich heißt); Arabisch gespiegelt geprüft.
+
 **Player – drei neue Feinheiten:**
 - **Knopf-Hinweis beim ersten Mal:** Eine Glas-Karte zeigt einmal alle Symbole mit ihrem Namen (nur die Knöpfe, die
   gerade da sind). „Verstanden“, Zurück oder Tippen aufs Bild schließt sie; danach erscheint sie auf dem Gerät nicht mehr.
