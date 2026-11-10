@@ -1,6 +1,19 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
-## 1.13.4 – 2026-11-10 · „Weiterschauen“ im TV-Player, Live-Vorschau in der Android-App
+## 1.13.4 – 2026-11-10 · Gerätetest Fire TV: Weiterschauen, Live-Vorschau, Umschalten, Bedienung
+
+- **TV-Player, Live-TV: Umschalten mit hoch/runter funktionierte nicht.** Beim Start mit dem letzten Sender kannte der Player nur diesen einen Sender – jetzt startet er mit der ganzen Senderliste der Kategorie. Außerdem ging das Loslassen der Taste an die Bedienleiste, die sich dadurch einblendete; danach schaltete hoch/runter nicht mehr um (nur jeder zweite Druck wirkte). Bei Live-TV entfallen die Spulknöpfe ±5/15 s, ⏮/⏭ schalten den Sender.
+- **TV-Player: „Nächste Folge“ (⏭) war mit dem Steuerkreuz nicht erreichbar.** Die Bedienleiste blendete sich nach 4 s aus, auch während man darin navigierte; in dieser Phase wurde RECHTS als „+30 s spulen“ abgefangen. Jetzt bleibt sie beim Navigieren offen.
+- **Verbindung testen: „Server-Fehler HTTP 404“.** Gleiche Ursache wie bei der Live-Vorschau (Segmente landeten bei `http://localhost`).
+- **Hilfe:** Fokus steht beim Öffnen direkt auf dem X (Schließen) statt ganz unten auf dem Webseiten-Link.
+- **Sprachmenü:** Die schon gewählte Sprache nochmals wählen schließt das Menü. Die gewählte/fokussierte Sprache ist jetzt Glas statt einer grellen weißen Fläche.
+- **Hinweis zu den Nutzungsbedingungen beim ersten Start:** eine kleine Zeile, 5 statt 9 Sekunden, ohne Überschrift „Gut zu wissen“.
+- **Feedback:** nach dem Senden 30 Tage gesperrt; danach lässt sich die Bewertung nur mit Begründung ändern.
+- **Player wählen:** Bei jeder Option stehen die passenden Geräte (Fire TV, Chromecast mit Google TV, Nvidia Shield, Mi Box, Handys …). Externe Player zusätzlich: Kodi, Nova Video Player, mpv.
+- **Ähnliche Titel (Fernseher, Filmseite):** als Glas-Schublade unten – klappt mit dem Fokus hoch und nach oben wieder zu, statt die ganze Seite wie im Browser zu rollen.
+- **Startbild:** Logo und „Telvo Player“ mit Ladeleiste, solange die App lädt (vorher leer). Startbildschirm-Grafik mit Namen.
+- **Fire-TV-Kachel:** Banner auch an der Start-Activity (Fire TV zeigte sonst nur das kleine Logo); Banner mit „Telvo Player“ und lila Lichtschein.
+- **Download-Seite für Downloader (Fernseher):** Größen richten sich nach der Bildschirmhöhe – passt jetzt auf einen Bildschirm.
 
 - **„Weiter bei …“ (Filme) und „Weiter: S… E…“ (Serien)** starteten im TV-Player (Fire TV, Android-Boxen) immer bei 00:00. Weil der Neustart dann bei wenigen Sekunden beendet wurde, war anschließend auch die gespeicherte Position weg. Ursache: Das Plugin las die Startposition mit `call.getLong()`. Capacitor gibt dort nur bei echten Long-Werten etwas zurück, Startpositionen unter ~24 Tagen kommen aber als Integer an – Ergebnis war immer 0. Jetzt `optLong()`, das jede Zahl übernimmt (der Schlaf-Timer liest seine Uhrzeit vorsorglich genauso). Gefunden beim Gerätetest auf dem Fire TV Stick 4K Max.
 - **Live-Vorschau und eingebauter Player (Android-App) luden bei vielen HLS-Sendern nichts** (Dauer-Ladekreis). Ursache: CapacitorHttp leitet Anfragen über `http://localhost/_capacitor_http_interceptor_?u=…` um, und hls.js löste relative Pfade der Playlist gegen `http://localhost` auf (`Failed to connect to localhost/127.0.0.1:80`). Jetzt bekommt hls.js die echte Adresse zurück, Weiterleitungen werden vorab aufgelöst. Im App-WebView geprüft: vorher `levelLoadError` bei `http://localhost/…`, nachher lädt das Segment.
