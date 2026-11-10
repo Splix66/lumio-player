@@ -355,8 +355,10 @@ public class PlayerActivity extends Activity {
             // Begrenzer am Ende: durch die Anhebung nie übersteuern
             b.setLimiterAllChannelsTo(new DynamicsProcessing.Limiter(true, true, 0, 1f, 60f, 10f, -2f, 0f));
             sound = new DynamicsProcessing(0, sid, b.build());
-            sound.setEnabled(true);
+            if (sound.setEnabled(true) != android.media.audiofx.AudioEffect.SUCCESS) throw new IllegalStateException("sound");
         } catch (Throwable t) {
+            // Effekt erzeugt, aber nicht nutzbar (z. B. Fire OS): wieder freigeben, sonst hängt er an der Audio-Session
+            if (sound != null) { try { sound.release(); } catch (Throwable ignored) { } }
             sound = null;
         }
     }
