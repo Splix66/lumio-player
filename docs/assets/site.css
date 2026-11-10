@@ -693,3 +693,11 @@ input:focus, select:focus, textarea:focus { border-color: rgba(167, 139, 250, .8
 @media (max-width: 400px) { .nav { padding: .15rem; gap: 0; } .nav a { padding: 0 .22rem; font-size: .8rem; } }
 @media (prefers-reduced-motion: reduce) { .pip-card { animation: none; } }
 body.lite .pip-card { animation: none; }
+
+/* Handy: kleine Knöpfe (Bearbeiten, Löschen, Herunterladen, Link kopieren …) und Fußzeilen-Links mindestens 44 px hoch –
+   vorher 33–35 px, schwer zu treffen */
+@media (max-width: 720px) {
+  button.small, a.btn.small { min-height: 44px; }
+  button.small.ghost[aria-label] { min-width: 44px; }
+  .site-foot a { display: inline-block; min-height: 44px; line-height: 44px; }
+}

@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Telvo Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.13.0',
+    version: '1.13.1',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     /* Bibliotheken: werden beim Bauen nach www/lib kopiert (scripts/copy-libs.js) und von dort geladen.
        Nur wenn sie fehlen, aus dem Internet – mit fester Version und Prüfsumme (SRI): eine veränderte Datei
@@ -202,6 +202,10 @@
     var n = String(name || ''), sn = String(seriesName || '').trim();
     if (sn && n.toLowerCase().indexOf(sn.toLowerCase()) === 0) n = n.slice(sn.length);
     n = n.replace(/^\s*[-–:|.]?\s*(\(\s*(19|20)\d{2}\s*\)\s*)?[-–:|.]?\s*S\d{1,2}\s*[\s.]?E\d{1,3}\s*[-–:|.]?\s*/i, '').replace(/^\s*[-–:|.]\s*/, '').trim();
+    // Serienname in der Folge anders geschrieben als in der Liste („Testserie - S01E02 - Pilot“ bei „DE - Testserie (2020)“):
+    // alles bis einschließlich S01E02 weglassen, wenn danach noch ein Titel kommt; nur „Serie S01E02“ → „Folge 2“
+    var m = /^(.*?)[\s\-–:|.]*\bS\d{1,2}\s*[\s.]?E\d{1,3}\b\s*[-–:|.]?\s*(.*)$/i.exec(n);
+    if (m) n = m[2].trim();
     return n || T('Folge {0}', num);
   }
   /* Dauer lesbar: „01:58:00“ oder Sekunden → „1 Std. 58 Min.“ / „45 Min.“ */
@@ -217,8 +221,13 @@
     if (m < 60) return T('{0} Min.', m);
     return m % 60 ? T('{0} Std. {1} Min.', Math.floor(m / 60), m % 60) : T('{0} Std.', m / 60);
   }
+  // Alles außer Buchstaben/Ziffern – auch Arabisch, Kyrillisch, Griechisch (vorher wurde daraus „1“ oder „?“).
+  // \p{L} kennen alte Fernseher nicht: darum über new RegExp in try, sonst die wichtigsten Schriften von Hand
+  var NON_LETTER = (function () {
+    try { return new RegExp('[^\\p{L}\\p{N} ]', 'gu'); } catch (e) { return /[^\w\u00C0-\u024F\u0370-\u03FF\u0400-\u04FF\u0590-\u05FF\u0600-\u06FF ]/g; }
+  })();
   function initials(s) {
-    var parts = String(s || '?').replace(/[^\wÄÖÜäöüß ]/g, ' ').trim().split(/\s+/);
+    var parts = String(s || '?').replace(NON_LETTER, ' ').trim().split(/\s+/);
     return ((parts[0] || '?').charAt(0) + (parts[1] ? parts[1].charAt(0) : '')).toUpperCase();
   }
   function norm(s) {
@@ -234,11 +243,21 @@
   }
   function fmtClock(ts) { return clockStr(new Date(ts * 1000)); }
   function fmtDate(ts) { if (!ts) return T('unbegrenzt'); var d = new Date(Number(ts) * 1000); return d.toLocaleDateString(locale(), { day: '2-digit', month: '2-digit', year: 'numeric' }); }
+  // Xtream-Kontostatus in verständlichen Worten (der Server liefert Englisch: Expired, Banned, Disabled …)
+  function statusError(status) {
+    var st = String(status || '');
+    if (!st || /^active$/i.test(st)) return null;
+    if (/expired/i.test(st)) return new Error(T('Playlist abgelaufen'));
+    if (/banned|disabled|blocked/i.test(st)) return new Error(T('Zugang gesperrt'));
+    return new Error(T('Konto-Status: {0}', st));
+  }
   function b64(s) {
     if (!s) return '';
     try { var bin = atob(s); try { return decodeURIComponent(escape(bin)); } catch (e) { return bin; } } catch (e) { return s; }
   }
-  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  // Neue, zufällige Kennung (Playlists). Eigener Name: „uid()“ weiter unten ist die Daten-Kennung der schauenden Person –
+  // gleichnamig überschrieb sie diese Funktion, und jede neue Playlist bekam die Kennung der gerade aktiven.
+  function newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
   // Programmführer-Zeitverschiebung der Playlist in Sekunden (Einstellungen → „Programmführer-Zeit“)
   function epgShiftOf(p) { return p ? (Number(p.epgShift) || 0) * 60 : 0; }
   function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
@@ -398,10 +417,10 @@
     // (taucht also in keinem Server-Protokoll auf). Die Webseite liest ihn und löscht ihn sofort aus der Adresszeile.
     portalLink: function () { return CONFIG.portalUrl + '#mac=' + encodeURIComponent(this.mac()) + '&key=' + this.key() + '&lang=' + Lang.cur; }
   };
-  function macTag(user, noCopy) {
+  function macTag(user, noCopy, label) {
     return h('div', { class: 'mac-tag' }, h('span', { text: 'MAC' }), h('b', { text: Device.mac() }), noCopy ? null : copyBtn(Device.mac(), 'MAC'),
       h('span', { text: 'KEY' }), h('b', { text: Device.key() }), noCopy ? null : copyBtn(Device.key(), 'KEY'),
-      user ? h('span', { text: T('Benutzername') }) : null, user ? h('b', { text: user }) : null);
+      user ? h('span', { text: label || T('Benutzername') }) : null, user ? h('b', { text: user }) : null);
   }
   /* In die Zwischenablage kopieren (Handy, iPad, Windows/Mac). Fernseher haben keine Zwischenablage – dort kein Knopf. */
   function copyText(text) {
@@ -428,6 +447,11 @@
     return h('button', { class: 'copy-btn', type: 'button', title: t, 'aria-label': t, onclick: function (e) { if (e && e.stopPropagation) e.stopPropagation(); copyText(text); } }, icon('copy'));
   }
   /* Benutzername des Zugangs: bei Xtream direkt, bei M3U aus dem Link (…?username=…), sonst der Profilname */
+  // Beschriftung dazu: echter Benutzername (Xtream, M3U mit username=…) oder sonst der Name der Playlist
+  function profileUserLabel(p) {
+    if (!p) return '';
+    return p.username || /[?&]username=/i.test(p.url || '') ? T('Benutzername') : T('Playlist');
+  }
   function profileUser(p) {
     if (!p) return '';
     if (p.username) return p.username;
@@ -671,7 +695,8 @@
       if (x.user_info) {
         var u = x.user_info;
         if (String(u.auth) !== '1') throw new Error(T('Benutzername oder Passwort falsch.'));
-        if (u.status && u.status !== 'Active') throw new Error(T('Konto-Status: {0}', u.status));
+        var st = statusError(u.status);
+        if (st) throw st;
         throw new Error(T('Unerwartete Antwort vom Server.'));
       }
       if (typeof x === 'object') {
@@ -717,7 +742,9 @@
         return pr.then(function (d) {
           if (!d || !d.user_info) throw new Error(T('Das ist kein gültiger Xtream-Server.'));
           if (String(d.user_info.auth) !== '1') throw new Error(T('Benutzername oder Passwort falsch.'));
-          if (d.user_info.status && d.user_info.status !== 'Active') throw new Error(T('Konto-Status: {0}', d.user_info.status));
+          // Status des Servers in verständlichen Worten (vorher roh: „Konto-Status: Expired“)
+          var st = statusError(d.user_info.status);
+          if (st) throw st;
           return d;
         });
       },
@@ -1441,7 +1468,15 @@
   var Profiles = {
     list: function () { return Store.get('profiles', []); },
     save: function (list) { Store.set('profiles', list); },
-    add: function (p) { var l = this.list(); p.id = p.id || uid(); l.push(p); this.save(l); return p; },
+    add: function (p) { var l = this.list(); p.id = p.id || newId(); l.push(p); this.save(l); return p; },
+    /* Reparatur für Geräte mit doppelten Kennungen (Fehler bis 1.13.0): jede weitere Playlist mit derselben Kennung
+       bekommt eine eigene. Ihre bisher gemeinsam genutzten Daten (Favoriten, Verlauf) bleiben bei der ersten. */
+    fixIds: function () {
+      var l = this.list(), seen = {}, changed = false;
+      l.forEach(function (p) { if (!p.id || seen[p.id]) { p.id = newId(); changed = true; } seen[p.id] = 1; });
+      if (changed) this.save(l);
+      return changed;
+    },
     remove: function (id) {
       var gone = this.get(id);
       // Online-Kopie löschen. Klappt das gerade nicht (offline, Server weg), wird es gemerkt und beim nächsten
@@ -1506,6 +1541,15 @@
       b.p_key = Device.key();
       return this.rpc(fn, b);
     },
+    /* Support-Nachricht: mit App-Token (geht auch, wenn jemand den KEY durch Fehlversuche gesperrt hat), sonst mit KEY.
+       Fehlt app_send_support in der Datenbank noch (schutz-2026-11.sql nicht eingespielt), der bisherige Weg. */
+    support: function (topic, message, contact) {
+      var self = this, mac = Device.mac();
+      function legacy() { return self.rpc('send_support', { p_mac: mac, p_key: Device.key(), p_topic: topic, p_message: message, p_contact: contact }); }
+      if (self.mode !== 'token') return legacy();
+      return self.rpc('app_send_support', { p_mac: mac, p_token: Device.token(), p_topic: topic, p_message: message, p_contact: contact })
+        .then(function (r) { return r && typeof r.ok === 'boolean' ? r : legacy(); });
+    },
     register: function () {
       var self = this, mac = Device.mac(), key = Device.key();
       function legacy() { self.mode = 'legacy'; return self.rpc('register_device', { p_mac: mac, p_key: key }); }
@@ -1566,7 +1610,7 @@
           // verknüpfen statt doppelt anlegen – sonst entstünde bei jedem Abgleich eine weitere Kopie.
           var twin = list.filter(function (p) { return !p.remoteId && sameConnection(p, data); })[0];
           if (twin) { twin.remoteId = it.id; changed = true; if (App.profile && App.profile.id === twin.id) App.profile.remoteId = it.id; return; }
-          data.id = uid(); list.push(data); added.push(data); changed = true; return;
+          data.id = newId(); list.push(data); added.push(data); changed = true; return;
         }
         var conn = false;
         ['type', 'name', 'url', 'server', 'username', 'password'].forEach(function (k) {
@@ -1756,7 +1800,8 @@
      gibt, warten und werden übernommen, sobald man sie einträgt und öffnet.
      ========================================================== */
   var BACKUP_DATA = ['fav', 'resume', 'recent', 'seen', 'seenNew', 'last', 'cats', 'hidech', 'upnext', 'swatch', 'later'];
-  var BACKUP_SKIP = ['parentPin', 'adminPin', 'deviceType', 'engine', 'extPlayer', 'volume', 'muted'];   // Sicherheit / gerätespezifisch
+  // Sicherheit / gerätespezifisch; Wetter-Ort bleibt auf dem Gerät (Datenschutzerklärung: geht nur an Open-Meteo)
+  var BACKUP_SKIP = ['parentPin', 'adminPin', 'deviceType', 'engine', 'extPlayer', 'volume', 'muted', 'weatherLoc'];
   function profileFp(p) {
     if (!p) return '';
     var s = p.type === 'xtream' ? 'x|' + normalizeServer(p.server).toLowerCase() + '|' + String(p.username || '').toLowerCase()
@@ -1834,7 +1879,7 @@
         var data = it.type === 'xtream' ? { type: 'xtream', server: normalizeServer(it.server), username: it.username, password: it.password } : { type: 'm3u', url: it.url };
         data.name = it.name;
         if (list.some(function (q) { return sameConnection(q, data); })) return;
-        data.id = uid(); list.push(data); added++;
+        data.id = newId(); list.push(data); added++;
       });
       if (b.settings) {
         var keep = {};
@@ -2113,7 +2158,9 @@
         var exp = Number(a.expires) * 1000;
         if (!(exp > 0)) return;
         var left = exp - Date.now(), day = 86400000;
-        var stage = left <= 0 ? 'over' : left <= day ? 'd1' : left <= 7 * day ? 'd7' : left <= 30 * day ? 'd30' : null;
+        // Erste Erinnerung 7 Tage vorher (wie „Läuft bald ab“ in der Statusanzeige) – vorher schon bei 30 Tagen:
+        // bei Monatszugängen erschien „läuft bald ab“ gleich beim Einrichten
+        var stage = left <= 0 ? 'over' : left <= day ? 'd1' : left <= 7 * day ? 'd7' : null;
         if (!stage) return;
         var key = 'expiry.' + p.id, seen = Store.get(key, {});
         if (seen.exp !== a.expires) seen = { exp: a.expires };
@@ -2359,6 +2406,7 @@
       var on = l.some(function (x) { return x.id === item.id; });
       a[item.kind] = on ? l.filter(function (x) { return x.id !== item.id; }) : [slim(item)].concat(l);
       Store.set('fav.' + uid(), a);
+      localChanged();
       toast(on ? T('Aus Favoriten entfernt') : T('Zu Favoriten hinzugefügt'));
       return !on;
     }
@@ -2399,6 +2447,7 @@
       var self = this, on = !this.has(it), l = this.all().filter(function (x) { return !self.same(x, it); });
       if (on) l.unshift(slim(it));
       Store.set(this.key(), l.slice(0, 300));
+      localChanged();
       toast(on ? T('Zu „Später ansehen“ hinzugefügt') : T('Aus „Später ansehen“ entfernt'));
       return on;
     }
@@ -2488,8 +2537,16 @@
     push: function (item) {
       var l = this.list().filter(function (x) { return x.id !== item.id; });
       l.unshift(slim(item)); Store.set('recent.' + uid(), l.slice(0, 15));
+      localChanged();
     }
   };
+  /* Favoriten / „Zuletzt gesehen“ geändert → Zähler in offenen Listen neu zeichnen (vorher blieben sie auf dem alten Stand) */
+  var localWatchers = [];
+  function onLocalChange(el, fn) { localWatchers.push({ el: el, fn: fn }); }
+  function localChanged() {
+    localWatchers = localWatchers.filter(function (w) { return document.body.contains(w.el); });
+    localWatchers.forEach(function (w) { try { w.fn(); } catch (e) {} });
+  }
 
   /* ==========================================================
      Toast & Dialog
@@ -2610,7 +2667,9 @@
         var inMain = list.filter(function (el) { return el.closest && el.closest('.mv-main'); });
         if (inMain.length) {
           var vis = inMain.filter(function (el) { var r = el.getBoundingClientRect(); return r.top < window.innerHeight && r.bottom > 0; });
-          var first = (vis.length ? vis : inMain)[0];
+          // Titel vor der Kopfzeile („Sortieren“ stand im Ablauf zuerst – Rechts landete dort statt auf dem ersten Cover)
+          var pool = vis.length ? vis : inMain, items = pool.filter(function (el) { return !(el.closest && el.closest('.mv-head')); });
+          var first = (items.length ? items : pool)[0];
           this.focus(first);
           return true;
         }
@@ -2653,6 +2712,7 @@
     stack: [],
     top: function () { return this.stack[this.stack.length - 1]; },
     push: function (name, el, opts) {
+      if (typeof StatusTip !== 'undefined') StatusTip.hide();
       opts = opts || {};
       var cur = this.top();
       if (cur) { cur.lastFocus = document.activeElement; if (!opts.overlay) cur.el.classList.add('is-off'); }
@@ -2665,6 +2725,7 @@
       return s;
     },
     pop: function () {
+      if (typeof StatusTip !== 'undefined') StatusTip.hide();
       var s = this.stack.pop();
       if (!s) return;
       if (s.onLeave) s.onLeave();
@@ -2684,6 +2745,7 @@
       document.body.classList.toggle('modal-open', !!(t && t.overlay));
     },
     reset: function (name, el, opts) {
+      if (typeof StatusTip !== 'undefined') StatusTip.hide();
       if (Player.mini) Player.close();
       while (this.stack.length) {
         var s = this.stack.pop();
@@ -2694,14 +2756,24 @@
     }
   };
 
+  /* Zurück – Tastatur, Fernbedienung und Android-Zurück-Taste (backButton) kommen alle hier an */
   function goBack() {
+    // offenes Aufklapp-Menü (z. B. Sortieren) zuerst schließen
+    if (InlineMenu.cur) { var w = InlineMenu.wrap; InlineMenu.close(); var fb = w && $('.f', w); if (fb) Nav.focus(fb); return; }
+    // angefangene Sendernummer abbrechen (sonst schaltete sie 1,8 s später trotzdem um)
+    if (NumEntry.buf) { NumEntry.reset(); return; }
     if (Dialog.open) { Dialog.close(); return; }
     var top = Screens.top();
+    // Einstellungen: aufgeklappte Auswahl zuerst schließen, statt die ganze Seite zu verlassen
+    var openRow = top && $('.st-row.is-open', top.el);
+    if (openRow && openRow._close) { openRow._close(); Nav.focus(openRow); return; }
     if (top && top.onBack && top.onBack() === true) return;
     if (Screens.stack.length > 1) { Screens.pop(); return; }
     askExit();
   }
   function askExit() {
+    // Im normalen Browser lässt sich ein Tab nicht per Skript schließen – „Beenden“ täte nichts, also gar nicht anbieten
+    if (!Platform.tizen && !Platform.webos && !Platform.capacitor && !/Electron/.test(UA)) return;
     confirmBox(T('App beenden?'), null, T('Beenden'), exitApp);
   }
   function exitApp() {
@@ -2728,8 +2800,11 @@
     // ohne Herkunftsangabe laden: viele Logo-Server sperren fremde Apps/Webseiten („Hotlink-Schutz“)
     i.setAttribute('referrerpolicy', 'no-referrer');
     try { i.referrerPolicy = 'no-referrer'; } catch (e) {}
-    i.src = src;
     i.onerror = function () { if (onFail) onFail(i); else i.style.display = 'none'; };
+    // nur Bildadressen laden – „javascript:“, „file:“ o. Ä. aus fremden Playlists gar nicht erst anfassen,
+    // sondern wie ein kaputtes Bild behandeln (Aufrufer bekommen trotzdem ein Element)
+    if (/^\s*(javascript:|vbscript:|file:|data:(?!image\/))/i.test(String(src))) { setTimeout(function () { i.onerror(); }, 0); return i; }
+    i.src = src;
     return i;
   }
 
@@ -3354,8 +3429,9 @@
       var plItem = [pl ? 'ok' : 'none', 'playlist', pl ? T('Playlist hinterlegt') : T('Keine Playlist'), 'playlist'];
       if (active) {
         var a = StatusLine.account(), days = a && a.expires ? Math.ceil((Number(a.expires) * 1000 - Date.now()) / 86400000) : null;
-        if (a && a.status && !/^active$/i.test(String(a.status))) plItem = ['off', 'playlist', T('Zugang gesperrt'), 'playlist'];
-        else if (days !== null && days <= 0) plItem = ['off', 'playlist', T('Playlist abgelaufen'), 'playlist'];
+        // Ablauf zuerst: Xtream meldet abgelaufene Zugänge mit Status „Expired“ – das ist „abgelaufen“, nicht „gesperrt“
+        if ((days !== null && days <= 0) || (a && /^expired$/i.test(String(a.status || '')))) plItem = ['off', 'playlist', T('Playlist abgelaufen'), 'playlist'];
+        else if (a && a.status && !/^active$/i.test(String(a.status))) plItem = ['off', 'playlist', T('Zugang gesperrt'), 'playlist'];
         else if (days !== null && days <= 7) plItem = ['warn', 'playlist', T('Läuft bald ab'), 'playlist'];
         else plItem = ['ok', 'playlist', T('Playlist aktiv'), 'playlist'];
       }
@@ -3501,9 +3577,20 @@
       var top = a.bottom + 8 + ph > H - 8 ? a.top - ph - 8 : a.bottom + 8;
       pop.style.left = Math.round(Math.max(8, Math.min(W - pw - 8, a.left + a.width / 2 - pw / 2))) + 'px';
       pop.style.top = Math.round(Math.max(8, top)) + 'px';
-      this.pop = pop;
+      this.pop = pop; this.anchor = anchor;
+      // Die Status-Knöpfe werden alle 3 s neu gebaut – „mouseleave“/„blur“ des alten Knopfs kommt dann nie.
+      // Darum: bei jeder Bewegung, jedem Tippen und Fokuswechsel prüfen, ob der Hinweis noch zu etwas gehört.
+      if (!this.armed) {
+        this.armed = true;
+        var self = this, check = function (e) {
+          var a = self.anchor;
+          if (!self.pop) return;
+          if (!a || !document.body.contains(a) || (e.target && e.target.nodeType === 1 && !a.contains(e.target))) self.hide();
+        };
+        ['mousemove', 'pointerdown', 'focusin', 'touchstart'].forEach(function (t) { document.addEventListener(t, check, true); });
+      }
     },
-    hide: function () { if (this.pop && this.pop.parentNode) this.pop.parentNode.removeChild(this.pop); this.pop = null; },
+    hide: function () { if (this.pop && this.pop.parentNode) this.pop.parentNode.removeChild(this.pop); this.pop = null; this.anchor = null; },
     wire: function (el, it) {
       var self = this;
       el.addEventListener('mouseenter', function () { self.show(el, it); });
@@ -3819,7 +3906,7 @@
         runTime.appendChild(h('b', { text: txt }));
         if (d !== null && d <= 30) runTime.classList.add(d <= 0 ? 'is-expired' : 'is-warn');
       }).catch(function () {});
-      self.el = h('div', { class: 'shell' }, head, h('main', { class: 'content' }, self.view), h('footer', { class: 'statusbar' }, macTag(profileUser(App.profile), true), StatusLine.el(), runTime, h('span', { class: 'sb-clock' })));
+      self.el = h('div', { class: 'shell' }, head, h('main', { class: 'content' }, self.view), h('footer', { class: 'statusbar' }, macTag(profileUser(App.profile), true, profileUserLabel(App.profile)), StatusLine.el(), runTime, h('span', { class: 'sb-clock' })));
       QuickSearch.build(self.el, searchBtn);
       Screens.reset('shell', self.el, {
         // Beim Verlassen (Playlist-Wechsel, Zurücksetzen) die offene Ansicht aufräumen –
@@ -4465,7 +4552,7 @@
         list.forEach(function (x) { var c = String(x.catId); by[c] = (by[c] || 0) + 1; var a = Number(x.added) || 0; if (a > newest) newest = a; });
         // Ergebnis gehört zur Playlist, die beim Start aktiv war (Wechsel während des Ladens → keine falschen Zahlen)
         Stats.set(kind, list.length, newest, owner);
-        var out = { by: by, total: list.length };
+        var out = { by: by, total: list.length, kind: kind };
         if (r[1]) {
           var ids = radioIds(r[1]), n = 0;
           list.forEach(function (x) { if (isRadio(x, ids)) n++; });
@@ -4504,7 +4591,9 @@
   function visTotal(cats, counts) {
     if (!cats || !cats.length) return counts.total;
     var n = 0;
-    cats.forEach(function (c) { n += counts.by[String(c.id)] || 0; });
+    // gesperrte Kategorien (Kindersicherung) zählen nicht mit – sie stehen auch nicht in „Alle Sender“
+    var kind = counts.kind || 'live';
+    cats.forEach(function (c) { if (!Parental.blocked(kind, c)) n += counts.by[String(c.id)] || 0; });
     return n || counts.total;
   }
   function fmtCount(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, Lang.cur === 'en' ? ',' : '.'); }
@@ -4546,13 +4635,14 @@
           var top2 = Screens.top();
           if (Player.el || Dialog.open || !top2 || !top2.el.contains(el)) return;
           var i = at;
-          if (i < 0) { i = 0; l = l || []; for (var q = 0; q < l.length; q++) if (String(l[q].id) === String(item.id)) { i = q; item = l[q]; break; } if (!l.length || String(l[i].id) !== String(item.id)) { l = [item]; i = 0; } }
+          if (i < 0) { i = 0; l = l || []; for (var q = 0; q < l.length; q++) if (String(l[q].id) === String(item.id)) { i = q; item = l[q]; break; } if (!l.length || String(l[i].id) !== String(item.id)) return; }   // ausgeblendet oder nicht mehr in der Playlist: keine Vorschau
           panel.show(item);
-          Player.open(item, { list: l, index: i }, { mini: true });
+          Player.open(item, { list: l, index: i }, { mini: true, auto: true });
         }).catch(function () {});
       });
     }
     // Zahlen hinter Sprachen und Kategorien: bei einer Sprache alle Einträge dieser Sprache, sonst je Kategorie
+    onLocalChange(el, function () { paintCounts(); });
     function paintCounts() {
       if (!counts) return;
       for (var i = 0; i < cats.children.length; i++) {
@@ -5086,7 +5176,9 @@
         st.top = top + 'px'; ps.top = (top + hh + 8) + 'px';
         return;
       }
-      if (r.left < W * 0.3) {
+      // Seitenleiste erkennt man an der Form (höher als breit) – nicht an der Lage der Lupe: im Hochformat steht die
+      // Lupe der Menüleiste oben links (< 30 % der Breite), das Suchfeld landete dann außerhalb des Bildschirms
+      if (nav.height > nav.width) {
         // Seitenleiste (Handy quer): Leiste oben im Inhaltsbereich
         var left = nav.right + 12;
         st.left = left + 'px'; st.top = '8px'; st.width = Math.min(30 * rem, W - left - 12) + 'px';
@@ -5096,7 +5188,7 @@
         var rr = Math.max(12, W - r.right), sw = Math.min(34 * rem, W - rr - 12), top2 = nav.bottom + 8;
         st.right = ps.right = rr + 'px'; st.width = ps.width = sw + 'px';
         st.top = top2 + 'px'; ps.top = (top2 + hh + 8) + 'px';
-        if (W < 700) { st.left = ps.left = '12px'; st.right = ps.right = '12px'; st.width = ps.width = 'auto'; }
+        if (W <= 960) { st.left = ps.left = '12px'; st.right = ps.right = '12px'; st.width = ps.width = 'auto'; }
       }
     },
     open: function (anchor) {
@@ -5171,7 +5263,7 @@
      Mit gewähltem Ort (Einstellungen → Darstellung → Wetter): echtes Wetter von Open-Meteo (kostenlos, ohne Konto).
      Gesendet werden nur die Koordinaten des gewählten Ortes, höchstens alle 30 Minuten. */
   var Sky = {
-    w: null, at: 0, busy: false,
+    w: null, at: 0, okAt: 0, busy: false, seq: 0,   // at = letzter Versuch, okAt = letzte gültige Antwort
     loc: function () { var l = Settings.get('weatherLoc'); return l && typeof l.lat === 'number' && typeof l.lon === 'number' ? l : null; },
     // Sonnenauf-/-untergang: vom Wetterdienst, sonst grob 7:00 / 18:00 Uhr
     sunTimes: function (d) {
@@ -5191,7 +5283,8 @@
       d = d || new Date();
       var ph = this.phase(d), night = ph === 'moon';
       var names = { sunrise: T('Sonnenaufgang'), sunset: T('Sonnenuntergang'), sun: T('Tag'), moon: T('Nacht') };
-      var w = this.loc() && this.w && Date.now() - this.at < 3 * 3600000 ? this.w : null;
+      // nur Wetter zeigen, das wirklich höchstens 3 Std. alt ist – auch wenn die Abfragen seitdem scheitern
+      var w = this.loc() && this.w && Date.now() - this.okAt < 3 * 3600000 ? this.w : null;
       this.refresh();
       if (!w) return [ph, names[ph], ''];
       var c = w.code, ic = ph, txt = names[ph];
@@ -5206,17 +5299,20 @@
     },
     refresh: function (force) {
       var self = this, l = self.loc();
-      if (!l || self.busy || (!force && Date.now() - self.at < 1800000) || navigator.onLine === false) return;
+      if (!l || (self.busy && !force) || (!force && Date.now() - self.at < 1800000) || navigator.onLine === false) return;
+      // neue Abfrage (z. B. anderer Ort) macht eine noch laufende ungültig – sonst stünde kurz das Wetter des alten Orts da
+      var seq = ++self.seq;
       self.busy = true;
       var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + l.lat.toFixed(2) + '&longitude=' + l.lon.toFixed(2) +
         '&current=temperature_2m,weather_code,is_day&daily=sunrise,sunset&timezone=auto&forecast_days=1';
       fetchWithTimeout(url, 10000).then(function (r) { return r.json(); }).then(function (j) {
         var cur = j && j.current, dl = j && j.daily;
+        if (seq !== self.seq) return;
         if (!cur) throw new Error('leer');
         self.w = { code: Number(cur.weather_code), temp: Number(cur.temperature_2m), rise: dl && dl.sunrise && dl.sunrise[0], set: dl && dl.sunset && dl.sunset[0] };
-        self.at = Date.now();
+        self.at = self.okAt = Date.now();
         Sky.paintAll();
-      }).catch(function () { self.at = Date.now() - 1500000; }).then(function () { self.busy = false; });
+      }).catch(function () { if (seq === self.seq) self.at = Date.now() - 1500000; }).then(function () { if (seq === self.seq) self.busy = false; });
     },
     // Symbol (und Temperatur) als Element
     el: function () {
@@ -5239,7 +5335,7 @@
             res.forEach(function (x) {
               list.appendChild(h('button', { class: 'ch-opt f', onclick: function () {
                 Settings.set('weatherLoc', { name: x.name, lat: Number(x.latitude), lon: Number(x.longitude) });
-                Sky.w = null; Sky.at = 0; Sky.refresh(true);
+                Sky.w = null; Sky.at = 0; Sky.okAt = 0; Sky.refresh(true);
                 goBack(); if (done) done();
               } }, h('span', { class: 'ch-txt' }, h('b', { text: x.name }), h('small', { text: [x.admin1, x.country].filter(Boolean).join(', ') }))));
             });
@@ -5984,8 +6080,8 @@
     },
     url: function () {
       var base = 'https://github.com/Splix66/lumio-player/releases/download/';
-      if (/Electron/.test(UA)) return base + 'pc/' + (/Mac/.test(UA) ? 'lumio-player-mac.dmg' : 'lumio-player-setup.exe');
-      return base + 'neueste/lumio-player.apk';
+      if (/Electron/.test(UA)) return base + 'pc/' + (/Mac/.test(UA) ? 'telvo-player-mac.dmg' : 'telvo-player-setup.exe');
+      return base + 'neueste/telvo-player.apk';
     },
     download: function () {
       var url = this.url(), pl = NativePlayer.plugin();
@@ -6017,6 +6113,8 @@
       main.className = 'st-main c-' + sec.c;
       clear(head).appendChild(h('span', { class: 'st-hic' }, icon(sec.ic)));
       head.appendChild(h('div', { class: 'st-htxt' }, h('h2', { text: sec.name }), sec.hint ? h('p', { text: sec.hint }) : null));
+      // aufgeklappte Auswahl schließen – die Zeilen werden beim Zurückkommen wiederverwendet und brauchten sonst zwei Mal OK
+      $all('.st-row.is-open', content).forEach(function (x) { if (x._close) x._close(); });
       clear(content).appendChild(sec.body());
     }
     sections.forEach(function (sec) {
@@ -6228,7 +6326,7 @@
       (Cloud.registered ? Promise.resolve({ ok: true }) : Cloud.register()).then(function (r) {
         if (!r || !r.ok) throw new Error(rpcErr(r));
         Cloud.registered = true;
-        return Cloud.rpc('send_support', { p_mac: Device.mac(), p_key: Device.key(), p_topic: topic, p_message: body, p_contact: mail.input.value.trim() || null });
+        return Cloud.support(topic, body, mail.input.value.trim() || null);
       }).then(function (r) {
         if (!r || !r.ok) throw new Error(rpcErr(r));
         goBack();
@@ -6294,12 +6392,19 @@
         if (!r || !r.ok) throw new Error(rpcErr(r));
         Cloud.registered = true;
         // Sterne: eine Bewertung pro Gerät auf dem Server (ersetzt die alte). Fehlt die Funktion dort noch, gehen sie wie bisher als Nachricht mit.
-        return changed ? Cloud.call('set_rating', { p_mac: Device.mac(), p_stars: stars }).then(function (x) { return !!(x && x.ok); }, function () { return false; }) : true;
+        // Nur wenn die Funktion fehlt (PGRST202 / keine Antwort im App-Format) oder das Token nicht passt, als Nachricht senden –
+        // eine echte Ablehnung (z. B. zu viele Änderungen) wird angezeigt statt „geändert“ zu melden.
+        return changed ? Cloud.call('set_rating', { p_mac: Device.mac(), p_stars: stars }).then(function (x) {
+          if (x && x.ok) return true;
+          // Sperre durch den Server zeigen; alles andere (Funktion fehlt, Anmeldung) wie bisher als Nachricht
+          if (x && x.ok === false && /Änderungen pro Tag/.test(rpcErr(x))) throw new Error('Du hast deine Bewertung heute schon oft geändert. Versuch es morgen wieder.');
+          return false;
+        }, function () { return false; }) : true;
       }).then(function (rated) {
         var withStars = changed && !rated;
         if (!text && !withStars) return { ok: true };
         var body = (changed ? starLine() + '\n' : '') + (text || '') + '\n\n— Telvo ' + CONFIG.version + ' · ' + kind + ' · ' + Lang.cur;
-        return Cloud.rpc('send_support', { p_mac: Device.mac(), p_key: Device.key(), p_topic: 'Feedback', p_message: body.slice(0, 2000), p_contact: mail.input.value.trim() || null });
+        return Cloud.support('Feedback', body.slice(0, 2000), mail.input.value.trim() || null);
       }).then(function (r) {
         if (!r || !r.ok) throw new Error(rpcErr(r));
         Store.set('feedbackAt', Date.now());
@@ -6592,7 +6697,7 @@
         Updates.check().then(show, function () { status.textContent = T('Keine Verbindung zum Update-Dienst.'); status.className = 'up-status'; });
       }
       var cached = Updates.cached();
-      if (cached) show(cached); else status.textContent = T('Version {0}', CONFIG.version);
+      if (cached) show(cached);   // sonst nichts: die Version steht direkt darüber (vorher doppelt)
       openSheet(T('Über & Updates'), 'info', [
         h('button', { class: 'about-version f', onclick: function () { Admin.tap(); } }, CONFIG.appName + ' ' + CONFIG.version),
         status, actions,
@@ -6692,11 +6797,12 @@
     function stopPreview() {
       clearTimeout(prevTimer); clearInterval(prevWatch); prevTimer = prevWatch = null;
       if (HeroPreview.stop === stopPreview) HeroPreview.stop = null;
-      if (!prevV) return;
+      if (!prevV) return false;
       var v = prevV; prevV = null;
       top.classList.remove('is-playing');
       try { v.pause(); v.removeAttribute('src'); v.load(); } catch (e) {}
       setTimeout(function () { if (v.parentNode) v.parentNode.removeChild(v); }, 900);
+      return true;   // es lief wirklich eine Vorschau (Verbindung zum Server war offen)
     }
     function startPreview(it) {
       stopPreview();
@@ -6740,7 +6846,7 @@
       return Settings.get('heroPreview') !== false && !Platform.tizen && !Platform.webos && !Platform.lite &&
         !(navigator.connection && navigator.connection.saveData) && !!App.provider && !!App.provider.streamUrl;
     },
-    halt: function () { if (this.stop) this.stop(); }
+    halt: function () { return this.stop ? !!this.stop() : false; }
   };
   function metaLine(d) {
     var m = h('div', { class: 'meta' });
@@ -6772,11 +6878,14 @@
     if (!item.catId) return;
     var kind = item.kind === 'series' ? 'series' : 'movie';
     Promise.all([App.provider.items(kind, item.catId), App.provider.categories(kind).then(null, function () { return []; })]).then(function (r) {
-      var list = r[0] || [], seen = {}, own = titleKey(item.name), cat = null;
+      // Schlüssel ohne 4K/HD-Zusätze; arabische, kyrillische oder griechische Titel haben keinen a-z-Schlüssel –
+      // dann der ganze Name (sonst galten alle als „derselbe Titel“ und die Leiste blieb leer)
+      var key = function (n) { return titleKey(n) || norm(n).replace(/[\s.,:;|_\-()[\]]+/g, ''); };
+      var list = r[0] || [], seen = {}, own = key(item.name), cat = null;
       (r[1] || []).forEach(function (c) { if (String(c.id) === String(item.catId)) cat = c; });
       seen[own] = 1;
       // derselbe Titel in 4K/HD/… nur einmal – und nicht der Titel selbst
-      var pick = list.filter(function (x) { if (x.id === item.id || !x.logo) return false; var k = titleKey(x.name); if (seen[k]) return false; seen[k] = 1; return true; })
+      var pick = list.filter(function (x) { if (x.id === item.id || !x.logo) return false; var k = key(x.name); if (!k) return true; if (seen[k]) return false; seen[k] = 1; return true; })
         .sort(byRating).slice(0, 16);
       if (pick.length < 3 || !panel.parentNode) return;
       var badges = kind === 'series' ? seriesBadges() : null;
@@ -7168,7 +7277,9 @@
   }
   function playItemNow(item, ctx) {
     ctx = ctx || { list: [item], index: 0 };
-    HeroPreview.halt();
+    // Lief stumm die Vorschau im Kopfbild, kurz warten, bis der Server die Verbindung freigegeben hat –
+    // Zugänge mit nur einer erlaubten Verbindung lehnten den Film sonst beim Start ab
+    if (HeroPreview.halt()) { setTimeout(function () { playItemNow(item, ctx); }, 400); return; }
     if (extPlayerOn() && item.kind !== 'series') {
       if (Player.el) Player.close();
       playExternal(item);
@@ -7206,6 +7317,8 @@
       var self = this;
       if (self.el) { self.switchTo(item, ctx); return; }
       self.ctx = ctx;
+      // auto = von selbst gestartete Vorschau (Live TV): zählt erst als „gesehen“, wenn man den Sender wählt
+      self.auto = !!(o && o.auto);
       // poster = durchsichtiges Bild, damit Android nicht sein weißes Standard-Vorschaubild zeigt
       var video = h('video', { playsinline: true, 'webkit-playsinline': true, autoplay: true, preload: 'auto', poster: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7' });
       self.video = video;
@@ -7390,7 +7503,8 @@
       video.addEventListener('resize', paintQuality);
       if (video.audioTracks && video.audioTracks.addEventListener) video.audioTracks.addEventListener('addtrack', function () { self.updateTracks(); });
       if (video.textTracks && video.textTracks.addEventListener) video.textTracks.addEventListener('addtrack', function () { self.updateTracks(); });
-      video.addEventListener('pause', function () { self.paintCtrls(); self.showOsd(true); });
+      // nach dem Schließen kommt „pause“ noch einmal – dann gibt es kein Video/Player-Fenster mehr
+      video.addEventListener('pause', function () { if (self.video !== video || !self.el) return; self.paintCtrls(); self.showOsd(true); });
       video.addEventListener('play', function () { self.hidePause(); });
       video.addEventListener('loadedmetadata', function () {
         if (self.isVod() && self.resumeAt) { try { video.currentTime = self.resumeAt; } catch (e) {} toast(T('Fortgesetzt bei {0}', fmtTime(self.resumeAt))); self.resumeAt = 0; }
@@ -7437,6 +7551,11 @@
     maximize: function () {
       var self = this;
       if (!self.el || !self.mini) return;
+      if (self.auto && self.item) {   // Vorschau groß gemacht = Sender gewählt
+        self.auto = false;
+        if (self.item.kind === 'live') Recent.push(self.item);
+        Last.set(self.item);
+      }
       self.mini = false; self.pip = false;
       self.maxAt = Date.now();
       clearInterval(self.placeTimer);
@@ -7496,6 +7615,7 @@
     },
 
     switchTo: function (item, ctx) {
+      this.auto = false;   // selbst gewählt
       this.saveResume();
       if (ctx) this.ctx = ctx;
       this.load(item);
@@ -7547,9 +7667,9 @@
       var r = Resume.get(item);
       self.resumeAt = self.isVod() && r && !(self.ctx && self.ctx.fromStart) ? r.t : 0;
       if (self.ctx) self.ctx.fromStart = false;
-      if (item.kind === 'live') { Recent.push(item); self.loadEpg(); }
+      if (item.kind === 'live') { if (!self.auto) Recent.push(item); self.loadEpg(); }
       if (item.kind === 'episode') { UpNext.hint(self.ctx && self.ctx.list); SeriesWatch.touch(item.seriesId); }
-      Last.set(item);
+      if (!self.auto) Last.set(item);
 
       var src = App.provider.streamUrl(item);
       self.alt = src.alt;
@@ -7597,6 +7717,11 @@
       var self = this, video = self.video;
       self.destroyHls();
       self.curUrl = url;
+      // Jeder Start zählt neu: das „waiting“ beim Anlaufen ist kein Stocken (sonst meldete schnelles Umschalten
+      // fälschlich „Der Sender stockt“). Laufende Nummer statt Adresse: A→B→A vor dem ersten Laden der
+      // Bibliothek hängte sonst zwei Player an dasselbe Video.
+      self.playedSince = 0; self.stalls = [];
+      var seq = self.attachSeq = (self.attachSeq || 0) + 1;
       self.usingNative = false;
       var nativeHls = !!video.canPlayType('application/vnd.apple.mpegurl');
       // Android-App: zuerst den eingebauten Android-Player nutzen (zuverlässiger für Live-Sender),
@@ -7605,7 +7730,7 @@
       if (isHlsUrl(url) && !(nativeHls && preferNative)) {
         ensureHls().then(function (Hls) {
           // inzwischen umgeschaltet? Dann nicht noch einen zweiten hls.js-Player an dasselbe Video hängen
-          if (self.video !== video || self.curUrl !== url) return;
+          if (self.video !== video || self.attachSeq !== seq) return;
           if (Hls && Hls.isSupported()) {
             // PC (Windows/Mac): gleich in hoher Qualität starten und nicht an die Fenstergröße koppeln –
             // sonst bleibt das Bild nach der kleinen Vorschau lange unscharf. „Beste Qualität“ hält die höchste Stufe fest.
@@ -7637,7 +7762,10 @@
                 if (!self.mediaRecoverAt || now - self.mediaRecoverAt > 10000) { self.mediaRecoverAt = now; hls.recoverMediaError(); return; }
                 if (!self.swappedCodec) { self.swappedCodec = true; self.mediaRecoverAt = now; hls.swapAudioCodec(); hls.recoverMediaError(); return; }
               }
-              if (data.type === Hls.ErrorTypes.NETWORK_ERROR && self.netRetries < 4) {
+              // 4xx (nicht gefunden, kein Zugriff) wird durch Warten nicht besser: nur einmal neu versuchen, dann gleich
+              // das andere Format bzw. die Meldung (vorher 4 Versuche = rund 18 s „Verbindung wird wiederhergestellt“)
+              var hcode = data.response && data.response.code, maxRetries = hcode >= 400 && hcode < 500 ? 1 : 4;
+              if (data.type === Hls.ErrorTypes.NETWORK_ERROR && self.netRetries < maxRetries) {
                 var delay = 1000 * Math.pow(2, self.netRetries++);
                 var manifest = /manifest/i.test(String(data.details || ''));
                 self.reconnecting();
@@ -7667,14 +7795,14 @@
         // Klappt das Umpacken nicht (kein Netz für die Hilfsdatei, oder der Anbieter
         // liefert doch etwas anderes), probieren wir es ganz normal weiter.
         var plain = function () {
-          if (self.video !== video || self.curUrl !== url) return;
+          if (self.video !== video || self.attachSeq !== seq) return;
           self.destroyHls();
           self.rawFail = true;
           video.src = url;
           self.playSafe();
         };
         ensureTs().then(function (mpegts) {
-          if (self.video !== video || self.curUrl !== url) return;
+          if (self.video !== video || self.attachSeq !== seq) return;
           var ok = mpegts && mpegts.getFeatureList && mpegts.getFeatureList().mseLivePlayback;
           if (!ok) { plain(); return; }
           /* Kein „Aufholen“ zum Live-Rand: das sprang immer wieder nach vorn, der Vorrat war danach leer –
@@ -7684,7 +7812,14 @@
             { enableWorker: true, liveBufferLatencyChasing: false, liveSync: false, lazyLoad: false,
               enableStashBuffer: true, stashInitialSize: 384 * 1024, autoCleanupSourceBuffer: true });
           self.ts = p;
-          p.on(mpegts.Events.ERROR, function () { if (self.ts === p) plain(); });
+          p.on(mpegts.Events.ERROR, function (type, detail, info) {
+            if (self.ts !== p) return;
+            // Server sagt „gibt es nicht / kein Zugriff“: direkt abspielen hilft dann auch nicht – klare Meldung statt
+            // des Hinweises auf „RAW“-Sender (bzw. erst das andere Format probieren, das macht onError)
+            var code = info && info.code;
+            if (code >= 400 && code < 500) { self.destroyHls(); self.errInfo = 'mpegts HTTP ' + code; self.onError(T('Der Stream ist nicht erreichbar.')); return; }
+            plain();
+          });
           try {
             p.attachMediaElement(video);
             p.load();
@@ -7957,6 +8092,8 @@
     openChannels: function () {
       var self = this, c = self.ctx;
       if (!self.item || self.item.kind !== 'live' || !c || !c.list || c.list.length < 2) return;
+      // zweiter Druck schließt (wie Zahnrad, Ton und Schlaf-Timer)
+      if (self.trackPanel && self.trackPanel.classList.contains('chan-panel')) { self.closeTracks(); self.showOsd(); return; }
       self.closeTracks();
       var list = c.list, scroller = h('div', { class: 'cp-scroll' }), box = h('div', { class: 'cp-rows' });
       scroller.appendChild(box);
@@ -8140,7 +8277,7 @@
 
     paintCtrls: function () {
       var self = this, v = self.video;
-      if (!self.ctrls) return;
+      if (!self.ctrls || !v) return;
       var had = (self.ctrls.contains(document.activeElement) || self.ctrlLeft.contains(document.activeElement)) ? document.activeElement.getAttribute('data-c') : null;
       clear(self.ctrls); clear(self.ctrlLeft);
       function cbtn(c, ic, label, fn, cls, num) {
@@ -8199,7 +8336,7 @@
       } else if (it.kind === 'live') {
         var e = self.epgCur;
         title = e ? e.title : it.name;
-        sub = it.name + (e ? ' · ' + fmtClock(e.start) + ' – ' + fmtClock(e.end) : '');
+        sub = e ? it.name + ' · ' + fmtClock(e.start) + ' – ' + fmtClock(e.end) : '';   // ohne Programm stand der Name sonst doppelt
         plot = (e && e.desc) || '';
       }
       var metaRow = h('div', { class: 'ps-meta' }), plotEl = h('p', { class: 'ps-plot', text: plot });
@@ -8369,7 +8506,7 @@
 
     showOsd: function (stay) {
       var self = this;
-      if (self.mini) return;
+      if (self.mini || !self.el) return;
       if (self.el && Date.now() - (self.zapAt || 0) > 700) self.el.classList.remove('is-zapping');
       self.hidePause();
       if (self.video && self.video.paused && !self.video.ended) self.armPause(); else clearTimeout(self.pauseTimer);
@@ -8381,7 +8518,7 @@
         if (pb && self.err.style.display === 'none') Nav.focus(pb);
       }
       clearTimeout(self.hideTimer);
-      if (!stay) self.hideTimer = setTimeout(function () { if (!self.video.paused) self.hideOsd(); }, 4500);
+      if (!stay) self.hideTimer = setTimeout(function () { if (self.video && !self.video.paused) self.hideOsd(); }, 4500);
     },
     hideOsd: function () {
       if (this.err.style.display !== 'none' || this.trackPanel) return;
@@ -8413,6 +8550,10 @@
       if (k === KEY.CH_UP) { self.zapBy(-1); return true; }
       if (k === KEY.CH_DOWN) { self.zapBy(1); return true; }
       if (errOpen) return false;
+      // Direkt nach dem Umschalten sind die Knöpfe unsichtbar (nur oben links Sender) – Hoch/Runter schaltet weiter
+      if (self.item.kind === 'live' && self.el && self.el.classList.contains('is-zapping') && (k === KEY.UP || k === KEY.DOWN)) {
+        self.zapBy(k === KEY.UP ? -1 : 1); return true;
+      }
       if (hidden) {
         if (self.item.kind === 'live' && k === KEY.UP) { self.zapBy(-1); return true; }
         if (self.item.kind === 'live' && k === KEY.DOWN) { self.zapBy(1); return true; }
@@ -8524,6 +8665,7 @@
     },
 
     teardown: function () {
+      this.closeTracks();   // offene Senderliste: Zeitgeber und Beobachter mit beenden
       this.hidePause();
       this.saveResume();
       clearInterval(this.saveTimer); clearInterval(this.epgTimer); clearTimeout(this.hideTimer); clearTimeout(this.zapTimer);
@@ -8538,7 +8680,7 @@
       this.mini = false;
       document.body.classList.remove('has-mini');
       window.removeEventListener('resize', this.onResize);
-      this.el = null; this.video = null; this.item = null; this.ctx = null;
+      this.el = null; this.video = null; this.item = null; this.ctx = null; this.auto = false;
       markPlaying(null);
     }
   };
@@ -8700,7 +8842,7 @@
     var dirs = { 37: 'left', 38: 'up', 39: 'right', 40: 'down' };
     if (dirs[k] || k === 13) document.body.classList.add('kbd');
 
-    if (isBackKey(e)) { e.preventDefault(); if (InlineMenu.cur) { var w = InlineMenu.wrap; InlineMenu.close(); var fb = w && $('.f', w); if (fb) Nav.focus(fb); return; } goBack(); return; }
+    if (isBackKey(e)) { e.preventDefault(); goBack(); return; }
     if (!Dialog.open && Player.el && Screens.top() && Screens.top().el === Player.el && Player.handleKey(k)) { e.preventDefault(); return; }
     // Live TV: Sendernummer eintippen, letzter Sender
     if (NumEntry.key(e, k)) { e.preventDefault(); return; }
@@ -8751,6 +8893,7 @@
   }
 
   function boot() {
+    Profiles.fixIds();
     Lang.init();
     addLogoDefs();
     Theme.apply();
@@ -8810,7 +8953,7 @@
     Xmltv: Xmltv, chanKey: chanKey, trackLabel: trackLabel, cleanTitle: cleanTitle, cleanEpName: cleanEpName, fmtDur: fmtDur, isRadio: isRadio, Sky: Sky, icon: icon, Terms: Terms, editPerson: editPerson, EpgStore: EpgStore, makeProvider: makeProvider, Profiles: Profiles, PinGuard: PinGuard, Store: Store, Cloud: Cloud,
     decodeBytes: decodeBytes, readText: readText, fetchText: fetchText, sameConnection: sameConnection, NativePlayer: NativePlayer, App: App, ensureTs: ensureTs, migrateM3uIds: migrateM3uIds,
     ErrLog: ErrLog, techInfo: techInfo,
-    CatPrefs: CatPrefs, visibleCats: visibleCats, Parental: Parental, ChanHide: ChanHide,
+    CatPrefs: CatPrefs, visibleCats: visibleCats, Parental: Parental, ChanHide: ChanHide, initials: initials, statusError: statusError,
     Backup: Backup, profileFp: profileFp, Settings: Settings,
     Seen: Seen, Resume: Resume, UpNext: UpNext, SeriesWatch: SeriesWatch, sortVod: sortVod,
     Reminders: Reminders, NumEntry: NumEntry, Sleep: Sleep, Later: Later, Saver: Saver, trailerQuery: trailerQuery, Persons: Persons, Favs: Favs, Recent: Recent, showGuide: showGuide, Player: Player, Dialog: Dialog,

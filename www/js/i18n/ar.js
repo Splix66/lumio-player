@@ -973,6 +973,7 @@ window.LUMIO_I18N["ar"] = {
   "Bewertung ändern": "تغيير التقييم",
   "Deine Bewertung ist schon gespeichert. Wähle andere Sterne, um sie zu ändern.": "تقييمك محفوظ بالفعل. اختر نجومًا أخرى لتغييره.",
   "Deine Bewertung wurde geändert.": "تم تغيير تقييمك.",
+  "Du hast deine Bewertung heute schon oft geändert. Versuch es morgen wieder.": "لقد غيّرت تقييمك عدة مرات اليوم. حاول مرة أخرى غدًا.",
   "Deine Bewertung – du kannst sie jederzeit ändern.": "تقييمك – يمكنك تغييره في أي وقت.",
   "In Playlists kommen regelmäßig neue Filme und Serien dazu. Die App lädt die Listen dann von selbst neu – im Hintergrund, nie während etwas läuft.": "تُضاف أفلام ومسلسلات جديدة إلى قوائم التشغيل بانتظام. يعيد التطبيق تحميل القوائم تلقائيًا – في الخلفية، وليس أثناء تشغيل أي شيء.",
   "Sender, Filme und Serien": "القنوات والأفلام والمسلسلات",

@@ -1019,6 +1019,8 @@ body.kbd .mini-open.f:focus, body.is-tv .mini-open.f:focus,
 body.kbd .mini-mute.f:focus, body.is-tv .mini-mute.f:focus,
 body.kbd .mini-close.f:focus, body.is-tv .mini-close.f:focus { position: absolute; }
 body.has-mini .screen.modal { padding-right: calc(min(26rem, 46vw) + 3rem); }
+/* TV-Programm: Vorschaufenster unten rechts verdeckte die letzten Zeilen – Platz darunter, damit man sie darüber scrollen kann */
+body.has-mini .guide .gd-rows { padding-bottom: calc(min(26rem, 46vw) * .5625 + 2rem); }
 
 /* ---------- Dialog & Toast ---------- */
 #dialog-layer:empty { display: none; }
@@ -1204,8 +1206,9 @@ body.lite .fh-title { text-shadow: none; }
   html:not(.tv) .osd-top { padding: calc(1rem + env(safe-area-inset-top)) 1rem 2.4rem; }
   html:not(.tv) .osd-top .btn span { display: none; }
   html:not(.tv) .osd-bottom { padding: 2.4rem 1rem calc(1rem + env(safe-area-inset-bottom)); }
-  html:not(.tv) .ctrl-side.left { display: none; }
-  html:not(.tv) .ctrl-row.is-stacked .ctrl-side.right { justify-content: center; }
+  /* linke Knöpfe (Senderliste, Favorit, Letzter Sender, Nächste Folge, Archiv) nicht mehr ausblenden – sonst gab es
+     im Hochformat keinen Weg, einen Sender zu merken; in der gestapelten Leiste mittig */
+  html:not(.tv) .ctrl-row.is-stacked .ctrl-side.left, html:not(.tv) .ctrl-row.is-stacked .ctrl-side.right { justify-content: center; }
   html:not(.tv) .ctrls > * + * { margin-left: .7rem; }
   html:not(.tv) .cbtn { width: 3rem; height: 3rem; }
   html:not(.tv) .cbtn.big { width: 3.9rem; height: 3.9rem; }
@@ -1597,6 +1600,8 @@ html[data-poster="l"] .poster-grid { grid-template-columns: repeat(auto-fill, mi
   html:not(.tv) .mv-side { position: static; width: auto; max-height: none; overflow: visible; padding: 0 0 .9rem; }
   html:not(.tv) .mv-cats { flex-direction: row; overflow-x: auto; padding: 0 var(--pad); scrollbar-width: none; }
   html:not(.tv) .mv-cats .cat { background: var(--surface); border-radius: 999px; padding: .5rem .95rem; font-size: .88rem; margin: 0 .4rem 0 0; }
+  /* gewählte Kategorie: die Regel oben überschrieb den hellen Hintergrund – dunkle Schrift auf dunklem Grund */
+  html:not(.tv) .mv-cats .cat.is-on { background: var(--text); color: var(--bg); }
   html:not(.tv) .mv-main { padding: 0 var(--pad); }
 }
 
@@ -2140,12 +2145,16 @@ body.kbd .lr-card.f:focus, body.is-tv .lr-card.f:focus { transform: scale(1.03);
   html:not(.tv) .launcher.no-recent .ln-card .lc-txt b { font-size: 1.12rem; }
   html:not(.tv) .launcher.no-recent .ln-card .lc-txt small { font-size: .78rem; }
 }
-/* Handy hochkant (Webseite im Browser): Kacheln nebeneinander, Radio und Favoriten darunter */
-@media (max-width: 700px) and (orientation: portrait) {
+/* Handy und Tablet hochkant (bis 900 px): Kacheln nebeneinander, Radio und Favoriten darunter.
+   Vorher nur bis 700 px – auf dem Tablet hochkant (768 px) war die Kopfzeile zu eng und die Karten zu schmal. */
+@media (max-width: 900px) and (orientation: portrait) {
   html:not(.tv) .launcher { overflow-y: auto; padding: calc(1rem + env(safe-area-inset-top)) var(--pad) 1rem; }
   html:not(.tv) .ln-head { grid-template-columns: minmax(0, 1fr) auto; }
   html:not(.tv) .ln-status { grid-column: 1 / -1; grid-row: 2; margin-top: .8rem; }
   html:not(.tv) .ln-chip span { display: none; }
+  /* Kopfzeile passt sonst nicht: Knöpfe lagen über „Telvo Player“ – nur „Telvo“ und bei der Sprache nur die Flagge */
+  html:not(.tv) .ln-head .wordmark > span { display: none; }
+  html:not(.tv) .ln-tools .lang-btn > span:not(.flag) { display: none; }
   html:not(.tv) .ln-round { width: 2.4rem; height: 2.4rem; }
   html:not(.tv) .ln-round[data-key="ln:reload"], html:not(.tv) .ln-round[data-key="ln:help"] { display: none; }
   html:not(.tv) .ln-tools .lang-btn { height: 2.4rem; padding: 0 .7rem; }
@@ -2271,8 +2280,11 @@ body.kbd .chan-panel .chan.f:focus .name, body.is-tv .chan-panel .chan.f:focus .
 body.kbd .chan-panel .chan.f:focus .num, body.is-tv .chan-panel .chan.f:focus .num, body.kbd .chan-panel .chan.f:focus .now, body.is-tv .chan-panel .chan.f:focus .now { color: rgba(0, 0, 0, .6); }
 body.kbd .chan-panel .chan.f:focus .now-bar, body.is-tv .chan-panel .chan.f:focus .now-bar { background: rgba(0, 0, 0, .12); }
 .chan-panel .chan .now-bar i { background: #c084fc; }
+/* PC/Handy (Maus/Finger): Liste endet über der Bedienleiste – sonst verdeckt sie links „Senderliste“, „Letzter Sender“
+   und „Favorit“, und der eigene Knopf lässt sich zum Schließen nicht mehr anklicken. Fernseher: volle Höhe. */
+html:not(.tv) .track-panel.chan-panel { top: 6rem; bottom: 8.5rem; }   /* oben frei für Zurück-Knopf und Sendertitel */
 @media (orientation: landscape) and (max-height: 540px) {
-  html:not(.tv) .track-panel.chan-panel { top: .8rem; bottom: .8rem; left: .8rem; width: 20rem; }
+  html:not(.tv) .track-panel.chan-panel { top: 4.3rem; bottom: 5.6rem; left: .8rem; width: 20rem; }
 }
 
 /* Verbindungstest */
@@ -2322,7 +2334,7 @@ body.lite .sv-pic { transition: none; }
 .avatar.av-add .i { width: 1.1rem; height: 1.1rem; }
 .ln-person { display: inline-flex; align-items: center; height: 2.9rem; padding: 0 .35rem; border-radius: 999px; background: rgba(255, 255, 255, .05); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12); color: var(--text); }
 .ln-person.has-name { padding: 0 1rem 0 .35rem; }
-.ln-person span { margin-left: .6rem; max-width: 8rem; font-size: .9rem; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ln-person span:not(.avatar) { margin-left: .6rem; max-width: 8rem; font-size: .9rem; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ln-person:hover { background: rgba(255, 255, 255, .1); }
 body.kbd .ln-person.f:focus, body.is-tv .ln-person.f:focus { background: var(--text); color: var(--bg); box-shadow: none; }
 :root[data-theme="light"] .ln-person { background: var(--surface); box-shadow: inset 0 0 0 1px var(--line-2); }
@@ -2346,7 +2358,7 @@ body.kbd .who-p.f:focus .avatar.av-big, body.is-tv .who-p.f:focus .avatar.av-big
 @media (orientation: landscape) and (max-height: 540px) {
   html:not(.tv) .ln-person { height: 2.3rem; }
   html:not(.tv) .ln-person .avatar { width: 1.7rem; height: 1.7rem; font-size: .8rem; }
-  html:not(.tv) .ln-person span { display: none; }
+  html:not(.tv) .ln-person span:not(.avatar) { display: none; }
   html:not(.tv) .ln-person.has-name { padding: 0 .3rem; }
   html:not(.tv) .who h1 { margin-top: .8rem; font-size: 1.6rem; }
   html:not(.tv) .who-grid { margin-top: 1rem; }
@@ -2545,7 +2557,9 @@ body.kbd .pf-person.f:focus small, body.is-tv .pf-person.f:focus small { color: 
 .osd-top > * + * { margin-left: 1.1rem; }
 .p-back.cbtn { width: 3.1rem; height: 3.1rem; }
 .pt-logo { flex: none; width: 3.4rem; height: 3.4rem; border-radius: .9rem; padding: .4rem; display: grid; place-items: center; background: rgba(255, 255, 255, .08); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12); }
-.pt-logo img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+/* Bild füllt die Box und wird darin eingepasst – „max-height: 100 %“ greift in der Grid-Zelle nicht: hochformatige Logos ragten heraus */
+.pt-logo { overflow: hidden; }
+.pt-logo img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .pt-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .pt-row { display: flex; align-items: center; min-width: 0; }
 .pt-row > * + * { margin-left: .6rem; }
@@ -3036,3 +3050,15 @@ body.lite .sv-tip { transition: none; }
 :root[data-theme="light"] .sky.sky-moon, :root[data-theme="light"] .sky.sky-cloudMoon { color: #7c3aed; }
 :root[data-theme="light"] .sky.sky-rain, :root[data-theme="light"] .sky.sky-snow { color: #2563eb; }
 :root[data-theme="light"] .sky.sky-cloud, :root[data-theme="light"] .sky.sky-fog { color: #64748b; }
+
+/* Tablet (701–1199 px, nicht Fernseher): Statusanzeigen oben nur als Symbol (sonst abgeschnitten: „ernet“, „Play…“),
+   Radio/Favoriten mit Platz für den Pfeil und gekürztem Titel statt Überlappung */
+@media (min-width: 701px) and (max-width: 1199px) {
+  html:not(.tv) .ln-status { justify-content: safe center; }
+  html:not(.tv) .ln-chip span { display: none; }
+  html:not(.tv) .ln-card { padding-right: 2.6rem; }
+  html:not(.tv) .ln-card .lc-txt b, html:not(.tv) .ln-card .lc-txt small { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* Fußzeile (MAC, KEY, Benutzer, Laufzeit, Uhr) lief links und rechts aus dem Bild – darf umbrechen */
+  html:not(.tv) .shell.is-launcher .statusbar { flex-wrap: wrap; justify-content: center; row-gap: .3rem; }
+  html:not(.tv) .shell.is-launcher .statusbar .mac-tag { font-size: .95rem; flex-wrap: wrap; justify-content: center; }
+}

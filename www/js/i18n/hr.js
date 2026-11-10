@@ -973,6 +973,7 @@ window.LUMIO_I18N["hr"] = {
   "Bewertung ändern": "Promijeni ocjenu",
   "Deine Bewertung ist schon gespeichert. Wähle andere Sterne, um sie zu ändern.": "Tvoja ocjena je već spremljena. Odaberi druge zvjezdice da je promijeniš.",
   "Deine Bewertung wurde geändert.": "Tvoja ocjena je promijenjena.",
+  "Du hast deine Bewertung heute schon oft geändert. Versuch es morgen wieder.": "Danas si već više puta promijenio ocjenu. Pokušaj ponovno sutra.",
   "Deine Bewertung – du kannst sie jederzeit ändern.": "Tvoja ocjena – možeš je promijeniti bilo kada.",
   "In Playlists kommen regelmäßig neue Filme und Serien dazu. Die App lädt die Listen dann von selbst neu – im Hintergrund, nie während etwas läuft.": "U playliste redovito stižu novi filmovi i serije. Aplikacija tada sama ponovno učitava popise – u pozadini, nikad dok se nešto reproducira.",
   "Sender, Filme und Serien": "Kanali, filmovi i serije",

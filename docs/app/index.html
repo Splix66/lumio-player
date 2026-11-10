@@ -93,6 +93,27 @@
         document.head.appendChild(sc);
       }
       try { document.getElementById('dl').focus(); } catch (e) {}
+      // Neuer Dateiname „telvo-player.apk“, sobald er auf GitHub liegt. Bis dahin (oder ohne Antwort von GitHub)
+      // greift die Weiterleitung oben auf „lumio-player.apk“ – dieselbe, immer aktuelle Datei unter altem Namen.
+      try {
+        var x = new XMLHttpRequest();
+        x.open('GET', 'https://api.github.com/repos/Splix66/lumio-player/releases/tags/neueste');
+        x.timeout = 1500;
+        x.onload = function () {
+          try {
+            var assets = JSON.parse(x.responseText).assets || [];
+            for (var i = 0; i < assets.length; i++) {
+              if (assets[i].name === 'telvo-player.apk') {
+                var url = 'https://github.com/Splix66/lumio-player/releases/download/neueste/telvo-player.apk';
+                document.getElementById('dl').href = url;
+                location.replace(url);
+                return;
+              }
+            }
+          } catch (e) {}
+        };
+        x.send();
+      } catch (e) {}
     })();
   </script>
 </body>

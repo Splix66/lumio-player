@@ -100,6 +100,10 @@ if (!g.includes('media3-exoplayer')) {
     '    implementation "androidx.media3:media3-ui:' + MEDIA3 + '"'
   ].join('\n'));
   fs.writeFileSync(gradlePath, g);
+} else {
+  // schon eingerichtet (z. B. „npm run android:aktualisieren“): Versionsnummer trotzdem angleichen
+  const g2 = g.replace(/(androidx\.media3:media3-[a-z-]+:)[0-9][0-9A-Za-z.\-]*/g, '$1' + MEDIA3);
+  if (g2 !== g) fs.writeFileSync(gradlePath, g2);
 }
 
 console.log('Android fuer TV und Handy vorbereitet (Leanback, Banner, http-Streams, dunkler Start, TV-Player)');

@@ -973,6 +973,7 @@ window.LUMIO_I18N["ru"] = {
   "Bewertung ändern": "Изменить оценку",
   "Deine Bewertung ist schon gespeichert. Wähle andere Sterne, um sie zu ändern.": "Ваша оценка уже сохранена. Выберите другое количество звёзд, чтобы её изменить.",
   "Deine Bewertung wurde geändert.": "Ваша оценка изменена.",
+  "Du hast deine Bewertung heute schon oft geändert. Versuch es morgen wieder.": "Сегодня вы уже несколько раз меняли оценку. Попробуйте снова завтра.",
   "Deine Bewertung – du kannst sie jederzeit ändern.": "Ваша оценка – её можно изменить в любое время.",
   "In Playlists kommen regelmäßig neue Filme und Serien dazu. Die App lädt die Listen dann von selbst neu – im Hintergrund, nie während etwas läuft.": "В плейлисты регулярно добавляются новые фильмы и сериалы. Приложение само обновляет списки – в фоне и никогда во время воспроизведения.",
   "Sender, Filme und Serien": "Каналы, фильмы и сериалы",

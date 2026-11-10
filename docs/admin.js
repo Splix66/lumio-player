@@ -74,7 +74,8 @@
     clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove('on'); }, 3200);
   }
   function debounce(fn, ms) { var t = null; return function () { clearTimeout(t); t = setTimeout(fn, ms); }; }
-  function isEmail(s) { return /^[^\s@<>"'()]+@[^\s@<>"'()]+\.[A-Za-z]{2,}$/.test(String(s || '').trim()); }
+  // ohne ? & , ; – sonst ließen sich über „a@b.de?bcc=…“ weitere Empfänger in den mailto:-Link schieben
+  function isEmail(s) { return /^[^\s@<>"'()?&,;]+@[^\s@<>"'()?&,;]+\.[A-Za-z]{2,}$/.test(String(s || '').trim()); }
   function copyText(text) {
     var done = function () { toast(text + ' kopiert'); };
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function () { toast(text); });
@@ -636,7 +637,8 @@
       del.disabled = true;
       api('admin_delete_device', { p_mac: dv.mac }).then(function () {
         toast('Gerät ' + dv.mac + ' gelöscht'); loaded.overview = false; closeDrawer();
-        if (!$('tab-devices').hidden) loadDevices();
+        // die Zeile, zu der closeDrawer() den Fokus zurückgibt, wird gleich neu gebaut – Fokus ins Suchfeld statt ins Leere
+        if (!$('tab-devices').hidden) { loadDevices(); $('deviceSearch').focus(); }
         if (!$('tab-support').hidden) loadSupport();
       }, function (err) { del.disabled = false; toast(err.message); });
     });

@@ -1,5 +1,71 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## 1.13.1 – 2026-11-10 · Gründlicher QA-Durchgang: Playlists, Player, Darstellung auf Handy/Tablet, Schutz der Datenbank
+
+**Wichtigste Korrektur – Playlists:** Jede neu hinzugefügte Playlist (von Hand, über die Webseite oder aus einer Sicherung)
+bekam bisher die Kennung der gerade aktiven Playlist. Folge: gemeinsame Favoriten, Verlauf und „Weiterschauen“, falsche
+Zahlen auf dem Startbildschirm (z. B. „44 Sender“ bei einer M3U mit 3 Sendern), Wechseln/Löschen konnte die falsche
+Playlist treffen. Ursache: zwei Funktionen hießen `uid()`. Neue Playlists bekommen jetzt eine eigene Kennung, und auf
+betroffenen Geräten werden doppelte Kennungen beim Start automatisch repariert.
+
+- **Zugang:** abgelaufener oder gesperrter Xtream-Zugang heißt „Playlist abgelaufen“ / „Zugang gesperrt“ statt
+  „Konto-Status: Expired/Banned“. Erste Ablauf-Erinnerung 7 Tage vorher (vorher schon bei 30 Tagen – bei Monatszugängen
+  gleich beim Einrichten). Fußzeile zeigt bei M3U „Playlist: Name“ statt „Benutzername: Name“.
+- **Player:** Senderliste im Player schließt beim zweiten Druck, verdeckt nicht mehr Bedienknöpfe und Zurück-Knopf ·
+  nicht vorhandener Stream (HTTP 404) wechselt nach unter 3 s aufs andere Format (vorher 18 s „Verbindung wird
+  wiederhergestellt“), gibt es beide nicht: „Der Stream ist nicht erreichbar.“ statt Hinweis auf RAW-Sender · Hochformat:
+  Senderliste, Favorit, Letzter Sender sind wieder da (vorher ausgeblendet) · hochformatige Senderlogos bleiben im Rahmen ·
+  Pause-Bildschirm ohne doppelten Sendernamen.
+- **Live TV:** Zähler „Favoriten“/„Zuletzt gesehen“ aktualisieren sich sofort · „Alle Sender“ zählt gesperrte Kategorien
+  nicht mit · Senderlogos ohne Bild zeigen die Anfangsbuchstaben auch bei arabischen, kyrillischen, griechischen Namen ·
+  Logo-Adressen wie „javascript:“ werden nicht geladen · TV-Programm: letzte Zeilen lassen sich über das Vorschaufenster
+  scrollen.
+- **Serien:** Folgennamen ohne Seriennamen und „S01E02“ auch, wenn die Serie in der Liste anders heißt („Verloren“ statt
+  „DE - Dark (2017) - S02E05 - Verloren“).
+- **Handy & Tablet:** Suche im Hochformat erscheint im Bild (vorher außerhalb) · Startbildschirm-Kopfzeile überdeckt das
+  Logo nicht mehr · gewählte Kategorie bei Filmen/Serien lesbar · Benutzer-Knopf (Profilbild) auf dem Handy quer wieder
+  sichtbar · Tablet: Statusanzeigen, „Favoriten“ und Fußzeile nicht mehr abgeschnitten, Hochformat-Layout bis 900 px.
+- **Fernbedienung:** in Filme/Serien springt „Rechts“ aus den Kategorien auf das erste Cover (vorher auf „Sortieren“).
+- **Sonstiges:** „App beenden?“ erscheint im Browser nicht mehr (ließ sich dort nicht ausführen) · „Über & Updates“ zeigt
+  die Version einmal · kein Ladefehler `webapis.js` mehr außerhalb von Samsung-Fernsehern · „Problem melden“ und Feedback
+  nutzen den sicheren App-Schlüssel (gehen auch, wenn jemand den KEY durch Fehlversuche gesperrt hat).
+- **Webseite:** „Gerät verbinden“ setzt den Cursor ins MAC-Feld · MAC-Feld: Cursor springt nicht mehr ans Ende,
+  Rücktaste hinter „:“ wirkt, „MAC: AA:BB:…“ lässt sich einfügen · leerer Name beim Bearbeiten behält den alten ·
+  „Anderes Gerät“ leert das Support-Formular · ohne Internet neu geladen bleibt das Gerät gemerkt · Handy: Editor-Überschrift
+  nicht mehr unter der Kopfzeile, Knöpfe mindestens 44 px · Arabisch: lateinische Playlist-Namen vom Anfang her ·
+  Dateigröße in der Sprache der Seite (z. B. „МБ“).
+- **Verwaltung:** E-Mail-Prüfung lässt keine zusätzlichen Empfänger (`?bcc=`) mehr in Antwort-Links · Fokus nach
+  „Gerät löschen“ im Suchfeld · Knöpfe auf dem Handy 44 px.
+- **Datenbank – neue Datei `server/schutz-2026-11.sql` (einmal im Supabase SQL-Editor ausführen):** Grenzen je
+  Internetverbindung und insgesamt für neue Geräte, Support-Nachrichten und Bewertungen (vorher nur je Gerät – mit
+  ausgedachten MACs unbegrenzt), Obergrenze für den Speicher aller Sicherungen, Playlist-Adressen nur mit http(s)://,
+  Support mit App-Schlüssel (`app_send_support`), keine Rechte mehr an der Zählfolge des Protokolls. Test:
+  `tests/sql/schutz.test.sql`.
+- Neue Tests: eigene Kennung je Playlist und Reparatur, Folgennamen, Anfangsbuchstaben in allen Schriften, Kontostatus.
+
+**Ebenfalls in 1.13.1 – Durchsicht vor dem ersten Test:**
+
+- **Korrekturen nach Durchsicht (Player):** schnelles Umschalten meldet nicht mehr fälschlich „Der Sender stockt“ ·
+  Hoch/Runter schaltet direkt nach einem Senderwechsel weiter (vorher nur einmal) · Zurück bricht eine angefangene
+  Sendernummer ab · die automatische Live-TV-Vorschau zählt erst als „gesehen“, wenn man den Sender wählt (sonst startete
+  er beim nächsten App-Start im Vollbild) · ausgeblendete Sender laufen nicht mehr in der Vorschau · kein Fehlereintrag
+  mehr bei jedem Schließen · offene Senderliste wird beim Schließen sauber beendet · nach der stummen Film-Vorschau
+  wartet der Start kurz (Zugänge mit nur einer Verbindung).
+- **Android-TV-Player:** kein Absturz mehr beim Öffnen großer Senderlisten · hängender Sender versucht es nicht endlos,
+  sondern wechselt nach 3 Versuchen auf das andere Format bzw. zeigt „Wiedergabe nicht möglich“ · endet ein .ts-Sender,
+  wird neu verbunden statt zum nächsten Sender zu springen · Stream wird beim Schließen sofort beendet · Media3-Version
+  wird auch bei „android:aktualisieren“ angeglichen.
+- **Weitere Korrekturen:** Status-Hinweis bleibt nicht mehr stehen · Zurück schließt das Sortier-Menü (auch Android) und
+  aufgeklappte Einstellungen · „Ähnliche Titel“ auch bei arabischen/kyrillischen/griechischen Titeln · abgelaufener
+  Zugang heißt „Playlist abgelaufen“ statt „gesperrt“ · abgelehnte Bewertung wird angezeigt statt „geändert“ ·
+  Wetter: kein veraltetes oder falsches Wetter nach Ortswechsel, Ort nicht mehr in der Online-Sicherung.
+- **Datenbank:** `server/bewertung-2026-11.sql` erneut ausführen – höchstens 10 Änderungen je 24 Stunden (vorher für immer
+  gezählt), `app_get_rating` funktioniert. Neuer Test `tests/sql/bewertung.test.sql`.
+- **Downloads heißen jetzt Telvo:** `telvo-player.apk`, `telvo-player-setup.exe` und `telvo-player-mac.dmg` statt
+  „lumio-player…“ – auf der Webseite, der Downloader-Seite (Code 5619512) und bei „Neue Version laden“ in der App.
+  Jeder Bau legt dieselbe Datei zusätzlich unter dem alten Namen ab, damit ältere App-Versionen und alte Links
+  weiterhin die neueste Version bekommen. Bis die erste Telvo-Datei auf GitHub liegt, verlinkt die Webseite die alte.
+
 ## 1.13.0 – 2026-11-10 · Live-Vorschau, neue Film-/Serienseite, ruhigerer Live-Player, Wetter neben der Uhr
 
 - **Hinweis beim ersten Start** jetzt klein unten statt als Fenster: „Gut zu wissen – Telvo ist nur ein Player ohne eigene

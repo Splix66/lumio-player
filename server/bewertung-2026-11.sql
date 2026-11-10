@@ -17,21 +17,27 @@ create table if not exists public.device_ratings (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+-- Tageszähler für Änderungen (bei schon vorhandener Tabelle nachrüsten)
+alter table public.device_ratings add column if not exists day_start timestamptz not null default now();
+alter table public.device_ratings add column if not exists day_changes int not null default 0;
 alter table public.device_ratings enable row level security;
 revoke all on public.device_ratings from anon, authenticated;
 
 -- gemeinsamer Teil: speichern oder ersetzen, höchstens 10 Änderungen pro Tag
 create or replace function public.lumio_set_rating(p_mac text, p_stars int)
 returns json language plpgsql security definer set search_path = public, extensions as $$
-declare old_stars smallint; old_at timestamptz; n int;
+declare old_stars smallint; v_day timestamptz; v_n int;
 begin
   if p_stars is null or p_stars < 1 or p_stars > 5 then return public.lumio_error('Bitte 1 bis 5 Sterne wählen.'); end if;
-  select stars, updated_at, changes into old_stars, old_at, n from public.device_ratings where mac = upper(p_mac);
-  if old_stars is not null and old_at > now() - interval '1 day' and n >= 10 then
+  select stars, day_start, day_changes into old_stars, v_day, v_n from public.device_ratings where mac = upper(p_mac) for update;
+  -- Zähler gilt für 24 Stunden ab der ersten Änderung, danach beginnt er neu
+  if v_day is null or v_day <= now() - interval '1 day' then v_day := now(); v_n := 0; end if;
+  if old_stars is not null and v_n >= 10 then
     return public.lumio_error('Maximal 10 Änderungen pro Tag.');
   end if;
   insert into public.device_ratings(mac, stars) values (upper(p_mac), p_stars)
-  on conflict (mac) do update set stars = excluded.stars, changes = public.device_ratings.changes + 1, updated_at = now();
+  on conflict (mac) do update set stars = excluded.stars, changes = public.device_ratings.changes + 1, updated_at = now(),
+    day_start = v_day, day_changes = v_n + 1;
   return json_build_object('ok', true, 'stars', p_stars, 'previous', old_stars);
 end $$;
 
@@ -52,7 +58,7 @@ begin
 end $$;
 
 create or replace function public.app_get_rating(p_mac text, p_token text)
-returns json language plpgsql stable security definer set search_path = public, extensions as $$
+returns json language plpgsql security definer set search_path = public, extensions as $$
 begin
   if not public.lumio_app_ok(p_mac, p_token) then return public.lumio_error('wrong'); end if;
   return json_build_object('ok', true, 'stars', (select stars from public.device_ratings where mac = upper(p_mac)),

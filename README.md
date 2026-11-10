@@ -83,6 +83,17 @@ Für das Aufräumen vorher **Database → Extensions → pg_cron** einschalten (
 Die App erkennt selbst, ob das Update eingespielt ist; ohne Update arbeitet sie wie bisher mit MAC + KEY.
 Automatischer Test: `tests/sql/run.sh` („Actions“ → „Datenbank testen“).
 
+## Schutz vor Massen-Anmeldungen und Spam (Datenbank, November 2026)
+
+`server/schutz-2026-11.sql` einmal im Supabase SQL-Editor ausführen – **nach** allen anderen Dateien aus November 2026
+(wiederholbar, ändert keine Daten). Begrenzt je Internetverbindung (IP aus den Anfrage-Kopfzeilen) und insgesamt: neue
+Geräte (10 je IP und Stunde, 2000 insgesamt), Support-Nachrichten (10 je IP, 300 insgesamt je Stunde), Bewertungen
+(20 je IP und Stunde); Sicherungen zusammen höchstens 300 MB; Playlist-Adressen nur mit http(s)://. Bekannte Geräte, die
+sich bei jedem App-Start erneut anmelden, zählen nicht. Dazu `app_send_support` (Support mit App-Schlüssel), die App nutzt
+es automatisch, sobald es da ist. Test: `tests/sql/schutz.test.sql`.
+**Nach dem Einspielen einmal prüfen**, dass die App sich weiter anmeldet und „Problem melden“ ankommt – die IP-Erkennung
+hängt davon ab, welche Kopfzeilen Supabase weitergibt (ohne IP greifen nur die Gesamtgrenzen).
+
 ## Sichern & Wiederherstellen (Datenbank, November 2026)
 
 `server/sicherung-2026-11.sql` einmal im Supabase SQL-Editor ausführen – **nach** dem Sicherheits-Update

@@ -41,9 +41,10 @@
   /* ---------- Download: feste Links, die immer auf die neueste Version zeigen ---------- */
   var DL_BASE = 'https://github.com/Splix66/lumio-player/releases/download/';
   var DL = [
-    { id: 'apk', icon: 'phone', name: 'Android', sub: 'Handy, Tablet und TV-Box', tag: 'neueste', file: 'lumio-player.apk', share: 'https://splix66.github.io/lumio-player/app' },
-    { id: 'win', icon: 'monitor', name: 'Windows', sub: 'Windows 10 und 11', tag: 'pc', file: 'lumio-player-setup.exe' },
-    { id: 'mac', icon: 'laptop', name: 'Mac', sub: 'Apple-Chip und Intel', tag: 'pc', file: 'lumio-player-mac.dmg' }
+    { id: 'apk', icon: 'phone', name: 'Android', sub: 'Handy, Tablet und TV-Box', tag: 'neueste', file: 'telvo-player.apk', old: 'lumio-player.apk', share: 'https://splix66.github.io/lumio-player/app' },
+    // old: früherer Dateiname – wird nur verlinkt, solange auf GitHub noch keine Datei mit neuem Namen liegt
+    { id: 'win', icon: 'monitor', name: 'Windows', sub: 'Windows 10 und 11', tag: 'pc', file: 'telvo-player-setup.exe', old: 'lumio-player-setup.exe' },
+    { id: 'mac', icon: 'laptop', name: 'Mac', sub: 'Apple-Chip und Intel', tag: 'pc', file: 'telvo-player-mac.dmg', old: 'lumio-player-mac.dmg' }
   ];
   var DL_FAQ = [
     ['Android blockiert die Installation', [
@@ -196,7 +197,7 @@
     }).then(function (r) { clearTimeout(timer); return r.json(); }).then(function (j) {
       return j && typeof j === 'object' && 'ok' in j ? j : { ok: false, error: (j && j.message) || 'Keine Verbindung. Bitte Internet prüfen und erneut versuchen.' };
     }, function () {
-      return { ok: false, error: 'Keine Verbindung. Bitte Internet prüfen und erneut versuchen.' };
+      return { ok: false, net: true, error: 'Keine Verbindung. Bitte Internet prüfen und erneut versuchen.' };
     });
   }
   function say(el, text, kind) { el.textContent = text ? tr(text) : ''; el.className = 'msg' + (kind ? ' ' + kind : ''); }
@@ -271,7 +272,10 @@
     var i = relInfo && relInfo[x.id];
     if (!i || !i.date) return tr('Immer die neueste Version');
     var date = new Date(i.date).toLocaleDateString(locale(), { day: 'numeric', month: 'long', year: 'numeric' });
-    var mb = (i.size / 1048576).toLocaleString(locale(), { maximumFractionDigits: i.size >= 100 * 1048576 ? 0 : 1 }) + ' MB';
+    // Einheit in der Sprache der Seite (z. B. „МБ“ auf Russisch); alte Browser ohne Einheiten: „MB“
+    var mbN = i.size / 1048576, mbD = i.size >= 100 * 1048576 ? 0 : 1, mb;
+    try { mb = mbN.toLocaleString(locale(), { style: 'unit', unit: 'megabyte', maximumFractionDigits: mbD }); }
+    catch (e) { mb = mbN.toLocaleString(locale(), { maximumFractionDigits: mbD }) + ' MB'; }
     var s = i.v ? tr('Version {0} vom {1}').replace('{0}', i.v).replace('{1}', date) : tr('Stand: {0}').replace('{0}', date);
     return s + ' (' + mb + ')';
   }
@@ -294,7 +298,7 @@
     var list = $('dlList'); list.textContent = '';
     var order = DL.slice().sort(function (a, b) { return (b.id === mine) - (a.id === mine); });
     order.forEach(function (x) {
-      var url = DL_BASE + x.tag + '/' + x.file;
+      var url = DL_BASE + x.tag + '/' + ((relInfo && relInfo[x.id] && relInfo[x.id].file) || x.file);
       var li = el('li', 'pl' + (x.id === mine ? ' is-mine' : ''));
       var ic = el('span', 'ic'); ic.appendChild(icon(x.icon));
       var txt = el('div', 't');
@@ -319,7 +323,7 @@
   function loadReleases() {
     if (relInfo || relLoading) return;
     try {
-      var c = JSON.parse(sessionStorage.getItem('lumio.rel') || 'null');
+      var c = JSON.parse(sessionStorage.getItem('lumio.rel2') || 'null');
       if (c && Date.now() - c.t < 10 * 60 * 1000) { relInfo = c.d; renderDownloads(); return; }
     } catch (e) {}
     relLoading = true;
@@ -330,23 +334,42 @@
         (rels || []).forEach(function (rel) {
           var v = (/(\d+\.\d+\.\d+)/.exec(rel.name || '') || [])[1] || '';
           (rel.assets || []).forEach(function (a) {
-            DL.forEach(function (x) { if (x.tag === rel.tag_name && x.file === a.name) d[x.id] = { size: a.size, date: a.updated_at, v: v }; });
+            DL.forEach(function (x) {
+              if (x.tag !== rel.tag_name) return;
+              // Neuer Dateiname hat Vorrang; der alte zählt nur, solange es den neuen noch nicht gibt
+              if (a.name === x.file || (a.name === x.old && !(d[x.id] && d[x.id].file === x.file))) {
+                d[x.id] = { size: a.size, date: a.updated_at, v: v, file: a.name };
+              }
+            });
           });
         });
         relInfo = d;
-        try { sessionStorage.setItem('lumio.rel', JSON.stringify({ t: Date.now(), d: d })); } catch (e) {}
+        try { sessionStorage.setItem('lumio.rel2', JSON.stringify({ t: Date.now(), d: d })); } catch (e) {}
         renderDownloads();
       }, function () {})
       .then(function () { relLoading = false; });
   }
-  $('goConnect').addEventListener('click', function () { goTab('main'); $('mac').focus(); });
+  // erst umschalten, dann fokussieren (goTab setzt nur die Adresse – der Bereich war beim focus() noch versteckt)
+  $('goConnect').addEventListener('click', function () { goTab('main'); showTab('main'); $('mac').focus(); });
 
   /* ---------- Gerät verbinden ---------- */
-  $('mac').addEventListener('input', function () {
-    // Doppelpunkte automatisch setzen, während man tippt
-    var hex = this.value.toUpperCase().replace(/[^0-9A-F]/g, '').slice(0, 12);
+  // Doppelpunkte automatisch setzen, während man tippt. Eingefügtes „MAC: AA:BB:…“ ohne die Beschriftung lesen
+  // (A und C sind Hex-Ziffern), Cursor an derselben Ziffer lassen (sprang ans Ende) und Rücktaste direkt hinter
+  // einem Doppelpunkt löscht die Ziffer davor (vorher passierte nichts).
+  $('mac').addEventListener('beforeinput', function () { this._old = this.value; });
+  $('mac').addEventListener('input', function (e) {
+    var raw = this.value.replace(/^\s*MAC(-Adresse)?\s*[:=]?\s*/i, '');
+    var cut = this.value.length - raw.length;
+    var pos = this.selectionStart == null ? raw.length : Math.max(0, this.selectionStart - cut);
+    var before = raw.slice(0, pos).toUpperCase().replace(/[^0-9A-F]/g, '').length;
+    var hex = raw.toUpperCase().replace(/[^0-9A-F]/g, '');
+    var oldHex = String(this._old || '').toUpperCase().replace(/[^0-9A-F]/g, '');
+    if (e && e.inputType === 'deleteContentBackward' && hex === oldHex && before > 0) { hex = hex.slice(0, before - 1) + hex.slice(before); before--; }
+    hex = hex.slice(0, 12); before = Math.min(before, hex.length);
     var v = (hex.match(/.{1,2}/g) || []).join(':');
     if (v !== this.value) this.value = v;
+    var c = before ? Math.min(v.length, before + Math.floor((before - 1) / 2)) : 0;
+    try { if (document.activeElement === this) this.setSelectionRange(c, c); } catch (x) {}
   });
   function setConnected(on) {
     $('connect').hidden = on; $('dash').hidden = !on;
@@ -361,7 +384,9 @@
       btn.disabled = false; btn.textContent = tr('Verbinden');
       if (!r.ok) {
         say($('loginMsg'), r.error, 'bad');
-        if (quiet) try { sessionStorage.removeItem('lumio.device'); } catch (e) {}
+        // nur bei falschen Zugangsdaten vergessen – bei „Keine Verbindung“ bleibt das Gerät gemerkt
+        if (quiet && !r.net) try { sessionStorage.removeItem('lumio.device'); } catch (e) {}
+        if (quiet) { $('mac').value = mac; $('key').value = key; }
         return;
       }
       say($('loginMsg'), '');
@@ -388,6 +413,8 @@
     try { sessionStorage.removeItem('lumio.device'); } catch (e) {}
     setConnected(false);
     $('mac').value = ''; $('key').value = ''; $('mac').focus();
+    // Support-Formular leeren – sonst sah die nächste Person die Nachricht/Kontaktdaten der vorigen
+    $('supMsg').value = ''; $('supContact').value = ''; $('supCount').textContent = '0 / 2000'; say($('supState'), '');
   });
 
   /* ---------- Playlists anzeigen ---------- */
@@ -410,8 +437,8 @@
       var li = el('li', 'pl' + (editing && editing.id === it.id ? ' is-editing' : ''));
       var ic = el('span', 'ic'); ic.appendChild(icon(it.type === 'xtream' ? 'server' : 'list'));
       var txt = el('div', 't');
-      txt.appendChild(el('b', null, it.name));
-      var line = el('small');
+      var nm = el('b', null, it.name); nm.setAttribute('dir', 'auto'); txt.appendChild(nm);
+      var line = el('small'); line.setAttribute('dir', 'auto');   // lateinische Namen/Adressen auch auf Arabisch vom Anfang her
       line.appendChild(el('span', 'type', it.type === 'xtream' ? 'Xtream' : 'M3U'));
       line.appendChild(document.createTextNode(hostOf(it.type === 'xtream' ? it.server : it.url)));
       txt.appendChild(line);
@@ -478,6 +505,9 @@
     $('editor').hidden = false;
     $('newBtn').hidden = true;
     render();
+    // Kopfzeile ist auf dem Handy zweizeilig – Abstand nach ihrer echten Höhe, sonst lag die Überschrift dahinter
+    var hd = document.querySelector('.site-head');
+    if (hd) document.documentElement.style.scrollPaddingTop = (hd.offsetHeight + 12) + 'px';
     $('editor').scrollIntoView({ behavior: 'smooth', block: 'start' });
     setTimeout(function () { (it ? $('name') : (mode === 'm3u' ? $('url') : $('server'))).focus({ preventScroll: true }); }, 250);
   }
@@ -503,7 +533,8 @@
       body.p_type = 'xtream'; body.p_server = srv.replace(/\/+$/, '');
       body.p_username = $('user').value.trim(); body.p_password = $('pass').value;
     }
-    if (!body.p_name) body.p_name = body.p_type === 'xtream' ? (body.p_username || 'Xtream') : tr('Meine Playlist');
+    // leerer Name beim Bearbeiten = alten Namen behalten (der Server macht das auch so); nur neue bekommen einen Standardnamen
+    if (!body.p_name) body.p_name = editing ? editing.name : body.p_type === 'xtream' ? (body.p_username || 'Xtream') : tr('Meine Playlist');
     var fn = 'add_playlist';
     if (editing) { fn = 'update_playlist'; body.p_id = editing.id; }
     var btn = $('saveBtn');
