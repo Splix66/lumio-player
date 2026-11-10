@@ -44,6 +44,13 @@ m = m.replace(/<activity\b[^>]*android:name="\.MainActivity"[^>]*>/, (tag) => {
   return tag.replace(/<activity\b/, '<activity\n            android:screenOrientation="sensorLandscape"');
 });
 
+// 3c) TV-Banner auch direkt an der Start-Activity: Der Fire-TV-Startbildschirm nimmt sonst teils nur das kleine
+//     App-Symbol (Logo auf grauer Kachel) statt der gefüllten Banner-Kachel mit Namen wie bei Netflix oder YouTube.
+m = m.replace(/<activity\b[^>]*android:name="\.MainActivity"[^>]*>/, (tag) => {
+  if (tag.includes('android:banner')) return tag;
+  return tag.replace(/<activity\b/, '<activity\n            android:banner="@drawable/banner"');
+});
+
 fs.writeFileSync(manifestPath, m);
 
 // 4) Startbildschirm dunkel statt weiß (Android 12 und neuer)
