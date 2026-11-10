@@ -9,6 +9,7 @@
 - **„App beim Start“** gilt nur noch beim Start der App – nicht mehr nach Personen- oder Playlist-Wechsel oder Sprachwechsel. Bei mehreren Personen erst nach „Wer schaut?“ (vorher wurde alles doppelt geladen).
 - **TV-Player:** Klangverbesserung, die ein Gerät nicht einschalten kann, wird sauber wieder freigegeben.
 - **TV-Player:** Liefert eine Quelle kein Bild (schwarz, Zeit bleibt bei 00:00 stehen), probiert der Player nach 20 Sekunden das andere Format und zeigt sonst „Wiedergabe nicht möglich“ – statt endlos schwarz.
+- **Automatische Fehlerberichte:** Fehler und Abstürze (auch des TV-Players) gehen gesammelt an den Online-Dienst – nur Stelle, bereinigte Meldung, Anzahl, App-Version und Gerätetyp, ohne Links, Namen oder Passwörter. Abschaltbar unter Einstellungen → Erweitert → „Fehlerberichte senden“. Braucht auf dem Server `server/fehler-2026-11.sql`; ohne die Datei schickt die App nichts. Datenschutzerklärung ergänzt.
 
 ## 1.14.0 – 2026-11-10 · Neues Design: Startseite, Einstellungen, Filme & Serien
 
