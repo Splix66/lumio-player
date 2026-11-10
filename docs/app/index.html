@@ -17,25 +17,28 @@
     :root { --bg: #0b0b0f; --surface: #14141a; --line: rgba(255, 255, 255, .1); --text: #f4f4f6; --muted: #a4a4b4; --accent-btn: #7442e6; --accent-2: #a78bfa; --gold: #ffc53d; color-scheme: dark; }
     * { box-sizing: border-box; }
     html, body { margin: 0; background: var(--bg); color: var(--text); }
+    /* Größe richtet sich nach der Bildschirmhöhe: Im Downloader-Browser auf dem Fernseher (ca. 960×540) passt so alles
+       auf einen Bildschirm (vorher 18 px fest – Seite war dort viel zu groß und musste gescrollt werden). Handy: 15–16 px. */
+    html { font-size: clamp(12px, 2.5vh, 16px); }
     body {
-      font: 18px/1.55 "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px 16px;
+      font: 1rem/1.5 "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 3vh 16px;
       background: radial-gradient(40rem 26rem at 80% -4rem, rgba(139, 92, 246, .22), transparent 70%), var(--bg);
     }
-    main { width: 100%; max-width: 40rem; display: flex; flex-direction: column; gap: 1.4rem; }
-    .brand { display: flex; align-items: center; gap: .8rem; font-weight: 800; font-size: 2rem; letter-spacing: -.035em; margin: 0; }
+    main { width: 100%; max-width: 34rem; display: flex; flex-direction: column; gap: 1rem; }
+    .brand { display: flex; align-items: center; gap: .6rem; font-weight: 800; font-size: 1.6rem; letter-spacing: -.035em; margin: 0; }
     .brand span:last-child { font-weight: 400; color: var(--muted); }
-    .mark { width: 3rem; height: 3rem; }
+    .mark { width: 2.4rem; height: 2.4rem; }
     .mark svg { width: 100%; height: 100%; overflow: visible; }
     .mark .play { fill: url(#lumioPlay); }
     .mark .dot { fill: var(--gold); }
-    .status { display: flex; align-items: center; gap: .8rem; font-size: 1.15rem; color: var(--muted); margin: 0; }
+    .status { display: flex; align-items: center; gap: .7rem; font-size: 1rem; color: var(--muted); margin: 0; }
     .spin { width: 1.4rem; height: 1.4rem; border-radius: 50%; border: .2rem solid var(--line); border-top-color: var(--accent-2); animation: spin .8s linear infinite; flex: none; }
     @keyframes spin { to { transform: rotate(360deg); } }
     p { margin: 0; }
     a.btn {
-      display: inline-flex; align-items: center; justify-content: center; gap: .7rem; color: #fff; text-decoration: none; font-weight: 700; font-size: 1.3rem;
-      padding: 1.05rem 1.8rem; border-radius: 999px; outline: none;
+      display: inline-flex; align-items: center; justify-content: center; gap: .6rem; color: #fff; text-decoration: none; font-weight: 700; font-size: 1.1rem;
+      padding: .75rem 1.5rem; border-radius: 999px; outline: none;
       background: linear-gradient(180deg, #7c4ff0, var(--accent-btn));
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18), 0 .8rem 2rem -.8rem rgba(124, 79, 240, .85);
     }
@@ -43,13 +46,13 @@
     a.btn:focus, a.btn:hover { box-shadow: 0 0 0 .25rem var(--bg), 0 0 0 .5rem var(--accent-2), 0 .8rem 2rem -.8rem rgba(124, 79, 240, .85); }
     a.btn svg { width: 1.4rem; height: 1.4rem; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
     /* wie die App: Glas-Karte, Code als lavendelfarbene Glas-Taste */
-    ol { margin: 0; padding: 1.1rem 1.2rem; padding-inline-start: 2.6rem; border-radius: 1.2rem; color: var(--muted);
+    ol { margin: 0; padding: .8rem 1rem; padding-inline-start: 2.2rem; border-radius: 1rem; color: var(--muted); font-size: .92rem;
       background: linear-gradient(180deg, rgba(255, 255, 255, .05), rgba(255, 255, 255, .018)); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08); }
-    ol li + li { margin-top: .45rem; }
+    ol li + li { margin-top: .3rem; }
     ol b { color: var(--text); }
     .small { font-size: .85rem; color: #8a8a9b; }
     .code { display: flex; align-items: baseline; gap: .8rem; flex-wrap: wrap; color: var(--muted); }
-    .code b { font: 800 2rem/1 ui-monospace, Menlo, Consolas, monospace; letter-spacing: .08em; color: #ece6ff; padding: .45rem .9rem; border-radius: .9rem;
+    .code b { font: 800 1.4rem/1 ui-monospace, Menlo, Consolas, monospace; letter-spacing: .08em; color: #ece6ff; padding: .35rem .7rem; border-radius: .7rem;
       background: linear-gradient(180deg, rgba(167, 139, 250, .22), rgba(167, 139, 250, .08)); box-shadow: inset 0 0 0 1px rgba(167, 139, 250, .4); }
     @media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
   </style>
