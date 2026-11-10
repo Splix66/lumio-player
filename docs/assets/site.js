@@ -42,8 +42,9 @@
   var DL_BASE = 'https://github.com/Splix66/lumio-player/releases/download/';
   var DL = [
     { id: 'apk', icon: 'phone', name: 'Android', sub: 'Handy, Tablet und TV-Box', tag: 'neueste', file: 'lumio-player.apk', share: 'https://splix66.github.io/lumio-player/app' },
-    { id: 'win', icon: 'monitor', name: 'Windows', sub: 'Windows 10 und 11', tag: 'pc', file: 'lumio-player-setup.exe' },
-    { id: 'mac', icon: 'laptop', name: 'Mac', sub: 'Apple-Chip und Intel', tag: 'pc', file: 'lumio-player-mac.dmg' }
+    // old: früherer Dateiname – wird nur verlinkt, solange auf GitHub noch keine Datei mit neuem Namen liegt
+    { id: 'win', icon: 'monitor', name: 'Windows', sub: 'Windows 10 und 11', tag: 'pc', file: 'telvo-player-setup.exe', old: 'lumio-player-setup.exe' },
+    { id: 'mac', icon: 'laptop', name: 'Mac', sub: 'Apple-Chip und Intel', tag: 'pc', file: 'telvo-player-mac.dmg', old: 'lumio-player-mac.dmg' }
   ];
   var DL_FAQ = [
     ['Android blockiert die Installation', [
@@ -294,7 +295,7 @@
     var list = $('dlList'); list.textContent = '';
     var order = DL.slice().sort(function (a, b) { return (b.id === mine) - (a.id === mine); });
     order.forEach(function (x) {
-      var url = DL_BASE + x.tag + '/' + x.file;
+      var url = DL_BASE + x.tag + '/' + ((relInfo && relInfo[x.id] && relInfo[x.id].file) || x.file);
       var li = el('li', 'pl' + (x.id === mine ? ' is-mine' : ''));
       var ic = el('span', 'ic'); ic.appendChild(icon(x.icon));
       var txt = el('div', 't');
@@ -319,7 +320,7 @@
   function loadReleases() {
     if (relInfo || relLoading) return;
     try {
-      var c = JSON.parse(sessionStorage.getItem('lumio.rel') || 'null');
+      var c = JSON.parse(sessionStorage.getItem('lumio.rel2') || 'null');
       if (c && Date.now() - c.t < 10 * 60 * 1000) { relInfo = c.d; renderDownloads(); return; }
     } catch (e) {}
     relLoading = true;
@@ -330,11 +331,17 @@
         (rels || []).forEach(function (rel) {
           var v = (/(\d+\.\d+\.\d+)/.exec(rel.name || '') || [])[1] || '';
           (rel.assets || []).forEach(function (a) {
-            DL.forEach(function (x) { if (x.tag === rel.tag_name && x.file === a.name) d[x.id] = { size: a.size, date: a.updated_at, v: v }; });
+            DL.forEach(function (x) {
+              if (x.tag !== rel.tag_name) return;
+              // Neuer Dateiname hat Vorrang; der alte zählt nur, solange es den neuen noch nicht gibt
+              if (a.name === x.file || (a.name === x.old && !(d[x.id] && d[x.id].file === x.file))) {
+                d[x.id] = { size: a.size, date: a.updated_at, v: v, file: a.name };
+              }
+            });
           });
         });
         relInfo = d;
-        try { sessionStorage.setItem('lumio.rel', JSON.stringify({ t: Date.now(), d: d })); } catch (e) {}
+        try { sessionStorage.setItem('lumio.rel2', JSON.stringify({ t: Date.now(), d: d })); } catch (e) {}
         renderDownloads();
       }, function () {})
       .then(function () { relLoading = false; });

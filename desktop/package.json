@@ -25,7 +25,7 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "artifactName": "lumio-player-setup.${ext}"
+      "artifactName": "telvo-player-setup.${ext}"
     },
     "mac": {
       "target": [{ "target": "dmg", "arch": ["universal"] }],
@@ -34,7 +34,7 @@
       "identity": null
     },
     "dmg": {
-      "artifactName": "lumio-player-mac.${ext}"
+      "artifactName": "telvo-player-mac.${ext}"
     }
   }
 }

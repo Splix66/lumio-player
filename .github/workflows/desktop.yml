@@ -56,8 +56,8 @@ jobs:
         with:
           name: pc-${{ matrix.os }}
           path: |
-            desktop/dist/lumio-player-setup.exe
-            desktop/dist/lumio-player-mac.dmg
+            desktop/dist/telvo-player-setup.exe
+            desktop/dist/telvo-player-mac.dmg
           if-no-files-found: ignore
 
   release:
@@ -88,8 +88,8 @@ jobs:
         run: |
           ls -la out || true
           if ls out/* >/dev/null 2>&1; then echo "any=true" >> "$GITHUB_OUTPUT"; else echo "any=false" >> "$GITHUB_OUTPUT"; fi
-          echo "win=$([ -f out/lumio-player-setup.exe ] && echo ja || echo 'nicht neu gebaut')" >> "$GITHUB_OUTPUT"
-          echo "mac=$([ -f out/lumio-player-mac.dmg ] && echo ja || echo 'nicht neu gebaut')" >> "$GITHUB_OUTPUT"
+          echo "win=$([ -f out/telvo-player-setup.exe ] && echo ja || echo 'nicht neu gebaut')" >> "$GITHUB_OUTPUT"
+          echo "mac=$([ -f out/telvo-player-mac.dmg ] && echo ja || echo 'nicht neu gebaut')" >> "$GITHUB_OUTPUT"
 
       - name: Unter "Releases" bereitstellen
         if: steps.files.outputs.any == 'true'
@@ -99,7 +99,7 @@ jobs:
           name: Telvo Player ${{ steps.ver.outputs.v }} – PC-Version
           body: |
             Version ${{ steps.ver.outputs.v }}
-            Windows: lumio-player-setup.exe (in diesem Lauf neu gebaut: ${{ steps.files.outputs.win }})
-            Mac: lumio-player-mac.dmg (in diesem Lauf neu gebaut: ${{ steps.files.outputs.mac }})
+            Windows: telvo-player-setup.exe (in diesem Lauf neu gebaut: ${{ steps.files.outputs.win }})
+            Mac: telvo-player-mac.dmg (in diesem Lauf neu gebaut: ${{ steps.files.outputs.mac }})
           files: out/*
           make_latest: false
