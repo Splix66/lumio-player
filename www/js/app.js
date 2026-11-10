@@ -2578,8 +2578,11 @@
       buttons.forEach(function (b) {
         var btn = h('button', { class: 'btn f ' + (b.primary ? 'primary' : ''), onclick: function () { self.close(); if (b.action) b.action(); } }, b.label);
         if (b.primary || !first) first = btn;
+        if (b.focus) btn._focus = true;
         row.appendChild(btn);
       });
+      // Ausdrücklich gewünschter Startfokus (z. B. „Abbrechen“ bei „App beenden?“) geht vor dem Hauptknopf
+      Array.prototype.forEach.call(row.children, function (x) { if (x._focus) first = x; });
       layer.appendChild(h('div', { class: 'dialog' + (cls ? ' ' + cls : ''), role: 'dialog' }, h('h3', { text: title }), text ? h('p', { text: text }) : null, row));
       self.open = true;
       setTimeout(function () { Nav.focus(first); }, 30);
@@ -2777,7 +2780,7 @@
   function askExit() {
     // Im normalen Browser lässt sich ein Tab nicht per Skript schließen – „Beenden“ täte nichts, also gar nicht anbieten
     if (!Platform.tizen && !Platform.webos && !Platform.capacitor && !/Electron/.test(UA)) return;
-    confirmBox(T('App beenden?'), null, T('Beenden'), exitApp);
+    Dialog.show(T('App beenden?'), null, [{ label: T('Abbrechen'), focus: true }, { label: T('Beenden'), primary: true, action: exitApp }]);   // Fokus auf „Abbrechen“: ein versehentliches OK beendet nicht
   }
   function exitApp() {
     try {
@@ -4837,7 +4840,8 @@
     var arch = h('div', { class: 'lp-arch' });
     var epg = h('div', { class: 'lp-epg' });
     var el = h('aside', { class: 'live-panel' }, box,
-      h('p', { class: 'lp-hint', text: T('Denselben Sender noch einmal wählen öffnet das Vollbild.') }), name, arch, epg);
+      // Mit dem TV-Player (Fire TV, Android-Boxen) öffnet OK den Sender sofort im Vollbild – dann passt der alte Hinweis nicht
+      h('p', { class: 'lp-hint', text: NativePlayer.use({ kind: 'live' }) ? T('OK öffnet den Sender im Vollbild.') : T('Denselben Sender noch einmal wählen öffnet das Vollbild.') }), name, arch, epg);
     var cur = null, timer = null;
     function show(item) {
       if (!item || (cur && cur.id === item.id)) return;
@@ -7320,6 +7324,11 @@
         if (top && top.onShow) top.onShow();
         var v = Shell.view && Shell.view.firstChild;
         if (v && v._refresh && (!top || top.name === 'shell')) v._refresh();
+        // Live: im TV-Player umgeschaltet → in der Senderliste auf dem zuletzt geschauten Sender landen (nicht auf dem anfangs gewählten)
+        if (live && cur && cur.id != null) setTimeout(function () {
+          var row = $('.chan[data-cid="' + String(cur.id).replace(/"/g, '') + '"]');
+          if (row && (!Screens.top() || Screens.top().name === 'shell')) Nav.focus(row);
+        }, 120);
       });
     }
   };
