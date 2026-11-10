@@ -1,6 +1,8 @@
 /* Telvo Player – Übersetzung: Arabisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["ar"] = {
+  "Fehlerberichte senden": "إرسال تقارير الأخطاء",
+  "Hilft, Fehler schnell zu beheben – ohne Links, Namen oder Passwörter": "يساعد على إصلاح الأخطاء بسرعة – بدون روابط أو أسماء أو كلمات مرور",
   "Klang": "الصوت",
   "Ton im TV-Player verbessern": "تحسين الصوت في مشغل التلفاز",
   "Lautstärke angleichen": "موازنة مستوى الصوت",
