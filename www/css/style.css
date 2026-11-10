@@ -3283,6 +3283,11 @@ html.no-flexgap .st2 .st-row .st-txt > * + * { margin-left: 0; }
 .hm-top .hm-chname { flex: 1; min-width: 0; margin-top: 0; color: var(--text); }
 body.kbd .hm-ch.f:focus, body.is-tv .hm-ch.f:focus, body.kbd .hm-top.f:focus, body.is-tv .hm-top.f:focus { transform: scale(1.05); background: var(--surface-2); box-shadow: 0 0 0 .2rem var(--bg), 0 0 0 .42rem #c084fc, 0 0 1.8rem rgba(168, 85, 247, .45); }
 body.kbd .hm .lr-card.f:focus .hm-play, body.is-tv .hm .lr-card.f:focus .hm-play { background: #fff; color: #120f1a; }
+/* Fußleiste der Startseite: seit dem Status dort steht, etwas kompakter – und der Status überlappt nie die Laufzeit */
+.shell.is-launcher .statusbar .mac-tag { font-size: 1.02rem; }
+.shell.is-launcher .statusbar .mac-tag b + span, .shell.is-launcher .statusbar .mac-tag .copy-btn + span { margin-left: 1.15rem; }
+.shell.is-launcher .sb-status { flex: 0 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; margin-left: 1.15rem; padding-left: 1.15rem; margin-right: 1.4rem; }
+.shell.is-launcher .sb-days { flex: none; }
 .hm-quickrow { display: flex; padding: 2.4rem var(--pad) 0; }
 .hm-quick { flex: 1 1 0; min-width: 0; height: 13rem; margin-right: 1.2rem; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 1.3rem; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); color: var(--text); }
 .hm-quick:last-child { margin-right: 0; }

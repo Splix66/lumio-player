@@ -4223,13 +4223,15 @@
     function paintHero() {
       HeroPicks.load().then(function (items) {
         if (!document.body.contains(el) && el.parentNode) return;
-        var had = heroSlot.firstChild, keep = had && had.contains(document.activeElement);
-        if (keep) return;      // gerade dort unterwegs: nicht austauschen
+        var had = heroSlot.firstChild, inside = had && had.contains(document.activeElement);
+        // im Titelbild unterwegs: nicht austauschen. Die Ersatzkacheln (noch kein Titelbild) dürfen ersetzt werden.
+        if (inside && had.classList.contains('hm-hero')) return;
         if (had && had._dispose) had._dispose();
         clear(heroSlot);
         if (items.length) heroSlot.appendChild(homeHero(items));
         el.classList.toggle('no-hero', !items.length);
         if (!items.length) heroSlot.appendChild(quickRow());
+        if (inside) { var fq = $('.f', heroSlot); if (fq) Nav.focus(fq); }
         // Beim Öffnen steht der Fokus auf „Jetzt ansehen“ (das Titelbild kommt erst kurz nach dem Aufbau dazu)
         // (erst nach den 20/30 ms, nach denen Screens/Shell selbst den ersten Knopf wählen)
         if (firstHero) setTimeout(function () {
@@ -4331,6 +4333,8 @@
       var sc = Screens.top(), lf = sc && sc.lastFocus, key = lf && lf.getAttribute && lf.getAttribute('data-key');
       if (key && rows.contains(lf)) wantKey = key;     // Karte wird neu gezeichnet – danach wieder dorthin
       paintRows();
+      // noch kein Titelbild (z. B. gerade erst die Listen aktualisiert): jetzt nachholen
+      if (!$('.hm-hero', heroSlot)) paintHero();
       setTimeout(autoCheck, 1500);
     };
     // App kommt aus dem Hintergrund zurück (z. B. Box-Fernbedienung, Handy entsperrt)
