@@ -1,5 +1,14 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## 1.14.1 – 2026-11-11 · Korrekturen aus der Code-Durchsicht
+
+- **Startseite:** Nach einem zu Ende geschauten Film aus „Weiterschauen“ springt der Fokus nicht mehr in die Menüleiste, sondern auf die erste Karte.
+- **Startseite:** Die Knöpfe im Titelbild zeigen nach dem Schauen gleich „Weiter bei …“ statt weiter „Jetzt ansehen“.
+- **Startseite:** Beim ersten Start erscheinen die Zahlen unter Live TV / Filme / Serien, sobald die Listen geladen sind (vorher blieb „…“ stehen).
+- **Startseite:** „Top Sender“ zeigt wieder fünf Sender, auch wenn einige ausgeblendet oder gesperrt sind.
+- **„App beim Start“** gilt nur noch beim Start der App – nicht mehr nach Personen- oder Playlist-Wechsel oder Sprachwechsel. Bei mehreren Personen erst nach „Wer schaut?“ (vorher wurde alles doppelt geladen).
+- **TV-Player:** Klangverbesserung, die ein Gerät nicht einschalten kann, wird sauber wieder freigegeben.
+
 ## 1.14.0 – 2026-11-10 · Neues Design: Startseite, Einstellungen, Filme & Serien
 
 - **Neue Startseite** (nach Entwurf): Menüleiste oben wie überall, darunter ein großes Titelbild mit den bestbewerteten Filmen und Serien (Bewertung · Genre · Jahr, „Jetzt ansehen“ und „Details“, wechselt alle 9 Sekunden, aber nie, während man dort steht). Darunter „Weiterschauen“, „Zuletzt gesehene Sender“ und „Top Sender“ (die meistgeschauten Sender der Person, aufgefüllt mit Favoriten). Die Auswahl fürs Titelbild wird beim Aktualisieren der Listen berechnet und klein gespeichert – die Startseite lädt die großen Film- und Serienlisten nicht selbst. Gesperrte und ausgeblendete Kategorien (Kindersicherung) erscheinen nie im Titelbild oder bei den Sendern. Status (Internet, Player, Laufzeit) steht jetzt unten in der Fußleiste; Radio über Live TV → Radio, Hilfe unter Einstellungen → Hilfe & Support.
