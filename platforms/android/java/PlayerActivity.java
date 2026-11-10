@@ -76,6 +76,8 @@ public class PlayerActivity extends Activity {
     private boolean triedAlt;
     private long bufferingSince;
     private long readySince;         // seit wann der Stream ohne Unterbrechung läuft
+    private long stuckPos = -1;      // Wiedergabeposition beim letzten Blick des Wächters
+    private long stuckSince;         // seit wann sich die Position nicht mehr bewegt
     private String lastError;
     private String txtReconnect = "Verbindung wird wiederhergestellt …";
     private String txtFailed = "Wiedergabe nicht möglich.";
@@ -131,6 +133,15 @@ public class PlayerActivity extends Activity {
                     bufferingSince = 0;
                     // eine Minute flüssig gelaufen: frühere Hänger zählen nicht mehr
                     if (readySince > 0 && now - readySince > 60000) hangs = 0;
+                    // Bereit und soll laufen, aber die Zeit steht (Quelle liefert kein Bild – schwarz bei 00:00):
+                    // anderes Format probieren bzw. „Wiedergabe nicht möglich“ zeigen statt endlos schwarz
+                    if (player.getPlaybackState() == Player.STATE_READY && player.getPlayWhenReady()) {
+                        long pos = player.getCurrentPosition();
+                        if (pos != stuckPos) { stuckPos = pos; stuckSince = now; }
+                        else if (now - stuckSince > (live ? 15000 : 20000)) { stuckPos = -1; failOver("stuck"); }
+                    } else {
+                        stuckPos = -1;
+                    }
                 }
             }
             handler.postDelayed(this, 2000);
@@ -355,8 +366,10 @@ public class PlayerActivity extends Activity {
             // Begrenzer am Ende: durch die Anhebung nie übersteuern
             b.setLimiterAllChannelsTo(new DynamicsProcessing.Limiter(true, true, 0, 1f, 60f, 10f, -2f, 0f));
             sound = new DynamicsProcessing(0, sid, b.build());
-            sound.setEnabled(true);
+            if (sound.setEnabled(true) != android.media.audiofx.AudioEffect.SUCCESS) throw new IllegalStateException("sound");
         } catch (Throwable t) {
+            // Effekt erzeugt, aber nicht nutzbar (z. B. Fire OS): wieder freigeben, sonst hängt er an der Audio-Session
+            if (sound != null) { try { sound.release(); } catch (Throwable ignored) { } }
             sound = null;
         }
     }
