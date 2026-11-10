@@ -1,6 +1,22 @@
 /* Telvo Player – Übersetzung: Arabisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["ar"] = {
+  "Ändern oder neues Feedback geben kannst du ab dem {0}.": "يمكنك التغيير أو إرسال ملاحظات جديدة اعتبارًا من {0}.",
+  "Beliebt auf Handys und Tablets.": "شائع على الهواتف والأجهزة اللوحية.",
+  "Bitte schreib kurz, warum du deine Bewertung änderst.": "يرجى أن تكتب باختصار لماذا تغيّر تقييمك.",
+  "Danke – dein Feedback ist angekommen.": "شكرًا – وصلتنا ملاحظاتك.",
+  "Deine Bewertung – beim Ändern bitte kurz begründen.": "تقييمك – عند التغيير يرجى ذكر السبب باختصار.",
+  "Empfohlen für Fire TV Stick und Cube, Chromecast mit Google TV, Nvidia Shield, Xiaomi Mi Box und andere Android-TV-Boxen.": "موصى به لأجهزة Fire TV Stick وCube وChromecast مع Google TV وNvidia Shield وXiaomi Mi Box وأجهزة Android TV الأخرى.",
+  "Fire TV, Android TV, Handy – spielt fast alles ab.": "Fire TV وAndroid TV والهاتف – يشغّل كل شيء تقريبًا.",
+  "Für ältere oder schwache Boxen und für Sender, die mit den anderen Playern hängen.": "للأجهزة القديمة أو الضعيفة وللقنوات التي تتوقف مع المشغّلات الأخرى.",
+  "Für Android TV und Google TV.": "لأجهزة Android TV وGoogle TV.",
+  "Für Android-Boxen und Nvidia Shield.": "لأجهزة Android وNvidia Shield.",
+  "Für Android-Handys und Tablets (Samsung, Xiaomi, Pixel) – oder wenn der TV-Player hakt.": "لهواتف Android وأجهزتها اللوحية (Samsung وXiaomi وPixel) – أو إذا تقطّع مشغّل التلفاز.",
+  "Für Technik-Fans mit vielen Einstellungen.": "لمحبي التقنية، مع إعدادات كثيرة.",
+  "OK öffnet den Sender im Vollbild.": "زر OK يفتح القناة بملء الشاشة.",
+  "Schlank, gut für Fire TV und Android-Boxen.": "خفيف، مناسب لأجهزة Fire TV وAndroid.",
+  "Telvo ist nur ein Player – nutze nur Quellen, für die du berechtigt bist.": "Telvo مجرد مشغّل – استخدم فقط المصادر التي يحق لك استخدامها.",
+  "Warum änderst du deine Bewertung?": "لماذا تغيّر تقييمك؟",
   "Dein Zugang ist abgelaufen": "انتهى اشتراكك",
   "Dein Zugang läuft bald ab": "اشتراكك على وشك الانتهاء",
   "Verstanden": "حسنًا",
