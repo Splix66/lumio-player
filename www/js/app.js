@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Telvo Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.13.3',
+    version: '1.13.4',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     /* Bibliotheken: werden beim Bauen nach www/lib kopiert (scripts/copy-libs.js) und von dort geladen.
        Nur wenn sie fehlen, aus dem Internet – mit fester Version und Prüfsumme (SRI): eine veränderte Datei
