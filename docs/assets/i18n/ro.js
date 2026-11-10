@@ -248,7 +248,7 @@ window.LUMIO_I18N["ro"] = {
   "Sendungen der letzten Tage nachschauen – wenn dein Anbieter aufzeichnet.": "Urmărește emisiunile din ultimele zile – dacă furnizorul le înregistrează.",
   "Erinnerungen": "Mementouri",
   "Eine Minute vor Beginn erinnert dich Telvo – ein Druck, und du bist dabei.": "Telvo îți amintește cu un minut înainte de început – o apăsare și te uiți.",
-  "Personen & Kinderprofil": "Persoane și profil pentru copii",
+  "Benutzer & Kinderprofil": "Utilizatori și profil pentru copii",
   "Bis zu 6 Profile mit eigenen Favoriten. Kinder sehen nur, was freigegeben ist.": "Până la 6 profiluri cu favorite proprii. Copiii văd doar ce e permis.",
   "Sichern & Wiederherstellen": "Copie de rezervă și restaurare",
   "Einstellungen und Favoriten online sichern – ohne Passwörter.": "Salvează online setările și favoritele – fără parole."

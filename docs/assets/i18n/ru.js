@@ -248,7 +248,7 @@ window.LUMIO_I18N["ru"] = {
   "Sendungen der letzten Tage nachschauen – wenn dein Anbieter aufzeichnet.": "Смотри передачи последних дней – если провайдер их записывает.",
   "Erinnerungen": "Напоминания",
   "Eine Minute vor Beginn erinnert dich Telvo – ein Druck, und du bist dabei.": "Telvo напомнит за минуту до начала – одно нажатие, и ты смотришь.",
-  "Personen & Kinderprofil": "Профили и детский профиль",
+  "Benutzer & Kinderprofil": "Пользователи и детский профиль",
   "Bis zu 6 Profile mit eigenen Favoriten. Kinder sehen nur, was freigegeben ist.": "До 6 профилей со своим избранным. Дети видят только разрешённое.",
   "Sichern & Wiederherstellen": "Резервная копия и восстановление",
   "Einstellungen und Favoriten online sichern – ohne Passwörter.": "Резервная копия настроек и избранного онлайн – без паролей."

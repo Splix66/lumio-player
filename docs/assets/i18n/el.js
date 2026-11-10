@@ -248,7 +248,7 @@ window.LUMIO_I18N["el"] = {
   "Sendungen der letzten Tage nachschauen – wenn dein Anbieter aufzeichnet.": "Δες εκπομπές των τελευταίων ημερών – αν ο πάροχός σου τις καταγράφει.",
   "Erinnerungen": "Υπενθυμίσεις",
   "Eine Minute vor Beginn erinnert dich Telvo – ein Druck, und du bist dabei.": "Το Telvo σε ειδοποιεί ένα λεπτό πριν την έναρξη – ένα πάτημα και βλέπεις.",
-  "Personen & Kinderprofil": "Άτομα & παιδικό προφίλ",
+  "Benutzer & Kinderprofil": "Χρήστες & παιδικό προφίλ",
   "Bis zu 6 Profile mit eigenen Favoriten. Kinder sehen nur, was freigegeben ist.": "Έως 6 προφίλ με δικά τους αγαπημένα. Τα παιδιά βλέπουν μόνο ό,τι επιτρέπεται.",
   "Sichern & Wiederherstellen": "Αντίγραφο ασφαλείας και επαναφορά",
   "Einstellungen und Favoriten online sichern – ohne Passwörter.": "Αποθήκευσε ρυθμίσεις και αγαπημένα online – χωρίς κωδικούς."

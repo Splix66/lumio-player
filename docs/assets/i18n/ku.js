@@ -248,7 +248,7 @@ window.LUMIO_I18N["ku"] = {
   "Sendungen der letzten Tage nachschauen – wenn dein Anbieter aufzeichnet.": "Bernameyên rojên dawî paşê temaşe bike – heke peydakarê te tomar dike.",
   "Erinnerungen": "Bibîrxistin",
   "Eine Minute vor Beginn erinnert dich Telvo – ein Druck, und du bist dabei.": "Telvo deqeyek berî destpêkê bi bîra te tîne – bi pêlekê tu temaşe dikî.",
-  "Personen & Kinderprofil": "Kes û profîla zarokan",
+  "Benutzer & Kinderprofil": "Bikarhêner û profîla zarokan",
   "Bis zu 6 Profile mit eigenen Favoriten. Kinder sehen nur, was freigegeben ist.": "Heta 6 profîl bi bijareyên xwe. Zarok tenê tiştên destûrdayî dibînin.",
   "Sichern & Wiederherstellen": "Paşkeftî û vegerandin",
   "Einstellungen und Favoriten online sichern – ohne Passwörter.": "Mîheng û bijareyan serhêl biparêze – bê şîfre."

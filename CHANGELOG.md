@@ -8,7 +8,40 @@
 - **Sprachauswahl** oben rechts kompakt in zwei Spalten – alle 14 Sprachen auf einen Blick, ohne Scrollen; gewählte Sprache
   lavendelfarben. Auf dem Handy als Karte statt Vollbild. (Drei Varianten verglichen: Liste, 2 und 3 Spalten.)
 - **Playlist von Hand einrichten:** Knopf „Zurück“ oben in der Karte.
-- Neuer Test.
+- **Einstellungen neu als Liste:** alles untereinander, Auswahl klappt direkt am Punkt auf, Erklärtext klein daneben;
+  An/Aus und Zwei-Wege-Auswahlen (z. B. 24 h / 12 h) schalten direkt in der Zeile. „Verlauf löschen“ als ein Knopf –
+  wählbar je Bereich, voreingestellt alles. Kindersicherung am PC ohne überlappende Schrift.
+- **Benutzer statt „Personen“**, mit Profilbildern (12 Symbole); Buchstabe im Profilkreis mittig. Sprache oben nur noch
+  als Flagge, sobald eine gewählt ist.
+- **Startbildschirm & Menü:** Reiter oben mit fester Größe und ohne Zahlen, Hover nur auf dem berührten Reiter (auch
+  Home und Favoriten). Kein Knopf-Hinweis mehr beim ersten Abspielen. „Zuletzt angesehen“-Bilder zeigen die Gesichter.
+- **Suche** mit „Suchen in: Alle · Filme · Serien · Live TV“, verdeckt den Home-Knopf nicht mehr. Sortieren bei Filmen
+  und Serien klappt am Knopf auf. „Daten neu laden“ im neuen Stil.
+- **Live TV:** Beim Öffnen läuft der zuletzt gesehene Sender sofort klein im Vorschaufenster (abschaltbar). Im breiten
+  PC-Fenster teilen sich Senderliste und Vorschau den Platz. „Radio“ zeigt nur echte Radiosender (TV-Sender in
+  gemischten Kategorien fallen raus; Kennzeichnung des Anbieters wird genutzt). „Letzten Sender beim Start“ ist
+  voreingestellt an – startet aber nicht nach einem Neustart aus der App heraus (z. B. Sprache gewechselt).
+- **Film-/Serienseite:** runder X-Knopf · Jahreszahl nicht mehr im Titel (steht darunter) · Folgen ohne Serienname und
+  „S01E02“ davor · Platzhalter-Dauer (überall „01:00:00“) wird ausgeblendet, echte Dauer als „45 Min.“ · Staffeln als
+  Glas-Leiste mit Folgenzahl, Folgen mit Nummer, Play-Symbol, „Als Nächstes“ / „Noch 12 Min.“ · „Ähnliche Titel“ ohne
+  doppelte 4K/HD-Versionen, mit Kategorie · Vorschau im Kopfbild: nach 2,5 s läuft stumm ein Ausschnitt (MP4/WebM,
+  höchstens 1 Minute, stoppt sofort beim Abspielen; abschaltbar).
+- **Player:** Zahnrad, Ton & Untertitel und Schlaf-Timer schließen beim zweiten Druck. Stumm schiebt den Regler auf 0,
+  Ton an springt zurück auf die eingestellte Lautstärke. Senderwechsel ohne Karte in der Mitte – oben links Logo,
+  Nummer, Name und laufende Sendung. Live ohne „Aufholen“ (vorher lief es kurz zu schnell und hakte dann, z. B. bei
+  RAW-Sendern); stockt ein Sender öfter, nimmt der Player mehr Puffer. Android-TV-Player: Live nie beschleunigt,
+  rohe TV-Signale (.ts) robuster, nach Hängern mehr Vorrat.
+- **Status oben/unten** zeigt Probleme (Internet langsam, Wiedergabe gestört, Playlist läuft bald ab / abgelaufen /
+  gesperrt). Beim Drüberfahren Grund und Zahlen (Geschwindigkeit, Fehler, Puffer, verlorene Bilder, Laufzeit,
+  Verbindungen …); auf dem Fernseher per OK.
+- **Bewertung** einmal pro Gerät, später änderbar (Sterne sind vorausgewählt). Neue Datei
+  `server/bewertung-2026-11.sql` (einmal im Supabase SQL-Editor ausführen) – bis dahin gehen die Sterne wie bisher als
+  Feedback-Nachricht ein.
+- **Keine Texte mit „IPTV“ oder „Anbieter“** mehr in der App (14 Texte neutral formuliert, alle Sprachen).
+- **Neben der Uhr:** Symbol für die Tageszeit (Sonnenaufgang, Sonne, Sonnenuntergang, Mond) – auf Wunsch echtes Wetter
+  mit Temperatur (Ort unter Einstellungen → Darstellung wählen; Open-Meteo, ohne Konto). Datenschutzerklärung ergänzt.
+- **Bildschirmschoner** mit „Wusstest du schon?“-Tipps.
+- Neue Tests (Titel ohne Jahr, Folgennamen, Dauer, Radio-Erkennung).
 
 ## 1.12.0 – 2026-11-10 · Neuer Startbildschirm, Profi-Player, Personen und neue Webseite
 

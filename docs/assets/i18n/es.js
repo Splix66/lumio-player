@@ -248,7 +248,7 @@ window.LUMIO_I18N["es"] = {
   "Sendungen der letzten Tage nachschauen – wenn dein Anbieter aufzeichnet.": "Ve los programas de los últimos días – si tu proveedor los graba.",
   "Erinnerungen": "Recordatorios",
   "Eine Minute vor Beginn erinnert dich Telvo – ein Druck, und du bist dabei.": "Telvo te avisa un minuto antes del inicio – una pulsación y ya lo estás viendo.",
-  "Personen & Kinderprofil": "Personas y perfil infantil",
+  "Benutzer & Kinderprofil": "Usuarios y perfil infantil",
   "Bis zu 6 Profile mit eigenen Favoriten. Kinder sehen nur, was freigegeben ist.": "Hasta 6 perfiles con sus propios favoritos. Los niños solo ven lo permitido.",
   "Sichern & Wiederherstellen": "Copia de seguridad y restauración",
   "Einstellungen und Favoriten online sichern – ohne Passwörter.": "Guarda en línea ajustes y favoritos – sin contraseñas."

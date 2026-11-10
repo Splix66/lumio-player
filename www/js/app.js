@@ -152,6 +152,15 @@
     update: '<path d="M12 3.5v11M7.5 10l4.5 4.5 4.5-4.5"/><path d="M4 16.5v3h16v-3"/>',
     tvplay: '<rect x="3" y="4.5" width="18" height="13" rx="2"/><path d="M8 21h8"/><path d="M10.2 8.4v5.2l4.5-2.6z" fill="currentColor"/>',
     moon: '<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/>',
+    sunrise: '<path d="M3.5 19h17M7 19a5 5 0 0 1 10 0"/><path d="M12 3.5v6M9.3 6.2L12 3.5l2.7 2.7"/><path d="M4.4 14.4l1.5.8M19.6 14.4l-1.5.8"/>',
+    sunset: '<path d="M3.5 19h17M7 19a5 5 0 0 1 10 0"/><path d="M12 3.5v6M9.3 6.8L12 9.5l2.7-2.7"/><path d="M4.4 14.4l1.5.8M19.6 14.4l-1.5.8"/>',
+    cloud: '<path d="M7 18.5h10a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 7.1 9.6 4.5 4.5 0 0 0 7 18.5z"/>',
+    cloudSun: '<path d="M8 3.5V5M3.4 5.4l1 1M2 10h1.5M12.6 5.4l-1 1"/><path d="M5.2 12.6A3.6 3.6 0 1 1 11.5 9"/><path d="M9 20h8.5a3.5 3.5 0 0 0 .4-6.97A4.7 4.7 0 0 0 9.2 12.5a3.8 3.8 0 0 0-.2 7.5z"/>',
+    cloudMoon: '<path d="M11.8 8.4A4.4 4.4 0 0 1 6.6 3.2a4.4 4.4 0 1 0 5.2 5.2z"/><path d="M9 20h8.5a3.5 3.5 0 0 0 .4-6.97A4.7 4.7 0 0 0 9.2 12.5a3.8 3.8 0 0 0-.2 7.5z"/>',
+    rain: '<path d="M7 14.5h10a3.6 3.6 0 0 0 .5-7.15A5 5 0 0 0 7.9 6.4 4 4 0 0 0 7 14.5z"/><path d="M8.6 17.4l-1 2.6M12.6 17.4l-1 2.6M16.6 17.4l-1 2.6"/>',
+    storm: '<path d="M7 14.5h10a3.6 3.6 0 0 0 .5-7.15A5 5 0 0 0 7.9 6.4 4 4 0 0 0 7 14.5z"/><path d="M12.8 15.2l-2.2 3.4h3l-2.2 3.4"/>',
+    snow: '<path d="M7 14.5h10a3.6 3.6 0 0 0 .5-7.15A5 5 0 0 0 7.9 6.4 4 4 0 0 0 7 14.5z"/><path d="M8.5 18v.1M12 19.2v.1M15.5 18v.1M10 21.5v.1M14 21.5v.1"/>',
+    fog: '<path d="M4 8.5h16M6.5 12.5h11M4 16.5h16M8 20h8"/>',
     avSmile: '<circle cx="12" cy="12" r="9"/><path d="M8.3 14.2a4.6 4.6 0 0 0 7.4 0"/><path d="M9 9.6h.01M15 9.6h.01" stroke-width="2.8"/>',
     avCat: '<path d="M5 10V4.5L9 7.5h6l4-3V10a7 7 0 0 1-7 9.5A7 7 0 0 1 5 10z"/><path d="M9.6 12.3h.01M14.4 12.3h.01" stroke-width="2.8"/><path d="M11 15.2h2"/>',
     avDog: '<path d="M7.2 6.8 4 5.2v5.6c0 1 .5 1.9 1.4 2.4M16.8 6.8 20 5.2v5.6c0 1-.5 1.9-1.4 2.4"/><path d="M7 6.5h10v6.2a5 5 0 0 1-10 0z"/><path d="M10 10.4h.01M14 10.4h.01" stroke-width="2.8"/><path d="M11 13.6h2l-1 1.3z" fill="currentColor"/>',
@@ -4085,6 +4094,7 @@
       var c = $('.sb-clock'), d = new Date();
       if (c) {
         clear(c);
+        c.appendChild(h('span', { class: 'sky-slot' }, Sky.el()));
         c.appendChild(h('b', { text: clockStr(d) }));
         c.appendChild(h('span', { class: 'sb-date' },
           h('i', { text: d.toLocaleDateString(locale(), { weekday: 'long' }) }),
@@ -5154,8 +5164,117 @@
   /* ---------- Bildschirmschoner ----------
      Nach einigen Minuten ohne Bedienung (und ohne laufendes Video): Uhr, Datum und langsam wechselnde Poster.
      Die Uhr wandert jede Minute ein Stück weiter (schont OLED-Fernseher). Die erste Taste beendet ihn nur – sie löst nichts aus. */
+  /* ---------- Tageszeit & Wetter neben der Uhr ----------
+     Ohne Einstellung: nur die Tageszeit (Sonnenaufgang, Sonne, Sonnenuntergang, Mond) – nichts geht ins Internet.
+     Mit gewähltem Ort (Einstellungen → Darstellung → Wetter): echtes Wetter von Open-Meteo (kostenlos, ohne Konto).
+     Gesendet werden nur die Koordinaten des gewählten Ortes, höchstens alle 30 Minuten. */
+  var Sky = {
+    w: null, at: 0, busy: false,
+    loc: function () { var l = Settings.get('weatherLoc'); return l && typeof l.lat === 'number' && typeof l.lon === 'number' ? l : null; },
+    // Sonnenauf-/-untergang: vom Wetterdienst, sonst grob 7:00 / 18:00 Uhr
+    sunTimes: function (d) {
+      var w = this.w, day = d.toDateString();
+      if (w && w.rise && w.set && new Date(w.rise).toDateString() === day) return [new Date(w.rise).getTime(), new Date(w.set).getTime()];
+      var a = new Date(d), b = new Date(d); a.setHours(7, 0, 0, 0); b.setHours(18, 0, 0, 0);
+      return [a.getTime(), b.getTime()];
+    },
+    phase: function (d) {
+      var t = d.getTime(), st = this.sunTimes(d), M = 60000;
+      if (t >= st[0] - 45 * M && t < st[0] + 60 * M) return 'sunrise';
+      if (t >= st[1] - 60 * M && t < st[1] + 45 * M) return 'sunset';
+      return t >= st[0] && t < st[1] ? 'sun' : 'moon';
+    },
+    // [Symbol, Beschreibung, Temperatur oder '']
+    now: function (d) {
+      d = d || new Date();
+      var ph = this.phase(d), night = ph === 'moon';
+      var names = { sunrise: T('Sonnenaufgang'), sunset: T('Sonnenuntergang'), sun: T('Tag'), moon: T('Nacht') };
+      var w = this.loc() && this.w && Date.now() - this.at < 3 * 3600000 ? this.w : null;
+      this.refresh();
+      if (!w) return [ph, names[ph], ''];
+      var c = w.code, ic = ph, txt = names[ph];
+      if (c >= 95) { ic = 'storm'; txt = T('Gewitter'); }
+      else if ((c >= 71 && c <= 77) || c === 85 || c === 86) { ic = 'snow'; txt = T('Schnee'); }
+      else if ((c >= 51 && c <= 67) || (c >= 80 && c <= 82)) { ic = 'rain'; txt = T('Regen'); }
+      else if (c === 45 || c === 48) { ic = 'fog'; txt = T('Nebel'); }
+      else if (c === 3) { ic = 'cloud'; txt = T('Bewölkt'); }
+      else if (c === 1 || c === 2) { ic = night ? 'cloudMoon' : 'cloudSun'; txt = T('Leicht bewölkt'); }
+      else if (c === 0) txt = ph === 'sun' ? T('Sonnig') : ph === 'moon' ? T('Klare Nacht') : names[ph];
+      return [ic, txt + ' · ' + (this.loc().name || ''), typeof w.temp === 'number' ? Math.round(w.temp) + '°' : ''];
+    },
+    refresh: function (force) {
+      var self = this, l = self.loc();
+      if (!l || self.busy || (!force && Date.now() - self.at < 1800000) || navigator.onLine === false) return;
+      self.busy = true;
+      var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + l.lat.toFixed(2) + '&longitude=' + l.lon.toFixed(2) +
+        '&current=temperature_2m,weather_code,is_day&daily=sunrise,sunset&timezone=auto&forecast_days=1';
+      fetchWithTimeout(url, 10000).then(function (r) { return r.json(); }).then(function (j) {
+        var cur = j && j.current, dl = j && j.daily;
+        if (!cur) throw new Error('leer');
+        self.w = { code: Number(cur.weather_code), temp: Number(cur.temperature_2m), rise: dl && dl.sunrise && dl.sunrise[0], set: dl && dl.sunset && dl.sunset[0] };
+        self.at = Date.now();
+        Sky.paintAll();
+      }).catch(function () { self.at = Date.now() - 1500000; }).then(function () { self.busy = false; });
+    },
+    // Symbol (und Temperatur) als Element
+    el: function () {
+      var n = this.now();
+      return h('span', { class: 'sky sky-' + n[0], title: n[1] }, icon(n[0]), n[2] ? h('em', { text: n[2] }) : null);
+    },
+    paintAll: function () { $all('.sky-slot').forEach(function (s) { clear(s).appendChild(Sky.el()); }); },
+    // Ort suchen (Open-Meteo Geocoding) und auswählen
+    pick: function (done) {
+      var input = h('input', { class: 'f', type: 'text', placeholder: T('z. B. Berlin'), autocomplete: 'off' });
+      var list = h('div', { class: 'choice sky-res' }), msg = h('p', { class: 'hint' });
+      function search() {
+        var q = input.value.trim();
+        if (q.length < 2) { msg.textContent = T('Gib mindestens zwei Buchstaben ein.'); return; }
+        msg.textContent = T('Wird gesucht …'); clear(list);
+        fetchWithTimeout('https://geocoding-api.open-meteo.com/v1/search?count=6&format=json&language=' + encodeURIComponent(Lang.cur) + '&name=' + encodeURIComponent(q), 10000)
+          .then(function (r) { return r.json(); }).then(function (j) {
+            var res = (j && j.results) || [];
+            msg.textContent = res.length ? '' : T('Kein Ort gefunden.');
+            res.forEach(function (x) {
+              list.appendChild(h('button', { class: 'ch-opt f', onclick: function () {
+                Settings.set('weatherLoc', { name: x.name, lat: Number(x.latitude), lon: Number(x.longitude) });
+                Sky.w = null; Sky.at = 0; Sky.refresh(true);
+                goBack(); if (done) done();
+              } }, h('span', { class: 'ch-txt' }, h('b', { text: x.name }), h('small', { text: [x.admin1, x.country].filter(Boolean).join(', ') }))));
+            });
+            var f = $('.f', list); if (f) Nav.focus(f);
+          }, function () { msg.textContent = navigator.onLine === false ? T('Kein Internet') : T('Der Wetterdienst ist gerade nicht erreichbar.'); });
+      }
+      input.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); search(); } });
+      var body = [
+        h('p', { class: 'hint', text: T('Für das Wetter neben der Uhr. Gesendet wird nur der gewählte Ort an den Wetterdienst Open-Meteo – höchstens alle 30 Minuten.') }),
+        h('label', { class: 'field' }, h('span', { text: T('Ort') }), input),
+        h('div', { class: 'row' }, sheetBtn('search', T('Suchen'), search, 'primary'),
+          Sky.loc() ? sheetBtn('close', T('Wetter ausschalten'), function () { Settings.set('weatherLoc', null); Sky.w = null; goBack(); if (done) done(); }) : null),
+        msg, list];
+      openSheet(T('Wetter'), 'cloudSun', body);
+      setTimeout(function () { Nav.focus(input); }, 60);
+    }
+  };
+  /* „Wusstest du schon?“ – kurze Tipps im Bildschirmschoner (nur Dinge, die es in der App wirklich gibt) */
+  function saverTips() {
+    var l = [
+      [T('Tippe eine Sendernummer ein, um direkt umzuschalten.'), 'tvplay'],
+      [T('Im TV-Programm lässt du dich an kommende Sendungen erinnern.'), 'bell'],
+      [T('Der Schlaf-Timer im Player beendet die Wiedergabe von selbst.'), 'timer'],
+      [T('Mit „Später ansehen“ merkst du dir Filme und Serien für später.'), 'bookmark'],
+      [T('Verpasste Sendungen der letzten Tage findest du direkt beim Sender.'), 'archive'],
+      [T('Jeder Benutzer hat eigene Favoriten und einen eigenen Verlauf.'), 'users'],
+      [T('Mit der Kindersicherung sperrst du Kategorien mit einer PIN.'), 'lock'],
+      [T('Bild-in-Bild: Der Sender läuft klein weiter, während du stöberst.'), 'pip'],
+      [T('Deine Playlists kannst du auch auf der Webseite bearbeiten – mit MAC und KEY.'), 'globe'],
+      [T('In der Suche wählst du, ob in Filmen, Serien oder Live TV gesucht wird.'), 'search'],
+      [T('Unter Einstellungen → Verbindung testen siehst du, wie schnell Sender bei dir ankommen.'), 'wifi'],
+      [T('Bei Serien bringt dich „Weiter“ direkt zur nächsten Folge.'), 'series']
+    ];
+    return l;
+  }
   var Saver = {
-    el: null, timer: null, pics: [], idx: 0, n: 0,
+    el: null, timer: null, pics: [], idx: 0, n: 0, tipAt: 0,
     mins: function () { var v = Settings.get('saverMin'); return typeof v === 'number' ? v : 10; },
     start: function () {
       var self = this, mx = -1, my = -1;
@@ -5180,7 +5299,11 @@
       var self = this;
       self.clock = h('b'); self.date = h('span');
       self.layers = [h('div', { class: 'sv-pic' }), h('div', { class: 'sv-pic' })];
-      self.card = h('div', { class: 'sv-clock' }, self.clock, self.date);
+      self.tip = h('div', { class: 'sv-tip' });
+      self.tips = saverTips();
+      self.tipAt = Math.floor(Math.random() * self.tips.length);
+      self.card = h('div', { class: 'sv-clock' }, self.clock, self.date, self.tip);
+      self.nextTip();
       self.el = h('div', { class: 'saver', 'aria-hidden': 'true' }, self.layers[0], self.layers[1], h('div', { class: 'sv-shade' }), self.card,
         h('div', { class: 'sv-brand' }, brandMark(), wordmark()));
       document.body.appendChild(self.el);
@@ -5195,7 +5318,18 @@
         });
       }
       clearInterval(self.timer);
-      self.timer = setInterval(function () { self.next(); }, 12000);
+      self.timer = setInterval(function () { self.next(); if (self.n % 2 === 0) self.nextTip(); }, 12000);
+    },
+    nextTip: function () {
+      if (!this.tip || !this.tips.length) return;
+      var t = this.tips[this.tipAt++ % this.tips.length], box = this.tip;
+      box.classList.remove('is-on');
+      setTimeout(function () {
+        clear(box);
+        box.appendChild(h('span', { class: 'sv-tip-ic' }, icon(t[1])));
+        box.appendChild(h('div', null, h('small', { text: T('Wusstest du schon?') }), h('p', { text: t[0] })));
+        box.classList.add('is-on');
+      }, box.firstChild ? 500 : 0);
     },
     // nächstes Poster überblenden
     next: function () {
@@ -5211,9 +5345,11 @@
       if (!this.el) return;
       var d = new Date();
       this.clock.textContent = clockStr(d);
-      this.date.textContent = d.toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' });
+      clear(this.date);
+      this.date.appendChild(h('span', { class: 'sky-slot' }, Sky.el()));
+      this.date.appendChild(document.createTextNode(d.toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' })));
       // jede Minute eine andere Stelle (Einbrennen vermeiden)
-      var m = d.getMinutes(), x = 6 + (m * 37 % 40), y = 8 + (m * 23 % 55);
+      var m = d.getMinutes(), x = 6 + (m * 37 % 40), y = 8 + (m * 23 % 42);
       this.card.style.left = x + '%'; this.card.style.top = y + '%';
     },
     hide: function () {
@@ -6413,6 +6549,7 @@
     var season = Season.current();
     var tTheme = choiceTile('sun', T('Farben'), THEMES, function () { return Settings.get('theme') || 'dark'; }, function (v) { Settings.set('theme', v); Theme.apply(); },
       season ? T('Gerade läuft das {0}-Design. Danach gilt wieder das Telvo-Violett.', T(SEASONS[season].name)) : null);
+    var tSky = tile('cloudSun', T('Wetter neben der Uhr'), function () { var l = Sky.loc(); return l ? l.name : T('Aus – nur Tageszeit'); }, function () { Sky.pick(paint); });
     var tPoster = choiceTile('grid', T('Größe der Cover bei Filmen und Serien'), POSTERS, function () { return Settings.get('posterSize') || 'm'; }, function (v) { Settings.set('posterSize', v); Theme.apply(); });
     var SAVERS = [[0, T('Aus')], [5, T('{0} Min.', 5)], [10, T('{0} Min.', 10)], [15, T('{0} Min.', 15)], [30, T('{0} Min.', 30)]];
     var tSaver = choiceTile('saver', T('Bildschirmschoner'), SAVERS, function () { return Saver.mins(); }, function (v) { Settings.set('saverMin', v); },
@@ -6470,7 +6607,7 @@
       { id: 'playlist', ic: 'playlist', c: 'violet', name: T('Playlist'), hint: T('Playlists hinzufügen, wechseln und aktuell halten.'), body: grid([tAdd, tPl, tUpd, tAuto, tShift]) },
       { id: 'family', ic: 'lock', c: 'pink', name: T('Benutzer & Kindersicherung'), hint: T('Wer schaut, was gesperrt ist und welche Kategorien und Sender du siehst.'), body: grid([tPersons, tPar, tHideL, tHideM, tHideS, tHideCh, tHis]) },
       { id: 'play', ic: 'play', c: 'blue', name: T('Wiedergabe'), hint: T('Player, Stream-Format, Untertitel und Zeitschaltungen.'), body: grid([tSort, tFmt, tQual, tEng, tExt, tSub, tNext, tLast, tPrev, tHero, tSleep, tIdle]) },
-      { id: 'look', ic: 'sun', c: 'amber', name: T('Darstellung'), hint: T('Sprache, Farben, Uhrzeit und Bildschirmschoner.'), body: grid([tLang, tTheme, tPoster, tClock, tSaver, tDev]) },
+      { id: 'look', ic: 'sun', c: 'amber', name: T('Darstellung'), hint: T('Sprache, Farben, Uhrzeit und Bildschirmschoner.'), body: grid([tLang, tTheme, tPoster, tClock, tSky, tSaver, tDev]) },
       { id: 'help', ic: 'help', c: 'green', name: T('Gerät & Hilfe'), hint: T('Sichern, Updates, Verbindungstest und Kontakt zum Support.'), body: grid([tBackup, tAbout, tSpeed, tFeedback, tReport]) }
     ], 'settings');
     settingsPaint = paint;
@@ -8668,7 +8805,7 @@
   // Für automatische Tests von außen erreichbar
   window.LumioDebug = {
     parseM3U: parseM3U, catchupUrl: catchupUrl, parseXtreamLink: parseXtreamLink, normalizeServer: normalizeServer, Nav: Nav, Screens: Screens, StillWatching: StillWatching,
-    Xmltv: Xmltv, chanKey: chanKey, trackLabel: trackLabel, cleanTitle: cleanTitle, cleanEpName: cleanEpName, fmtDur: fmtDur, isRadio: isRadio, Terms: Terms, editPerson: editPerson, EpgStore: EpgStore, makeProvider: makeProvider, Profiles: Profiles, PinGuard: PinGuard, Store: Store, Cloud: Cloud,
+    Xmltv: Xmltv, chanKey: chanKey, trackLabel: trackLabel, cleanTitle: cleanTitle, cleanEpName: cleanEpName, fmtDur: fmtDur, isRadio: isRadio, Sky: Sky, icon: icon, Terms: Terms, editPerson: editPerson, EpgStore: EpgStore, makeProvider: makeProvider, Profiles: Profiles, PinGuard: PinGuard, Store: Store, Cloud: Cloud,
     decodeBytes: decodeBytes, readText: readText, fetchText: fetchText, sameConnection: sameConnection, NativePlayer: NativePlayer, App: App, ensureTs: ensureTs, migrateM3uIds: migrateM3uIds,
     ErrLog: ErrLog, techInfo: techInfo,
     CatPrefs: CatPrefs, visibleCats: visibleCats, Parental: Parental, ChanHide: ChanHide,

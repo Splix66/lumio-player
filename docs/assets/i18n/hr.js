@@ -248,7 +248,7 @@ window.LUMIO_I18N["hr"] = {
   "Sendungen der letzten Tage nachschauen – wenn dein Anbieter aufzeichnet.": "Pogledaj emisije iz zadnjih dana – ako ih tvoj pružatelj snima.",
   "Erinnerungen": "Podsjetnici",
   "Eine Minute vor Beginn erinnert dich Telvo – ein Druck, und du bist dabei.": "Telvo te podsjeti minutu prije početka – jedan pritisak i gledaš.",
-  "Personen & Kinderprofil": "Osobe i dječji profil",
+  "Benutzer & Kinderprofil": "Korisnici i dječji profil",
   "Bis zu 6 Profile mit eigenen Favoriten. Kinder sehen nur, was freigegeben ist.": "Do 6 profila s vlastitim favoritima. Djeca vide samo ono što je dopušteno.",
   "Sichern & Wiederherstellen": "Sigurnosna kopija i vraćanje",
   "Einstellungen und Favoriten online sichern – ohne Passwörter.": "Spremi postavke i favorite online – bez lozinki."

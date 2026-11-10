@@ -248,7 +248,7 @@ window.LUMIO_I18N["tr"] = {
   "Sendungen der letzten Tage nachschauen – wenn dein Anbieter aufzeichnet.": "Son günlerin programlarını sonradan izle – sağlayıcın kaydediyorsa.",
   "Erinnerungen": "Hatırlatıcılar",
   "Eine Minute vor Beginn erinnert dich Telvo – ein Druck, und du bist dabei.": "Telvo başlamadan bir dakika önce hatırlatır – bir tuşla izlemeye başlarsın.",
-  "Personen & Kinderprofil": "Kişiler ve çocuk profili",
+  "Benutzer & Kinderprofil": "Kullanıcılar ve çocuk profili",
   "Bis zu 6 Profile mit eigenen Favoriten. Kinder sehen nur, was freigegeben ist.": "Kendi favorileriyle 6 profile kadar. Çocuklar yalnızca izin verilenleri görür.",
   "Sichern & Wiederherstellen": "Yedekle ve geri yükle",
   "Einstellungen und Favoriten online sichern – ohne Passwörter.": "Ayarları ve favorileri çevrimiçi yedekle – şifreler olmadan."
