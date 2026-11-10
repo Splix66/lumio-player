@@ -4538,7 +4538,9 @@
       for (var k = 0; r && k < list.length; k++) if (String(list[k].id) === String(r.id)) { at = k; break; }
       var item = at >= 0 ? list[at] : (r || list[0]);
       if (at < 0 && !r) at = 0;
-      if (extPlayerOn() || NativePlayer.use(item)) return;
+      // Vorschau immer im eingebauten Player – auch wenn sonst der TV-Player (Android) abspielt;
+      // beim Auswählen öffnet sich dann wie gewohnt der TV-Player im Vollbild. Externer Player (VLC): keine Vorschau.
+      if (extPlayerOn()) return;
       quietGate(item, function () {
         (at >= 0 ? Promise.resolve(list) : liveChannels()).then(function (l) {
           var top2 = Screens.top();
