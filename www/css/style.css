@@ -993,6 +993,7 @@ body.kbd .vol-range.f:focus, body.is-tv .vol-range.f:focus { box-shadow: none; o
 .player.is-mini .state > * + * { margin-top: .3rem; }
 .player.is-mini .state h3 { font-size: .85rem; }
 .player.is-mini .state .row { display: none; }
+.player.is-mini .state .hint { display: none; }   /* lange Erklärung nur im großen Player */
 .player.is-mini .loading .spinner { width: 1.8rem; height: 1.8rem; border-width: .2rem; }
 .player.is-mini .load-txt { display: none; }
 .mini-ui { display: none; }
@@ -2896,3 +2897,71 @@ body.kbd .st-opt.f:focus > .i, body.is-tv .st-opt.f:focus > .i { color: #6d4fc7;
 }
 .st2 .st-row .st-go { position: static; top: auto; right: auto; margin-top: 0; }
 .st2 .st-row .st-val { margin-top: 0; }
+
+/* ===== Film-/Serienseite: X-Knopf, Vorschau im Kopfbild, Staffeln & Folgen, Ähnliche Titel ===== */
+.d-close { width: 3rem; height: 3rem; padding: 0; justify-content: center; border-radius: 50%; background: rgba(11, 11, 15, .45); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .18); }
+.d-close .i { width: 1.35rem; height: 1.35rem; }
+.d-close:hover { background: rgba(255, 255, 255, .16); }
+.d-prev { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 1.2s ease; pointer-events: none; }
+.d-hero.is-playing .d-prev { opacity: 1; }
+.d-hero .d-bg { transition: opacity 1.2s ease; }
+.d-hero.is-playing .d-bg { opacity: 0; }
+
+.seasons { display: flex; align-items: center; justify-content: space-between; padding: .6rem 2.6rem 0; overflow: visible; }
+.sn-track { display: flex; min-width: 0; overflow-x: auto; scrollbar-width: none; padding: .3rem; border-radius: 999px; background: rgba(255, 255, 255, .04); box-shadow: inset 0 0 0 1px var(--line); }
+.sn-track::-webkit-scrollbar { display: none; }
+.seasons .sn-track .btn { flex: none; margin: 0; padding: .55rem 1.15rem; border-radius: 999px; background: transparent; box-shadow: none; color: var(--muted); font-weight: 600; }
+.seasons .sn-track .btn + .btn { margin-left: .2rem; }
+.seasons .sn-track .btn:hover { color: var(--text); background: rgba(255, 255, 255, .06); }
+.seasons .sn-track .btn.is-on { color: var(--text); background: linear-gradient(180deg, rgba(167, 139, 250, .32), rgba(167, 139, 250, .16)); box-shadow: inset 0 0 0 1px rgba(167, 139, 250, .45); }
+.seasons .sn-track .btn .sn-prog { background: rgba(255, 255, 255, .1); }
+.sn-side { display: flex; align-items: center; flex: none; margin-left: 1rem; }
+.sn-count { margin-right: .8rem; color: var(--muted); font-size: .9rem; font-variant-numeric: tabular-nums; }
+.seasons .season-mark { display: grid; place-items: center; width: 2.6rem; height: 2.6rem; margin: 0; border-radius: 50%; color: var(--dim); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); }
+.seasons .season-mark .i { width: 1.15rem; height: 1.15rem; }
+.seasons .season-mark.is-on { color: var(--ok); }
+.seasons .season-mark:hover { color: var(--text); background: var(--surface-2); }
+body.kbd .seasons .season-mark.f:focus, body.is-tv .seasons .season-mark.f:focus { background: var(--text); color: var(--bg); }
+
+.episodes { padding: 1rem 2.6rem 2.4rem; }
+.ep-line { border-top: 1px solid var(--line); margin-bottom: 0; padding: .35rem 0; }
+.ep-line:first-child { border-top: 0; }
+.ep { padding: .8rem; border-radius: 1rem; margin-bottom: 0; }
+.ep > * + * { margin-left: 1.2rem; }
+.ep-n { flex: none; width: 2rem; text-align: center; font-size: 1.5rem; font-weight: 700; color: var(--dim); font-variant-numeric: tabular-nums; }
+.ep .thumb { width: 12rem; height: 6.75rem; border-radius: .7rem; box-shadow: 0 0 0 1px var(--line-2); }
+.ep-play { position: absolute; left: 50%; top: 50%; width: 2.8rem; height: 2.8rem; margin: -1.4rem 0 0 -1.4rem; border-radius: 50%; display: grid; place-items: center; color: #fff; background: rgba(11, 11, 15, .55); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .35); opacity: 0; transform: scale(.85); transition: opacity .2s ease, transform .2s ease; }
+.ep-play .i { width: 1.2rem; height: 1.2rem; margin-left: .12rem; }
+.ep:hover .ep-play, body.kbd .ep.f:focus .ep-play, body.is-tv .ep.f:focus .ep-play, .ep-line.is-next .ep-play { opacity: 1; transform: none; }
+.ep-head { display: flex; align-items: baseline; min-width: 0; }
+.ep .ep-head b { flex: 1; min-width: 0; font-size: 1.05rem; }
+.ep-dur { flex: none; margin-left: 1rem; color: var(--muted); font-size: .85rem; font-variant-numeric: tabular-nums; }
+.ep-tag { display: inline-block; margin-top: .4rem; padding: .12rem .6rem; border-radius: 999px; font-size: .72rem; font-weight: 700; color: var(--text); background: rgba(167, 139, 250, .22); box-shadow: inset 0 0 0 1px rgba(167, 139, 250, .42); }
+.ep .t small { margin-top: .35rem; }
+.ep-line.is-next .ep { background: linear-gradient(90deg, rgba(167, 139, 250, .13), rgba(167, 139, 250, .02) 70%); }
+.ep-line.is-seen .ep-n { color: var(--muted); opacity: .6; }
+.ep-mark { width: 2.5rem; height: 2.5rem; background: transparent; box-shadow: inset 0 0 0 1px var(--line); }
+
+.d-similar { margin: .6rem 1.6rem 1.8rem; padding: 1.3rem 0 1.5rem; border-radius: 1.4rem; background: linear-gradient(180deg, rgba(167, 139, 250, .09), rgba(255, 255, 255, .015) 70%); box-shadow: inset 0 0 0 1px var(--line); }
+.d-similar .rail h2, .d-similar .rail-track { padding-left: 1.2rem; padding-right: 1.2rem; }
+.d-similar .rail h2 { flex-wrap: wrap; align-items: baseline; }
+.sim-sub { margin-left: .8rem; font-size: .85rem; font-weight: 500; letter-spacing: 0; color: var(--muted); }
+.d-similar .poster { width: 10.5rem; }
+.d-similar .poster .art { transition: transform .25s ease, box-shadow .25s ease; }
+.d-similar .poster:hover .art { transform: translateY(-.35rem) scale(1.03); box-shadow: 0 1rem 2rem rgba(0, 0, 0, .45), 0 0 0 1px rgba(167, 139, 250, .55); }
+body.lite .d-similar .poster .art, body.lite .d-prev { transition: none; }
+@media (max-width: 960px) and (orientation: portrait) {
+  html:not(.tv) .seasons { padding: .2rem 1.1rem 0; }
+  html:not(.tv) .sn-count { display: none; }
+  html:not(.tv) .episodes { padding: .6rem .6rem 2rem; }
+  html:not(.tv) .ep { padding: .6rem; }
+  html:not(.tv) .ep > * + * { margin-left: .8rem; }
+  html:not(.tv) .ep-n { width: 1.1rem; font-size: 1rem; }
+  html:not(.tv) .ep > .ep-n + * { margin-left: .5rem; }
+  html:not(.tv) .ep .thumb { width: 7.6rem; height: 4.3rem; }
+  html:not(.tv) .ep-dur { display: none; }
+  html:not(.tv) .d-similar { margin: .4rem .6rem 1.4rem; }
+  html:not(.tv) .d-similar .poster { width: 8.4rem; }
+}
+.d-hero.is-playing + .detail-main .detail-info h1, .detail-info h1 { text-shadow: 0 .15rem 1.2rem rgba(0, 0, 0, .45); }
+:root[data-theme="light"] .detail-info h1 { text-shadow: none; }

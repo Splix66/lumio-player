@@ -527,4 +527,19 @@
     eq(D.trackLabel('Deutsch', 'ger', 0), D.trackLabel('', 'de', 0), '„Deutsch“ (ger) → nur Sprachname');
     ok(D.trackLabel('English Commentary', 'en', 0).indexOf('English Commentary') >= 0, 'Zusatz bleibt sichtbar');
   });
+
+  t('Titel', 'Jahr raus aus dem Titel, Folgen ohne Seriennamen, Dauer lesbar, Radio nur echte Radiosender', function () {
+    eq(D.cleanTitle('Rocky III (1982)'), 'Rocky III');
+    eq(D.cleanTitle('Blade Runner 2049', '2017'), 'Blade Runner 2049', 'Jahreszahl als Teil des Titels bleibt');
+    eq(D.cleanTitle('Der Pate - 1972', '1972'), 'Der Pate', 'bekanntes Jahr am Ende fällt weg');
+    eq(D.cleanTitle('(2020)'), '(2020)', 'nie ein leerer Titel');
+    eq(D.cleanEpName('Murdoch Mysteries - S01E02 - Power', 'Murdoch Mysteries', 2), 'Power');
+    eq(D.cleanEpName('Murdoch Mysteries (2008) S01E05', 'Murdoch Mysteries', 5), D.cleanEpName('', '', 5), 'nur Serienname + Nummer → „Folge 5“');
+    eq(D.fmtDur('00:45:00'), D.fmtDur(2700), 'hh:mm:ss und Sekunden gleich');
+    eq(D.fmtDur('00:00:20'), '', 'unter einer Minute: nichts');
+    var ids = { r: 1 };
+    ok(D.isRadio({ name: 'Radyo Fenomen', catId: 'r' }, ids) && D.isRadio({ name: 'Power FM HD', catId: 'r' }, ids), 'Radiosender in der Radio-Kategorie');
+    ok(!D.isRadio({ name: 'Kral Pop TV HD', catId: 'r' }, ids) && !D.isRadio({ name: 'Radio Bremen TV', catId: 'r' }, ids), 'TV-Sender in gemischter Kategorie zählen nicht');
+    ok(D.isRadio({ name: 'Irgendwas', catId: 'x', radio: 1 }, ids), 'vom Anbieter als Radio gekennzeichnet');
+  });
 })();
