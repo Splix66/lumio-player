@@ -583,4 +583,14 @@
     ok(D.isVisible({ intersectionRatio: 0.3 }), 'alter Browser: sichtbar über intersectionRatio');
     ok(!D.isVisible({ intersectionRatio: 0 }), 'alter Browser: nicht sichtbar');
   });
+
+  t('Programmführer', 'Beschreibung: „\\n“ als Text wird zum echten Zeilenumbruch', function () {
+    eq(D.epgText('Leben hinter Stacheldraht.\\n\\nManch ein Gefangener'), 'Leben hinter Stacheldraht.\n\nManch ein Gefangener');
+    eq(D.epgText('Zeile 1\\r\\nZeile 2'), 'Zeile 1\nZeile 2', 'Windows-Umbruch');
+    eq(D.epgText('A\\tB'), 'A B', 'Tabulator wird Leerzeichen');
+    eq(D.epgText('  Text  \\n'), 'Text', 'Ränder weg');
+    eq(D.epgText('Echter\nUmbruch bleibt'), 'Echter\nUmbruch bleibt');
+    eq(D.epgText(''), '');
+    eq(D.epgText(null), '');
+  });
 })();

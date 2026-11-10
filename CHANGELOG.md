@@ -1,5 +1,10 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## 1.13.5 – 2026-11-10 · Zwei Kleinigkeiten aus dem Gerätetest
+
+- **Filme/Serien (Fernseher):** Rechts aus der Kategorienliste landete auf „Sortieren“ statt auf der ersten Kachel, sobald „Weiterschauen“ zu sehen war – „Sortieren“ sitzt dann in dessen Überschrift. Jetzt geht es direkt zur ersten Weiterschauen-Kachel.
+- **Programmbeschreibungen:** Manche Anbieter liefern Zeilenumbrüche als Text, dann stand z. B. „Stacheldraht.\n\nManch ein …“ in der Live-Vorschau. Jetzt echte Absätze (im Programm-Fenster) bzw. ein Leerzeichen (in der kurzen Vorschau). Gilt für Xtream und XMLTV, auch für schon gespeicherte Programmdaten. Neuer Test.
+
 ## 1.13.4 – 2026-11-10 · Gerätetest Fire TV: Weiterschauen, Live-Vorschau, Umschalten, Bedienung
 
 - **TV-Player, Live-TV: Umschalten mit hoch/runter funktionierte nicht.** Beim Start mit dem letzten Sender kannte der Player nur diesen einen Sender – jetzt startet er mit der ganzen Senderliste der Kategorie. Außerdem ging das Loslassen der Taste an die Bedienleiste, die sich dadurch einblendete; danach schaltete hoch/runter nicht mehr um (nur jeder zweite Druck wirkte). Bei Live-TV entfallen die Spulknöpfe ±5/15 s, ⏮/⏭ schalten den Sender.

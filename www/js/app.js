@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Telvo Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.13.4',
+    version: '1.13.5',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     /* Bibliotheken: werden beim Bauen nach www/lib kopiert (scripts/copy-libs.js) und von dort geladen.
        Nur wenn sie fehlen, aus dem Internet – mit fester Version und Prüfsumme (SRI): eine veränderte Datei
@@ -257,6 +257,11 @@
   function b64(s) {
     if (!s) return '';
     try { var bin = atob(s); try { return decodeURIComponent(escape(bin)); } catch (e) { return bin; } } catch (e) { return s; }
+  }
+  // Programmtexte: manche Anbieter liefern Zeilenumbrüche als Text („\n“) – dann stand „Stacheldraht.\n\nManch …“ in der Beschreibung
+  function epgText(s) {
+    if (!s) return '';
+    return String(s).replace(/\\r\\n|\\n|\\r/g, '\n').replace(/\\t/g, ' ').replace(/^\s+|\s+$/g, '');
   }
   // Neue, zufällige Kennung (Playlists). Eigener Name: „uid()“ weiter unten ist die Daten-Kennung der schauenden Person –
   // gleichnamig überschrieb sie diese Funktion, und jede neue Playlist bekam die Kennung der gerade aktiven.
@@ -832,7 +837,7 @@
         return pr.then(function (d) {
           var now = Date.now() / 1000;
           var list = ((d && d.epg_listings) || []).map(function (e) {
-            return { title: b64(e.title), desc: b64(e.description), start: Number(e.start_timestamp) + sh, end: Number(e.stop_timestamp) + sh };
+            return { title: b64(e.title), desc: epgText(b64(e.description)), start: Number(e.start_timestamp) + sh, end: Number(e.stop_timestamp) + sh };
           });
           if (sh > 0) list = list.filter(function (e) { return e.end > now; }).sort(function (a, b) { return a.start - b.start; }).slice(0, n);
           return list;
@@ -845,7 +850,7 @@
         return Promise.all([api('get_simple_data_table', '&stream_id=' + item.id, true), serverOffset()]).then(function (r) {
           var now = Date.now() / 1000, from = now - days * 86400 - 3600, off = r[1], sh = epgShiftOf(p);
           return ((r[0] && r[0].epg_listings) || []).map(function (e) {
-            var x = { title: b64(e.title), desc: b64(e.description), start: Number(e.start_timestamp), end: Number(e.stop_timestamp), startText: e.start, rec: e.has_archive };
+            var x = { title: b64(e.title), desc: epgText(b64(e.description)), start: Number(e.start_timestamp), end: Number(e.stop_timestamp), startText: e.start, rec: e.has_archive };
             x.at = tsStart(x, off);                 // Adresse immer mit der echten Startzeit des Servers
             x.start += sh; x.end += sh;             // Anzeige mit Programmführer-Verschiebung
             return x;
@@ -1342,7 +1347,7 @@
           if (!list) return [];
           var sh = epgShiftOf(p), t = Date.now() / 1000 - sh;
           return list.filter(function (x) { return x[1] > t; }).slice(0, limit || 8)
-            .map(function (x) { return { title: x[2], desc: x[3], start: x[0] + sh, end: x[1] + sh }; });
+            .map(function (x) { return { title: x[2], desc: epgText(x[3]), start: x[0] + sh, end: x[1] + sh }; });
         }).catch(function () { return []; });
       },
       /* Catch-up (M3U): vergangene Sendungen aus dem Programmführer. Ohne Programmdaten: Stundenblöcke.
@@ -1352,7 +1357,7 @@
           var it = epgItem(item), days = it.archive || item.archive || 0, sh = epgShiftOf(p);
           var now = Date.now() / 1000, from = now - days * 86400 - 3600;
           return loadEpg().then(function (E) { return Xmltv.find(E, it) || []; }, function () { return []; }).then(function (list) {
-            var out = list.map(function (x) { return { title: x[2], desc: x[3], start: x[0] + sh, end: x[1] + sh }; })
+            var out = list.map(function (x) { return { title: x[2], desc: epgText(x[3]), start: x[0] + sh, end: x[1] + sh }; })
               .filter(function (e) { return e.end > e.start && e.start <= now && e.start >= from; });
             if (!out.length && days) {
               var h0 = Math.floor(now / 3600) * 3600;
@@ -2670,8 +2675,9 @@
         var inMain = list.filter(function (el) { return el.closest && el.closest('.mv-main'); });
         if (inMain.length) {
           var vis = inMain.filter(function (el) { var r = el.getBoundingClientRect(); return r.top < window.innerHeight && r.bottom > 0; });
-          // Titel vor der Kopfzeile („Sortieren“ stand im Ablauf zuerst – Rechts landete dort statt auf dem ersten Cover)
-          var pool = vis.length ? vis : inMain, items = pool.filter(function (el) { return !(el.closest && el.closest('.mv-head')); });
+          // Titel vor der Kopfzeile („Sortieren“ stand im Ablauf zuerst – Rechts landete dort statt auf dem ersten Cover).
+          // Mit „Weiterschauen“ sitzt „Sortieren“ in dessen Überschrift (nicht in .mv-head) – deshalb .sort-wrap extra.
+          var pool = vis.length ? vis : inMain, items = pool.filter(function (el) { return !(el.closest && el.closest('.mv-head, .sort-wrap')); });
           var first = (items.length ? items : pool)[0];
           this.focus(first);
           return true;
@@ -9045,7 +9051,7 @@
     parseM3U: parseM3U, catchupUrl: catchupUrl, parseXtreamLink: parseXtreamLink, normalizeServer: normalizeServer, Nav: Nav, Screens: Screens, StillWatching: StillWatching,
     Xmltv: Xmltv, chanKey: chanKey, trackLabel: trackLabel, cleanTitle: cleanTitle, cleanEpName: cleanEpName, fmtDur: fmtDur, isRadio: isRadio, Sky: Sky, icon: icon, Terms: Terms, editPerson: editPerson, EpgStore: EpgStore, makeProvider: makeProvider, Profiles: Profiles, PinGuard: PinGuard, Store: Store, Cloud: Cloud,
     decodeBytes: decodeBytes, readText: readText, fetchText: fetchText, sameConnection: sameConnection, NativePlayer: NativePlayer, App: App, ensureTs: ensureTs, migrateM3uIds: migrateM3uIds,
-    ErrLog: ErrLog, techInfo: techInfo,
+    ErrLog: ErrLog, techInfo: techInfo, epgText: epgText,
     CatPrefs: CatPrefs, visibleCats: visibleCats, Parental: Parental, ChanHide: ChanHide, initials: initials, statusError: statusError, isVisible: isVisible,
     Backup: Backup, profileFp: profileFp, Settings: Settings,
     Seen: Seen, Resume: Resume, UpNext: UpNext, SeriesWatch: SeriesWatch, sortVod: sortVod,
