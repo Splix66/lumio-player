@@ -1,6 +1,22 @@
 /* Telvo Player – Übersetzung: Russisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["ru"] = {
+  "Ändern oder neues Feedback geben kannst du ab dem {0}.": "Изменить отзыв или оставить новый можно с {0}.",
+  "Beliebt auf Handys und Tablets.": "Популярен на телефонах и планшетах.",
+  "Bitte schreib kurz, warum du deine Bewertung änderst.": "Пожалуйста, коротко напишите, почему вы меняете оценку.",
+  "Danke – dein Feedback ist angekommen.": "Спасибо – ваш отзыв получен.",
+  "Deine Bewertung – beim Ändern bitte kurz begründen.": "Ваша оценка – при изменении коротко укажите причину.",
+  "Empfohlen für Fire TV Stick und Cube, Chromecast mit Google TV, Nvidia Shield, Xiaomi Mi Box und andere Android-TV-Boxen.": "Рекомендуется для Fire TV Stick и Cube, Chromecast с Google TV, Nvidia Shield, Xiaomi Mi Box и других приставок Android TV.",
+  "Fire TV, Android TV, Handy – spielt fast alles ab.": "Fire TV, Android TV, телефон – воспроизводит почти всё.",
+  "Für ältere oder schwache Boxen und für Sender, die mit den anderen Playern hängen.": "Для старых или слабых приставок и для каналов, которые зависают в других плеерах.",
+  "Für Android TV und Google TV.": "Для Android TV и Google TV.",
+  "Für Android-Boxen und Nvidia Shield.": "Для приставок на Android и Nvidia Shield.",
+  "Für Android-Handys und Tablets (Samsung, Xiaomi, Pixel) – oder wenn der TV-Player hakt.": "Для телефонов и планшетов на Android (Samsung, Xiaomi, Pixel) – или если ТВ-плеер подтормаживает.",
+  "Für Technik-Fans mit vielen Einstellungen.": "Для любителей техники, с множеством настроек.",
+  "OK öffnet den Sender im Vollbild.": "OK открывает канал на весь экран.",
+  "Schlank, gut für Fire TV und Android-Boxen.": "Лёгкий, хорошо подходит для Fire TV и приставок на Android.",
+  "Telvo ist nur ein Player – nutze nur Quellen, für die du berechtigt bist.": "Telvo – это только плеер. Используйте только источники, на которые у вас есть права.",
+  "Warum änderst du deine Bewertung?": "Почему вы меняете оценку?",
   "Dein Zugang ist abgelaufen": "Срок доступа истёк",
   "Dein Zugang läuft bald ab": "Срок доступа скоро истекает",
   "Verstanden": "Понятно",
