@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Telvo Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.14.4',
+    version: '1.14.5',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     /* Bibliotheken: werden beim Bauen nach www/lib kopiert (scripts/copy-libs.js) und von dort geladen.
        Nur wenn sie fehlen, aus dem Internet – mit fester Version und Prüfsumme (SRI): eine veränderte Datei
@@ -2913,9 +2913,22 @@
     var art = h('span', { class: 'art' });
     // Titelbild liegt über dem Platzhalter: lädt es langsam oder gar nicht, sieht man den Titel
     art.appendChild(h('span', { class: 'ph', style: 'background:' + gradientFor(item.name), text: item.name }));
-    if (item.logo) art.appendChild(img(item.logo, '', function (i) { if (i.parentNode) i.parentNode.removeChild(i); }));
+    if (item.logo) {
+      // TMDB-Cover in der Größe laden, die hier gebraucht wird (342 px breit statt 600×900) – ca. ein Drittel der Daten,
+      // die Cover erscheinen spürbar schneller. Klappt die kleine Fassung nicht, einmal das Original.
+      var small = tmdbSized(item.logo, 'w342'), tried = small === item.logo;
+      art.appendChild(img(small, '', function (i) {
+        if (!tried) { tried = true; i.src = item.logo; return; }
+        if (i.parentNode) i.parentNode.removeChild(i);
+      }));
+    }
     if (extra) add(art, extra);
     return art;
+  }
+  // „…/t/p/w600_and_h900_bestv2/abc.jpg“ → „…/t/p/w342/abc.jpg“ (nur TMDB; alles andere bleibt, wie es ist)
+  function tmdbSized(src, size) {
+    var m = /^(https?:\/\/image\.tmdb\.org\/t\/p\/)[^\/]+(\/[^\/?#]+\.(?:jpe?g|png|webp))$/i.exec(String(src || ''));
+    return m ? m[1] + size + m[2] : src;
   }
 
   /* Programmdaten (EPG) pro Sender, kurz zwischengespeichert */
@@ -5801,7 +5814,8 @@
       this.n++;
       clear(front);
       // Hintergrund: das Poster ganz weich und dunkel – färbt den Bildschirm passend zum Film
-      if (!Platform.lite) front.appendChild(img(it.logo, 'sv-blur', function () {}));
+      // (für den Weichzeichner reicht ein winziges Bild – spart Speicher und Ladezeit)
+      if (!Platform.lite) front.appendChild(img(tmdbSized(it.logo, 'w92'), 'sv-blur', function () {}));
       front.classList.add('is-on'); back.classList.remove('is-on');
       // Karte rechts: Poster mit leuchtendem Rand, Name und Genre
       var g = String(it.genre || '').split(/\s*[,\/|]\s*/).filter(Boolean).slice(0, 2).join(' • ') || (it.kind === 'series' ? T('Serie') : T('Film'));
@@ -5809,7 +5823,7 @@
       var hd = /\b(4k|uhd|fhd|hd)\b/i.exec(String(it.name || ''));
       var nm = hd ? String(it.name).replace(hd[0], '').replace(/[\s\-–|:([]+$/, '').replace(/\(\s*\)|\[\s*\]/g, '').replace(/\s{2,}/g, ' ').replace(/^\s+|\s+$/g, '') || it.name : it.name;
       var card = h('div', { class: 'sv-poster' },
-        img(it.logo, '', function (i) { if (i.parentNode) i.parentNode.removeChild(i); }),
+        img(tmdbSized(it.logo, 'w500'), '', function (i) { if (i.parentNode) i.parentNode.removeChild(i); }),
         h('div', { class: 'sv-cap' }, h('div', null, h('b', { text: nm }), h('small', { text: g })), hd ? h('em', { text: hd[1].toUpperCase() }) : null));
       var old = this.cardBox.firstChild;
       if (old) { old.classList.add('is-out'); setTimeout(function () { if (old.parentNode) old.parentNode.removeChild(old); }, 900); }
@@ -5820,7 +5834,7 @@
       var N = Math.min(5, this.pics.length);
       for (var i = 0; i < N; i++) this.dots.appendChild(h('i', { class: i === pos % N ? 'is-on' : '' }));
       // Farbe passend zum Poster
-      this.tint(it.logo, function (c) { if (self.el && self.cardBox.lastChild === card) self.setAcc(c); });
+      this.tint(tmdbSized(it.logo, 'w92'), function (c) { if (self.el && self.cardBox.lastChild === card) self.setAcc(c); });
     },
     tick: function () {
       if (!this.el) return;
@@ -9507,7 +9521,18 @@
     setTimeout(function () { ErrReport.flush(); }, 30000);
     // Fire TV: Video-Ebene der Amazon-WebView gleich belegen, damit die Live-TV-Vorschau ein Bild zeigt (siehe AwvHold)
     AwvHold.start();
-    document.addEventListener('visibilitychange', function () { if (!document.hidden) setTimeout(function () { AwvHold.refresh(); }, 300); });
+    var hiddenAt = 0;
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) { hiddenAt = Date.now(); return; }
+      setTimeout(function () { AwvHold.refresh(); }, 300);
+      // Live-Vorschau war im Hintergrund pausiert und lief danach an der alten Stelle weiter (Minuten hinter dem
+      // Live-Bild). Nach mehr als 20 s weg: Sender neu laden, damit wieder das aktuelle Programm läuft.
+      if (hiddenAt && Date.now() - hiddenAt > 20000 && Player.el && Player.mini && Player.item && Player.item.kind === 'live') {
+        var it = Player.item;
+        setTimeout(function () { if (Player.el && Player.mini && Player.item === it && !document.hidden) Player.load(it); }, 600);
+      }
+      hiddenAt = 0;
+    });
 
     SubStyle.apply();
     var active = Profiles.get(Store.get('active'));
