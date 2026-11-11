@@ -8022,7 +8022,12 @@
       this.wdLastT = v.currentTime;
       if (this.wdStill < (this.item && this.item.kind === 'live' ? 10 : 18)) return;   // Live: nach 10 s Stillstand neu verbinden
       this.wdStill = 0;
-      if (this.stallRetries >= 3) { this.errInfo = 'Stillstand (3 Versuche)'; this.onError(T('Der Stream hängt und lässt sich gerade nicht wiederherstellen.')); return; }
+      if (this.stallRetries >= 3) {
+        // Daten im Puffer, aber die Zeit steht = Wiedergabe selbst hängt (z. B. Tonausgabe blockiert, Fernseher aus), nicht der Stream
+        var ahead = 0, q = v.getVideoPlaybackQuality ? v.getVideoPlaybackQuality() : null;
+        try { for (var bi = 0; bi < v.buffered.length; bi++) if (v.buffered.end(bi) > v.currentTime) ahead = Math.max(ahead, v.buffered.end(bi) - v.currentTime); } catch (e) {}
+        this.errInfo = 'Stillstand (3 Versuche) rs' + v.readyState + ' Puffer ' + Math.round(ahead) + 's' + (q ? ' Bilder ' + q.totalVideoFrames : '') + (v.muted ? ' stumm' : ' mit Ton');
+        this.onError(T('Der Stream hängt und lässt sich gerade nicht wiederherstellen.')); return; }
       this.stallRetries++;
       if (this.isVod() && v.currentTime > 1) this.resumeAt = v.currentTime;
       this.reconnecting();
@@ -8177,6 +8182,10 @@
       self.spinner.style.display = 'none';
       self.reconnect = false;
       clearInterval(self.wdTimer);
+      // Stream wirklich beenden: sonst lud er hinter der Fehlermeldung weiter (Puffer wuchs, beim Anbieter blieb eine Verbindung
+      // belegt – bei Zugängen mit nur einer Verbindung scheiterte dann der nächste Sender). „Erneut versuchen“ lädt neu.
+      self.destroyHls();
+      try { self.video.removeAttribute('src'); self.video.load(); } catch (e) {}
       var it = self.item || {};
       // Hinweistext vorn (zeigt der Status „Letzter Fehler“), danach die Kette – ihr erster Versuch ist der aussagekräftigste
       ErrLog.add('Wiedergabe', msg + ' | ' + (it.kind || '?') + (it.ext ? ' .' + it.ext : '') + (self.mini ? ' Vorschau' : '') + ' | ' + self.errTrail.join(' → '));
