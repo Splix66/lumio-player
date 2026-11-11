@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Telvo Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.14.6',
+    version: '1.14.7',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     /* Bibliotheken: werden beim Bauen nach www/lib kopiert (scripts/copy-libs.js) und von dort geladen.
        Nur wenn sie fehlen, aus dem Internet – mit fester Version und Prüfsumme (SRI): eine veränderte Datei
@@ -7842,6 +7842,46 @@
     Player.open(item, ctx);
   }
 
+  /* Gleitende Leuchtfläche für Listen (wie im Menü oben): Beim Wechseln mit der Fernbedienung gleitet eine milchige
+     Glasfläche weich zum nächsten Eintrag und schimmert in dessen Farbe. Gilt für die Knöpfe oben rechts, Kategorien,
+     Einstellungs-Bereiche, Senderliste, Suchtreffer und Auswahllisten. Die Fläche liegt im selben Behälter wie die
+     Einträge (scrollt also mit) und wird beim ersten Fokus angelegt; nur bei Bedienung mit Tasten/Fernbedienung. */
+  var Glide = {
+    SEL: '.top-tools > .icon-btn, .mv-side .cat, .section .cats .cat, .st-side .st-sec, .chan, .qs-item, .ch-opt',
+    init: function () {
+      var self = this;
+      document.addEventListener('focusin', function (e) { self.to(e.target); });
+      document.addEventListener('focusout', function (e) {
+        var b = e.target && e.target._glBox, n = e.relatedTarget;
+        if (b && !(n && n.parentNode === b && n.matches && n.matches(self.SEL))) self.hide(b);
+      });
+    },
+    to: function (el) {
+      if (!el || !el.matches || !el.matches(this.SEL)) return;
+      var bc = document.body.classList;
+      if (!bc.contains('is-tv') && !bc.contains('kbd')) return;
+      var box = el.parentNode;
+      if (!box || !box.appendChild) return;
+      var g = box._glider, fresh = false;
+      if (!g || g.parentNode !== box) {
+        g = h('span', { class: 'f-glider', 'aria-hidden': 'true' });
+        box.appendChild(g); box._glider = g; box.classList.add('gl-on'); fresh = true;
+      }
+      el._glBox = box;
+      // erstes Mal (oder nach dem Ausblenden) ohne Gleiten an die Stelle setzen – sonst flöge sie von oben links herein
+      if (fresh || !g.classList.contains('is-on')) g.style.transition = 'none';
+      var cs = getComputedStyle(el);
+      g.style.width = el.offsetWidth + 'px';
+      g.style.height = el.offsetHeight + 'px';
+      g.style.transform = 'translate(' + el.offsetLeft + 'px, ' + el.offsetTop + 'px)';
+      g.style.borderRadius = cs.borderRadius;
+      g.style.setProperty('--gcr', (cs.getPropertyValue('--cr') || '').trim() || '167, 139, 250');
+      if (g.style.transition) { void g.offsetWidth; g.style.transition = ''; }
+      g.classList.add('is-on');
+    },
+    hide: function (box) { if (box && box._glider) box._glider.classList.remove('is-on'); }
+  };
+
   /* Fire TV: Die Amazon-WebView legt das erste Video, das per MediaSource (hls.js) startet, während kein anderes läuft,
      auf eine eigene Hardware-Ebene (SurfaceView) – in die der Decoder dann aber nicht zeichnet: Ton ja, Bild schwarz
      (Live-TV-Vorschau). Läuft schon ein Video, bekommen weitere den normalen Weg und sind sichtbar. Deshalb belegt ein
@@ -9568,6 +9608,7 @@
     setTimeout(function () { ErrReport.flush(); }, 30000);
     // Fire TV: Video-Ebene der Amazon-WebView gleich belegen, damit die Live-TV-Vorschau ein Bild zeigt (siehe AwvHold)
     AwvHold.start();
+    Glide.init();
     var hiddenAt = 0;
     document.addEventListener('visibilitychange', function () {
       if (document.hidden) { hiddenAt = Date.now(); return; }
