@@ -1,5 +1,12 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## 1.14.4 – 2026-11-11 · Neuer Bildschirmschoner in den Farben des Films
+
+- **Bildschirmschoner neu gestaltet:** große Uhr mit Datum und Wetter links (bleibt an ihrer Stelle), rechts eine Poster-Karte mit leuchtendem Rand, Name, Genre und HD-Hinweis, darunter Punkte für die wechselnden Poster. Ein geschwungenes Lichtband und ein Leuchten am unteren Rand geben die Tiefe.
+- **Farbe passend zum Film:** Rand, Linien und Leuchten nehmen den kräftigsten Farbton des gerade gezeigten Posters an (sonst Telvo-Violett) und wechseln weich mit.
+- **Logo oben links, Statusanzeigen oben rechts** als Symbole: Internet, Player und Playlist – gelb bei Warnung, rot bei Problem.
+- **„Wusstest du schon?“ kleiner und unten links**, daneben ein Auge zum Ein- und Ausblenden (Tippen/Klicken oder Menütaste der Fernbedienung). Auch unter Einstellungen → Darstellung → „Tipps im Bildschirmschoner“.
+
 ## 1.14.3 – 2026-11-11 · Live-TV-Vorschau auf Fire TV mit Bild, neuer Schriftzug, „App hat sich plötzlich geschlossen“ wird erkannt
 
 - **Neuer Schriftzug „Telvo Player“** in der Schrift Outfit – im Startbild, oben links in der App, im Fire-TV-Banner und überall, wo der Name steht. Oben links ist das Logo größer, daneben steht jetzt „Telvo Player“.
