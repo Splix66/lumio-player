@@ -3386,3 +3386,50 @@ body.kbd .hm-quick.f:focus, body.is-tv .hm-quick.f:focus { transform: scale(1.03
   html:not(.tv) .hm-quick { height: 8rem; }
   html:not(.tv) .hm-quick b { font-size: 1.15rem; }
 }
+
+/* ==========================================================
+   Menüleiste oben: gleitende Leuchtfläche (1.14.6). Die Reiter selbst haben keine eigene Fläche mehr –
+   die Leuchtfläche zeigt den gewählten Reiter (farbiges Glas) und den Fokus der Fernbedienung (hell)
+   und gleitet beim Wechseln weich nach links und rechts. Start (Haus) sieht aus wie die anderen Reiter.
+   ========================================================== */
+.tab-glider { display: none; }
+@media (min-width: 961px), (orientation: landscape) and (min-width: 861px) {
+  .main-tabs { position: relative; }
+  .tab-glider { --gcr: 167, 139, 250; display: block; position: absolute; top: 0; left: 0; z-index: 0; width: 0; height: 2.9rem; border-radius: 999px; pointer-events: none;
+    background: linear-gradient(180deg, rgba(var(--gcr), .34), rgba(var(--gcr), .16));
+    box-shadow: inset 0 0 0 1.5px rgba(var(--gcr), .7), 0 .5rem 1.4rem -.6rem rgba(var(--gcr), .85);
+    transition: transform .42s cubic-bezier(.22, 1, .36, 1), width .42s cubic-bezier(.22, 1, .36, 1), background .3s ease, box-shadow .3s ease, opacity .2s ease; }
+  .tab-glider.is-focus { background: var(--text); box-shadow: 0 0 0 .18rem rgba(var(--gcr), .55), 0 .7rem 1.8rem -.5rem rgba(var(--gcr), .95); }
+  .tab-glider.is-gone { opacity: 0; }
+  .main-tabs .tab { z-index: 1; transition: color .25s ease; }
+  /* keine eigene Fläche mehr – auch nicht beim Start-Knopf (vorher grauer Kreis) */
+  .main-tabs .tab.is-on, .main-tabs .tab.k-live.is-on, .main-tabs .tab.k-movie.is-on, .main-tabs .tab.k-series.is-on,
+  .main-tabs .tab.k-home, .main-tabs .tab.k-home.is-on, .main-tabs .tab.tab-home, .main-tabs .tab.tab-round.is-on,
+  body.kbd .main-tabs .tab.f:focus, body.is-tv .main-tabs .tab.f:focus, body.kbd .tab.tab-home.f:focus, body.is-tv .tab.tab-home.f:focus {
+    background: transparent; box-shadow: none; }
+  .main-tabs .tab.k-home { --cr: 167, 139, 250; }
+  .main-tabs .tab.k-home .i { color: var(--text); }
+  body.kbd .main-tabs .tab.f:focus .i, body.is-tv .main-tabs .tab.f:focus .i { color: var(--bg); }
+  .main-tabs .tab:not(.is-on):hover { background: rgba(255, 255, 255, .06); }
+}
+@media (prefers-reduced-motion: reduce) { .tab-glider { transition: none; } }
+
+/* ==========================================================
+   Fußleiste der Startseite (1.14.6): deutlich niedriger und kleiner, die Angaben gleichmäßig über die ganze
+   Breite verteilt (MAC/KEY/Benutzer · Status · Laufzeit · Uhr) statt links gedrängt und rechts die große Uhr.
+   ========================================================== */
+.shell.is-launcher .statusbar { justify-content: space-between; padding: .4rem var(--pad) .5rem; }
+.shell.is-launcher .statusbar .mac-tag { font-size: .82rem; }
+.shell.is-launcher .statusbar .mac-tag span { font-size: .66rem; }
+.shell.is-launcher .statusbar .mac-tag b + span, .shell.is-launcher .statusbar .mac-tag .copy-btn + span { margin-left: .9rem; }
+.shell.is-launcher .sb-status { margin: 0; padding: 0; box-shadow: none; font-size: .72rem; }
+.shell.is-launcher .sb-st + .sb-st { margin-left: 1.1rem; }
+.shell.is-launcher .sb-st i { width: .45rem; height: .45rem; margin-right: .4rem; }
+.shell.is-launcher .sb-days, .shell.is-launcher .sb-days:not(:empty) + .sb-clock { margin: 0; }
+.shell.is-launcher .sb-clock { margin: 0; font-size: .8rem; }
+.shell.is-launcher .sb-clock b { font-size: 1.1rem; margin-right: .5rem; letter-spacing: 0; }
+.shell.is-launcher .sb-clock .sky-slot { margin-right: .45rem; }
+.shell.is-launcher .sb-clock .sky .i { width: 1.1rem; height: 1.1rem; }
+.shell.is-launcher .sb-date { flex-direction: row; align-items: baseline; }
+.shell.is-launcher .sb-date i { font-size: .8rem; margin-right: .35rem; }
+.shell.is-launcher .sb-date small { font-size: .74rem; }

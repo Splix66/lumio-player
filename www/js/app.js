@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Telvo Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.14.5',
+    version: '1.14.6',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     /* Bibliotheken: werden beim Bauen nach www/lib kopiert (scripts/copy-libs.js) und von dort geladen.
        Nur wenn sie fehlen, aus dem Internet – mit fester Version und Prüfsumme (SRI): eine veränderte Datei
@@ -721,6 +721,17 @@
     var base = normalizeServer(p.server);
     var user = encodeURIComponent(p.username), pass = encodeURIComponent(p.password);
     var cache = {}, lists = {};
+    /* Film- und Serienliste im Gerät zwischenspeichern (IndexedDB): nach dem Start sofort da, statt erst Sekunden
+       vom Server zu laden (68.000 Filme ≈ 5 s auf dem Fire TV). Gilt bis zur nächsten Aktualisierung – „Aktualisieren“
+       und das automatische Neuladen rufen reset() auf, dann wird frisch geladen und neu gespeichert –, höchstens 2 Tage,
+       und nur für dieselbe Playlist mit demselben Zugang (sig). */
+    var DISK = { movie: 1, series: 1 }, LIST_V = 1, fresh = false, sig = base + '|' + p.username;
+    function diskKey(kind) { return 'list.' + (p.id || 'neu') + '.' + kind; }
+    function saveList(kind, list) {
+      // etwas später: das Speichern kostet kurz Rechenzeit – nicht, während die Liste gerade gezeichnet wird
+      if (list && list.length) setTimeout(function () { EpgStore.set(diskKey(kind), { v: LIST_V, sig: sig, at: Date.now(), items: list }); }, 4000);
+      return list;
+    }
     var ACTIONS = {
       live: ['get_live_categories', 'get_live_streams'],
       movie: ['get_vod_categories', 'get_vod_streams'],
@@ -812,11 +823,21 @@
         var all = !catId || catId === '__all', key = kind + '|' + (all ? '__all' : catId);
         if (lists[key]) return lists[key];
         var whole = lists[kind + '|__all'];
-        var pr = whole && whole.done
-          ? whole.then(function (l) { return l.filter(function (x) { return x.catId === String(catId); }); })
-          : api(ACTIONS[kind][1], all ? '' : '&category_id=' + encodeURIComponent(catId), true).then(function (list) {
+        function net() {
+          return api(ACTIONS[kind][1], all ? '' : '&category_id=' + encodeURIComponent(catId), true).then(function (list) {
             return asList(list).map(function (s) { return mapItem(kind, s); });
           });
+        }
+        var pr;
+        if (whole && whole.done) pr = whole.then(function (l) { return l.filter(function (x) { return x.catId === String(catId); }); });
+        else if (all && DISK[kind] && !fresh) {
+          // gespeicherte Gesamtliste aus dem Gerät – sonst vom Server laden und speichern
+          pr = EpgStore.get(diskKey(kind)).then(function (c) {
+            if (c && c.v === LIST_V && c.sig === sig && c.items && c.items.length && Date.now() - c.at < 172800000) return c.items;
+            return net().then(function (l) { return saveList(kind, l); });
+          }, function () { return net().then(function (l) { return saveList(kind, l); }); });
+        }
+        else pr = all && DISK[kind] ? net().then(function (l) { return saveList(kind, l); }) : net();
         lists[key] = pr;
         pr.then(function () { pr.done = true; }, function () { delete lists[key]; });
         return pr;
@@ -916,7 +937,8 @@
         var dir = item.kind === 'movie' ? 'movie' : 'series';
         return { url: base + '/' + dir + '/' + user + '/' + pass + '/' + item.id + '.' + (item.ext || 'mp4') };
       },
-      reset: function () { cache = {}; lists = {}; }
+      // Aktualisieren: alles frisch vom Server (auch nicht aus dem Gerätespeicher) – die neue Liste wird dann gespeichert
+      reset: function () { cache = {}; lists = {}; fresh = true; }
     };
   }
 
@@ -4008,12 +4030,19 @@
         self.buttons[it[0]] = b;
         tabs.appendChild(b);
       });
+      // Gleitende Leuchtfläche: wandert beim Wechseln mit der Fernbedienung weich von Reiter zu Reiter (links/rechts)
+      // und nimmt die Farbe des Reiters an. Ohne Fokus im Menü sitzt sie auf dem gewählten Reiter.
+      self.glider = h('span', { class: 'tab-glider is-gone', 'aria-hidden': 'true' });
+      tabs.insertBefore(self.glider, tabs.firstChild);
+      self.tabsEl = tabs;
       // Die drei Reiter reagieren sichtbar aufeinander: der Nachbar des gerade gewählten hebt sich leicht mit
-      tabs.addEventListener('focusin', function (e) { self.hint(e.target && e.target._tabKey); });
+      tabs.addEventListener('focusin', function (e) { self.hint(e.target && e.target._tabKey); self.glide(e.target, true); });
       tabs.addEventListener('focusout', function (e) {
-        if (!e.relatedTarget || !tabs.contains(e.relatedTarget)) self.hint(null);
+        if (!e.relatedTarget || !tabs.contains(e.relatedTarget)) { self.hint(null); self.glide(null, false); }
       });
       tabs.addEventListener('mouseleave', function () { if (!tabs.contains(document.activeElement)) self.hint(null); });
+      window.addEventListener('resize', function () { self.glide(); });
+      try { document.fonts.ready.then(function () { self.glide(); }); } catch (e) {}
       ['live', 'movie', 'series'].forEach(function (k) {
         self.buttons[k]._tabKey = k;
         self.buttons[k].addEventListener('mouseenter', function () { self.hint(k); });
@@ -4055,6 +4084,8 @@
           return false;
         },
         onShow: function () {
+          // Leuchtfläche neu setzen: beim Aufbau lag z. B. „Wer schaut?“ darüber (Menü unsichtbar → keine Maße)
+          setTimeout(function () { if (!(self.tabsEl && self.tabsEl.contains(document.activeElement))) self.glide(); }, 50);
           var v = self.view.firstChild;
           if (v && v._refresh) v._refresh();
           else if (self.current === 'home') self.show('home', false, true);
@@ -4087,6 +4118,9 @@
         if (k !== name) self.setCount(k, '');
       });
       self.hint(null);
+      // Leuchtfläche zum neuen Reiter (gleich und noch einmal nach dem Aufbau – dann stimmen die Maße sicher)
+      setTimeout(function () { var a = document.activeElement; self.glide(self.tabsEl && self.tabsEl.contains(a) ? a : null, !!(self.tabsEl && self.tabsEl.contains(a))); }, 0);
+      setTimeout(function () { if (!(self.tabsEl && self.tabsEl.contains(document.activeElement))) self.glide(); }, 400);
       self.viewBack = null;
       // alte Ansicht aufräumen (lange Listen sofort freigeben – wichtig für Boxen mit wenig Speicher)
       var old = self.view.firstChild;
@@ -4123,6 +4157,19 @@
         b.classList.toggle('is-near', i >= 0 && Math.abs(i - j) === 1);
         b.classList.toggle('is-hint', i === j);
       });
+    },
+    // Leuchtfläche auf Reiter „b“ setzen (ohne: der gewählte Reiter). focused = Fokus der Fernbedienung (hell)
+    glide: function (b, focused) {
+      var g = this.glider, tabs = this.tabsEl;
+      if (!g || !tabs) return;
+      if (!b || !b.classList || !b.classList.contains('tab')) { b = $('.tab.is-on', tabs); focused = false; }
+      if (!b || !b.offsetWidth) { g.classList.add('is-gone'); return; }
+      g.style.width = b.offsetWidth + 'px';
+      g.style.height = b.offsetHeight + 'px';
+      g.style.transform = 'translate(' + b.offsetLeft + 'px, ' + b.offsetTop + 'px)';
+      g.style.setProperty('--gcr', (getComputedStyle(b).getPropertyValue('--cr') || '').trim() || '167, 139, 250');
+      g.classList.toggle('is-focus', !!focused);
+      g.classList.remove('is-gone');
     }
   };
 
