@@ -9289,7 +9289,8 @@
     // Danach liegengebliebene Fehlerberichte schicken (kurz warten, bis die Anmeldung beim Online-Dienst durch ist).
     var np = NativePlayer.plugin();
     if (np && typeof np.takeCrash === 'function') {
-      try { np.takeCrash().then(function (r) { if (r && r.crash) ErrLog.add('Absturz', r.crash); }, function () {}); } catch (e) {}
+      // r.exit: Android hat die App sichtbar beendet (Speichermangel, Absturz im Browser-Teil, reagierte nicht) – „App hat sich plötzlich geschlossen“
+      try { np.takeCrash().then(function (r) { if (r && r.crash) ErrLog.add('Absturz', r.crash); if (r && r.exit) ErrLog.add('Beendet', r.exit); }, function () {}); } catch (e) {}
     }
     setTimeout(function () { ErrReport.flush(); }, 30000);
 
