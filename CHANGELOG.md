@@ -1,5 +1,9 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## 1.14.6 – 2026-11-11 · Filme und Serien sofort da
+
+- **Film- und Serienliste werden im Gerät gespeichert:** Nach dem Start sind „Filme“ und „Serien“ sofort da, statt erst Sekunden vom Server zu laden (bei 68.000 Filmen auf dem Fire TV ca. 5 s → unter 1 s). Bei „Aktualisieren“ und beim automatischen Neuladen (alle 12 Stunden) wird frisch vom Server geladen und neu gespeichert; gespeicherte Listen gelten höchstens 2 Tage und nur für dieselbe Playlist mit demselben Zugang (Xtream).
+
 ## 1.14.5 – 2026-11-11 · Cover laden schneller, TV-Programm übersichtlicher
 
 - **Cover laden schneller:** Film- und Serien-Cover von TMDB werden in der Größe geladen, in der sie angezeigt werden (342 px statt 600×900) – etwa ein Drittel der Daten. Klappt die kleine Fassung nicht, kommt das Original. Der Bildschirmschoner lädt für Hintergrund und Farbe nur ein winziges Bild.
