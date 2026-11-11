@@ -1,5 +1,12 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## 1.14.5 – 2026-11-11 · Cover laden schneller, TV-Programm übersichtlicher
+
+- **Cover laden schneller:** Film- und Serien-Cover von TMDB werden in der Größe geladen, in der sie angezeigt werden (342 px statt 600×900) – etwa ein Drittel der Daten. Klappt die kleine Fassung nicht, kommt das Original. Der Bildschirmschoner lädt für Hintergrund und Farbe nur ein winziges Bild.
+- **TV-Programm:** Läuft eine Vorschau, sitzt sie rechts oben neben dem Raster – sie verdeckt keine Sendungen mehr. Kurze Sendungen („h…“) werden beim Auswählen breit, damit Titel und Zeit lesbar sind.
+- **Live-Vorschau nach dem Zurückkommen:** War die App länger als 20 Sekunden im Hintergrund, lädt die Vorschau den Sender neu – vorher lief sie an der alten Stelle weiter, Minuten hinter dem Live-Bild.
+- **Suche:** Die Seite darunter wird stärker abgedunkelt – zwischen Suchfeld und Treffern schien kein Titel mehr durch.
+
 ## 1.14.4 – 2026-11-11 · Neuer Bildschirmschoner in den Farben des Films
 
 - **Bildschirmschoner neu gestaltet:** große Uhr mit Datum und Wetter links (bleibt an ihrer Stelle), rechts eine Poster-Karte mit leuchtendem Rand, Name, Genre und HD-Hinweis, darunter Punkte für die wechselnden Poster. Ein geschwungenes Lichtband und ein Leuchten am unteren Rand geben die Tiefe.
