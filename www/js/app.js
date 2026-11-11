@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Telvo Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.14.3',
+    version: '1.14.4',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     /* Bibliotheken: werden beim Bauen nach www/lib kopiert (scripts/copy-libs.js) und von dort geladen.
        Nur wenn sie fehlen, aus dem Internet – mit fester Version und Prüfsumme (SRI): eine veränderte Datei
@@ -5494,7 +5494,8 @@
      fragt die App nach. Kommt keine Antwort, stoppt die Wiedergabe – so bleibt der Zugang beim Anbieter frei. */
   /* ---------- Bildschirmschoner ----------
      Nach einigen Minuten ohne Bedienung (und ohne laufendes Video): Uhr, Datum und langsam wechselnde Poster.
-     Die Uhr wandert jede Minute ein Stück weiter (schont OLED-Fernseher). Die erste Taste beendet ihn nur – sie löst nichts aus. */
+     Uhr fest links, Poster-Karte rechts; Linien und Leuchten nehmen die Farbe des Posters an. Tipps unten links,
+     mit dem Auge (oder der Menütaste) ein-/ausblendbar. Die erste andere Taste beendet ihn nur – sie löst nichts aus. */
   /* ---------- Tageszeit & Wetter neben der Uhr ----------
      Ohne Einstellung: nur die Tageszeit (Sonnenaufgang, Sonne, Sonnenuntergang, Mond) – nichts geht ins Internet.
      Mit gewähltem Ort (Einstellungen → Darstellung → Wetter): echtes Wetter von Open-Meteo (kostenlos, ohne Konto).
@@ -5613,7 +5614,14 @@
     mins: function () { var v = Settings.get('saverMin'); return typeof v === 'number' ? v : 10; },
     start: function () {
       var self = this, mx = -1, my = -1;
-      function wake(e) { if (!self.el) return; e.preventDefault(); e.stopPropagation(); self.hide(); }
+      function wake(e) {
+        if (!self.el) return;
+        e.preventDefault(); e.stopPropagation();
+        // Auge (Tippen/Klicken) oder Menütaste der Fernbedienung: Tipps ein-/ausblenden, Bildschirmschoner bleibt
+        var eye = e.target && e.target.closest && e.target.closest('.sv-eye');
+        if (eye || (e.type === 'keydown' && (e.key === 'ContextMenu' || e.keyCode === 82 || e.key === 'm'))) { self.toggleTips(); return; }
+        self.hide();
+      }
       // am Fenster, damit die Taste vor der normalen Steuerung abgefangen wird
       ['keydown', 'pointerdown', 'touchstart', 'wheel'].forEach(function (ev) { window.addEventListener(ev, wake, true); });
       window.addEventListener('mousemove', function (e) {
@@ -5630,6 +5638,65 @@
       if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
       if (Date.now() - StillWatching.last >= m * 60000) this.show();
     },
+    tipsOn: function () { return Settings.get('saverTips') !== false; },
+    toggleTips: function () {
+      Settings.set('saverTips', !this.tipsOn());
+      this.paintEye();
+      if (this.tipsOn()) this.nextTip();
+    },
+    paintEye: function () {
+      if (!this.el) return;
+      var on = this.tipsOn();
+      this.el.classList.toggle('no-tips', !on);
+      clear(this.eye).appendChild(icon(on ? 'eye' : 'eyeOff'));
+      this.eye.setAttribute('title', on ? T('Tipps ausblenden') : T('Tipps einblenden'));
+    },
+    /* Akzentfarbe aus dem Poster: kräftigster häufiger Farbton, auf gut lesbare Helligkeit gebracht.
+       Geht nur, wenn der Bildserver das erlaubt (CORS) – sonst bleibt das Telvo-Violett. */
+    tint: function (src, done) {
+      var im = new Image(), fin = false;
+      function end(c) { if (!fin) { fin = true; done(c); } }
+      im.crossOrigin = 'anonymous';
+      try { im.referrerPolicy = 'no-referrer'; } catch (e) {}
+      im.onerror = function () { end(null); };
+      im.onload = function () {
+        try {
+          var W = 24, H = 36, c = document.createElement('canvas'); c.width = W; c.height = H;
+          var g = c.getContext('2d'); g.drawImage(im, 0, 0, W, H);
+          var d = g.getImageData(0, 0, W, H).data, bk = {};
+          for (var i = 0; i < d.length; i += 4) {
+            var r = d[i], gg = d[i + 1], b = d[i + 2], mx = Math.max(r, gg, b), mn = Math.min(r, gg, b);
+            if (mx < 50 || mx - mn < 40) continue;   // zu dunkel oder grau
+            var hh = mx === mn ? 0 : mx === r ? ((gg - b) / (mx - mn) + 6) % 6 : mx === gg ? (b - r) / (mx - mn) + 2 : (r - gg) / (mx - mn) + 4;
+            var k = Math.floor(hh * 2), wgt = (mx - mn) / mx * (mx / 255);
+            var o = bk[k] || (bk[k] = { w: 0, r: 0, g: 0, b: 0 });
+            o.w += wgt; o.r += r * wgt; o.g += gg * wgt; o.b += b * wgt;
+          }
+          var best = null;
+          for (var kk in bk) if (!best || bk[kk].w > best.w) best = bk[kk];
+          if (!best || best.w < 3) { end(null); return; }
+          end(Saver.vivid([best.r / best.w, best.g / best.w, best.b / best.w]));
+        } catch (e) { end(null); }
+      };
+      setTimeout(function () { end(null); }, 6000);
+      im.src = src;
+    },
+    // gleicher Farbton, aber satt und hell genug für Linien und Leuchten auf dunklem Grund
+    vivid: function (c) {
+      var r = c[0] / 255, g = c[1] / 255, b = c[2] / 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b), hh = 0, l = (mx + mn) / 2, s = 0;
+      if (mx !== mn) {
+        var dd = mx - mn; s = l > .5 ? dd / (2 - mx - mn) : dd / (mx + mn);
+        hh = mx === r ? (g - b) / dd + (g < b ? 6 : 0) : mx === g ? (b - r) / dd + 2 : (r - g) / dd + 4; hh /= 6;
+      }
+      s = Math.min(.92, Math.max(.6, s)); l = .6;
+      function f(t) { var q = l < .5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q; t = (t + 1) % 1; return t < 1 / 6 ? p + (q - p) * 6 * t : t < .5 ? q : t < 2 / 3 ? p + (q - p) * (2 / 3 - t) * 6 : p; }
+      return [Math.round(f(hh + 1 / 3) * 255), Math.round(f(hh) * 255), Math.round(f(hh - 1 / 3) * 255)];
+    },
+    setAcc: function (c) {
+      if (!this.el) return;
+      c = c || [139, 92, 246];   // Telvo-Violett
+      this.el.style.setProperty('--acc', c.join(', '));
+    },
     show: function () {
       var self = this;
       self.clock = h('b'); self.date = h('span');
@@ -5637,10 +5704,24 @@
       self.tip = h('div', { class: 'sv-tip' });
       self.tips = saverTips();
       self.tipAt = Math.floor(Math.random() * self.tips.length);
-      self.card = h('div', { class: 'sv-clock' }, self.clock, self.date, self.tip);
+      self.card = h('div', { class: 'sv-clock' }, self.clock, self.date);
+      self.eye = h('span', { class: 'sv-eye', role: 'button' });
+      self.stat = h('div', { class: 'sv-stat' });
+      self.dots = h('div', { class: 'sv-dots' });
+      self.cardBox = h('div', { class: 'sv-card' });
+      var wave = h('div', { class: 'sv-wave' });
+      wave.innerHTML = '<svg viewBox="0 0 1600 900" preserveAspectRatio="none"><defs>' +
+        '<linearGradient id="svWg" x1="0" y1="1" x2="1" y2="0"><stop offset="0" class="sv-s0"/><stop offset=".55" class="sv-s1"/><stop offset="1" class="sv-s2"/></linearGradient></defs>' +
+        '<path class="sv-band" d="M0 0H1600V20C1330 60 1100 90 860 150 600 215 330 300 0 420Z"/>' +
+        '<path class="sv-glow" d="M0 420C330 300 600 215 860 150 1100 90 1330 60 1600 20"/>' +
+        '<path class="sv-line" d="M0 420C330 300 600 215 860 150 1100 90 1330 60 1600 20"/>' +
+        '<path class="sv-line2" d="M0 470C360 350 640 260 900 200 1140 145 1370 115 1600 85"/></svg>';
+      self.el = h('div', { class: 'saver', 'aria-hidden': 'true' }, self.layers[0], self.layers[1], wave, h('div', { class: 'sv-horizon' }), h('div', { class: 'sv-shade' }),
+        h('div', { class: 'sv-brand' }, brandMark(), wordmark()), self.stat, self.card, self.cardBox, self.dots,
+        h('div', { class: 'sv-tipbar' }, self.eye, self.tip));
+      self.setAcc(null);
+      self.paintEye();
       self.nextTip();
-      self.el = h('div', { class: 'saver', 'aria-hidden': 'true' }, self.layers[0], self.layers[1], h('div', { class: 'sv-shade' }), self.card,
-        h('div', { class: 'sv-brand' }, brandMark(), wordmark()));
       document.body.appendChild(self.el);
       self.n = 0; self.tick();
       // Poster der Playlist (Filme und Serien mit Bild), zufällig gemischt
@@ -5656,25 +5737,42 @@
       self.timer = setInterval(function () { self.next(); if (self.n % 2 === 0) self.nextTip(); }, 12000);
     },
     nextTip: function () {
-      if (!this.tip || !this.tips.length) return;
+      if (!this.tip || !this.tips.length || !this.tipsOn()) return;
       var t = this.tips[this.tipAt++ % this.tips.length], box = this.tip;
       box.classList.remove('is-on');
       setTimeout(function () {
         clear(box);
         box.appendChild(h('span', { class: 'sv-tip-ic' }, icon(t[1])));
         box.appendChild(h('div', null, h('small', { text: T('Wusstest du schon?') }), h('p', { text: t[0] })));
+        if (!Saver.tipsOn()) return;
         box.classList.add('is-on');
       }, box.firstChild ? 500 : 0);
     },
     // nächstes Poster überblenden
     next: function () {
       if (!this.el || !this.pics.length) return;
-      var it = this.pics[this.idx++ % this.pics.length], back = this.layers[this.n % 2], front = this.layers[(this.n + 1) % 2];
+      var self = this, pos = this.idx % this.pics.length, it = this.pics[this.idx++ % this.pics.length], back = this.layers[this.n % 2], front = this.layers[(this.n + 1) % 2];
       this.n++;
       clear(front);
+      // Hintergrund: das Poster ganz weich und dunkel – färbt den Bildschirm passend zum Film
       if (!Platform.lite) front.appendChild(img(it.logo, 'sv-blur', function () {}));
-      front.appendChild(h('div', { class: 'sv-poster' }, img(it.logo, '', function (i) { if (i.parentNode) i.parentNode.removeChild(i); }), h('span', { text: it.name })));
       front.classList.add('is-on'); back.classList.remove('is-on');
+      // Karte rechts: Poster mit leuchtendem Rand, Name und Genre
+      var g = String(it.genre || '').split(/\s*[,\/|]\s*/).filter(Boolean).slice(0, 2).join(' • ') || (it.kind === 'series' ? T('Serie') : T('Film'));
+      var hd = /\b(4k|uhd|fhd|hd)\b/i.exec(String(it.name || ''));
+      var card = h('div', { class: 'sv-poster' },
+        img(it.logo, '', function (i) { if (i.parentNode) i.parentNode.removeChild(i); }),
+        h('div', { class: 'sv-cap' }, h('div', null, h('b', { text: it.name }), h('small', { text: g })), hd ? h('em', { text: hd[1].toUpperCase() }) : null));
+      var old = this.cardBox.firstChild;
+      if (old) { old.classList.add('is-out'); setTimeout(function () { if (old.parentNode) old.parentNode.removeChild(old); }, 900); }
+      this.cardBox.appendChild(card);
+      setTimeout(function () { card.classList.add('is-on'); }, 30);
+      // Punkte unter der Karte (höchstens 5, der aktuelle leuchtet)
+      clear(this.dots);
+      var N = Math.min(5, this.pics.length);
+      for (var i = 0; i < N; i++) this.dots.appendChild(h('i', { class: i === pos % N ? 'is-on' : '' }));
+      // Farbe passend zum Poster
+      this.tint(it.logo, function (c) { if (self.el && self.cardBox.lastChild === card) self.setAcc(c); });
     },
     tick: function () {
       if (!this.el) return;
@@ -5683,9 +5781,12 @@
       clear(this.date);
       this.date.appendChild(h('span', { class: 'sky-slot' }, Sky.el()));
       this.date.appendChild(document.createTextNode(d.toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' })));
-      // jede Minute eine andere Stelle (Einbrennen vermeiden)
-      var m = d.getMinutes(), x = 6 + (m * 37 % 40), y = 8 + (m * 23 % 42);
-      this.card.style.left = x + '%'; this.card.style.top = y + '%';
+      // Statusanzeigen oben rechts nur als Symbole (Farbe = Zustand)
+      clear(this.stat);
+      var self = this;
+      WelcomeStatus.items(!!App.provider).forEach(function (it) {
+        self.stat.appendChild(h('span', { class: 'sv-st is-' + it[0], title: it[2] }, icon(it[1])));
+      });
     },
     hide: function () {
       clearInterval(this.timer);
@@ -6944,6 +7045,8 @@
     var tSaver = choiceTile('saver', T('Bildschirmschoner'), SAVERS, function () { return Saver.mins(); }, function (v) { Settings.set('saverMin', v); },
       T('Wird die App so lange nicht bedient (und läuft kein Video), erscheinen Uhr und Poster. Schont OLED-Fernseher. Eine beliebige Taste beendet ihn.'),
       function () { return h('div', { class: 'row nt-act' }, sheetBtn('play', T('Jetzt ansehen'), function () { setTimeout(function () { Saver.show(); }, 200); })); });
+    var tSaverTips = switchTile('eye', T('Tipps im Bildschirmschoner'), T('„Wusstest du schon?“ unten links. Im Bildschirmschoner auch mit dem Auge oder der Menütaste ein- und ausblenden.'),
+      function () { return Settings.get('saverTips') !== false; }, function (v) { Settings.set('saverTips', v); });
     var tClock = segTile('clock', T('Zeitformat'), [[false, '24 h'], [true, '12 h']],
       function () { return !!Settings.get('clock12'); }, function (v) { Settings.set('clock12', v); }, T('Für Uhr und Programmführer'));
     var tDev = choiceTile('device', T('Gerätetyp'), DEVICES, function () { return Settings.get('deviceType') || 'auto'; }, function (v) {
@@ -6996,7 +7099,7 @@
     var el = sidePage('settings st-page', T('Einstellungen'), 'settings', [
       { id: 'general', ic: 'home', c: 'violet', name: T('Allgemein'), hint: T('Grundlegende Einstellungen für dein Telvo-Erlebnis.'), body: grid([tLang, tClock, tStart, tUpdChk]) },
       { id: 'play', ic: 'play', c: 'blue', name: T('Wiedergabe'), hint: T('Player, Bildqualität, Untertitel und Vorschau.'), body: grid([tEng, tQual, tSound, tSub, tNext, tPrev, tHero]) },
-      { id: 'look', ic: 'sun', c: 'amber', name: T('Darstellung'), hint: T('Farben, Cover, Wetter und Bildschirmschoner.'), body: grid([tTheme, tPoster, tSky, tSaver]) },
+      { id: 'look', ic: 'sun', c: 'amber', name: T('Darstellung'), hint: T('Farben, Cover, Wetter und Bildschirmschoner.'), body: grid([tTheme, tPoster, tSky, tSaver, tSaverTips]) },
       { id: 'content', ic: 'series', c: 'teal', name: T('Inhalte & Listen'), hint: T('Playlists, Kategorien und Sender.'), body: grid([tAdd, tPl, tUpd, tAuto, tSort, tHideL, tHideM, tHideS, tHideCh]) },
       { id: 'users', ic: 'lock', c: 'pink', name: T('Benutzer & Sicherheit'), hint: T('Wer schaut, Kindersicherung und Verlauf.'), body: grid([tPersons, tPar, tHis]) },
       { id: 'devices', ic: 'device', c: 'slate', name: T('Geräte & Verbindungen'), hint: T('Gerätetyp, Verbindung, Sicherung und externe Player.'), body: grid([tDev, tSpeed, tBackup, tExt]) },
