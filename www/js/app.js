@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Telvo Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.14.8',
+    version: '1.14.9',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     /* Bibliotheken: werden beim Bauen nach www/lib kopiert (scripts/copy-libs.js) und von dort geladen.
        Nur wenn sie fehlen, aus dem Internet – mit fester Version und Prüfsumme (SRI): eine veränderte Datei
@@ -7991,12 +7991,15 @@
       if (!this.m) { try { this.m = JSON.parse(localStorage.getItem(this.key) || '{}') || {}; } catch (e) { this.m = {}; } }
       return this.m;
     },
-    has: function (id) { return !!this.map()[id]; },
-    set: function (id, on) {
-      var m = this.map();
-      if (on) m[id] = Date.now(); else if (m[id]) delete m[id]; else return;
+    // 'a' = anderes Format (.ts), 'h' = gleich hls.js (der eingebaute Android-Player scheitert, gemessen ~2,6 s verschenkt)
+    kind: function (id) { var v = this.map()[id]; return !v ? '' : typeof v === 'number' ? 'a' : v[0]; },
+    has: function (id) { return this.kind(id) === 'a'; },
+    set: function (id, kind) {
+      var m = this.map(), now = Date.now();
+      if (kind) { if (this.kind(id) === kind) return; m[id] = [kind, now]; } else if (m[id]) delete m[id]; else return;
+      var at = function (x) { var v = m[x]; return typeof v === 'number' ? v : v[1]; };
       var k = Object.keys(m);
-      if (k.length > 300) k.sort(function (a, b) { return m[a] - m[b]; }).slice(0, k.length - 300).forEach(function (x) { delete m[x]; });
+      if (k.length > 300) k.sort(function (a, b) { return at(a) - at(b); }).slice(0, k.length - 300).forEach(function (x) { delete m[x]; });
       try { localStorage.setItem(this.key, JSON.stringify(m)); } catch (e) {}
     }
   };
@@ -8186,7 +8189,11 @@
         self.spinner.style.display = 'none'; self.err.style.display = 'none'; self.reconnect = false;
         self.netRetries = 0; self.playedSince = Date.now();
         // lief erst das andere Format (.ts)? Für diesen Sender merken – nächstes Mal gleich damit starten
-        if (self.item && self.item.kind === 'live' && self.alt && self.curUrl === self.alt && !self.altFirst) AltPref.set(self.item.id, true);
+        if (self.item && self.item.kind === 'live') {
+          if (self.alt && self.curUrl === self.alt) { if (!self.altFirst) AltPref.set(self.item.id, 'a'); }
+          // eingebauter Player gescheitert, hls.js läuft: nächstes Mal gleich hls.js
+          else if (self.hls && self.forceHlsJs && !self.hlsFirst && Platform.android) AltPref.set(self.item.id, 'h');
+        }
         self.paintCtrls(); self.updateTracks();
       });
       video.addEventListener('progress', function () { self.paintBuffer(); });
@@ -8373,7 +8380,10 @@
 
       var src = App.provider.streamUrl(item);
       self.alt = src.alt; self.mainUrl = src.url;
-      self.altFirst = !!(item.kind === 'live' && src.alt && AltPref.has(item.id));
+      var pk = item.kind === 'live' ? AltPref.kind(item.id) : '';
+      self.altFirst = !!(pk === 'a' && src.alt);
+      self.hlsFirst = pk === 'h';
+      if (self.hlsFirst) self.forceHlsJs = true;
       if (self.altFirst) { self.triedAlt = true; self.attach(src.alt); } else self.attach(src.url);
 
       clearInterval(self.saveTimer);
@@ -8585,8 +8595,12 @@
       if (self.alt && !self.triedAlt) { self.triedAlt = true; self.retried = false; self.attach(self.alt); return; }
       // gemerktes Format klappt diesmal nicht: vergessen und den normalen Weg gehen
       if (self.altFirst && self.mainUrl && self.curUrl === self.alt) {
-        self.altFirst = false; if (self.item) AltPref.set(self.item.id, false);
+        self.altFirst = false; if (self.item) AltPref.set(self.item.id, '');
         self.retried = false; self.forceHlsJs = false; self.attach(self.mainUrl); return;
+      }
+      if (self.hlsFirst && self.mainUrl) {
+        self.hlsFirst = false; if (self.item) AltPref.set(self.item.id, '');
+        self.retried = false; self.forceHlsJs = false; self.triedAlt = false; self.attach(self.mainUrl); return;
       }
       self.spinner.style.display = 'none';
       self.reconnect = false;
