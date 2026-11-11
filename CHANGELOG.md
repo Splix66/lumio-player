@@ -1,5 +1,9 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## 1.14.8 – 2026-11-11 · Sender mit Dolby-Ton starten schneller
+
+- **Vorschau startet schneller bei Sendern wie „Das Erste“:** Solche Sender laufen nur im anderen Format (.ts). Vorher ging jeder Start erst durch zwei Fehlversuche (etwa 4 s bis zum Bild). Jetzt merkt sich die App je Sender das funktionierende Format und startet beim nächsten Mal gleich damit. Klappt es einmal nicht, nimmt sie wieder den normalen Weg.
+
 ## 1.14.7 – 2026-11-11 · Gleitende Glasfläche überall
 
 - **Gleitende Leuchtfläche überall:** Wie im Menü oben gleitet jetzt auch in den Kategorien (Live TV, Filme, Serien), der Senderliste, den Einstellungs-Bereichen, den Knöpfen oben rechts, den Suchtreffern und den Auswahllisten eine Fläche weich zum nächsten Eintrag und schimmert in dessen Farbe.
