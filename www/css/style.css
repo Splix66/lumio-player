@@ -358,6 +358,9 @@ body.kbd .chip.f:focus, body.is-tv .chip.f:focus { transform: scale(1.06); }
 }
 @keyframes qsIn { from { opacity: 0; transform: scaleX(.85); } }
 .qs.is-hidden, .qs-pop.is-hidden { display: none; }
+/* Seite unter der offenen Suche abdunkeln – sonst schien sie durch und überlappte das Suchfeld */
+.qs-dim { position: fixed; left: 0; right: 0; bottom: 0; top: var(--head-h, 0); z-index: 44; background: rgba(6, 6, 12, .8); pointer-events: none; }
+.qs-dim.is-hidden { display: none; }
 .qs > .i { width: 1.2rem; height: 1.2rem; color: var(--muted); flex: none; margin-right: .6rem; }
 .qs input { flex: 1; min-width: 0; height: 100%; background: transparent; border: 0; color: var(--text); font: inherit; font-size: .98rem; outline: none; -webkit-appearance: none; appearance: none; }
 .qs input::placeholder { color: var(--dim); }
@@ -2360,6 +2363,9 @@ html:not(.tv) .track-panel.chan-panel { top: 6rem; bottom: 8.5rem; }   /* oben f
 .sv-dots { position: absolute; right: 6vw; width: 22vw; max-width: 48vh; top: 50%; transform: translateY(calc(min(34vw, 74vh) * .52 + 1.3rem)); display: flex; justify-content: center; }
 .sv-dots i { width: .5rem; height: .5rem; margin: 0 .25rem; border-radius: 999px; background: rgba(255, 255, 255, .3); transition: width .6s ease, background .6s ease; }
 .sv-dots i.is-on { width: 1.4rem; background: rgb(var(--acc)); }
+/* Einbrennschutz: --dx/--dy (±5 px, jede Minute anders) verschieben alle festen Teile – links/oben wie rechts/unten verankerte */
+.saver > .sv-brand, .saver > .sv-stat, .saver > .sv-clock, .saver > .sv-card, .saver > .sv-dots, .saver > .sv-tipbar {
+  margin: var(--dy, 0px) calc(-1 * var(--dx, 0px)) calc(-1 * var(--dy, 0px)) var(--dx, 0px); transition: margin 2s ease; }
 body.lite .sv-pic, body.lite .sv-poster { transition: none; }
 body.lite .sv-glow { display: none; }
 @media (orientation: landscape) and (max-height: 540px) {
