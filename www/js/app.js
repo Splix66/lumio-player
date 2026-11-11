@@ -4084,6 +4084,8 @@
           return false;
         },
         onShow: function () {
+          // Leuchtfläche neu setzen: beim Aufbau lag z. B. „Wer schaut?“ darüber (Menü unsichtbar → keine Maße)
+          setTimeout(function () { if (!(self.tabsEl && self.tabsEl.contains(document.activeElement))) self.glide(); }, 50);
           var v = self.view.firstChild;
           if (v && v._refresh) v._refresh();
           else if (self.current === 'home') self.show('home', false, true);
