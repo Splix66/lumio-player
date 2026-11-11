@@ -7832,7 +7832,8 @@
       video.addEventListener('ended', function () { self.onEnded(); });
       video.addEventListener('error', function () {
         if (self.hls) return;   // hls.js meldet seine Fehler selbst (und versucht es erst noch einmal)
-        self.errInfo = 'Video-Fehler ' + (video.error ? video.error.code : '?') + (self.ts ? ' (mpegts.js)' : '');
+        // nach gescheitertem Umpacken (mpegts.js) zuerst dessen Grund nennen – „Video-Fehler 4“ allein sagt nur „Format geht nicht“
+        self.errInfo = (self.tsInfo ? self.tsInfo + ', direkt: ' : '') + 'Video-Fehler ' + (video.error ? video.error.code : '?') + (self.ts ? ' (mpegts.js)' : '');
         self.onError(T('Das Video konnte nicht abgespielt werden (Format oder Verbindung).'));
       });
       // Ton-Verzögerung nach dem Umschalten wieder anwenden (nur wenn der neue Stream sie erlaubt)
@@ -7948,6 +7949,7 @@
       markPlaying(item);
       self.triedAlt = false; self.retried = false; self.forceHlsJs = false; self.rawFail = false;
       self.netRetries = 0; self.stallRetries = 0; self.swappedCodec = false; self.mediaRecoverAt = 0; self.reconnect = false;
+      self.errTrail = []; self.errInfo = '';
       self.closeTracks();
       if (self.nextCancel) self.nextCancel();
       if (self.tracksBtn) self.tracksBtn.classList.add('is-gone');
@@ -8036,6 +8038,7 @@
       var self = this, video = self.video;
       self.destroyHls();
       self.curUrl = url;
+      self.tsInfo = '';
       // Jeder Start zählt neu: das „waiting“ beim Anlaufen ist kein Stocken (sonst meldete schnelles Umschalten
       // fälschlich „Der Sender stockt“). Laufende Nummer statt Adresse: A→B→A vor dem ersten Laden der
       // Bibliothek hängte sonst zwei Player an dasselbe Video.
@@ -8139,6 +8142,7 @@
             // des Hinweises auf „RAW“-Sender (bzw. erst das andere Format probieren, das macht onError)
             var code = info && info.code;
             if (code >= 400 && code < 500) { self.destroyHls(); self.errInfo = 'mpegts HTTP ' + code; self.onError(T('Der Stream ist nicht erreichbar.')); return; }
+            self.tsInfo = 'mpegts ' + type + ' ' + detail + (code ? ' HTTP ' + code : '');
             plain();
           });
           try {
@@ -8162,14 +8166,21 @@
 
     onError: function (msg) {
       var self = this;
+      // Jeden Versuch merken (Format + Grund), damit im Fehlerprotokoll die ganze Kette steht – nicht nur der letzte
+      // Rückfall (z. B. „Video-Fehler 4“, wenn am Ende die .ts-Adresse direkt probiert wurde)
+      var fm = /\.(m3u8|ts|mp4|mkv|avi)(\?|$)/i.exec(String(self.curUrl || ''));
+      self.errTrail = self.errTrail || [];
+      self.errTrail.push((fm ? fm[1].toLowerCase() : '?') + (self.usingNative ? ' nativ' : '') + ': ' + (self.errInfo || msg));
+      self.errInfo = '';
       if (self.usingNative && Platform.android && !self.forceHlsJs) { self.forceHlsJs = true; self.retried = false; self.attach(self.curUrl); return; }
       if (self.alt && !self.triedAlt) { self.triedAlt = true; self.retried = false; self.attach(self.alt); return; }
       self.spinner.style.display = 'none';
       self.reconnect = false;
       clearInterval(self.wdTimer);
       var it = self.item || {};
-      ErrLog.add('Wiedergabe', msg + ' | ' + (it.kind || '?') + (it.ext ? ' .' + it.ext : '') + (self.errInfo ? ' | ' + self.errInfo : ''));
-      self.errInfo = '';
+      // Hinweistext vorn (zeigt der Status „Letzter Fehler“), danach die Kette – ihr erster Versuch ist der aussagekräftigste
+      ErrLog.add('Wiedergabe', msg + ' | ' + (it.kind || '?') + (it.ext ? ' .' + it.ext : '') + (self.mini ? ' Vorschau' : '') + ' | ' + self.errTrail.join(' → '));
+      self.errTrail = [];
       clear(self.err);
       self.err.appendChild(h('h3', { text: T('Wiedergabe nicht möglich') }));
       self.err.appendChild(h('p', { text: msg }));
