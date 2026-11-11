@@ -6,6 +6,14 @@
 - **Farbe passend zum Film:** Rand, Linien und Leuchten nehmen den kräftigsten Farbton des gerade gezeigten Posters an (sonst Telvo-Violett) und wechseln weich mit.
 - **Logo oben links, Statusanzeigen oben rechts** als Symbole: Internet, Player und Playlist – gelb bei Warnung, rot bei Problem.
 - **„Wusstest du schon?“ kleiner und unten links**, daneben ein Auge zum Ein- und Ausblenden (Tippen/Klicken oder Play/Pause-Taste der Fernbedienung). Auch unter Einstellungen → Darstellung → „Tipps im Bildschirmschoner“.
+- **Einbrennschutz:** Alles im Bildschirmschoner wandert jede Minute um ein paar Pixel – fürs Auge bleibt die Uhr an ihrer Stelle, OLED-Fernseher werden trotzdem geschont.
+- **Titel in deiner Sprache:** Bildschirmschoner und das große Titelbild auf der Startseite nehmen Filme und Serien aus den Kategorien der App-Sprache (z. B. „DE …“) – vorher kamen auch italienische, polnische oder türkische Titel.
+- **„HD“/„4K“ nicht mehr doppelt:** Steht es im Kästchen, wird es aus dem Titel genommen.
+- **„Letzter Sender“ beim Start klappt jetzt auch mit mehreren Personen:** Der Sender startet nach „Wer schaut?“ – vorher blieb die Startseite stehen.
+- **„Weiterschauen“ zeigt die Restzeit verständlich:** „Noch 1 Std. 15 Min.“ statt nur „01:15:42“.
+- **TV-Programm ohne Sternchen:** Hervorhebungen wie „\*\*Ein neuer Versuch\*\*“ erscheinen als normaler Text.
+- **Live TV:** Mit „Rechts“ aus den Kategorien landet man auf dem laufenden Sender (bzw. dem obersten sichtbaren), nicht auf einem zufälligen.
+- **Suche:** Die Seite darunter wird abgedunkelt – vorher schien sie durch und überlappte das Suchfeld.
 
 ## 1.14.3 – 2026-11-11 · Live-TV-Vorschau auf Fire TV mit Bild, neuer Schriftzug, „App hat sich plötzlich geschlossen“ wird erkannt
 
