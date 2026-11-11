@@ -3975,8 +3975,8 @@
       self.buttons = {}; self.current = null;
       self.view = h('div', { class: 'view' });
       var tabs = h('nav', { class: 'main-tabs', 'aria-label': T('Hauptmenü') });
-      // Mitte: Favoriten (Herz) · Live TV · Filme · Serien · Start (Haus) – der gewählte Reiter leuchtet in seiner Farbe
-      [['favs', T('Favoriten'), 'heart'], ['live', T('Live TV'), 'live'], ['movie', T('Filme'), 'movie'], ['series', T('Serien'), 'series'], ['home', T('Start'), 'home']].forEach(function (it) {
+      // Mitte: Start (Haus) · Live TV · Filme · Serien · Favoriten (Herz) – der gewählte Reiter leuchtet in seiner Farbe
+      [['home', T('Start'), 'home'], ['live', T('Live TV'), 'live'], ['movie', T('Filme'), 'movie'], ['series', T('Serien'), 'series'], ['favs', T('Favoriten'), 'heart']].forEach(function (it) {
         var round = it[0] === 'home' || it[0] === 'favs';
         var b = h('button', { class: 'tab f k-' + it[0] + (round ? ' tab-round' : '') + (it[0] === 'home' ? ' tab-home' : ''), 'data-tab': it[0], title: it[1], 'aria-label': it[1], onclick: function () { self.show(it[0], true); } },
           icon(it[2]), h('span', { class: 'tab-label', text: it[1] }));
@@ -4001,7 +4001,7 @@
       }
       var searchBtn = h('button', { class: 'icon-btn f', title: T('Suche'), 'aria-label': T('Suche'), onclick: function () { QuickSearch.toggle(); } }, icon('search'));
       var head = h('header', { class: 'topnav' },
-        h('div', { class: 'nav-left' }, h('div', { class: 'brand brand-sm' }, brandMark(), h('span', { class: 'wordmark' }, h('b', { text: 'Telvo' })))),
+        h('div', { class: 'nav-left' }, h('div', { class: 'brand brand-sm' }, brandMark(), wordmark())),
         tabs,
         h('div', { class: 'top-tools' }, searchBtn, reloadTop, tool('settings', T('Einstellungen')), tool('profile', T('Profil'))));
       var runTime = h('div', { class: 'mac-tag sb-days' });
