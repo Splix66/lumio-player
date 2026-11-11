@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Telvo Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.14.9',
+    version: '1.15.0',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     /* Bibliotheken: werden beim Bauen nach www/lib kopiert (scripts/copy-libs.js) und von dort geladen.
        Nur wenn sie fehlen, aus dem Internet – mit fester Version und Prüfsumme (SRI): eine veränderte Datei
@@ -7991,7 +7991,8 @@
       if (!this.m) { try { this.m = JSON.parse(localStorage.getItem(this.key) || '{}') || {}; } catch (e) { this.m = {}; } }
       return this.m;
     },
-    // 'a' = anderes Format (.ts), 'h' = gleich hls.js (der eingebaute Android-Player scheitert, gemessen ~2,6 s verschenkt)
+    // 'a' = anderes Format (.ts), 'h' = gleich hls.js (der eingebaute Android-Player scheitert, gemessen ~2,6 s verschenkt),
+    // 'n' = .ts klappt bei diesem Sender nicht (nicht mehr zuerst probieren)
     kind: function (id) { var v = this.map()[id]; return !v ? '' : typeof v === 'number' ? 'a' : v[0]; },
     has: function (id) { return this.kind(id) === 'a'; },
     set: function (id, kind) {
@@ -8192,7 +8193,7 @@
         if (self.item && self.item.kind === 'live') {
           if (self.alt && self.curUrl === self.alt) { if (!self.altFirst) AltPref.set(self.item.id, 'a'); }
           // eingebauter Player gescheitert, hls.js läuft: nächstes Mal gleich hls.js
-          else if (self.hls && self.forceHlsJs && !self.hlsFirst && Platform.android) AltPref.set(self.item.id, 'h');
+          else if (self.hls && self.forceHlsJs && !self.hlsFirst && Platform.android && AltPref.kind(self.item.id) !== 'n') AltPref.set(self.item.id, 'h');
         }
         self.paintCtrls(); self.updateTracks();
       });
@@ -8381,8 +8382,12 @@
       var src = App.provider.streamUrl(item);
       self.alt = src.alt; self.mainUrl = src.url;
       var pk = item.kind === 'live' ? AltPref.kind(item.id) : '';
-      self.altFirst = !!(pk === 'a' && src.alt);
-      self.hlsFirst = pk === 'h';
+      // Geräte mit TV-Player (Fire TV, Android-Boxen): hier zeigt der Web-Player nur die Vorschau. Der .ts-Weg (mpegts.js)
+      // zeigt schon mit den ersten Daten ein Bild – gemessen Vollbild → Vorschaubild 1,9–2,1 s statt 4,4 s mit hls.js,
+      // das erst ein ganzes Stück (beim Anbieter 1,5–2 s Ladezeit) abwartet. Klappt .ts nicht, normaler Weg (onError).
+      var tsPrev = item.kind === 'live' && pk !== 'n' && NativePlayer.use({ kind: 'live' });
+      self.altFirst = !!((pk === 'a' || tsPrev) && src.alt);
+      self.hlsFirst = pk === 'h' && !self.altFirst;
       if (self.hlsFirst) self.forceHlsJs = true;
       if (self.altFirst) { self.triedAlt = true; self.attach(src.alt); } else self.attach(src.url);
 
@@ -8595,7 +8600,8 @@
       if (self.alt && !self.triedAlt) { self.triedAlt = true; self.retried = false; self.attach(self.alt); return; }
       // gemerktes Format klappt diesmal nicht: vergessen und den normalen Weg gehen
       if (self.altFirst && self.mainUrl && self.curUrl === self.alt) {
-        self.altFirst = false; if (self.item) AltPref.set(self.item.id, '');
+        // 'n' = bei diesem Sender nicht mehr zuerst .ts probieren
+        self.altFirst = false; if (self.item) AltPref.set(self.item.id, 'n');
         self.retried = false; self.forceHlsJs = false; self.attach(self.mainUrl); return;
       }
       if (self.hlsFirst && self.mainUrl) {
