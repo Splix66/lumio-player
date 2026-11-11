@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Telvo Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.14.5',
+    version: '1.14.6',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     /* Bibliotheken: werden beim Bauen nach www/lib kopiert (scripts/copy-libs.js) und von dort geladen.
        Nur wenn sie fehlen, aus dem Internet – mit fester Version und Prüfsumme (SRI): eine veränderte Datei
@@ -721,6 +721,17 @@
     var base = normalizeServer(p.server);
     var user = encodeURIComponent(p.username), pass = encodeURIComponent(p.password);
     var cache = {}, lists = {};
+    /* Film- und Serienliste im Gerät zwischenspeichern (IndexedDB): nach dem Start sofort da, statt erst Sekunden
+       vom Server zu laden (68.000 Filme ≈ 5 s auf dem Fire TV). Gilt bis zur nächsten Aktualisierung – „Aktualisieren“
+       und das automatische Neuladen rufen reset() auf, dann wird frisch geladen und neu gespeichert –, höchstens 2 Tage,
+       und nur für dieselbe Playlist mit demselben Zugang (sig). */
+    var DISK = { movie: 1, series: 1 }, LIST_V = 1, fresh = false, sig = base + '|' + p.username;
+    function diskKey(kind) { return 'list.' + (p.id || 'neu') + '.' + kind; }
+    function saveList(kind, list) {
+      // etwas später: das Speichern kostet kurz Rechenzeit – nicht, während die Liste gerade gezeichnet wird
+      if (list && list.length) setTimeout(function () { EpgStore.set(diskKey(kind), { v: LIST_V, sig: sig, at: Date.now(), items: list }); }, 4000);
+      return list;
+    }
     var ACTIONS = {
       live: ['get_live_categories', 'get_live_streams'],
       movie: ['get_vod_categories', 'get_vod_streams'],
@@ -812,11 +823,21 @@
         var all = !catId || catId === '__all', key = kind + '|' + (all ? '__all' : catId);
         if (lists[key]) return lists[key];
         var whole = lists[kind + '|__all'];
-        var pr = whole && whole.done
-          ? whole.then(function (l) { return l.filter(function (x) { return x.catId === String(catId); }); })
-          : api(ACTIONS[kind][1], all ? '' : '&category_id=' + encodeURIComponent(catId), true).then(function (list) {
+        function net() {
+          return api(ACTIONS[kind][1], all ? '' : '&category_id=' + encodeURIComponent(catId), true).then(function (list) {
             return asList(list).map(function (s) { return mapItem(kind, s); });
           });
+        }
+        var pr;
+        if (whole && whole.done) pr = whole.then(function (l) { return l.filter(function (x) { return x.catId === String(catId); }); });
+        else if (all && DISK[kind] && !fresh) {
+          // gespeicherte Gesamtliste aus dem Gerät – sonst vom Server laden und speichern
+          pr = EpgStore.get(diskKey(kind)).then(function (c) {
+            if (c && c.v === LIST_V && c.sig === sig && c.items && c.items.length && Date.now() - c.at < 172800000) return c.items;
+            return net().then(function (l) { return saveList(kind, l); });
+          }, function () { return net().then(function (l) { return saveList(kind, l); }); });
+        }
+        else pr = all && DISK[kind] ? net().then(function (l) { return saveList(kind, l); }) : net();
         lists[key] = pr;
         pr.then(function () { pr.done = true; }, function () { delete lists[key]; });
         return pr;
@@ -916,7 +937,8 @@
         var dir = item.kind === 'movie' ? 'movie' : 'series';
         return { url: base + '/' + dir + '/' + user + '/' + pass + '/' + item.id + '.' + (item.ext || 'mp4') };
       },
-      reset: function () { cache = {}; lists = {}; }
+      // Aktualisieren: alles frisch vom Server (auch nicht aus dem Gerätespeicher) – die neue Liste wird dann gespeichert
+      reset: function () { cache = {}; lists = {}; fresh = true; }
     };
   }
 
