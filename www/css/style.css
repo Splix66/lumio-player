@@ -3433,3 +3433,35 @@ body.kbd .hm-quick.f:focus, body.is-tv .hm-quick.f:focus { transform: scale(1.03
 .shell.is-launcher .sb-date { flex-direction: row; align-items: baseline; }
 .shell.is-launcher .sb-date i { font-size: .8rem; margin-right: .35rem; }
 .shell.is-launcher .sb-date small { font-size: .74rem; }
+
+/* ==========================================================
+   Gleitende Leuchtfläche überall (1.14.7): milchiges Glas statt reinem Weiß – heller Rand, Schimmer in der Farbe
+   des Eintrags (--gcr). Gilt für das Menü oben und alle Listen (Glide in app.js). Die Einträge selbst bekommen
+   beim Fokus keine eigene Fläche mehr, die Schrift bleibt hell.
+   ========================================================== */
+.f-glider { --gcr: 167, 139, 250; position: absolute; top: 0; left: 0; z-index: 0; pointer-events: none; opacity: 0; border-radius: .9rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .2), rgba(255, 255, 255, .09));
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .36), 0 0 0 .14rem rgba(var(--gcr), .5), 0 .7rem 1.8rem -.5rem rgba(var(--gcr), .75);
+  transition: transform .38s cubic-bezier(.22, 1, .36, 1), width .38s cubic-bezier(.22, 1, .36, 1), height .38s cubic-bezier(.22, 1, .36, 1), opacity .2s ease, box-shadow .3s ease; }
+.f-glider.is-on { opacity: 1; }
+:root[data-theme="light"] .f-glider { background: linear-gradient(180deg, rgba(0, 0, 0, .07), rgba(0, 0, 0, .04)); box-shadow: inset 0 0 0 1.5px rgba(0, 0, 0, .14), 0 0 0 .14rem rgba(var(--gcr), .45); }
+@media (prefers-reduced-motion: reduce) { .f-glider { transition: opacity .2s ease; } }
+.gl-on { position: relative; }
+.gl-on > .f { z-index: 1; }
+.gl-on > .f:not(.cat-back) { position: relative; }
+/* Fokus: keine eigene (weiße) Fläche, helle Schrift – die Glasfläche darunter zeigt die Auswahl */
+body.kbd .gl-on > .f.f:focus, body.is-tv .gl-on > .f.f:focus { background: transparent !important; box-shadow: none !important; color: var(--text) !important; }
+body.kbd .gl-on > .chan.f:focus .name, body.is-tv .gl-on > .chan.f:focus .name { color: var(--text) !important; }
+body.kbd .gl-on > .chan.f:focus .num, body.is-tv .gl-on > .chan.f:focus .num,
+body.kbd .gl-on > .chan.f:focus .now, body.is-tv .gl-on > .chan.f:focus .now,
+body.kbd .gl-on > .cat.f:focus .lc-n, body.is-tv .gl-on > .cat.f:focus .lc-n { color: var(--muted) !important; }
+body.kbd .gl-on > .chan.f:focus .now-bar, body.is-tv .gl-on > .chan.f:focus .now-bar { background: rgba(255, 255, 255, .14) !important; }
+body.kbd .gl-on > .ch-opt.f:focus small, body.is-tv .gl-on > .ch-opt.f:focus small { color: var(--muted) !important; }
+/* Menü oben: dieselbe milchige Fläche beim Fokus statt Weiß */
+@media (min-width: 961px), (orientation: landscape) and (min-width: 861px) {
+  .tab-glider.is-focus { background: linear-gradient(180deg, rgba(255, 255, 255, .22), rgba(255, 255, 255, .1));
+    box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .4), 0 0 0 .16rem rgba(var(--gcr), .55), 0 .7rem 1.8rem -.5rem rgba(var(--gcr), .9); }
+  body.kbd .main-tabs .tab.f:focus, body.is-tv .main-tabs .tab.f:focus { color: #fff; }
+  body.kbd .main-tabs .tab.f:focus .i, body.is-tv .main-tabs .tab.f:focus .i { color: var(--c1, #fff); }
+  body.kbd .main-tabs .tab.k-home.f:focus .i, body.is-tv .main-tabs .tab.k-home.f:focus .i { color: #fff; }
+}
