@@ -1,5 +1,9 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## 1.14.9 – 2026-11-11 · Vorschau nach dem Vollbild schneller
+
+- **Vorschau nach dem Vollbild etwa 2,5 s schneller:** Bei vielen Sendern (z. B. „Das Erste FHD“) scheitert auf Fire TV der eingebaute Android-Player, erst hls.js zeigt das Bild – vorher jedes Mal ein verschenkter Versuch (gemessen 4,4 s bis zum Vorschaubild). Die App merkt sich das jetzt je Sender und startet beim nächsten Mal gleich mit hls.js. Klappt es einmal nicht, wird es vergessen.
+
 ## 1.14.8 – 2026-11-11 · Sender mit Dolby-Ton starten schneller
 
 - **Vorschau startet schneller bei Sendern wie „Das Erste“:** Solche Sender laufen nur im anderen Format (.ts). Vorher ging jeder Start erst durch zwei Fehlversuche (etwa 4 s bis zum Bild). Jetzt merkt sich die App je Sender das funktionierende Format und startet beim nächsten Mal gleich damit. Klappt es einmal nicht, nimmt sie wieder den normalen Weg.
