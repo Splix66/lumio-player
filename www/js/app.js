@@ -5195,6 +5195,20 @@
         arch.appendChild(h('button', { class: 'btn f', onclick: function () { showArchive(item); } },
           icon('archive'), h('span', { text: T('Verpasste Sendungen') }), h('small', { text: T('{0} Tage', item.archive) })));
       }
+      // Merken – der TV-Player (Fire TV, Android-Boxen) hat keinen Herz-Knopf: vorher ließ sich dort kein Sender merken
+      var fb = favButton(item), fClick = fb.onclick;
+      fb.classList.remove('ghost'); fb.classList.add('lp-fav');
+      fb.onclick = function () {
+        fClick();
+        var on = Favs.has(item);
+        $all('.chan[data-cid]').forEach(function (r) {
+          if (r.getAttribute('data-cid') !== String(item.id)) return;
+          var s = r.querySelector('.fav');
+          if (on && !s) r.appendChild(h('span', { class: 'fav', title: T('Favorit') }, icon('heartFill')));
+          else if (!on && s) s.parentNode.removeChild(s);
+        });
+      };
+      arch.appendChild(fb);
       // Sender ausblenden – direkt hier, weil der TV-Player auf Android-Boxen keinen eigenen Knopf dafür hat
       arch.appendChild(h('button', { class: 'btn f lp-hide', title: T('Sender ausblenden'), onclick: function () {
         askHideChannel(item, function () {
