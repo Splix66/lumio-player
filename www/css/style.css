@@ -2248,12 +2248,19 @@ body.kbd .lp-rem.f:focus .t, body.is-tv .lp-rem.f:focus .t { color: inherit; }
 .gd-prog.is-rem { padding-right: 1.6rem; }
 .gd-prog.is-rem > .i { display: block; }
 .gd-prog:hover, .gd-ch:hover { background: var(--surface-2); }
-body.kbd .gd-prog.f:focus, body.is-tv .gd-prog.f:focus, body.kbd .gd-ch.f:focus, body.is-tv .gd-ch.f:focus { z-index: 3; background: var(--text); color: var(--bg); box-shadow: none; opacity: 1; }
-body.kbd .gd-prog.f:focus small, body.is-tv .gd-prog.f:focus small, body.kbd .gd-prog.f:focus > .i, body.is-tv .gd-prog.f:focus > .i, body.kbd .gd-ch.f:focus .gd-num, body.is-tv .gd-ch.f:focus .gd-num { color: inherit; }
-body.kbd .gd-ch.f:focus, body.is-tv .gd-ch.f:focus { z-index: 4; }
+/* Fokus im TV-Programm: milchiges Glas wie überall (1.14.7) – deckend über der Fläche, weil Sender-Spalte und
+   verbreiterte Sendung über anderen liegen. Position ausdrücklich: die allgemeine Fokus-Regel setzte „relative“ –
+   die Sendung sprang dadurch nach oben und wurde flach, die Sender-Spalte klebte nicht mehr links. */
+body.kbd .gd-prog.f:focus, body.is-tv .gd-prog.f:focus, body.kbd .gd-ch.f:focus, body.is-tv .gd-ch.f:focus { z-index: 3; color: var(--text); opacity: 1;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .2), rgba(255, 255, 255, .09)), var(--surface-2);
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .36), 0 0 0 .14rem rgba(167, 139, 250, .5), 0 .7rem 1.8rem -.5rem rgba(167, 139, 250, .75); }
+:root[data-theme="light"] body .gd-prog.f:focus, :root[data-theme="light"] body .gd-ch.f:focus { background: linear-gradient(180deg, rgba(0, 0, 0, .07), rgba(0, 0, 0, .04)), var(--surface); box-shadow: inset 0 0 0 1.5px rgba(0, 0, 0, .14), 0 0 0 .14rem rgba(167, 139, 250, .45); }
+body.kbd .gd-prog.f:focus, body.is-tv .gd-prog.f:focus { position: absolute; }
+body.kbd .gd-ch.f:focus, body.is-tv .gd-ch.f:focus { position: sticky; z-index: 4; }
+body.kbd .gd-prog.f:focus small, body.is-tv .gd-prog.f:focus small, body.kbd .gd-ch.f:focus .gd-num, body.is-tv .gd-ch.f:focus .gd-num { color: var(--muted); }
 .gd-wait, .gd-empty { position: sticky; left: 15.5rem; display: inline-flex; align-items: center; height: 100%; color: var(--dim); font-size: .82rem; }
 /* Kurze Sendungen („h…“, „I“): beim Auswählen breiter, damit Titel und Zeit lesbar sind (liegt über den Nachbarn) */
-body.kbd .gd-prog.f:focus, body.is-tv .gd-prog.f:focus { min-width: 15rem; z-index: 6; box-shadow: 0 .6rem 1.6rem rgba(0, 0, 0, .55); }
+body.kbd .gd-prog.f:focus, body.is-tv .gd-prog.f:focus { min-width: 15rem; z-index: 6; }
 /* TV-Programm mit laufender Vorschau: Vorschau rechts oben neben dem Raster, das Raster rückt zur Seite – sie verdeckt
    keine Sendungen mehr (vorher lag sie unten rechts über dem Raster) */
 body.has-mini:has(.guide) .player.is-mini:not(.is-docked) { top: 5.4rem; bottom: auto; right: var(--pad); width: 20rem; height: 11.25rem; max-width: none; max-height: none; }
