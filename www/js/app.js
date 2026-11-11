@@ -5580,6 +5580,11 @@
           // Normalisierten Namen am Eintrag merken: bei großen Playlists sonst bei jedem Tastendruck zigtausend Mal neu berechnet
           var all = list.filter(function (x) { if (x._n === undefined) x._n = norm(x.name); return x._n.indexOf(q) >= 0; });
           if (!all.length) return;
+          // Treffer, deren Name (oder ein Wort darin) mit dem Suchwort beginnt, zuerst – sonst stand bei „ard“
+          // „LeonARDo DiCaprio“ vor „ARD-alpha“. Innerhalb einer Stufe bleibt die Reihenfolge der Playlist.
+          var wordRe = new RegExp('(^|[^a-z0-9])' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+          all = all.map(function (x, k) { return [x._n.indexOf(q) === 0 ? 0 : wordRe.test(x._n) ? 1 : 2, k, x]; })
+            .sort(function (a, b) { return a[0] - b[0] || a[1] - b[1]; }).map(function (a) { return a[2]; });
           total += all.length;
           var hits = all.slice(0, 12), kind = kinds[i];
           var sec = h('section', { class: 'qs-sec k-' + kind }, h('h3', null, icon(kind), h('span', { text: labels[i] }), h('small', { text: String(all.length) })));
