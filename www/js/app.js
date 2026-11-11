@@ -5495,7 +5495,7 @@
   /* ---------- Bildschirmschoner ----------
      Nach einigen Minuten ohne Bedienung (und ohne laufendes Video): Uhr, Datum und langsam wechselnde Poster.
      Uhr fest links, Poster-Karte rechts; Linien und Leuchten nehmen die Farbe des Posters an. Tipps unten links,
-     mit dem Auge (oder der Menütaste) ein-/ausblendbar. Die erste andere Taste beendet ihn nur – sie löst nichts aus. */
+     mit dem Auge (oder der Play/Pause-Taste) ein-/ausblendbar. Die erste andere Taste beendet ihn nur – sie löst nichts aus. */
   /* ---------- Tageszeit & Wetter neben der Uhr ----------
      Ohne Einstellung: nur die Tageszeit (Sonnenaufgang, Sonne, Sonnenuntergang, Mond) – nichts geht ins Internet.
      Mit gewähltem Ort (Einstellungen → Darstellung → Wetter): echtes Wetter von Open-Meteo (kostenlos, ohne Konto).
@@ -5617,9 +5617,10 @@
       function wake(e) {
         if (!self.el) return;
         e.preventDefault(); e.stopPropagation();
-        // Auge (Tippen/Klicken) oder Menütaste der Fernbedienung: Tipps ein-/ausblenden, Bildschirmschoner bleibt
+        // Auge (Tippen/Klicken) oder Play/Pause-Taste der Fernbedienung: Tipps ein-/ausblenden, Bildschirmschoner bleibt
+        // (die Menütaste kommt auf Fire TV gar nicht in der App an – Play/Pause schon)
         var eye = e.target && e.target.closest && e.target.closest('.sv-eye');
-        if (eye || (e.type === 'keydown' && (e.key === 'ContextMenu' || e.keyCode === 82 || e.key === 'm'))) { self.toggleTips(); return; }
+        if (eye || (e.type === 'keydown' && (e.key === 'MediaPlayPause' || e.keyCode === 179 || e.key === 'ContextMenu' || e.key === 'm'))) { self.toggleTips(); return; }
         self.hide();
       }
       // am Fenster, damit die Taste vor der normalen Steuerung abgefangen wird
@@ -7045,7 +7046,7 @@
     var tSaver = choiceTile('saver', T('Bildschirmschoner'), SAVERS, function () { return Saver.mins(); }, function (v) { Settings.set('saverMin', v); },
       T('Wird die App so lange nicht bedient (und läuft kein Video), erscheinen Uhr und Poster. Schont OLED-Fernseher. Eine beliebige Taste beendet ihn.'),
       function () { return h('div', { class: 'row nt-act' }, sheetBtn('play', T('Jetzt ansehen'), function () { setTimeout(function () { Saver.show(); }, 200); })); });
-    var tSaverTips = switchTile('eye', T('Tipps im Bildschirmschoner'), T('„Wusstest du schon?“ unten links. Im Bildschirmschoner auch mit dem Auge oder der Menütaste ein- und ausblenden.'),
+    var tSaverTips = switchTile('eye', T('Tipps im Bildschirmschoner'), T('„Wusstest du schon?“ unten links. Im Bildschirmschoner auch mit dem Auge oder der Play/Pause-Taste ein- und ausblenden.'),
       function () { return Settings.get('saverTips') !== false; }, function (v) { Settings.set('saverTips', v); });
     var tClock = segTile('clock', T('Zeitformat'), [[false, '24 h'], [true, '12 h']],
       function () { return !!Settings.get('clock12'); }, function (v) { Settings.set('clock12', v); }, T('Für Uhr und Programmführer'));
