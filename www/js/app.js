@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Telvo Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.14.7',
+    version: '1.14.8',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     /* Bibliotheken: werden beim Bauen nach www/lib kopiert (scripts/copy-libs.js) und von dort geladen.
        Nur wenn sie fehlen, aus dem Internet – mit fester Version und Prüfsumme (SRI): eine veränderte Datei
@@ -4983,7 +4983,7 @@
     if (kind === 'live') el._afterNative = function () {
       var go = function () {
         AwvHold.refresh();
-        AwvHold.ready(function () { setTimeout(function () { if (panel && shown && shown.list && shown.list.length) autoPreview(shown.list); }, 250); });
+        AwvHold.ready(function () { setTimeout(function () { if (panel && shown && shown.list && shown.list.length) autoPreview(shown.list); }, 100); });
       };
       if (!document.hidden) { setTimeout(go, 50); return; }
       var onv = function () { if (document.hidden) return; document.removeEventListener('visibilitychange', onv); setTimeout(go, 50); };
@@ -7982,6 +7982,25 @@
     }
   };
 
+  /* Sender, die nur im anderen Format (.ts) laufen – z. B. Dolby-Ton (EC-3), den weder der eingebaute Player noch
+     hls.js schafft. Vorher lief jeder Start erst durch zwei Fehlversuche (gemessen: ~4 s bis zum Bild); gemerkt
+     startet der Sender gleich im funktionierenden Format. Scheitert das einmal, wird es vergessen. */
+  var AltPref = {
+    key: 'telvo.altpref', m: null,
+    map: function () {
+      if (!this.m) { try { this.m = JSON.parse(localStorage.getItem(this.key) || '{}') || {}; } catch (e) { this.m = {}; } }
+      return this.m;
+    },
+    has: function (id) { return !!this.map()[id]; },
+    set: function (id, on) {
+      var m = this.map();
+      if (on) m[id] = Date.now(); else if (m[id]) delete m[id]; else return;
+      var k = Object.keys(m);
+      if (k.length > 300) k.sort(function (a, b) { return m[a] - m[b]; }).slice(0, k.length - 300).forEach(function (x) { delete m[x]; });
+      try { localStorage.setItem(this.key, JSON.stringify(m)); } catch (e) {}
+    }
+  };
+
   var Player = {
     el: null, video: null, hls: null, item: null, ctx: null, osd: null, hideTimer: null, saveTimer: null, epgTimer: null,
     cushion: {},   // Live-Sender, die mehr Puffer brauchen (Kennung → 1)
@@ -8166,6 +8185,8 @@
       video.addEventListener('playing', function () {
         self.spinner.style.display = 'none'; self.err.style.display = 'none'; self.reconnect = false;
         self.netRetries = 0; self.playedSince = Date.now();
+        // lief erst das andere Format (.ts)? Für diesen Sender merken – nächstes Mal gleich damit starten
+        if (self.item && self.item.kind === 'live' && self.alt && self.curUrl === self.alt && !self.altFirst) AltPref.set(self.item.id, true);
         self.paintCtrls(); self.updateTracks();
       });
       video.addEventListener('progress', function () { self.paintBuffer(); });
@@ -8351,8 +8372,9 @@
       if (!self.auto) Last.set(item);
 
       var src = App.provider.streamUrl(item);
-      self.alt = src.alt;
-      self.attach(src.url);
+      self.alt = src.alt; self.mainUrl = src.url;
+      self.altFirst = !!(item.kind === 'live' && src.alt && AltPref.has(item.id));
+      if (self.altFirst) { self.triedAlt = true; self.attach(src.alt); } else self.attach(src.url);
 
       clearInterval(self.saveTimer);
       self.saveTimer = setInterval(function () { self.saveResume(); }, 10000);
@@ -8561,6 +8583,11 @@
       self.errInfo = '';
       if (self.usingNative && Platform.android && !self.forceHlsJs) { self.forceHlsJs = true; self.retried = false; self.attach(self.curUrl); return; }
       if (self.alt && !self.triedAlt) { self.triedAlt = true; self.retried = false; self.attach(self.alt); return; }
+      // gemerktes Format klappt diesmal nicht: vergessen und den normalen Weg gehen
+      if (self.altFirst && self.mainUrl && self.curUrl === self.alt) {
+        self.altFirst = false; if (self.item) AltPref.set(self.item.id, false);
+        self.retried = false; self.forceHlsJs = false; self.attach(self.mainUrl); return;
+      }
       self.spinner.style.display = 'none';
       self.reconnect = false;
       clearInterval(self.wdTimer);
