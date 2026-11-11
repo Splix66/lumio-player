@@ -1,5 +1,10 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## 1.14.7 – 2026-11-11 · Gleitende Glasfläche überall
+
+- **Gleitende Leuchtfläche überall:** Wie im Menü oben gleitet jetzt auch in den Kategorien (Live TV, Filme, Serien), der Senderliste, den Einstellungs-Bereichen, den Knöpfen oben rechts, den Suchtreffern und den Auswahllisten eine Fläche weich zum nächsten Eintrag und schimmert in dessen Farbe.
+- **Milchiges Glas statt Weiß:** Der Fokus ist eine halbdurchsichtige, helle Glasfläche mit farbigem Schimmer – die Schrift bleibt hell und gut lesbar (vorher weiße Fläche mit dunkler Schrift).
+
 ## 1.14.6 – 2026-11-11 · Filme und Serien sofort da, Menü mit gleitender Leuchtfläche, schlankere Fußleiste
 
 - **Menü oben mit gleitender Leuchtfläche:** Beim Wechseln mit der Fernbedienung gleitet eine Leuchtfläche weich nach links und rechts zum nächsten Reiter und nimmt dessen Farbe an (Live TV violett, Filme gold, Serien blau, Favoriten rosa). Ohne Fokus sitzt sie als farbiges Glas auf dem gewählten Reiter.
