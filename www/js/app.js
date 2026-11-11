@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Telvo Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.14.1',
+    version: '1.14.2',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     /* Bibliotheken: werden beim Bauen nach www/lib kopiert (scripts/copy-libs.js) und von dort geladen.
        Nur wenn sie fehlen, aus dem Internet – mit fester Version und Prüfsumme (SRI): eine veränderte Datei
@@ -7832,7 +7832,8 @@
       video.addEventListener('ended', function () { self.onEnded(); });
       video.addEventListener('error', function () {
         if (self.hls) return;   // hls.js meldet seine Fehler selbst (und versucht es erst noch einmal)
-        self.errInfo = 'Video-Fehler ' + (video.error ? video.error.code : '?') + (self.ts ? ' (mpegts.js)' : '');
+        // nach gescheitertem Umpacken (mpegts.js) zuerst dessen Grund nennen – „Video-Fehler 4“ allein sagt nur „Format geht nicht“
+        self.errInfo = (self.tsInfo ? self.tsInfo + ', direkt: ' : '') + 'Video-Fehler ' + (video.error ? video.error.code : '?') + (self.ts ? ' (mpegts.js)' : '');
         self.onError(T('Das Video konnte nicht abgespielt werden (Format oder Verbindung).'));
       });
       // Ton-Verzögerung nach dem Umschalten wieder anwenden (nur wenn der neue Stream sie erlaubt)
@@ -7948,6 +7949,9 @@
       markPlaying(item);
       self.triedAlt = false; self.retried = false; self.forceHlsJs = false; self.rawFail = false;
       self.netRetries = 0; self.stallRetries = 0; self.swappedCodec = false; self.mediaRecoverAt = 0; self.reconnect = false;
+      self.errTrail = []; self.errInfo = '';
+      // vom Wächter stumm geschaltet (Ton blockiert)? Beim nächsten Sender wieder die eigene Einstellung
+      if (self.autoMuted) { self.autoMuted = false; if (self.video) { self.video.muted = !!Settings.get('muted'); self.paintVol(); } }
       self.closeTracks();
       if (self.nextCancel) self.nextCancel();
       if (self.tracksBtn) self.tracksBtn.classList.add('is-gone');
@@ -8020,7 +8024,25 @@
       this.wdLastT = v.currentTime;
       if (this.wdStill < (this.item && this.item.kind === 'live' ? 10 : 18)) return;   // Live: nach 10 s Stillstand neu verbinden
       this.wdStill = 0;
-      if (this.stallRetries >= 3) { this.errInfo = 'Stillstand (3 Versuche)'; this.onError(T('Der Stream hängt und lässt sich gerade nicht wiederherstellen.')); return; }
+      var ahead = 0;
+      try { for (var bi = 0; bi < v.buffered.length; bi++) if (v.buffered.end(bi) > v.currentTime) ahead = Math.max(ahead, v.buffered.end(bi) - v.currentTime); } catch (e) {}
+      // Daten im Puffer, Zeit steht, Ton an: meist nimmt das Gerät keinen Ton an (Fire TV bei ausgeschaltetem Fernseher –
+      // dann bleibt jede Wiedergabe mit Ton nach wenigen Bildern stehen, stumm läuft sie). Einmal stumm neu starten statt
+      // Neuverbinden und Fehlermeldung. Nur am Video, nicht in den Einstellungen: der nächste Sender startet wieder normal.
+      if (!v.muted && !this.autoMuted && v.readyState >= 3 && ahead >= 3) {
+        this.autoMuted = true;
+        v.muted = true; this.paintVol();
+        var ai = this.item || {};
+        ErrLog.add('Ton', 'Tonausgabe blockiert – stumm weiter | ' + (ai.kind || '?') + (this.mini ? ' Vorschau' : ''));
+        this.reconnecting();
+        this.attach(this.curUrl);
+        return;
+      }
+      if (this.stallRetries >= 3) {
+        // Daten im Puffer, aber die Zeit steht = Wiedergabe selbst hängt (z. B. Tonausgabe blockiert, Fernseher aus), nicht der Stream
+        var q = v.getVideoPlaybackQuality ? v.getVideoPlaybackQuality() : null;
+        this.errInfo = 'Stillstand (3 Versuche) rs' + v.readyState + ' Puffer ' + Math.round(ahead) + 's' + (q ? ' Bilder ' + q.totalVideoFrames : '') + (v.muted ? ' stumm' : ' mit Ton');
+        this.onError(T('Der Stream hängt und lässt sich gerade nicht wiederherstellen.')); return; }
       this.stallRetries++;
       if (this.isVod() && v.currentTime > 1) this.resumeAt = v.currentTime;
       this.reconnecting();
@@ -8036,6 +8058,7 @@
       var self = this, video = self.video;
       self.destroyHls();
       self.curUrl = url;
+      self.tsInfo = '';
       // Jeder Start zählt neu: das „waiting“ beim Anlaufen ist kein Stocken (sonst meldete schnelles Umschalten
       // fälschlich „Der Sender stockt“). Laufende Nummer statt Adresse: A→B→A vor dem ersten Laden der
       // Bibliothek hängte sonst zwei Player an dasselbe Video.
@@ -8139,6 +8162,7 @@
             // des Hinweises auf „RAW“-Sender (bzw. erst das andere Format probieren, das macht onError)
             var code = info && info.code;
             if (code >= 400 && code < 500) { self.destroyHls(); self.errInfo = 'mpegts HTTP ' + code; self.onError(T('Der Stream ist nicht erreichbar.')); return; }
+            self.tsInfo = 'mpegts ' + type + ' ' + detail + (code ? ' HTTP ' + code : '');
             plain();
           });
           try {
@@ -8162,14 +8186,25 @@
 
     onError: function (msg) {
       var self = this;
+      // Jeden Versuch merken (Format + Grund), damit im Fehlerprotokoll die ganze Kette steht – nicht nur der letzte
+      // Rückfall (z. B. „Video-Fehler 4“, wenn am Ende die .ts-Adresse direkt probiert wurde)
+      var fm = /\.(m3u8|ts|mp4|mkv|avi)(\?|$)/i.exec(String(self.curUrl || ''));
+      self.errTrail = self.errTrail || [];
+      self.errTrail.push((fm ? fm[1].toLowerCase() : '?') + (self.usingNative ? ' nativ' : '') + ': ' + (self.errInfo || msg));
+      self.errInfo = '';
       if (self.usingNative && Platform.android && !self.forceHlsJs) { self.forceHlsJs = true; self.retried = false; self.attach(self.curUrl); return; }
       if (self.alt && !self.triedAlt) { self.triedAlt = true; self.retried = false; self.attach(self.alt); return; }
       self.spinner.style.display = 'none';
       self.reconnect = false;
       clearInterval(self.wdTimer);
+      // Stream wirklich beenden: sonst lud er hinter der Fehlermeldung weiter (Puffer wuchs, beim Anbieter blieb eine Verbindung
+      // belegt – bei Zugängen mit nur einer Verbindung scheiterte dann der nächste Sender). „Erneut versuchen“ lädt neu.
+      self.destroyHls();
+      try { self.video.removeAttribute('src'); self.video.load(); } catch (e) {}
       var it = self.item || {};
-      ErrLog.add('Wiedergabe', msg + ' | ' + (it.kind || '?') + (it.ext ? ' .' + it.ext : '') + (self.errInfo ? ' | ' + self.errInfo : ''));
-      self.errInfo = '';
+      // Hinweistext vorn (zeigt der Status „Letzter Fehler“), danach die Kette – ihr erster Versuch ist der aussagekräftigste
+      ErrLog.add('Wiedergabe', msg + ' | ' + (it.kind || '?') + (it.ext ? ' .' + it.ext : '') + (self.mini ? ' Vorschau' : '') + ' | ' + self.errTrail.join(' → '));
+      self.errTrail = [];
       clear(self.err);
       self.err.appendChild(h('h3', { text: T('Wiedergabe nicht möglich') }));
       self.err.appendChild(h('p', { text: msg }));
