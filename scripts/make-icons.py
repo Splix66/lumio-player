@@ -105,6 +105,32 @@ def icon(size, rounded=False, scale=0.8):
     return bg
 
 
+def brand_font(size, bold=True):
+    """Schrift des Schriftzugs „Telvo Player“: Outfit (wie in der App, www/css/style.css .wordmark) aus
+    node_modules/@fontsource/outfit (nach „npm install“ vorhanden). Pillow liest WOFF meist direkt, sonst
+    wird sie mit fontTools (pip install fonttools) umgewandelt. Fehlt beides: Standardschrift."""
+    name = os.path.join(ROOT, 'node_modules', '@fontsource', 'outfit', 'files',
+                        'outfit-latin-%d-normal.woff' % (700 if bold else 400))
+    if os.path.exists(name):
+        try:
+            return ImageFont.truetype(name, size)
+        except OSError:
+            try:
+                import io
+                from fontTools.ttLib import TTFont
+                tt = TTFont(name)
+                tt.flavor = None
+                buf = io.BytesIO()
+                tt.save(buf)
+                buf.seek(0)
+                return ImageFont.truetype(buf, size)
+            except Exception as e:  # noqa: BLE001
+                print('Outfit nicht lesbar (%s) – Standardschrift' % e)
+    else:
+        print('Outfit fehlt (%s) – Standardschrift' % name)
+    return font(size, bold)
+
+
 def font(size, bold=True):
     names = (['/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 'DejaVuSans-Bold.ttf', 'arialbd.ttf',
               '/System/Library/Fonts/Supplemental/Arial Bold.ttf'] if bold else
@@ -127,12 +153,13 @@ fg.alpha_composite(m, (202, 202))
 fg.save(p('assets', 'icon-foreground.png'))
 background(1024, 1024).save(p('assets', 'icon-background.png'))
 
-# Startbildschirm: Logo und darunter „Telvo Player“
+# Startbildschirm: Logo und darunter „Telvo Player“ (Outfit). Dieselben Maße nutzt www/index.html (#boot) als SVG –
+# bei Änderungen dort mitändern, sonst springt das Bild beim Übergang zur App.
 sp = Image.new('RGBA', (2732, 2732), (11, 10, 26, 255))
 sm = mark(440)
 sp.alpha_composite(sm, ((2732 - 440) // 2, (2732 - 440) // 2 - 110))
 sd = ImageDraw.Draw(sp)
-f_b, f_r = font(150), font(150, bold=False)
+f_b, f_r = brand_font(150), brand_font(150, bold=False)
 w_b = sd.textlength(NAME + ' ', font=f_b)
 w_r = sd.textlength('Player', font=f_r)
 sx = (2732 - (w_b + w_r)) / 2
@@ -155,8 +182,8 @@ x0 = int(W * 0.07) * S
 ban.alpha_composite(bm, (x0, (H * S - bm.height) // 2))
 tx = x0 + bm.width + int(W * 0.035) * S
 dr = ImageDraw.Draw(ban)
-dr.text((tx, int(H * 0.55) * S), NAME, font=font(44 * S), fill=(246, 245, 250), anchor='ls')
-dr.text((tx + 2 * S, int(H * 0.6) * S), 'Player', font=font(28 * S, bold=False), fill=(214, 200, 255), anchor='lt')
+dr.text((tx, int(H * 0.55) * S), NAME, font=brand_font(48 * S), fill=(246, 245, 250), anchor='ls')
+dr.text((tx + 2 * S, int(H * 0.6) * S), 'Player', font=brand_font(30 * S, bold=False), fill=(214, 200, 255), anchor='lt')
 ban.resize((W, H), Image.LANCZOS).convert('RGB').save(p('assets', 'banner.png'))
 
 # Samsung (512x423), LG (80x80, 130x130), Webseite/App (192x192)
