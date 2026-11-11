@@ -1,5 +1,11 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## 1.14.2 – 2026-11-11 · Live-Vorschau bei ausgeschaltetem Fernseher
+
+- **Live-Vorschau / eingebauter Player:** Nimmt das Gerät keinen Ton an (z. B. Fire TV bei ausgeschaltetem Fernseher), blieb das Bild nach wenigen Bildern stehen; nach drei Neuverbindungen kam „Wiedergabe nicht möglich“ (in den Fehlerberichten „Video-Fehler 4“ oder „Stillstand“). Jetzt startet die Wiedergabe in diesem Fall einmal stumm neu und läuft weiter. Die eigene Ton-Einstellung bleibt unverändert, der nächste Sender startet wieder mit Ton.
+- **Nach „Wiedergabe nicht möglich“** wird der Stream wirklich beendet – vorher lud er im Hintergrund weiter und belegte beim Anbieter eine Verbindung (bei Zugängen mit nur einer Verbindung scheiterte dann der nächste Sender).
+- **Fehlerberichte:** zeigen jetzt alle Versuche nacheinander (z. B. m3u8 → hls.js → ts) statt nur den letzten, kennzeichnen die Vorschau und sagen bei einem Stillstand, ob Daten im Puffer lagen und ob der Ton an war.
+
 ## 1.14.1 – 2026-11-11 · Korrekturen aus der Code-Durchsicht
 
 - **Startseite:** Nach einem zu Ende geschauten Film aus „Weiterschauen“ springt der Fokus nicht mehr in die Menüleiste, sondern auf die erste Karte.
