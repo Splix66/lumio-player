@@ -1,6 +1,10 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
-## 1.14.3 – 2026-11-11 · Live-TV-Vorschau auf Fire TV mit Bild, „App hat sich plötzlich geschlossen“ wird erkannt
+## 1.14.3 – 2026-11-11 · Live-TV-Vorschau auf Fire TV mit Bild, neuer Schriftzug, „App hat sich plötzlich geschlossen“ wird erkannt
+
+- **Neuer Schriftzug „Telvo Player“** in der Schrift Outfit – im Startbild, oben links in der App, im Fire-TV-Banner und überall, wo der Name steht. Oben links ist das Logo größer, daneben steht jetzt „Telvo Player“.
+- **Kein zweiter Ladebildschirm mehr:** Nach dem Startbild von Android kam kurz ein eigener Ladebildschirm mit Ladebalken. Jetzt zeigt die App beim Laden genau dasselbe Bild an derselben Stelle weiter – das Logo bleibt einfach stehen, bis die App da ist.
+- **Menü oben:** Start (Haus) steht jetzt ganz links, die Favoriten (Herz) ganz rechts.
 
 - **Live-TV-Vorschau auf Fire TV:** Die Vorschau rechts in Live TV blieb schwarz, nur der Ton lief. Ursache ist die Amazon-WebView: Sie legt das erste Video auf eine eigene Hardware-Ebene, in die der Decoder dann nicht zeichnet. Die App belegt diese Ebene jetzt beim Start mit einem winzigen, unsichtbaren Clip – die Vorschau läuft dadurch auf dem normalen Weg und zeigt ein Bild. Nur auf Fire-TV-Geräten aktiv.
 - **Fehlerberichte (Android 11 und neuer):** Hat Android die App beendet, während sie zu sehen war – Speichermangel, Absturz im Browser-Teil oder „App reagiert nicht“ –, steht das beim nächsten Start im Fehlerprotokoll (Stelle „Beendet“). Solche Fälle sah man bisher nicht, weil dabei kein normaler Absturz entsteht; für Nutzer wirkt es so, als hätte sich die App einfach geschlossen. Beenden im Hintergrund (normale Speicherbereinigung) wird nicht gemeldet.
