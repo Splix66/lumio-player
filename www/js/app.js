@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Telvo Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.14.6',
+    version: '1.14.7',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     /* Bibliotheken: werden beim Bauen nach www/lib kopiert (scripts/copy-libs.js) und von dort geladen.
        Nur wenn sie fehlen, aus dem Internet – mit fester Version und Prüfsumme (SRI): eine veränderte Datei
@@ -4440,6 +4440,8 @@
       function done(rc) {
         if (my !== rowsReq) return;
         if (rc.length) out.push(row(T('Zuletzt gesehene Sender'), null, rc.map(function (c) { return chanTile(c); })));
+        // Neue Playlist, noch nichts geschaut: statt leerer Fläche unter dem Titelbild die Schnellzugriffe (Live TV, Filme, Serien)
+        if (!out.length && !(heroSlot.firstChild && heroSlot.firstChild.classList && heroSlot.firstChild.classList.contains('hm-quickrow'))) out.push(quickRow());
         clear(rows); out.forEach(function (x) { rows.appendChild(x); });
         el.classList.toggle('is-empty', !out.length);
         var k = fkey || wantKey, top0 = Screens.top();
@@ -4975,6 +4977,18 @@
         }).catch(function () {});
       });
     }
+    // Zurück aus dem Vollbild (TV-Player): Vorschau wieder starten – mit dem zuletzt geschauten Sender.
+    // Vorher blieb das Vorschaufenster leer („Zum Abspielen auswählen“).
+    // Vorher frisch den Platzhalter-Clip setzen und abwarten (AwvHold) – sonst Ton, aber schwarzes Bild.
+    if (kind === 'live') el._afterNative = function () {
+      var go = function () {
+        AwvHold.refresh();
+        AwvHold.ready(function () { setTimeout(function () { if (panel && shown && shown.list && shown.list.length) autoPreview(shown.list); }, 250); });
+      };
+      if (!document.hidden) { setTimeout(go, 50); return; }
+      var onv = function () { if (document.hidden) return; document.removeEventListener('visibilitychange', onv); setTimeout(go, 50); };
+      document.addEventListener('visibilitychange', onv);
+    };
     // Zahlen hinter Sprachen und Kategorien: bei einer Sprache alle Einträge dieser Sprache, sonst je Kategorie
     onLocalChange(el, function () { paintCounts(); });
     function paintCounts() {
@@ -5181,6 +5195,20 @@
         arch.appendChild(h('button', { class: 'btn f', onclick: function () { showArchive(item); } },
           icon('archive'), h('span', { text: T('Verpasste Sendungen') }), h('small', { text: T('{0} Tage', item.archive) })));
       }
+      // Merken – der TV-Player (Fire TV, Android-Boxen) hat keinen Herz-Knopf: vorher ließ sich dort kein Sender merken
+      var fb = favButton(item), fClick = fb.onclick;
+      fb.classList.remove('ghost'); fb.classList.add('lp-fav');
+      fb.onclick = function () {
+        fClick();
+        var on = Favs.has(item);
+        $all('.chan[data-cid]').forEach(function (r) {
+          if (r.getAttribute('data-cid') !== String(item.id)) return;
+          var s = r.querySelector('.fav');
+          if (on && !s) r.appendChild(h('span', { class: 'fav', title: T('Favorit') }, icon('heartFill')));
+          else if (!on && s) s.parentNode.removeChild(s);
+        });
+      };
+      arch.appendChild(fb);
       // Sender ausblenden – direkt hier, weil der TV-Player auf Android-Boxen keinen eigenen Knopf dafür hat
       arch.appendChild(h('button', { class: 'btn f lp-hide', title: T('Sender ausblenden'), onclick: function () {
         askHideChannel(item, function () {
@@ -5573,6 +5601,11 @@
           // Normalisierten Namen am Eintrag merken: bei großen Playlists sonst bei jedem Tastendruck zigtausend Mal neu berechnet
           var all = list.filter(function (x) { if (x._n === undefined) x._n = norm(x.name); return x._n.indexOf(q) >= 0; });
           if (!all.length) return;
+          // Treffer, deren Name (oder ein Wort darin) mit dem Suchwort beginnt, zuerst – sonst stand bei „ard“
+          // „LeonARDo DiCaprio“ vor „ARD-alpha“. Innerhalb einer Stufe bleibt die Reihenfolge der Playlist.
+          var wordRe = new RegExp('(^|[^a-z0-9])' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+          all = all.map(function (x, k) { return [x._n.indexOf(q) === 0 ? 0 : wordRe.test(x._n) ? 1 : 2, k, x]; })
+            .sort(function (a, b) { return a[0] - b[0] || a[1] - b[1]; }).map(function (a) { return a[2]; });
           total += all.length;
           var hits = all.slice(0, 12), kind = kinds[i];
           var sec = h('section', { class: 'qs-sec k-' + kind }, h('h3', null, icon(kind), h('span', { text: labels[i] }), h('small', { text: String(all.length) })));
@@ -7798,6 +7831,7 @@
         if (top && top.onShow) top.onShow();
         var v = Shell.view && Shell.view.firstChild;
         if (v && v._refresh && (!top || top.name === 'shell')) v._refresh();
+        if (live && v && v._afterNative && (!top || top.name === 'shell')) v._afterNative();
         // Live: im TV-Player umgeschaltet → in der Senderliste auf dem zuletzt geschauten Sender landen (nicht auf dem anfangs gewählten)
         if (live && cur && cur.id != null) setTimeout(function () {
           var row = $('.chan[data-cid="' + String(cur.id).replace(/"/g, '') + '"]');
@@ -7841,6 +7875,46 @@
     }
     Player.open(item, ctx);
   }
+
+  /* Gleitende Leuchtfläche für Listen (wie im Menü oben): Beim Wechseln mit der Fernbedienung gleitet eine milchige
+     Glasfläche weich zum nächsten Eintrag und schimmert in dessen Farbe. Gilt für die Knöpfe oben rechts, Kategorien,
+     Einstellungs-Bereiche, Senderliste, Suchtreffer und Auswahllisten. Die Fläche liegt im selben Behälter wie die
+     Einträge (scrollt also mit) und wird beim ersten Fokus angelegt; nur bei Bedienung mit Tasten/Fernbedienung. */
+  var Glide = {
+    SEL: '.top-tools > .icon-btn, .mv-side .cat, .section .cats .cat, .st-side .st-sec, .chan, .qs-item, .ch-opt',
+    init: function () {
+      var self = this;
+      document.addEventListener('focusin', function (e) { self.to(e.target); });
+      document.addEventListener('focusout', function (e) {
+        var b = e.target && e.target._glBox, n = e.relatedTarget;
+        if (b && !(n && n.parentNode === b && n.matches && n.matches(self.SEL))) self.hide(b);
+      });
+    },
+    to: function (el) {
+      if (!el || !el.matches || !el.matches(this.SEL)) return;
+      var bc = document.body.classList;
+      if (!bc.contains('is-tv') && !bc.contains('kbd')) return;
+      var box = el.parentNode;
+      if (!box || !box.appendChild) return;
+      var g = box._glider, fresh = false;
+      if (!g || g.parentNode !== box) {
+        g = h('span', { class: 'f-glider', 'aria-hidden': 'true' });
+        box.appendChild(g); box._glider = g; box.classList.add('gl-on'); fresh = true;
+      }
+      el._glBox = box;
+      // erstes Mal (oder nach dem Ausblenden) ohne Gleiten an die Stelle setzen – sonst flöge sie von oben links herein
+      if (fresh || !g.classList.contains('is-on')) g.style.transition = 'none';
+      var cs = getComputedStyle(el);
+      g.style.width = el.offsetWidth + 'px';
+      g.style.height = el.offsetHeight + 'px';
+      g.style.transform = 'translate(' + el.offsetLeft + 'px, ' + el.offsetTop + 'px)';
+      g.style.borderRadius = cs.borderRadius;
+      g.style.setProperty('--gcr', (cs.getPropertyValue('--cr') || '').trim() || '167, 139, 250');
+      if (g.style.transition) { void g.offsetWidth; g.style.transition = ''; }
+      g.classList.add('is-on');
+    },
+    hide: function (box) { if (box && box._glider) box._glider.classList.remove('is-on'); }
+  };
 
   /* Fire TV: Die Amazon-WebView legt das erste Video, das per MediaSource (hls.js) startet, während kein anderes läuft,
      auf eine eigene Hardware-Ebene (SurfaceView) – in die der Decoder dann aber nicht zeichnet: Ton ja, Bild schwarz
@@ -7893,9 +7967,18 @@
     refresh: function () {
       var v = this.el;
       if (!this.needed() || this.busy || this.otherActive()) return;
+      // zweimal kurz hintereinander (Rückkehr aus dem TV-Player + Sichtbarkeit): nicht den gerade gesetzten Clip wieder abreißen
+      if (this.at && Date.now() - this.at < 2000) return;
+      this.at = Date.now();
       if (v) { try { v.removeAttribute('src'); v.load(); if (v.parentNode) v.parentNode.removeChild(v); } catch (e) {} }
       this.el = null;
       this.start();
+    },
+    // erst weitermachen, wenn der Clip seine Ebene hat – startet die Vorschau vorher, bekommt sie die Ebene: Ton, aber
+    // schwarzes Bild (gemessen nach dem Zurückkommen aus dem TV-Player: Vorschau nach 600 ms, Clip erst danach fertig)
+    ready: function (fn) {
+      var self = this, n = 0;
+      (function chk() { if (!self.busy || ++n > 30) fn(); else setTimeout(chk, 100); })();
     }
   };
 
@@ -8373,7 +8456,18 @@
             var hls = new Hls(hlsCfg);
             self.hls = hls;
             hls.on(Hls.Events.ERROR, function (ev, data) {
-              if (!data.fatal || self.hls !== hls) return;
+              if (self.hls !== hls) return;
+              // Ton in EC-3/AC-3 (Dolby, z. B. „Das Erste HD“): hls.js kann ihn in TS-Segmenten nicht entpacken. Vorher gab
+              // es eine Flut von Fehlern, zwei Rettungsversuche und erst nach 8–13 s das andere Format. Jetzt gleich beim
+              // ersten Hinweis auf das andere Format (.ts über mpegts.js) wechseln – das spielt solche Sender ab.
+              if (data.details === 'fragParsingError' && /(EC-3|AC-3)/i.test(String(data.reason || (data.error && data.error.message) || '')) && self.alt && !self.triedAlt) {
+                if (self.ecSwitch === hls) return;
+                self.ecSwitch = hls;
+                self.errInfo = 'hls.js Ton ' + String(data.reason || 'EC-3').slice(0, 40);
+                setTimeout(function () { if (self.hls === hls) self.onError(T('Der Stream konnte nicht abgespielt werden.')); }, 0);
+                return;
+              }
+              if (!data.fatal) return;
               if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
                 var now = Date.now();
                 if (!self.mediaRecoverAt || now - self.mediaRecoverAt > 10000) { self.mediaRecoverAt = now; hls.recoverMediaError(); return; }
@@ -9568,6 +9662,7 @@
     setTimeout(function () { ErrReport.flush(); }, 30000);
     // Fire TV: Video-Ebene der Amazon-WebView gleich belegen, damit die Live-TV-Vorschau ein Bild zeigt (siehe AwvHold)
     AwvHold.start();
+    Glide.init();
     var hiddenAt = 0;
     document.addEventListener('visibilitychange', function () {
       if (document.hidden) { hiddenAt = Date.now(); return; }
@@ -9576,7 +9671,7 @@
       // Live-Bild). Nach mehr als 20 s weg: Sender neu laden, damit wieder das aktuelle Programm läuft.
       if (hiddenAt && Date.now() - hiddenAt > 20000 && Player.el && Player.mini && Player.item && Player.item.kind === 'live') {
         var it = Player.item;
-        setTimeout(function () { if (Player.el && Player.mini && Player.item === it && !document.hidden) Player.load(it); }, 600);
+        setTimeout(function () { AwvHold.ready(function () { if (Player.el && Player.mini && Player.item === it && !document.hidden) Player.load(it); }); }, 600);
       }
       hiddenAt = 0;
     });
@@ -9601,8 +9696,16 @@
         // Mit der Senderliste der Kategorie starten – sonst kannte der Player nur diesen einen Sender und hoch/runter schaltete nicht um
         var cat = lastLive.catId !== undefined && lastLive.catId !== null && lastLive.catId !== '' ? lastLive.catId : '__all';
         var load = App.provider && App.provider.items ? App.provider.items('live', cat).then(null, function () { return null; }) : Promise.resolve(null);
-        Promise.race([load, new Promise(function (res) { setTimeout(function () { res(null); }, 3000); })]).then(function (list) {
+        // Abgelaufener oder gesperrter Zugang: nicht automatisch starten – sonst lief nur die Ablauf-Meldung des Anbieters
+        // im Vollbild. Kontodaten nur kurz abwarten (2,5 s); ohne Antwort wie bisher starten.
+        var acc = App.provider && App.provider.account ? Promise.race([App.provider.account().then(null, function () { return null; }), wait(2500).then(function () { return null; })]) : Promise.resolve(null);
+        Promise.all([Promise.race([load, wait(3000).then(function () { return null; })]), acc]).then(function (r) {
+          var list = r[0], a = r[1];
           if (!ok()) return;
+          if (a && ((a.expires && Number(a.expires) > 0 && Number(a.expires) * 1000 < Date.now()) || (a.status && !/^active$/i.test(String(a.status))))) {
+            toast(T('Deine Playlist ist abgelaufen – der letzte Sender wird nicht automatisch gestartet.'), 6000);
+            return;
+          }
           var idx = -1;
           for (var i = 0; list && i < list.length; i++) if (String(list[i].id) === String(lastLive.id)) { idx = i; break; }
           if (idx < 0) playItem(lastLive, { list: [lastLive], index: 0 });

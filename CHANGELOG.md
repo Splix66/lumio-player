@@ -1,5 +1,17 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## 1.14.7 – 2026-11-11 · Gleitende Glasfläche überall
+
+- **Gleitende Leuchtfläche überall:** Wie im Menü oben gleitet jetzt auch in den Kategorien (Live TV, Filme, Serien), der Senderliste, den Einstellungs-Bereichen, den Knöpfen oben rechts, den Suchtreffern und den Auswahllisten eine Fläche weich zum nächsten Eintrag und schimmert in dessen Farbe.
+- **Milchiges Glas statt Weiß:** Der Fokus ist eine halbdurchsichtige, helle Glasfläche mit farbigem Schimmer – die Schrift bleibt hell und gut lesbar (vorher weiße Fläche mit dunkler Schrift).
+- **Live-Vorschau startet bei Sendern mit Dolby-Ton viel schneller:** Sender wie „Das Erste HD“ senden den Ton als EC-3 (Dolby Digital Plus), den hls.js nicht entpacken kann. Vorher gab es zwei Rettungsversuche und erst nach 8–13 s Bild; jetzt wechselt die Vorschau beim ersten Hinweis gleich auf das andere Format.
+- **Vorschau nach dem Vollbild:** Kommt man aus dem TV-Player zurück, läuft die Vorschau wieder – mit dem zuletzt geschauten Sender (vorher stand dort nur „Zum Abspielen auswählen“). Dabei wartet sie, bis die Fire-TV-Bildebene wieder bereit ist – sonst gab es Ton, aber ein schwarzes Bild.
+- **Sender merken auf Fire TV:** Neben „Ausblenden“ steht in Live TV jetzt „Merken“. Der TV-Player hat keinen Herz-Knopf – vorher ließ sich auf Fire TV und Android-Boxen gar kein Sender zu den Favoriten hinzufügen. Gemerkte Sender bekommen in der Liste sofort ein Herz.
+- **TV-Programm:** Die ausgewählte Sendung und der ausgewählte Sender haben jetzt auch das milchige Glas statt Weiß. Außerdem sprang die ausgewählte Sendung nach oben und wurde flach, und die Sender-Spalte blieb beim Auswählen nicht mehr links stehen – behoben.
+- **Abgelaufene Playlist:** „Letzter Sender beim Start“ startet nicht mehr automatisch, wenn der Zugang abgelaufen oder gesperrt ist – statt der Ablauf-Meldung des Anbieters im Vollbild erscheint ein Hinweis.
+- **Suche sortiert besser:** Treffer, deren Name (oder ein Wort darin) mit dem Suchwort beginnt, stehen oben – bei „ard“ kommt „ARD-alpha“ jetzt vor „LeonARDo DiCaprio“.
+- **Neue Playlist:** Unter dem Titelbild der Startseite stehen Schnellzugriffe (Live TV, Filme, Serien), solange es noch kein „Weiterschauen“ und keine zuletzt gesehenen Sender gibt – vorher war die Fläche leer.
+
 ## 1.14.6 – 2026-11-11 · Filme und Serien sofort da, Menü mit gleitender Leuchtfläche, schlankere Fußleiste
 
 - **Menü oben mit gleitender Leuchtfläche:** Beim Wechseln mit der Fernbedienung gleitet eine Leuchtfläche weich nach links und rechts zum nächsten Reiter und nimmt dessen Farbe an (Live TV violett, Filme gold, Serien blau, Favoriten rosa). Ohne Fokus sitzt sie als farbiges Glas auf dem gewählten Reiter.
