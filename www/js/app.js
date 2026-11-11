@@ -4030,12 +4030,19 @@
         self.buttons[it[0]] = b;
         tabs.appendChild(b);
       });
+      // Gleitende Leuchtfläche: wandert beim Wechseln mit der Fernbedienung weich von Reiter zu Reiter (links/rechts)
+      // und nimmt die Farbe des Reiters an. Ohne Fokus im Menü sitzt sie auf dem gewählten Reiter.
+      self.glider = h('span', { class: 'tab-glider is-gone', 'aria-hidden': 'true' });
+      tabs.insertBefore(self.glider, tabs.firstChild);
+      self.tabsEl = tabs;
       // Die drei Reiter reagieren sichtbar aufeinander: der Nachbar des gerade gewählten hebt sich leicht mit
-      tabs.addEventListener('focusin', function (e) { self.hint(e.target && e.target._tabKey); });
+      tabs.addEventListener('focusin', function (e) { self.hint(e.target && e.target._tabKey); self.glide(e.target, true); });
       tabs.addEventListener('focusout', function (e) {
-        if (!e.relatedTarget || !tabs.contains(e.relatedTarget)) self.hint(null);
+        if (!e.relatedTarget || !tabs.contains(e.relatedTarget)) { self.hint(null); self.glide(null, false); }
       });
       tabs.addEventListener('mouseleave', function () { if (!tabs.contains(document.activeElement)) self.hint(null); });
+      window.addEventListener('resize', function () { self.glide(); });
+      try { document.fonts.ready.then(function () { self.glide(); }); } catch (e) {}
       ['live', 'movie', 'series'].forEach(function (k) {
         self.buttons[k]._tabKey = k;
         self.buttons[k].addEventListener('mouseenter', function () { self.hint(k); });
@@ -4109,6 +4116,9 @@
         if (k !== name) self.setCount(k, '');
       });
       self.hint(null);
+      // Leuchtfläche zum neuen Reiter (gleich und noch einmal nach dem Aufbau – dann stimmen die Maße sicher)
+      setTimeout(function () { var a = document.activeElement; self.glide(self.tabsEl && self.tabsEl.contains(a) ? a : null, !!(self.tabsEl && self.tabsEl.contains(a))); }, 0);
+      setTimeout(function () { if (!(self.tabsEl && self.tabsEl.contains(document.activeElement))) self.glide(); }, 400);
       self.viewBack = null;
       // alte Ansicht aufräumen (lange Listen sofort freigeben – wichtig für Boxen mit wenig Speicher)
       var old = self.view.firstChild;
@@ -4145,6 +4155,19 @@
         b.classList.toggle('is-near', i >= 0 && Math.abs(i - j) === 1);
         b.classList.toggle('is-hint', i === j);
       });
+    },
+    // Leuchtfläche auf Reiter „b“ setzen (ohne: der gewählte Reiter). focused = Fokus der Fernbedienung (hell)
+    glide: function (b, focused) {
+      var g = this.glider, tabs = this.tabsEl;
+      if (!g || !tabs) return;
+      if (!b || !b.classList || !b.classList.contains('tab')) { b = $('.tab.is-on', tabs); focused = false; }
+      if (!b || !b.offsetWidth) { g.classList.add('is-gone'); return; }
+      g.style.width = b.offsetWidth + 'px';
+      g.style.height = b.offsetHeight + 'px';
+      g.style.transform = 'translate(' + b.offsetLeft + 'px, ' + b.offsetTop + 'px)';
+      g.style.setProperty('--gcr', (getComputedStyle(b).getPropertyValue('--cr') || '').trim() || '167, 139, 250');
+      g.classList.toggle('is-focus', !!focused);
+      g.classList.remove('is-gone');
     }
   };
 
