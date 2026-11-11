@@ -4440,6 +4440,8 @@
       function done(rc) {
         if (my !== rowsReq) return;
         if (rc.length) out.push(row(T('Zuletzt gesehene Sender'), null, rc.map(function (c) { return chanTile(c); })));
+        // Neue Playlist, noch nichts geschaut: statt leerer Fläche unter dem Titelbild die Schnellzugriffe (Live TV, Filme, Serien)
+        if (!out.length && !(heroSlot.firstChild && heroSlot.firstChild.classList && heroSlot.firstChild.classList.contains('hm-quickrow'))) out.push(quickRow());
         clear(rows); out.forEach(function (x) { rows.appendChild(x); });
         el.classList.toggle('is-empty', !out.length);
         var k = fkey || wantKey, top0 = Screens.top();
@@ -4975,6 +4977,11 @@
         }).catch(function () {});
       });
     }
+    // Zurück aus dem Vollbild (TV-Player): Vorschau wieder starten – mit dem zuletzt geschauten Sender.
+    // Vorher blieb das Vorschaufenster leer („Zum Abspielen auswählen“).
+    if (kind === 'live') el._afterNative = function () {
+      if (panel && shown && shown.list && shown.list.length) setTimeout(function () { autoPreview(shown.list); }, 600);
+    };
     // Zahlen hinter Sprachen und Kategorien: bei einer Sprache alle Einträge dieser Sprache, sonst je Kategorie
     onLocalChange(el, function () { paintCounts(); });
     function paintCounts() {
@@ -7798,6 +7805,7 @@
         if (top && top.onShow) top.onShow();
         var v = Shell.view && Shell.view.firstChild;
         if (v && v._refresh && (!top || top.name === 'shell')) v._refresh();
+        if (live && v && v._afterNative && (!top || top.name === 'shell')) v._afterNative();
         // Live: im TV-Player umgeschaltet → in der Senderliste auf dem zuletzt geschauten Sender landen (nicht auf dem anfangs gewählten)
         if (live && cur && cur.id != null) setTimeout(function () {
           var row = $('.chan[data-cid="' + String(cur.id).replace(/"/g, '') + '"]');
@@ -8413,7 +8421,18 @@
             var hls = new Hls(hlsCfg);
             self.hls = hls;
             hls.on(Hls.Events.ERROR, function (ev, data) {
-              if (!data.fatal || self.hls !== hls) return;
+              if (self.hls !== hls) return;
+              // Ton in EC-3/AC-3 (Dolby, z. B. „Das Erste HD“): hls.js kann ihn in TS-Segmenten nicht entpacken. Vorher gab
+              // es eine Flut von Fehlern, zwei Rettungsversuche und erst nach 8–13 s das andere Format. Jetzt gleich beim
+              // ersten Hinweis auf das andere Format (.ts über mpegts.js) wechseln – das spielt solche Sender ab.
+              if (data.details === 'fragParsingError' && /(EC-3|AC-3)/i.test(String(data.reason || (data.error && data.error.message) || '')) && self.alt && !self.triedAlt) {
+                if (self.ecSwitch === hls) return;
+                self.ecSwitch = hls;
+                self.errInfo = 'hls.js Ton ' + String(data.reason || 'EC-3').slice(0, 40);
+                setTimeout(function () { if (self.hls === hls) self.onError(T('Der Stream konnte nicht abgespielt werden.')); }, 0);
+                return;
+              }
+              if (!data.fatal) return;
               if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
                 var now = Date.now();
                 if (!self.mediaRecoverAt || now - self.mediaRecoverAt > 10000) { self.mediaRecoverAt = now; hls.recoverMediaError(); return; }
@@ -9642,8 +9661,16 @@
         // Mit der Senderliste der Kategorie starten – sonst kannte der Player nur diesen einen Sender und hoch/runter schaltete nicht um
         var cat = lastLive.catId !== undefined && lastLive.catId !== null && lastLive.catId !== '' ? lastLive.catId : '__all';
         var load = App.provider && App.provider.items ? App.provider.items('live', cat).then(null, function () { return null; }) : Promise.resolve(null);
-        Promise.race([load, new Promise(function (res) { setTimeout(function () { res(null); }, 3000); })]).then(function (list) {
+        // Abgelaufener oder gesperrter Zugang: nicht automatisch starten – sonst lief nur die Ablauf-Meldung des Anbieters
+        // im Vollbild. Kontodaten nur kurz abwarten (2,5 s); ohne Antwort wie bisher starten.
+        var acc = App.provider && App.provider.account ? Promise.race([App.provider.account().then(null, function () { return null; }), wait(2500).then(function () { return null; })]) : Promise.resolve(null);
+        Promise.all([Promise.race([load, wait(3000).then(function () { return null; })]), acc]).then(function (r) {
+          var list = r[0], a = r[1];
           if (!ok()) return;
+          if (a && ((a.expires && Number(a.expires) > 0 && Number(a.expires) * 1000 < Date.now()) || (a.status && !/^active$/i.test(String(a.status))))) {
+            toast(T('Deine Playlist ist abgelaufen – der letzte Sender wird nicht automatisch gestartet.'), 6000);
+            return;
+          }
           var idx = -1;
           for (var i = 0; list && i < list.length; i++) if (String(list[i].id) === String(lastLive.id)) { idx = i; break; }
           if (idx < 0) playItem(lastLive, { list: [lastLive], index: 0 });
