@@ -358,6 +358,9 @@ body.kbd .chip.f:focus, body.is-tv .chip.f:focus { transform: scale(1.06); }
 }
 @keyframes qsIn { from { opacity: 0; transform: scaleX(.85); } }
 .qs.is-hidden, .qs-pop.is-hidden { display: none; }
+/* Seite unter der offenen Suche abdunkeln – sonst schien sie durch und überlappte das Suchfeld */
+.qs-dim { position: fixed; left: 0; right: 0; bottom: 0; top: var(--head-h, 0); z-index: 44; background: rgba(6, 6, 12, .8); pointer-events: none; }
+.qs-dim.is-hidden { display: none; }
 .qs > .i { width: 1.2rem; height: 1.2rem; color: var(--muted); flex: none; margin-right: .6rem; }
 .qs input { flex: 1; min-width: 0; height: 100%; background: transparent; border: 0; color: var(--text); font: inherit; font-size: .98rem; outline: none; -webkit-appearance: none; appearance: none; }
 .qs input::placeholder { color: var(--dim); }
@@ -2310,24 +2313,72 @@ html:not(.tv) .track-panel.chan-panel { top: 6rem; bottom: 8.5rem; }   /* oben f
 /* ==========================================================
    Bildschirmschoner: Uhr wandert, Poster wechseln langsam
    ========================================================== */
-.saver { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 200; overflow: hidden; background: #000; color: #fff; cursor: none; animation: svIn .8s ease; }
+/* --acc = Akzentfarbe als „r, g, b“ – kommt aus dem Poster (sonst Telvo-Violett) */
+.saver { --acc: 139, 92, 246; position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 200; overflow: hidden; color: #fff; cursor: none; animation: svIn .8s ease;
+  background: radial-gradient(70% 60% at 85% 10%, rgba(var(--acc), .22), transparent 70%), radial-gradient(60% 45% at 35% 105%, rgba(var(--acc), .28), transparent 70%), #05050d; }
 @keyframes svIn { from { opacity: 0; } to { opacity: 1; } }
 .sv-pic { position: absolute; top: 0; right: 0; bottom: 0; left: 0; opacity: 0; transition: opacity 2.4s ease; }
 .sv-pic.is-on { opacity: 1; }
-.sv-blur { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(1.3); filter: blur(40px) brightness(.32) saturate(1.2); }
-.sv-poster { position: absolute; top: 50%; right: 8%; width: 21vw; display: flex; flex-direction: column; align-items: center; transform: translateY(-50%); }
-.sv-poster img { display: block; width: 100%; height: 31.5vw; object-fit: cover; border-radius: 1.2rem; box-shadow: 0 2rem 4rem rgba(0, 0, 0, .6); }
-.sv-poster span { max-width: 100%; margin-top: 1rem; color: rgba(255, 255, 255, .75); font-size: 1.1rem; font-weight: 650; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sv-shade { position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: linear-gradient(90deg, rgba(0, 0, 0, .55), transparent 60%); }
-.sv-clock { position: absolute; display: flex; flex-direction: column; transition: left 3s ease, top 3s ease; }
-.sv-clock b { font-size: 7rem; font-weight: 800; line-height: 1; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
-.sv-clock span { margin-top: .7rem; color: rgba(255, 255, 255, .75); font-size: 1.5rem; font-weight: 500; }
-.sv-brand { position: absolute; left: 3rem; bottom: 2.4rem; display: flex; align-items: center; color: rgba(255, 255, 255, .55); font-size: 1.1rem; }
-.sv-brand .brand-mark { width: 1.8rem; height: 1.8rem; margin-right: .6rem; }
-body.lite .sv-pic { transition: none; }
+.sv-blur { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(1.3); filter: blur(60px) brightness(.22) saturate(1.3); opacity: .7; }
+/* geschwungene Linie wie ein Lichtband + helleres Feld darüber */
+.sv-wave { position: absolute; top: 0; right: 0; bottom: 0; left: 0; pointer-events: none; }
+.sv-wave svg { width: 100%; height: 100%; display: block; }
+.sv-wave .sv-s0 { stop-color: rgb(var(--acc)); stop-opacity: 0; transition: stop-color 2s ease; }
+.sv-wave .sv-s1 { stop-color: rgb(var(--acc)); stop-opacity: 1; transition: stop-color 2s ease; }
+.sv-wave .sv-s2 { stop-color: #fff; stop-opacity: .9; }
+.sv-band { fill: rgba(var(--acc), .1); transition: fill 2s ease; }
+.sv-line { fill: none; stroke: url(#svWg); stroke-width: 2.5; }
+.sv-glow { fill: none; stroke: url(#svWg); stroke-width: 18; opacity: .35; filter: blur(10px); }
+.sv-line2 { fill: none; stroke: rgba(var(--acc), .35); stroke-width: 1.2; transition: stroke 2s ease; }
+.sv-horizon { position: absolute; left: 0; right: 0; bottom: 0; height: 28%; pointer-events: none;
+  background: radial-gradient(45% 35% at 38% 100%, rgba(var(--acc), .45), transparent 75%), linear-gradient(to top, rgba(var(--acc), .1), transparent); transition: background 2s ease; }
+.sv-horizon::before { content: ""; position: absolute; left: 8%; right: 38%; bottom: 17%; height: 1px; background: linear-gradient(90deg, transparent, rgba(var(--acc), .9), rgba(255, 255, 255, .8), rgba(var(--acc), .9), transparent); box-shadow: 0 0 1.4rem rgba(var(--acc), .9); }
+.sv-shade { position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: linear-gradient(90deg, rgba(0, 0, 0, .35), transparent 55%); }
+/* Logo oben links, Status oben rechts */
+.sv-brand { position: absolute; left: 4.5vw; top: 6vh; display: flex; align-items: center; color: #fff; font-size: 2rem; }
+.sv-brand .brand-mark { width: 3.2rem; height: 3.2rem; margin-right: .8rem; }
+.sv-brand .wordmark span { color: #c9b8fb; }
+.sv-stat { position: absolute; right: 4.5vw; top: 6vh; display: flex; align-items: center; }
+.sv-st { display: grid; place-items: center; width: 2.6rem; height: 2.6rem; margin-left: .7rem; border-radius: 50%; color: rgba(255, 255, 255, .9); background: rgba(255, 255, 255, .06); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14); }
+.sv-st .i { width: 1.35rem; height: 1.35rem; }
+.sv-st.is-warn { color: #fcd34d; box-shadow: inset 0 0 0 1px rgba(252, 211, 77, .5); }
+.sv-st.is-off { color: #fca5a5; box-shadow: inset 0 0 0 1px rgba(252, 165, 165, .5); }
+.sv-st.is-wait, .sv-st.is-none { color: rgba(255, 255, 255, .45); }
+/* Uhr: fest an einer Stelle, groß */
+.sv-clock { position: absolute; left: 6vw; right: 46vw; top: 50%; display: flex; flex-direction: column; align-items: center; transform: translateY(-58%); }
+.sv-clock b { font-size: 9.5rem; font-weight: 800; line-height: 1; letter-spacing: -.045em; font-variant-numeric: tabular-nums; text-shadow: 0 .4rem 2.5rem rgba(0, 0, 0, .45); }
+.sv-clock > span { margin-top: 1rem; color: rgba(255, 255, 255, .9); font-size: 1.7rem; font-weight: 500; }
+/* Poster-Karte rechts mit leuchtendem Rand in Posterfarbe */
+.sv-card { position: absolute; right: 6vw; top: 50%; width: 22vw; height: 34vw; max-height: 74vh; max-width: 48vh; transform: translateY(-48%); }
+.sv-poster { position: absolute; top: 0; right: 0; bottom: 0; left: 0; overflow: hidden; border-radius: 1.6rem; background: #111;
+  box-shadow: 0 0 0 2px rgba(var(--acc), .95), 0 0 2.2rem rgba(var(--acc), .55), 0 2rem 4rem rgba(0, 0, 0, .6); opacity: 0; transform: scale(.97); transition: opacity 1.2s ease, transform 1.2s ease, box-shadow 2s ease; }
+.sv-poster.is-on { opacity: 1; transform: none; }
+.sv-poster.is-out { opacity: 0; }
+.sv-poster img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.sv-cap { position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: flex-end; justify-content: space-between; padding: 3.5rem 1.2rem 1.1rem; background: linear-gradient(to top, rgba(4, 4, 12, .95), rgba(4, 4, 12, .6) 55%, transparent); }
+.sv-cap > div { min-width: 0; }
+.sv-cap b { display: block; font-size: 1.25rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sv-cap small { display: block; margin-top: .2rem; color: rgba(255, 255, 255, .7); font-size: .95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sv-cap em { flex: none; margin-left: .6rem; padding: .1rem .4rem; border-radius: .35rem; box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .8); font-size: .75rem; font-style: normal; font-weight: 800; }
+.sv-dots { position: absolute; right: 6vw; width: 22vw; max-width: 48vh; top: 50%; transform: translateY(calc(min(34vw, 74vh) * .52 + 1.3rem)); display: flex; justify-content: center; }
+.sv-dots i { width: .5rem; height: .5rem; margin: 0 .25rem; border-radius: 999px; background: rgba(255, 255, 255, .3); transition: width .6s ease, background .6s ease; }
+.sv-dots i.is-on { width: 1.4rem; background: rgb(var(--acc)); }
+/* Einbrennschutz: --dx/--dy (±5 px, jede Minute anders) verschieben alle festen Teile – links/oben wie rechts/unten verankerte */
+.saver > .sv-brand, .saver > .sv-stat, .saver > .sv-clock, .saver > .sv-card, .saver > .sv-dots, .saver > .sv-tipbar {
+  margin: var(--dy, 0px) calc(-1 * var(--dx, 0px)) calc(-1 * var(--dy, 0px)) var(--dx, 0px); transition: margin 2s ease; }
+body.lite .sv-pic, body.lite .sv-poster { transition: none; }
+body.lite .sv-glow { display: none; }
 @media (orientation: landscape) and (max-height: 540px) {
-  html:not(.tv) .sv-clock b { font-size: 4.5rem; }
-  html:not(.tv) .sv-clock span { font-size: 1.1rem; }
+  html:not(.tv) .sv-clock b { font-size: 5rem; }
+  html:not(.tv) .sv-clock > span { font-size: 1.1rem; }
+  html:not(.tv) .sv-brand { font-size: 1.3rem; }
+  html:not(.tv) .sv-brand .brand-mark { width: 2rem; height: 2rem; }
+}
+@media (orientation: portrait) {
+  .sv-clock { left: 6vw; right: 6vw; top: 30%; }
+  .sv-clock b { font-size: 5.5rem; }
+  .sv-card { width: 46vw; height: 69vw; top: 68%; right: 27vw; }
+  .sv-dots { display: none; }
 }
 
 /* ==========================================================
@@ -2836,7 +2887,7 @@ body.kbd .st-tile.f:focus .st-seg span:not(.is-on), body.is-tv .st-tile.f:focus 
 .st2 .st-switch .st-txt { flex: 1; margin-right: .8rem; }
 
 /* Schnellsuche im Glas-Stil, rechts im Feld „Suchen in“ (Alle · Live TV · Filme · Serien) */
-.qs { padding: 0 .35rem 0 1rem; background: rgba(24, 24, 32, .96); box-shadow: 0 1rem 2.4rem -1rem rgba(0, 0, 0, .8), inset 0 0 0 1px rgba(255, 255, 255, .12); }
+.qs { padding: 0 .35rem 0 1rem; background: rgb(24, 24, 32); box-shadow: 0 1rem 2.4rem -1rem rgba(0, 0, 0, .8), inset 0 0 0 1px rgba(255, 255, 255, .12); }
 .qs:focus-within { box-shadow: 0 1rem 2.4rem -1rem rgba(0, 0, 0, .8), inset 0 0 0 1.5px rgba(167, 139, 250, .8), 0 0 0 4px rgba(167, 139, 250, .16); }
 .qs > .i { color: #c9b8fb; }
 .qs-scope { flex: none; display: inline-flex; margin-left: .5rem; padding: .18rem; border-radius: 999px; background: rgba(255, 255, 255, .06); }
@@ -2845,7 +2896,7 @@ body.kbd .st-tile.f:focus .st-seg span:not(.is-on), body.is-tv .st-tile.f:focus 
 .qs-sc:hover { color: var(--text); background: rgba(255, 255, 255, .06); }
 .qs-sc.is-on { color: #fff; background: linear-gradient(180deg, rgba(167, 139, 250, .42), rgba(167, 139, 250, .22)); box-shadow: inset 0 0 0 1px rgba(167, 139, 250, .6); }
 body.kbd .qs-sc.f:focus, body.is-tv .qs-sc.f:focus { background: #fff; color: #0b0b0f; box-shadow: none; }
-.qs-pop { padding: .45rem; border-radius: 1.2rem; background: rgba(22, 22, 30, .97); box-shadow: 0 1.4rem 3.4rem -1rem rgba(0, 0, 0, .85), inset 0 0 0 1px rgba(255, 255, 255, .1); }
+.qs-pop { padding: .45rem; border-radius: 1.2rem; background: rgb(22, 22, 30); box-shadow: 0 1.4rem 3.4rem -1rem rgba(0, 0, 0, .85), inset 0 0 0 1px rgba(255, 255, 255, .1); }
 .qs-sec.k-live { --k: #c9b8fb; } .qs-sec.k-movie { --k: #ecd4a6; } .qs-sec.k-series { --k: #b5d0ee; }
 .qs-item { border-radius: .8rem; }
 .qs-item:hover { background: rgba(255, 255, 255, .06); }
@@ -3046,12 +3097,18 @@ body.kbd .ln-chip.f:focus, body.is-tv .ln-chip.f:focus { background: #fff; color
 .section-live .live-panel { flex: 0 1 46%; min-width: 22rem; max-width: 64rem; }
 
 /* ===== Bildschirmschoner: „Wusstest du schon?“ ===== */
-.sv-tip { display: flex; align-items: flex-start; max-width: 30rem; margin-top: 1.6rem; padding: 1rem 1.2rem; border-radius: 1.2rem; background: rgba(16, 16, 22, .55); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12); opacity: 0; transform: translateY(.4rem); transition: opacity .5s ease, transform .5s ease; }
+/* klein unten links, daneben das Auge zum Ein-/Ausblenden */
+.sv-tipbar { position: absolute; left: 4.5vw; bottom: 5vh; display: flex; align-items: center; max-width: 34rem; }
+.sv-eye { flex: none; display: grid; place-items: center; width: 2.4rem; height: 2.4rem; margin-right: .7rem; border-radius: 50%; color: rgba(255, 255, 255, .75); background: rgba(255, 255, 255, .06); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .16); cursor: pointer; }
+.sv-eye .i { width: 1.2rem; height: 1.2rem; }
+.saver.no-tips .sv-eye { color: rgba(255, 255, 255, .4); }
+.saver.no-tips .sv-tip { display: none; }
+.sv-tip { display: flex; align-items: center; min-width: 0; padding: .55rem .9rem .55rem .55rem; border-radius: .9rem; background: rgba(10, 10, 20, .55); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1); opacity: 0; transform: translateY(.3rem); transition: opacity .5s ease, transform .5s ease; }
 .sv-tip.is-on { opacity: 1; transform: none; }
-.sv-tip-ic { flex: none; display: flex; display: grid; place-items: center; width: 2.6rem; height: 2.6rem; margin-right: .9rem; border-radius: .8rem; color: #ddd6fe; background: rgba(167, 139, 250, .22); box-shadow: inset 0 0 0 1px rgba(167, 139, 250, .45); }
-.sv-tip-ic .i { width: 1.3rem; height: 1.3rem; }
-.sv-tip small { display: block; margin-bottom: .2rem; color: #c4b5fd; font-size: .8rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
-.sv-clock .sv-tip p { margin: 0; color: rgba(255, 255, 255, .9); font-size: 1.15rem; font-weight: 500; line-height: 1.4; }
+.sv-tip-ic { flex: none; display: grid; place-items: center; width: 1.9rem; height: 1.9rem; margin-right: .65rem; border-radius: .55rem; color: #fff; background: rgba(var(--acc), .3); box-shadow: inset 0 0 0 1px rgba(var(--acc), .55); }
+.sv-tip-ic .i { width: 1rem; height: 1rem; }
+.sv-tip small { display: block; color: rgba(255, 255, 255, .6); font-size: .7rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.sv-tip p { margin: .05rem 0 0; color: rgba(255, 255, 255, .88); font-size: .9rem; font-weight: 500; line-height: 1.35; }
 .sv-clock > span { display: flex; align-items: center; }
 .sv-clock .sky-slot { margin-right: .6rem; }
 .sv-clock .sky .i { width: 1.6rem; height: 1.6rem; }

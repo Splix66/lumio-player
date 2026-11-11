@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Telvo Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.14.3',
+    version: '1.14.4',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     /* Bibliotheken: werden beim Bauen nach www/lib kopiert (scripts/copy-libs.js) und von dort geladen.
        Nur wenn sie fehlen, aus dem Internet – mit fester Version und Prüfsumme (SRI): eine veränderte Datei
@@ -261,7 +261,9 @@
   // Programmtexte: manche Anbieter liefern Zeilenumbrüche als Text („\n“) – dann stand „Stacheldraht.\n\nManch …“ in der Beschreibung
   function epgText(s) {
     if (!s) return '';
-    return String(s).replace(/\\r\\n|\\n|\\r/g, '\n').replace(/\\t/g, ' ').replace(/^\s+|\s+$/g, '');
+    // … und Markdown-Hervorhebungen („**Ein neuer Versuch**“) – die Sternchen standen sonst roh im Text
+    return String(s).replace(/\\r\\n|\\n|\\r/g, '\n').replace(/\\t/g, ' ')
+      .replace(/\*\*([^*\n]+)\*\*/g, '$1').replace(/__([^_\n]+)__/g, '$1').replace(/^\s+|\s+$/g, '');
   }
   // Neue, zufällige Kennung (Playlists). Eigener Name: „uid()“ weiter unten ist die Daten-Kennung der schauenden Person –
   // gleichnamig überschrieb sie diese Funktion, und jede neue Playlist bekam die Kennung der gerade aktiven.
@@ -2357,6 +2359,8 @@
           startPending = 0;
           var sv = startView();
           if (sv === 'live' || sv === 'movie' || sv === 'series') Shell.show(sv);
+          // „Letzter Sender“: hier wird die Startseite nicht neu aufgebaut – deshalb direkt starten
+          if (startLast) { var sl = startLast; startLast = null; sl(); }
         }
         return;
       }
@@ -2733,6 +2737,14 @@
           this.focus(first);
           return true;
         }
+      }
+      // Live TV: von den Kategorien links mit Rechts auf den laufenden Sender (falls sichtbar), sonst auf den obersten
+      // sichtbaren – vorher landete der Fokus auf dem Sender, der zufällig auf gleicher Höhe wie die Kategorie stand
+      if (dir === 'right' && cur.classList && cur.classList.contains('cat') && cur.closest && cur.closest('.section-live')) {
+        var chans = list.filter(function (el) { return el.classList.contains('chan') && el.closest('.section-live'); });
+        var onScreen = chans.filter(function (el) { var r = el.getBoundingClientRect(); return r.top >= 0 && r.bottom <= window.innerHeight; });
+        var pickCh = onScreen.filter(function (el) { return el.classList.contains('is-playing'); })[0] || onScreen[0] || chans[0];
+        if (pickCh) { this.focus(pickCh); return true; }
       }
       // Startseite: Runter aus der Menüleiste führt ins Titelbild („Jetzt ansehen“) – sonst sprang der Fokus
       // über das Titelbild hinweg auf die erste Karte darunter (die liegt waagerecht näher am Herz/Live TV)
@@ -3966,7 +3978,7 @@
     return Settings.get('autoLast') !== false ? 'last' : 'home';
   }
   // Wie viele Shell.open() noch bis zur eingestellten Startansicht (nur beim App-Start gesetzt, s. boot)
-  var startPending = 0, startPendingUntil = 0;
+  var startPending = 0, startPendingUntil = 0, startLast = null;   // startLast: „Letzten Sender abspielen“, sobald die Startansicht steht
 
   var Shell = {
     el: null, view: null, current: null, buttons: {}, pendingFocus: null,
@@ -4038,8 +4050,11 @@
       // Start: Startseite – oder Live TV / Filme / Serien, wenn so eingestellt („App beim Start“).
       // Nur beim echten App-Start – nicht nach Personen-/Playlist-Wechsel oder Neustart wegen Sprachwechsel
       if (Date.now() > startPendingUntil) startPending = 0;
-      var sv = startPending > 0 && --startPending === 0 ? startView() : 'home';
+      var justStarted = startPending > 0 && --startPending === 0;
+      var sv = justStarted ? startView() : 'home';
       self.show(sv === 'live' || sv === 'movie' || sv === 'series' ? sv : 'home');
+      // „Letzter Sender“: erst jetzt – bei mehreren Personen also nach „Wer schaut?“ (vorher lief der Zeitgeber ins Leere)
+      if (startLast && startPending === 0) { var sl = startLast; startLast = null; if (justStarted) sl(); }
     },
     show: function (name, focusContent, keepFocus) {
       var self = this, prev = self.current;
@@ -4120,6 +4135,24 @@
     if (!searchCache[k]) { searchCache[k] = visibleItems(kind, App.provider.items(kind, '__all')); searchCache[k].catch(function () { delete searchCache[k]; }); }
     return searchCache[k];
   }
+  /* Kategorien in der Sprache der App (z. B. „DE ⚡ …“ bei Deutsch) – für Titelbild und Bildschirmschoner.
+     null, wenn die Playlist keine Sprach-Kürzel in den Kategorien hat. */
+  function ownLangCats(kind) {
+    if (!App.provider || !App.provider.categories) return Promise.resolve(null);
+    return App.provider.categories(kind).then(function (cats) {
+      var m = {}, n = 0;
+      (cats || []).forEach(function (c) { var r = langOf(c.name); if (r && r.g === Lang.cur) { m[String(c.id)] = 1; n++; } });
+      return n ? m : null;
+    }, function () { return null; });
+  }
+  // nur Titel aus Kategorien der App-Sprache – wenn davon mindestens „min“ da sind, sonst die ganze Liste
+  function preferOwnLang(kind, list, min) {
+    return ownLangCats(kind).then(function (m) {
+      if (!m) return list;
+      var own = list.filter(function (x) { return m[String(x.catId)]; });
+      return own.length >= (min || 1) ? own : list;
+    });
+  }
   function byAdded(a, b) { return Number(b.added || 0) - Number(a.added || 0); }
   function byRating(a, b) { return Number(b.rating || 0) - Number(a.rating || 0); }
   function some(list, fn) { for (var i = 0; i < list.length; i++) if (fn(list[i])) return true; return false; }
@@ -4150,9 +4183,10 @@
     var src = it.backdrop || it.logo || (u && u.series.logo);
     var art = h('span', { class: 'lr-art' }, h('span', { class: 'ph', style: 'background:' + gradientFor(name) }));
     if (src) art.appendChild(img(src, it.backdrop ? 'is-wide' : 'is-poster', function (i) { if (i.parentNode) i.parentNode.removeChild(i); }));
-    var right = ep && it.season ? T('S{0}: F{1}', it.season, it.num) : r.d ? fmtHMS(r.d - r.t) : '';
+    // Restzeit als „Noch 1 Std. 15 Min.“ – vorher stand nur „01:15:42“ da, ohne dass man sah, dass es die Restzeit ist
+    var right = ep && it.season ? T('S{0}: F{1}', it.season, it.num) : r.d ? T('Noch {0}', fmtLeft(r.d - r.t)) : '';
     var pct = r.d ? Math.max(3, Math.min(100, Math.round(r.t / r.d * 100))) : 0;
-    var label = name + (right ? ' – ' + (ep ? right : T('Noch {0}', fmtLeft(r.d - r.t))) : '');
+    var label = name + (right ? ' – ' + right : '');
     var sid = it.seriesId || (u && u.series.id);
     return h('button', { class: 'lr-card f k-' + (ep ? 'series' : 'movie'), 'data-key': 'lr:' + (ep ? 'series:' + sid : 'movie:' + it.id), title: label, 'aria-label': label,
       onclick: function () { (onOpen || openContinue)(r); } },
@@ -4186,7 +4220,8 @@
   /* Auswahl fürs Titelbild: wird beim Aktualisieren der Listen berechnet (catCounts) und klein gespeichert –
      die Startseite muss die großen Film- und Serienlisten dafür nicht selbst laden. */
   var HeroPicks = {
-    key: function (kind, owner) { return 'hero.' + (owner || pid()) + '.' + kind; },
+    // „hero2“ + Sprache: Auswahl bevorzugt Titel in der App-Sprache – neuer Schlüssel, damit nach dem Update neu gerechnet wird
+    key: function (kind, owner) { return 'hero2.' + Lang.cur + '.' + (owner || pid()) + '.' + kind; },
     get: function (kind) { return Store.get(this.key(kind), []); },
     // schon einmal berechnet (auch leer, z. B. M3U ohne Bewertungen) – dann nicht bei jedem Öffnen neu rechnen
     computed: function (kind) { return Store.get(this.key(kind), null) !== null; },
@@ -4205,7 +4240,10 @@
       var self = this;
       return this.blocked(kind).then(function (bad) {
         var vis = list.filter(function (x) { return !bad[String(x.catId)]; });
-        var top = topTen(vis, some(vis, function (x) { return Number(x.added) > 0; })).slice(0, 4);
+        // Titel in der Sprache der App zuerst (sonst stand z. B. ein türkischer Film mit türkischem Text oben)
+        return preferOwnLang(kind, vis, 4);
+      }).then(function (pool) {
+        var top = topTen(pool, some(pool, function (x) { return Number(x.added) > 0; })).slice(0, 4);
         Store.set(self.key(kind, owner), top.map(slim));
       }).catch(function () {});
     },
@@ -5389,7 +5427,9 @@
       self.paintScope();
       self.el = h('div', { class: 'qs is-hidden' }, icon('search'), self.input, self.scopeEl);
       self.pop = h('div', { class: 'qs-pop is-hidden' });
-      root.appendChild(self.el); root.appendChild(self.pop);
+      // Abdunkelung im selben Bereich wie Suchfeld und Treffer (liegt darunter, über der Seite)
+      self.dim = h('div', { class: 'qs-dim is-hidden', 'aria-hidden': 'true' });
+      root.appendChild(self.dim); root.appendChild(self.el); root.appendChild(self.pop);
       self.isOpen = false;
       if (self.wired) return;
       self.wired = true;
@@ -5434,6 +5474,8 @@
       self.isOpen = true;
       self.el.classList.remove('is-hidden'); self.pop.classList.remove('is-hidden');
       self.btn.classList.add('is-on');
+      // Seite darunter abdunkeln – sonst schien sie durch (Überschrift und Reiter überlappten das Suchfeld)
+      if (self.dim) self.dim.classList.remove('is-hidden');
       self.place();
       self.run();
       setTimeout(function () { Nav.focus(self.input); }, 30);
@@ -5445,6 +5487,7 @@
       clear(this.pop);
       this.el.classList.add('is-hidden'); this.pop.classList.add('is-hidden');
       this.btn.classList.remove('is-on');
+      if (this.dim) this.dim.classList.add('is-hidden');
       if (!keepFocus) Nav.focus(this.btn);
     },
     toggle: function (anchor) { if (this.isOpen) this.close(); else this.open(anchor); },
@@ -5494,7 +5537,8 @@
      fragt die App nach. Kommt keine Antwort, stoppt die Wiedergabe – so bleibt der Zugang beim Anbieter frei. */
   /* ---------- Bildschirmschoner ----------
      Nach einigen Minuten ohne Bedienung (und ohne laufendes Video): Uhr, Datum und langsam wechselnde Poster.
-     Die Uhr wandert jede Minute ein Stück weiter (schont OLED-Fernseher). Die erste Taste beendet ihn nur – sie löst nichts aus. */
+     Uhr fest links, Poster-Karte rechts; Linien und Leuchten nehmen die Farbe des Posters an. Tipps unten links,
+     mit dem Auge (oder der Play/Pause-Taste) ein-/ausblendbar. Die erste andere Taste beendet ihn nur – sie löst nichts aus. */
   /* ---------- Tageszeit & Wetter neben der Uhr ----------
      Ohne Einstellung: nur die Tageszeit (Sonnenaufgang, Sonne, Sonnenuntergang, Mond) – nichts geht ins Internet.
      Mit gewähltem Ort (Einstellungen → Darstellung → Wetter): echtes Wetter von Open-Meteo (kostenlos, ohne Konto).
@@ -5613,7 +5657,15 @@
     mins: function () { var v = Settings.get('saverMin'); return typeof v === 'number' ? v : 10; },
     start: function () {
       var self = this, mx = -1, my = -1;
-      function wake(e) { if (!self.el) return; e.preventDefault(); e.stopPropagation(); self.hide(); }
+      function wake(e) {
+        if (!self.el) return;
+        e.preventDefault(); e.stopPropagation();
+        // Auge (Tippen/Klicken) oder Play/Pause-Taste der Fernbedienung: Tipps ein-/ausblenden, Bildschirmschoner bleibt
+        // (die Menütaste kommt auf Fire TV gar nicht in der App an – Play/Pause schon)
+        var eye = e.target && e.target.closest && e.target.closest('.sv-eye');
+        if (eye || (e.type === 'keydown' && (e.key === 'MediaPlayPause' || e.keyCode === 179 || e.key === 'ContextMenu' || e.key === 'm'))) { self.toggleTips(); return; }
+        self.hide();
+      }
       // am Fenster, damit die Taste vor der normalen Steuerung abgefangen wird
       ['keydown', 'pointerdown', 'touchstart', 'wheel'].forEach(function (ev) { window.addEventListener(ev, wake, true); });
       window.addEventListener('mousemove', function (e) {
@@ -5630,6 +5682,65 @@
       if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
       if (Date.now() - StillWatching.last >= m * 60000) this.show();
     },
+    tipsOn: function () { return Settings.get('saverTips') !== false; },
+    toggleTips: function () {
+      Settings.set('saverTips', !this.tipsOn());
+      this.paintEye();
+      if (this.tipsOn()) this.nextTip();
+    },
+    paintEye: function () {
+      if (!this.el) return;
+      var on = this.tipsOn();
+      this.el.classList.toggle('no-tips', !on);
+      clear(this.eye).appendChild(icon(on ? 'eye' : 'eyeOff'));
+      this.eye.setAttribute('title', on ? T('Tipps ausblenden') : T('Tipps einblenden'));
+    },
+    /* Akzentfarbe aus dem Poster: kräftigster häufiger Farbton, auf gut lesbare Helligkeit gebracht.
+       Geht nur, wenn der Bildserver das erlaubt (CORS) – sonst bleibt das Telvo-Violett. */
+    tint: function (src, done) {
+      var im = new Image(), fin = false;
+      function end(c) { if (!fin) { fin = true; done(c); } }
+      im.crossOrigin = 'anonymous';
+      try { im.referrerPolicy = 'no-referrer'; } catch (e) {}
+      im.onerror = function () { end(null); };
+      im.onload = function () {
+        try {
+          var W = 24, H = 36, c = document.createElement('canvas'); c.width = W; c.height = H;
+          var g = c.getContext('2d'); g.drawImage(im, 0, 0, W, H);
+          var d = g.getImageData(0, 0, W, H).data, bk = {};
+          for (var i = 0; i < d.length; i += 4) {
+            var r = d[i], gg = d[i + 1], b = d[i + 2], mx = Math.max(r, gg, b), mn = Math.min(r, gg, b);
+            if (mx < 50 || mx - mn < 40) continue;   // zu dunkel oder grau
+            var hh = mx === mn ? 0 : mx === r ? ((gg - b) / (mx - mn) + 6) % 6 : mx === gg ? (b - r) / (mx - mn) + 2 : (r - gg) / (mx - mn) + 4;
+            var k = Math.floor(hh * 2), wgt = (mx - mn) / mx * (mx / 255);
+            var o = bk[k] || (bk[k] = { w: 0, r: 0, g: 0, b: 0 });
+            o.w += wgt; o.r += r * wgt; o.g += gg * wgt; o.b += b * wgt;
+          }
+          var best = null;
+          for (var kk in bk) if (!best || bk[kk].w > best.w) best = bk[kk];
+          if (!best || best.w < 3) { end(null); return; }
+          end(Saver.vivid([best.r / best.w, best.g / best.w, best.b / best.w]));
+        } catch (e) { end(null); }
+      };
+      setTimeout(function () { end(null); }, 6000);
+      im.src = src;
+    },
+    // gleicher Farbton, aber satt und hell genug für Linien und Leuchten auf dunklem Grund
+    vivid: function (c) {
+      var r = c[0] / 255, g = c[1] / 255, b = c[2] / 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b), hh = 0, l = (mx + mn) / 2, s = 0;
+      if (mx !== mn) {
+        var dd = mx - mn; s = l > .5 ? dd / (2 - mx - mn) : dd / (mx + mn);
+        hh = mx === r ? (g - b) / dd + (g < b ? 6 : 0) : mx === g ? (b - r) / dd + 2 : (r - g) / dd + 4; hh /= 6;
+      }
+      s = Math.min(.92, Math.max(.6, s)); l = .6;
+      function f(t) { var q = l < .5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q; t = (t + 1) % 1; return t < 1 / 6 ? p + (q - p) * 6 * t : t < .5 ? q : t < 2 / 3 ? p + (q - p) * (2 / 3 - t) * 6 : p; }
+      return [Math.round(f(hh + 1 / 3) * 255), Math.round(f(hh) * 255), Math.round(f(hh - 1 / 3) * 255)];
+    },
+    setAcc: function (c) {
+      if (!this.el) return;
+      c = c || [139, 92, 246];   // Telvo-Violett
+      this.el.style.setProperty('--acc', c.join(', '));
+    },
     show: function () {
       var self = this;
       self.clock = h('b'); self.date = h('span');
@@ -5637,17 +5748,33 @@
       self.tip = h('div', { class: 'sv-tip' });
       self.tips = saverTips();
       self.tipAt = Math.floor(Math.random() * self.tips.length);
-      self.card = h('div', { class: 'sv-clock' }, self.clock, self.date, self.tip);
+      self.card = h('div', { class: 'sv-clock' }, self.clock, self.date);
+      self.eye = h('span', { class: 'sv-eye', role: 'button' });
+      self.stat = h('div', { class: 'sv-stat' });
+      self.dots = h('div', { class: 'sv-dots' });
+      self.cardBox = h('div', { class: 'sv-card' });
+      var wave = h('div', { class: 'sv-wave' });
+      wave.innerHTML = '<svg viewBox="0 0 1600 900" preserveAspectRatio="none"><defs>' +
+        '<linearGradient id="svWg" x1="0" y1="1" x2="1" y2="0"><stop offset="0" class="sv-s0"/><stop offset=".55" class="sv-s1"/><stop offset="1" class="sv-s2"/></linearGradient></defs>' +
+        '<path class="sv-band" d="M0 0H1600V20C1330 60 1100 90 860 150 600 215 330 300 0 420Z"/>' +
+        '<path class="sv-glow" d="M0 420C330 300 600 215 860 150 1100 90 1330 60 1600 20"/>' +
+        '<path class="sv-line" d="M0 420C330 300 600 215 860 150 1100 90 1330 60 1600 20"/>' +
+        '<path class="sv-line2" d="M0 470C360 350 640 260 900 200 1140 145 1370 115 1600 85"/></svg>';
+      self.el = h('div', { class: 'saver', 'aria-hidden': 'true' }, self.layers[0], self.layers[1], wave, h('div', { class: 'sv-horizon' }), h('div', { class: 'sv-shade' }),
+        h('div', { class: 'sv-brand' }, brandMark(), wordmark()), self.stat, self.card, self.cardBox, self.dots,
+        h('div', { class: 'sv-tipbar' }, self.eye, self.tip));
+      self.setAcc(null);
+      self.paintEye();
       self.nextTip();
-      self.el = h('div', { class: 'saver', 'aria-hidden': 'true' }, self.layers[0], self.layers[1], h('div', { class: 'sv-shade' }), self.card,
-        h('div', { class: 'sv-brand' }, brandMark(), wordmark()));
       document.body.appendChild(self.el);
       self.n = 0; self.tick();
       // Poster der Playlist (Filme und Serien mit Bild), zufällig gemischt
       self.pics = [];
       if (App.profile && App.provider) {
-        Promise.all([allItems('movie').catch(function () { return []; }), allItems('series').catch(function () { return []; })]).then(function (r) {
-          var all = r[0].concat(r[1]).filter(function (x) { return x.logo; });
+        // Filme und Serien aus Kategorien der App-Sprache (sonst kamen italienische und polnische Titel), mit Bild
+        function mine(kind) { return allItems(kind).then(function (l) { return preferOwnLang(kind, l.filter(function (x) { return x.logo; }), 10); }).catch(function () { return []; }); }
+        Promise.all([mine('movie'), mine('series')]).then(function (r) {
+          var all = r[0].concat(r[1]);
           for (var i = 0; i < 40 && all.length; i++) self.pics.push(all.splice(Math.floor(Math.random() * all.length), 1)[0]);
           self.next();
         });
@@ -5656,25 +5783,44 @@
       self.timer = setInterval(function () { self.next(); if (self.n % 2 === 0) self.nextTip(); }, 12000);
     },
     nextTip: function () {
-      if (!this.tip || !this.tips.length) return;
+      if (!this.tip || !this.tips.length || !this.tipsOn()) return;
       var t = this.tips[this.tipAt++ % this.tips.length], box = this.tip;
       box.classList.remove('is-on');
       setTimeout(function () {
         clear(box);
         box.appendChild(h('span', { class: 'sv-tip-ic' }, icon(t[1])));
         box.appendChild(h('div', null, h('small', { text: T('Wusstest du schon?') }), h('p', { text: t[0] })));
+        if (!Saver.tipsOn()) return;
         box.classList.add('is-on');
       }, box.firstChild ? 500 : 0);
     },
     // nächstes Poster überblenden
     next: function () {
       if (!this.el || !this.pics.length) return;
-      var it = this.pics[this.idx++ % this.pics.length], back = this.layers[this.n % 2], front = this.layers[(this.n + 1) % 2];
+      var self = this, pos = this.idx % this.pics.length, it = this.pics[this.idx++ % this.pics.length], back = this.layers[this.n % 2], front = this.layers[(this.n + 1) % 2];
       this.n++;
       clear(front);
+      // Hintergrund: das Poster ganz weich und dunkel – färbt den Bildschirm passend zum Film
       if (!Platform.lite) front.appendChild(img(it.logo, 'sv-blur', function () {}));
-      front.appendChild(h('div', { class: 'sv-poster' }, img(it.logo, '', function (i) { if (i.parentNode) i.parentNode.removeChild(i); }), h('span', { text: it.name })));
       front.classList.add('is-on'); back.classList.remove('is-on');
+      // Karte rechts: Poster mit leuchtendem Rand, Name und Genre
+      var g = String(it.genre || '').split(/\s*[,\/|]\s*/).filter(Boolean).slice(0, 2).join(' • ') || (it.kind === 'series' ? T('Serie') : T('Film'));
+      // „4K“/„HD“ nur im Kästchen – aus dem Titel nehmen, sonst stand es doppelt da
+      var hd = /\b(4k|uhd|fhd|hd)\b/i.exec(String(it.name || ''));
+      var nm = hd ? String(it.name).replace(hd[0], '').replace(/[\s\-–|:([]+$/, '').replace(/\(\s*\)|\[\s*\]/g, '').replace(/\s{2,}/g, ' ').replace(/^\s+|\s+$/g, '') || it.name : it.name;
+      var card = h('div', { class: 'sv-poster' },
+        img(it.logo, '', function (i) { if (i.parentNode) i.parentNode.removeChild(i); }),
+        h('div', { class: 'sv-cap' }, h('div', null, h('b', { text: nm }), h('small', { text: g })), hd ? h('em', { text: hd[1].toUpperCase() }) : null));
+      var old = this.cardBox.firstChild;
+      if (old) { old.classList.add('is-out'); setTimeout(function () { if (old.parentNode) old.parentNode.removeChild(old); }, 900); }
+      this.cardBox.appendChild(card);
+      setTimeout(function () { card.classList.add('is-on'); }, 30);
+      // Punkte unter der Karte (höchstens 5, der aktuelle leuchtet)
+      clear(this.dots);
+      var N = Math.min(5, this.pics.length);
+      for (var i = 0; i < N; i++) this.dots.appendChild(h('i', { class: i === pos % N ? 'is-on' : '' }));
+      // Farbe passend zum Poster
+      this.tint(it.logo, function (c) { if (self.el && self.cardBox.lastChild === card) self.setAcc(c); });
     },
     tick: function () {
       if (!this.el) return;
@@ -5683,9 +5829,16 @@
       clear(this.date);
       this.date.appendChild(h('span', { class: 'sky-slot' }, Sky.el()));
       this.date.appendChild(document.createTextNode(d.toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' })));
-      // jede Minute eine andere Stelle (Einbrennen vermeiden)
-      var m = d.getMinutes(), x = 6 + (m * 37 % 40), y = 8 + (m * 23 % 42);
-      this.card.style.left = x + '%'; this.card.style.top = y + '%';
+      // Einbrennschutz (OLED): jede Minute alles um wenige Pixel versetzt – fürs Auge bleibt die Uhr an ihrer Stelle
+      var mm = d.getHours() * 60 + d.getMinutes();
+      this.el.style.setProperty('--dx', ((mm * 7) % 11 - 5) + 'px');
+      this.el.style.setProperty('--dy', ((mm * 5) % 11 - 5) + 'px');
+      // Statusanzeigen oben rechts nur als Symbole (Farbe = Zustand)
+      clear(this.stat);
+      var self = this;
+      WelcomeStatus.items(!!App.provider).forEach(function (it) {
+        self.stat.appendChild(h('span', { class: 'sv-st is-' + it[0], title: it[2] }, icon(it[1])));
+      });
     },
     hide: function () {
       clearInterval(this.timer);
@@ -6944,6 +7097,8 @@
     var tSaver = choiceTile('saver', T('Bildschirmschoner'), SAVERS, function () { return Saver.mins(); }, function (v) { Settings.set('saverMin', v); },
       T('Wird die App so lange nicht bedient (und läuft kein Video), erscheinen Uhr und Poster. Schont OLED-Fernseher. Eine beliebige Taste beendet ihn.'),
       function () { return h('div', { class: 'row nt-act' }, sheetBtn('play', T('Jetzt ansehen'), function () { setTimeout(function () { Saver.show(); }, 200); })); });
+    var tSaverTips = switchTile('eye', T('Tipps im Bildschirmschoner'), T('„Wusstest du schon?“ unten links. Im Bildschirmschoner auch mit dem Auge oder der Play/Pause-Taste ein- und ausblenden.'),
+      function () { return Settings.get('saverTips') !== false; }, function (v) { Settings.set('saverTips', v); });
     var tClock = segTile('clock', T('Zeitformat'), [[false, '24 h'], [true, '12 h']],
       function () { return !!Settings.get('clock12'); }, function (v) { Settings.set('clock12', v); }, T('Für Uhr und Programmführer'));
     var tDev = choiceTile('device', T('Gerätetyp'), DEVICES, function () { return Settings.get('deviceType') || 'auto'; }, function (v) {
@@ -6996,7 +7151,7 @@
     var el = sidePage('settings st-page', T('Einstellungen'), 'settings', [
       { id: 'general', ic: 'home', c: 'violet', name: T('Allgemein'), hint: T('Grundlegende Einstellungen für dein Telvo-Erlebnis.'), body: grid([tLang, tClock, tStart, tUpdChk]) },
       { id: 'play', ic: 'play', c: 'blue', name: T('Wiedergabe'), hint: T('Player, Bildqualität, Untertitel und Vorschau.'), body: grid([tEng, tQual, tSound, tSub, tNext, tPrev, tHero]) },
-      { id: 'look', ic: 'sun', c: 'amber', name: T('Darstellung'), hint: T('Farben, Cover, Wetter und Bildschirmschoner.'), body: grid([tTheme, tPoster, tSky, tSaver]) },
+      { id: 'look', ic: 'sun', c: 'amber', name: T('Darstellung'), hint: T('Farben, Cover, Wetter und Bildschirmschoner.'), body: grid([tTheme, tPoster, tSky, tSaver, tSaverTips]) },
       { id: 'content', ic: 'series', c: 'teal', name: T('Inhalte & Listen'), hint: T('Playlists, Kategorien und Sender.'), body: grid([tAdd, tPl, tUpd, tAuto, tSort, tHideL, tHideM, tHideS, tHideCh]) },
       { id: 'users', ic: 'lock', c: 'pink', name: T('Benutzer & Sicherheit'), hint: T('Wer schaut, Kindersicherung und Verlauf.'), body: grid([tPersons, tPar, tHis]) },
       { id: 'devices', ic: 'device', c: 'slate', name: T('Geräte & Verbindungen'), hint: T('Gerätetyp, Verbindung, Sicherung und externe Player.'), body: grid([tDev, tSpeed, tBackup, tExt]) },
@@ -9363,12 +9518,13 @@
       // „App beim Start“ (Live TV / Filme / Serien): bei mehreren Personen erst nach „Wer schaut?“ – sonst wird alles doppelt geladen
       startPending = soft ? 0 : Persons.multi() ? 2 : 1;
       startPendingUntil = Date.now() + 120000;   // „Wer schaut?“ nur weggeklickt: später nicht mehr umspringen
-      activateProfile(active, false);
-      if (Persons.multi()) setTimeout(function () { if (App.profile === active) showWhoWatches(); }, 300);
-      // Einstellung „Letzten Sender beim Start abspielen“ (nicht nach einem Neustart aus der App heraus)
-      var lastLive = !soft && startView() === 'last' && Recent.list()[0];
-      if (lastLive) setTimeout(function () {
-        function ok() { var top = Screens.top(); return !Player.el && App.profile === active && top && top.name === 'shell' && !Dialog.open; }
+      // Einstellung „Letzten Sender beim Start abspielen“ (nicht nach einem Neustart aus der App heraus).
+      // Startet, sobald die Startansicht aufgebaut ist (Shell.build) – bei mehreren Personen also erst nach „Wer schaut?“.
+      // Vorher lief der Zeitgeber nach 1,2 s, während „Wer schaut?“ noch offen war, und tat dann nichts.
+      startLast = soft || startView() !== 'last' ? null : function () { setTimeout(function () {
+        var lastLive = Recent.list()[0];
+        if (!lastLive) return;
+        function ok() { var top = Screens.top(); return !Player.el && top && top.name === 'shell' && !Dialog.open; }
         if (!ok()) return;
         // Mit der Senderliste der Kategorie starten – sonst kannte der Player nur diesen einen Sender und hoch/runter schaltete nicht um
         var cat = lastLive.catId !== undefined && lastLive.catId !== null && lastLive.catId !== '' ? lastLive.catId : '__all';
@@ -9380,7 +9536,9 @@
           if (idx < 0) playItem(lastLive, { list: [lastLive], index: 0 });
           else playItem(list[idx], { list: list, index: idx });
         });
-      }, 1200);
+      }, 1200); };
+      activateProfile(active, false);
+      if (Persons.multi()) setTimeout(function () { if (App.profile === active) showWhoWatches(); }, 300);
     }
     else showProfiles();
     Terms.check();
