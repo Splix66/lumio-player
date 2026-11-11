@@ -32,3 +32,12 @@ for (const w of [400, 500, 600, 700, 800]) {
   fs.copyFileSync(src, path.join(fontDir, name));
 }
 console.log('OK: Schrift Inter nach www/fonts kopiert');
+
+// Schrift "Outfit" für den Schriftzug "Telvo Player" (oben links und Startbild)
+for (const w of [400, 700]) {
+  const name = 'outfit-latin-' + w + '-normal.woff2';
+  const src = path.join(__dirname, '..', 'node_modules', '@fontsource', 'outfit', 'files', name);
+  if (!fs.existsSync(src)) { console.log('Schrift ' + name + ' nicht gefunden – der Schriftzug nutzt dann Inter.'); continue; }
+  fs.copyFileSync(src, path.join(fontDir, name));
+}
+console.log('OK: Schrift Outfit nach www/fonts kopiert');

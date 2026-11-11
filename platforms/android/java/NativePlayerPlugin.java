@@ -85,9 +85,49 @@ public class NativePlayerPlugin extends Plugin {
                 r.put("crash", s);
                 p.edit().remove("last").apply();
             }
+            String ex = takeExitReason(p);
+            if (ex != null) r.put("exit", ex);
         } catch (Exception ignored) {
         }
         call.resolve(r);
+    }
+
+    /**
+     * Hat Android die App beim letzten Mal selbst beendet, während sie zu sehen war (Speichermangel, Absturz im
+     * Browser-Teil, App reagierte nicht)? Das fängt CrashSaver nicht ab, weil dabei keine Java-Ausnahme entsteht –
+     * für Nutzer sieht es aus wie „App hat sich plötzlich geschlossen“. Android merkt sich den Grund (ab Android 11).
+     * Jeder Eintrag wird nur einmal gemeldet; Beenden im Hintergrund (normale Speicherbereinigung) zählt nicht.
+     */
+    private String takeExitReason(android.content.SharedPreferences p) {
+        if (android.os.Build.VERSION.SDK_INT < 30) return null;
+        try {
+            android.app.ActivityManager am = (android.app.ActivityManager) getContext().getSystemService(android.content.Context.ACTIVITY_SERVICE);
+            if (am == null) return null;
+            java.util.List<android.app.ApplicationExitInfo> list = am.getHistoricalProcessExitReasons(getContext().getPackageName(), 0, 16);
+            long seen = p.getLong("exitSeen", 0L), newest = seen;
+            String found = null;
+            for (android.app.ApplicationExitInfo e : list) {   // neueste zuerst
+                long ts = e.getTimestamp();
+                if (ts > newest) newest = ts;
+                if (ts <= seen || found != null) continue;
+                int why = e.getReason();
+                boolean shown = e.getImportance() <= android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE;
+                String what = null;
+                if (why == android.app.ApplicationExitInfo.REASON_CRASH_NATIVE) what = "Absturz (nativ)";
+                else if (why == android.app.ApplicationExitInfo.REASON_ANR) what = "App reagierte nicht (ANR)";
+                else if (why == android.app.ApplicationExitInfo.REASON_EXCESSIVE_RESOURCE_USAGE) what = "zu hoher Verbrauch";
+                else if (why == android.app.ApplicationExitInfo.REASON_LOW_MEMORY && shown) what = "Speichermangel im Vordergrund";
+                else if (why == android.app.ApplicationExitInfo.REASON_SIGNALED && shown) what = "vom System beendet (Signal " + e.getStatus() + ")";
+                if (what != null) {
+                    String proc = e.getProcessName();
+                    found = what + " · " + (e.getPss() / 1024) + " MB" + (proc != null && proc.indexOf(':') >= 0 ? " · " + proc.substring(proc.indexOf(':')) : "");
+                }
+            }
+            if (newest > seen) p.edit().putLong("exitSeen", newest).apply();
+            return found;
+        } catch (Throwable t) {
+            return null;
+        }
     }
 
     @PluginMethod

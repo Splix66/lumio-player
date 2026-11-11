@@ -33,7 +33,7 @@ jobs:
 
       - name: Bilder erzeugen (Symbole, Banner)
         run: |
-          pip install pillow
+          pip install pillow fonttools
           python3 scripts/make-icons.py
 
       - name: Android-Projekt erzeugen

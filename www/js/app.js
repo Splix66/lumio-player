@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Telvo Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.14.2',
+    version: '1.14.3',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     /* Bibliotheken: werden beim Bauen nach www/lib kopiert (scripts/copy-libs.js) und von dort geladen.
        Nur wenn sie fehlen, aus dem Internet – mit fester Version und Prüfsumme (SRI): eine veränderte Datei
@@ -3975,8 +3975,8 @@
       self.buttons = {}; self.current = null;
       self.view = h('div', { class: 'view' });
       var tabs = h('nav', { class: 'main-tabs', 'aria-label': T('Hauptmenü') });
-      // Mitte: Favoriten (Herz) · Live TV · Filme · Serien · Start (Haus) – der gewählte Reiter leuchtet in seiner Farbe
-      [['favs', T('Favoriten'), 'heart'], ['live', T('Live TV'), 'live'], ['movie', T('Filme'), 'movie'], ['series', T('Serien'), 'series'], ['home', T('Start'), 'home']].forEach(function (it) {
+      // Mitte: Start (Haus) · Live TV · Filme · Serien · Favoriten (Herz) – der gewählte Reiter leuchtet in seiner Farbe
+      [['home', T('Start'), 'home'], ['live', T('Live TV'), 'live'], ['movie', T('Filme'), 'movie'], ['series', T('Serien'), 'series'], ['favs', T('Favoriten'), 'heart']].forEach(function (it) {
         var round = it[0] === 'home' || it[0] === 'favs';
         var b = h('button', { class: 'tab f k-' + it[0] + (round ? ' tab-round' : '') + (it[0] === 'home' ? ' tab-home' : ''), 'data-tab': it[0], title: it[1], 'aria-label': it[1], onclick: function () { self.show(it[0], true); } },
           icon(it[2]), h('span', { class: 'tab-label', text: it[1] }));
@@ -4001,7 +4001,7 @@
       }
       var searchBtn = h('button', { class: 'icon-btn f', title: T('Suche'), 'aria-label': T('Suche'), onclick: function () { QuickSearch.toggle(); } }, icon('search'));
       var head = h('header', { class: 'topnav' },
-        h('div', { class: 'nav-left' }, h('div', { class: 'brand brand-sm' }, brandMark(), h('span', { class: 'wordmark' }, h('b', { text: 'Telvo' })))),
+        h('div', { class: 'nav-left' }, h('div', { class: 'brand brand-sm' }, brandMark(), wordmark())),
         tabs,
         h('div', { class: 'top-tools' }, searchBtn, reloadTop, tool('settings', T('Einstellungen')), tool('profile', T('Profil'))));
       var runTime = h('div', { class: 'mac-tag sb-days' });
@@ -7626,6 +7626,63 @@
     Player.open(item, ctx);
   }
 
+  /* Fire TV: Die Amazon-WebView legt das erste Video, das per MediaSource (hls.js) startet, während kein anderes läuft,
+     auf eine eigene Hardware-Ebene (SurfaceView) – in die der Decoder dann aber nicht zeichnet: Ton ja, Bild schwarz
+     (Live-TV-Vorschau). Läuft schon ein Video, bekommen weitere den normalen Weg und sind sichtbar. Deshalb belegt ein
+     winziger, unsichtbarer Clip (64×64, schwarz, 1 KB) diese Ebene gleich beim Start und bleibt pausiert stehen.
+     Gemessen auf dem Fire TV Stick 4K Max: hält auch nach Minuten Leerlauf; nach dem Zurückkommen aus dem Hintergrund
+     wird er neu gesetzt, falls Android ihn freigegeben hat. */
+  var AwvHold = {
+    el: null, busy: false,
+    clip: 'AAAAGGZ0eXBpc282AAAAAGlzbzZtcDQxAAACcW1vb3YAAABsbXZoZAAAAAAAAAAAAAAAAAAAA+gAAAAAAAEAAAEAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAHVdHJhawAAAFx0a2hkAAAAAwAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAABAAAAAQAAAAAABcW1kaWEAAAAgbWRoZAAAAAAAAAAAAAAAAAAAA+gAAAAAVcQAAAAAAC1oZGxyAAAAAAAAAAB2aWRlAAAAAAAAAAAAAAAAVmlkZW9IYW5kbGVyAAAAARxtaW5mAAAAFHZtaGQAAAABAAAAAAAAAAAAAAAkZGluZgAAABxkcmVmAAAAAAAAAAEAAAAMdXJsIAAAAAEAAADcc3RibAAAAJBzdHNkAAAAAAAAAAEAAACAYXZjMQAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAABAAEAASAAAAEgAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABj//wAAACphdmNDAULACv/hABFnQsAKjWhCSQgAAAMAPCIRqAEABmjOAag1yAAAABBzdHRzAAAAAAAAAAAAAAAQc3RzYwAAAAAAAAAAAAAAFHN0c3oAAAAAAAAAAAAAAAAAAAAQc3RjbwAAAAAAAAAAAAAAKG12ZXgAAAAgdHJleAAAAAAAAAABAAAAAQAAAAAAAAAAAAAAAAAAAOhtb29mAAAAEG1maGQAAAAAAAAAAQAAANB0cmFmAAAAEHRmaGQAAgAAAAAAAQAAABR0ZmR0AQAAAAAAAAAAAAAAAAAApHRydW4AAAcBAAAADAAAAPAAAAAoAAAAHgIAAAAAAAAoAAAACwEBAAAAAAAoAAAACwEBAAAAAAAoAAAACwEBAAAAAAAoAAAACwEBAAAAAAAoAAAACwEBAAAAAAAoAAAACwEBAAAAAAAoAAAACwEBAAAAAAAoAAAACwEBAAAAAAAoAAAACwEBAAAAAAAoAAAACwEBAAAAAAAoAAAACwEBAAAAAACfbWRhdAAAABpluAAEBZ///w9FAAEE/3331111111111114AAAAAdh4AAgHHCMAAAAB2HgAEAccIwAAAAHYeAAYBxwjAAAAAdh4ACAHHCMAAAAB2HgAKAccIwAAAAHYeAAwBxwjAAAAAdh4ADgHHCMAAAAB2HgAQAccIwAAAAHYeABIBxwjAAAAAdh4AFAHHCMAAAAB2HgAWAccIw=',
+    needed: function () { return Platform.capacitor && Platform.android && /AFT/.test(UA) && !!window.MediaSource; },
+    // läuft gerade ein anderes Video? Dann bekäme der Platzhalter die Ebene nicht – später nochmal
+    otherActive: function () {
+      var vs = document.getElementsByTagName('video');
+      for (var i = 0; i < vs.length; i++) if (vs[i] !== this.el && vs[i].currentSrc && !vs[i].paused) return true;
+      return false;
+    },
+    start: function () {
+      var self = this;
+      if (!self.needed() || self.busy || (self.el && self.el.parentNode)) return;
+      if (self.otherActive()) { setTimeout(function () { self.start(); }, 3000); return; }
+      self.busy = true;
+      try {
+        var bin = atob(self.clip), u = new Uint8Array(bin.length);
+        for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+        var v = document.createElement('video');
+        v.muted = true; v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.setAttribute('aria-hidden', 'true'); v.tabIndex = -1;
+        v.style.cssText = 'position:fixed;left:0;top:0;width:2px;height:2px;opacity:.01;pointer-events:none;z-index:-1';
+        document.body.appendChild(v);
+        self.el = v;
+        var ms = new MediaSource();
+        var done = function () { self.busy = false; };
+        ms.addEventListener('sourceopen', function () {
+          try {
+            var sb = ms.addSourceBuffer('video/mp4; codecs="avc1.42001f"');
+            sb.addEventListener('updateend', function () {
+              try { ms.endOfStream(); } catch (e) {}
+              var p = v.play();
+              var stop = function () { try { v.pause(); } catch (e) {} done(); };
+              if (p && p.then) p.then(function () { setTimeout(stop, 400); }, stop); else setTimeout(stop, 400);
+            }, { once: true });
+            sb.appendBuffer(u);
+          } catch (e) { done(); }
+        }, { once: true });
+        v.src = URL.createObjectURL(ms);
+      } catch (e) { self.busy = false; }
+    },
+    // nach dem Hintergrund: Android kann den Decoder des pausierten Clips freigegeben haben (ohne dass man es dem
+    // Element ansieht) – deshalb frisch setzen, solange kein anderes Video läuft
+    refresh: function () {
+      var v = this.el;
+      if (!this.needed() || this.busy || this.otherActive()) return;
+      if (v) { try { v.removeAttribute('src'); v.load(); if (v.parentNode) v.parentNode.removeChild(v); } catch (e) {} }
+      this.el = null;
+      this.start();
+    }
+  };
+
   var Player = {
     el: null, video: null, hls: null, item: null, ctx: null, osd: null, hideTimer: null, saveTimer: null, epgTimer: null,
     cushion: {},   // Live-Sender, die mehr Puffer brauchen (Kennung → 1)
@@ -9289,9 +9346,13 @@
     // Danach liegengebliebene Fehlerberichte schicken (kurz warten, bis die Anmeldung beim Online-Dienst durch ist).
     var np = NativePlayer.plugin();
     if (np && typeof np.takeCrash === 'function') {
-      try { np.takeCrash().then(function (r) { if (r && r.crash) ErrLog.add('Absturz', r.crash); }, function () {}); } catch (e) {}
+      // r.exit: Android hat die App sichtbar beendet (Speichermangel, Absturz im Browser-Teil, reagierte nicht) – „App hat sich plötzlich geschlossen“
+      try { np.takeCrash().then(function (r) { if (r && r.crash) ErrLog.add('Absturz', r.crash); if (r && r.exit) ErrLog.add('Beendet', r.exit); }, function () {}); } catch (e) {}
     }
     setTimeout(function () { ErrReport.flush(); }, 30000);
+    // Fire TV: Video-Ebene der Amazon-WebView gleich belegen, damit die Live-TV-Vorschau ein Bild zeigt (siehe AwvHold)
+    AwvHold.start();
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) setTimeout(function () { AwvHold.refresh(); }, 300); });
 
     SubStyle.apply();
     var active = Profiles.get(Store.get('active'));
