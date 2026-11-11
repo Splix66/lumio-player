@@ -1,5 +1,9 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## 1.14.3 – 2026-11-11 · „App hat sich plötzlich geschlossen“ wird erkannt
+
+- **Fehlerberichte (Android 11 und neuer):** Hat Android die App beendet, während sie zu sehen war – Speichermangel, Absturz im Browser-Teil oder „App reagiert nicht“ –, steht das beim nächsten Start im Fehlerprotokoll (Stelle „Beendet“). Solche Fälle sah man bisher nicht, weil dabei kein normaler Absturz entsteht; für Nutzer wirkt es so, als hätte sich die App einfach geschlossen. Beenden im Hintergrund (normale Speicherbereinigung) wird nicht gemeldet.
+
 ## 1.14.2 – 2026-11-11 · Live-Vorschau bei ausgeschaltetem Fernseher
 
 - **Live-Vorschau / eingebauter Player:** Nimmt das Gerät keinen Ton an (z. B. Fire TV bei ausgeschaltetem Fernseher), blieb das Bild nach wenigen Bildern stehen; nach drei Neuverbindungen kam „Wiedergabe nicht möglich“ (in den Fehlerberichten „Video-Fehler 4“ oder „Stillstand“). Jetzt startet die Wiedergabe in diesem Fall einmal stumm neu und läuft weiter. Die eigene Ton-Einstellung bleibt unverändert, der nächste Sender startet wieder mit Ton.
