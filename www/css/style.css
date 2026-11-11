@@ -359,7 +359,7 @@ body.kbd .chip.f:focus, body.is-tv .chip.f:focus { transform: scale(1.06); }
 @keyframes qsIn { from { opacity: 0; transform: scaleX(.85); } }
 .qs.is-hidden, .qs-pop.is-hidden { display: none; }
 /* Seite unter der offenen Suche abdunkeln – sonst schien sie durch und überlappte das Suchfeld */
-.qs-dim { position: fixed; left: 0; right: 0; bottom: 0; top: var(--head-h, 0); z-index: 44; background: rgba(6, 6, 12, .8); pointer-events: none; }
+.qs-dim { position: fixed; left: 0; right: 0; bottom: 0; top: var(--head-h, 0); z-index: 44; background: rgba(6, 6, 12, .93); pointer-events: none; }
 .qs-dim.is-hidden { display: none; }
 .qs > .i { width: 1.2rem; height: 1.2rem; color: var(--muted); flex: none; margin-right: .6rem; }
 .qs input { flex: 1; min-width: 0; height: 100%; background: transparent; border: 0; color: var(--text); font: inherit; font-size: .98rem; outline: none; -webkit-appearance: none; appearance: none; }
@@ -2252,6 +2252,12 @@ body.kbd .gd-prog.f:focus, body.is-tv .gd-prog.f:focus, body.kbd .gd-ch.f:focus,
 body.kbd .gd-prog.f:focus small, body.is-tv .gd-prog.f:focus small, body.kbd .gd-prog.f:focus > .i, body.is-tv .gd-prog.f:focus > .i, body.kbd .gd-ch.f:focus .gd-num, body.is-tv .gd-ch.f:focus .gd-num { color: inherit; }
 body.kbd .gd-ch.f:focus, body.is-tv .gd-ch.f:focus { z-index: 4; }
 .gd-wait, .gd-empty { position: sticky; left: 15.5rem; display: inline-flex; align-items: center; height: 100%; color: var(--dim); font-size: .82rem; }
+/* Kurze Sendungen („h…“, „I“): beim Auswählen breiter, damit Titel und Zeit lesbar sind (liegt über den Nachbarn) */
+body.kbd .gd-prog.f:focus, body.is-tv .gd-prog.f:focus { min-width: 15rem; z-index: 6; box-shadow: 0 .6rem 1.6rem rgba(0, 0, 0, .55); }
+/* TV-Programm mit laufender Vorschau: Vorschau rechts oben neben dem Raster, das Raster rückt zur Seite – sie verdeckt
+   keine Sendungen mehr (vorher lag sie unten rechts über dem Raster) */
+body.has-mini:has(.guide) .player.is-mini:not(.is-docked) { top: 5.4rem; bottom: auto; right: var(--pad); width: 20rem; height: 11.25rem; max-width: none; max-height: none; }
+body.has-mini:has(.guide) .guide .gd-body { margin-right: calc(var(--pad) + 21rem); }
 .gd-now { position: absolute; top: 0; bottom: 0; z-index: 2; width: 2px; margin-left: -1px; background: #c084fc; box-shadow: 0 0 .6rem rgba(192, 132, 252, .8); pointer-events: none; }
 @media (orientation: landscape) and (max-height: 540px) {
   html:not(.tv) .gd-head { padding: .6rem var(--pad) .5rem; }
