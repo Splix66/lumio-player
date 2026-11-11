@@ -1,5 +1,9 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## 1.15.0 – 2026-11-11 · Live-Vorschau doppelt so schnell
+
+- **Live-Vorschau auf Fire TV und Android-Boxen startet etwa doppelt so schnell:** Dort läuft das Vollbild im TV-Player, der Web-Player zeigt nur noch die Vorschau. Die Vorschau nimmt jetzt zuerst den direkten .ts-Stream, der schon mit den ersten Daten ein Bild zeigt. Gemessen vom Vollbild zurück bis zum Vorschaubild: 1,9–2,1 s statt 4,4 s. Klappt das bei einem Sender nicht, nimmt die App den normalen Weg und merkt sich das.
+
 ## 1.14.9 – 2026-11-11 · Vorschau nach dem Vollbild schneller
 
 - **Vorschau nach dem Vollbild etwa 2,5 s schneller:** Bei vielen Sendern (z. B. „Das Erste FHD“) scheitert auf Fire TV der eingebaute Android-Player, erst hls.js zeigt das Bild – vorher jedes Mal ein verschenkter Versuch (gemessen 4,4 s bis zum Vorschaubild). Die App merkt sich das jetzt je Sender und startet beim nächsten Mal gleich mit hls.js. Klappt es einmal nicht, wird es vergessen.
