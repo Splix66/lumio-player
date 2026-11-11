@@ -261,7 +261,9 @@
   // Programmtexte: manche Anbieter liefern Zeilenumbrüche als Text („\n“) – dann stand „Stacheldraht.\n\nManch …“ in der Beschreibung
   function epgText(s) {
     if (!s) return '';
-    return String(s).replace(/\\r\\n|\\n|\\r/g, '\n').replace(/\\t/g, ' ').replace(/^\s+|\s+$/g, '');
+    // … und Markdown-Hervorhebungen („**Ein neuer Versuch**“) – die Sternchen standen sonst roh im Text
+    return String(s).replace(/\\r\\n|\\n|\\r/g, '\n').replace(/\\t/g, ' ')
+      .replace(/\*\*([^*\n]+)\*\*/g, '$1').replace(/__([^_\n]+)__/g, '$1').replace(/^\s+|\s+$/g, '');
   }
   // Neue, zufällige Kennung (Playlists). Eigener Name: „uid()“ weiter unten ist die Daten-Kennung der schauenden Person –
   // gleichnamig überschrieb sie diese Funktion, und jede neue Playlist bekam die Kennung der gerade aktiven.
@@ -2734,6 +2736,14 @@
           return true;
         }
       }
+      // Live TV: von den Kategorien links mit Rechts auf den laufenden Sender (falls sichtbar), sonst auf den obersten
+      // sichtbaren – vorher landete der Fokus auf dem Sender, der zufällig auf gleicher Höhe wie die Kategorie stand
+      if (dir === 'right' && cur.classList && cur.classList.contains('cat') && cur.closest && cur.closest('.section-live')) {
+        var chans = list.filter(function (el) { return el.classList.contains('chan') && el.closest('.section-live'); });
+        var onScreen = chans.filter(function (el) { var r = el.getBoundingClientRect(); return r.top >= 0 && r.bottom <= window.innerHeight; });
+        var pickCh = onScreen.filter(function (el) { return el.classList.contains('is-playing'); })[0] || onScreen[0] || chans[0];
+        if (pickCh) { this.focus(pickCh); return true; }
+      }
       // Startseite: Runter aus der Menüleiste führt ins Titelbild („Jetzt ansehen“) – sonst sprang der Fokus
       // über das Titelbild hinweg auf die erste Karte darunter (die liegt waagerecht näher am Herz/Live TV)
       if (dir === 'down' && cur.closest && cur.closest('.topnav')) {
@@ -3966,7 +3976,7 @@
     return Settings.get('autoLast') !== false ? 'last' : 'home';
   }
   // Wie viele Shell.open() noch bis zur eingestellten Startansicht (nur beim App-Start gesetzt, s. boot)
-  var startPending = 0, startPendingUntil = 0;
+  var startPending = 0, startPendingUntil = 0, startLast = null;   // startLast: „Letzten Sender abspielen“, sobald die Startansicht steht
 
   var Shell = {
     el: null, view: null, current: null, buttons: {}, pendingFocus: null,
@@ -4038,8 +4048,11 @@
       // Start: Startseite – oder Live TV / Filme / Serien, wenn so eingestellt („App beim Start“).
       // Nur beim echten App-Start – nicht nach Personen-/Playlist-Wechsel oder Neustart wegen Sprachwechsel
       if (Date.now() > startPendingUntil) startPending = 0;
-      var sv = startPending > 0 && --startPending === 0 ? startView() : 'home';
+      var justStarted = startPending > 0 && --startPending === 0;
+      var sv = justStarted ? startView() : 'home';
       self.show(sv === 'live' || sv === 'movie' || sv === 'series' ? sv : 'home');
+      // „Letzter Sender“: erst jetzt – bei mehreren Personen also nach „Wer schaut?“ (vorher lief der Zeitgeber ins Leere)
+      if (startLast && startPending === 0) { var sl = startLast; startLast = null; if (justStarted) sl(); }
     },
     show: function (name, focusContent, keepFocus) {
       var self = this, prev = self.current;
@@ -4120,6 +4133,24 @@
     if (!searchCache[k]) { searchCache[k] = visibleItems(kind, App.provider.items(kind, '__all')); searchCache[k].catch(function () { delete searchCache[k]; }); }
     return searchCache[k];
   }
+  /* Kategorien in der Sprache der App (z. B. „DE ⚡ …“ bei Deutsch) – für Titelbild und Bildschirmschoner.
+     null, wenn die Playlist keine Sprach-Kürzel in den Kategorien hat. */
+  function ownLangCats(kind) {
+    if (!App.provider || !App.provider.categories) return Promise.resolve(null);
+    return App.provider.categories(kind).then(function (cats) {
+      var m = {}, n = 0;
+      (cats || []).forEach(function (c) { var r = langOf(c.name); if (r && r.g === Lang.cur) { m[String(c.id)] = 1; n++; } });
+      return n ? m : null;
+    }, function () { return null; });
+  }
+  // nur Titel aus Kategorien der App-Sprache – wenn davon mindestens „min“ da sind, sonst die ganze Liste
+  function preferOwnLang(kind, list, min) {
+    return ownLangCats(kind).then(function (m) {
+      if (!m) return list;
+      var own = list.filter(function (x) { return m[String(x.catId)]; });
+      return own.length >= (min || 1) ? own : list;
+    });
+  }
   function byAdded(a, b) { return Number(b.added || 0) - Number(a.added || 0); }
   function byRating(a, b) { return Number(b.rating || 0) - Number(a.rating || 0); }
   function some(list, fn) { for (var i = 0; i < list.length; i++) if (fn(list[i])) return true; return false; }
@@ -4150,9 +4181,10 @@
     var src = it.backdrop || it.logo || (u && u.series.logo);
     var art = h('span', { class: 'lr-art' }, h('span', { class: 'ph', style: 'background:' + gradientFor(name) }));
     if (src) art.appendChild(img(src, it.backdrop ? 'is-wide' : 'is-poster', function (i) { if (i.parentNode) i.parentNode.removeChild(i); }));
-    var right = ep && it.season ? T('S{0}: F{1}', it.season, it.num) : r.d ? fmtHMS(r.d - r.t) : '';
+    // Restzeit als „Noch 1 Std. 15 Min.“ – vorher stand nur „01:15:42“ da, ohne dass man sah, dass es die Restzeit ist
+    var right = ep && it.season ? T('S{0}: F{1}', it.season, it.num) : r.d ? T('Noch {0}', fmtLeft(r.d - r.t)) : '';
     var pct = r.d ? Math.max(3, Math.min(100, Math.round(r.t / r.d * 100))) : 0;
-    var label = name + (right ? ' – ' + (ep ? right : T('Noch {0}', fmtLeft(r.d - r.t))) : '');
+    var label = name + (right ? ' – ' + right : '');
     var sid = it.seriesId || (u && u.series.id);
     return h('button', { class: 'lr-card f k-' + (ep ? 'series' : 'movie'), 'data-key': 'lr:' + (ep ? 'series:' + sid : 'movie:' + it.id), title: label, 'aria-label': label,
       onclick: function () { (onOpen || openContinue)(r); } },
@@ -4186,7 +4218,8 @@
   /* Auswahl fürs Titelbild: wird beim Aktualisieren der Listen berechnet (catCounts) und klein gespeichert –
      die Startseite muss die großen Film- und Serienlisten dafür nicht selbst laden. */
   var HeroPicks = {
-    key: function (kind, owner) { return 'hero.' + (owner || pid()) + '.' + kind; },
+    // „hero2“ + Sprache: Auswahl bevorzugt Titel in der App-Sprache – neuer Schlüssel, damit nach dem Update neu gerechnet wird
+    key: function (kind, owner) { return 'hero2.' + Lang.cur + '.' + (owner || pid()) + '.' + kind; },
     get: function (kind) { return Store.get(this.key(kind), []); },
     // schon einmal berechnet (auch leer, z. B. M3U ohne Bewertungen) – dann nicht bei jedem Öffnen neu rechnen
     computed: function (kind) { return Store.get(this.key(kind), null) !== null; },
@@ -4205,7 +4238,10 @@
       var self = this;
       return this.blocked(kind).then(function (bad) {
         var vis = list.filter(function (x) { return !bad[String(x.catId)]; });
-        var top = topTen(vis, some(vis, function (x) { return Number(x.added) > 0; })).slice(0, 4);
+        // Titel in der Sprache der App zuerst (sonst stand z. B. ein türkischer Film mit türkischem Text oben)
+        return preferOwnLang(kind, vis, 4);
+      }).then(function (pool) {
+        var top = topTen(pool, some(pool, function (x) { return Number(x.added) > 0; })).slice(0, 4);
         Store.set(self.key(kind, owner), top.map(slim));
       }).catch(function () {});
     },
@@ -5389,7 +5425,9 @@
       self.paintScope();
       self.el = h('div', { class: 'qs is-hidden' }, icon('search'), self.input, self.scopeEl);
       self.pop = h('div', { class: 'qs-pop is-hidden' });
-      root.appendChild(self.el); root.appendChild(self.pop);
+      // Abdunkelung im selben Bereich wie Suchfeld und Treffer (liegt darunter, über der Seite)
+      self.dim = h('div', { class: 'qs-dim is-hidden', 'aria-hidden': 'true' });
+      root.appendChild(self.dim); root.appendChild(self.el); root.appendChild(self.pop);
       self.isOpen = false;
       if (self.wired) return;
       self.wired = true;
@@ -5434,6 +5472,8 @@
       self.isOpen = true;
       self.el.classList.remove('is-hidden'); self.pop.classList.remove('is-hidden');
       self.btn.classList.add('is-on');
+      // Seite darunter abdunkeln – sonst schien sie durch (Überschrift und Reiter überlappten das Suchfeld)
+      if (self.dim) self.dim.classList.remove('is-hidden');
       self.place();
       self.run();
       setTimeout(function () { Nav.focus(self.input); }, 30);
@@ -5445,6 +5485,7 @@
       clear(this.pop);
       this.el.classList.add('is-hidden'); this.pop.classList.add('is-hidden');
       this.btn.classList.remove('is-on');
+      if (this.dim) this.dim.classList.add('is-hidden');
       if (!keepFocus) Nav.focus(this.btn);
     },
     toggle: function (anchor) { if (this.isOpen) this.close(); else this.open(anchor); },
@@ -5728,8 +5769,10 @@
       // Poster der Playlist (Filme und Serien mit Bild), zufällig gemischt
       self.pics = [];
       if (App.profile && App.provider) {
-        Promise.all([allItems('movie').catch(function () { return []; }), allItems('series').catch(function () { return []; })]).then(function (r) {
-          var all = r[0].concat(r[1]).filter(function (x) { return x.logo; });
+        // Filme und Serien aus Kategorien der App-Sprache (sonst kamen italienische und polnische Titel), mit Bild
+        function mine(kind) { return allItems(kind).then(function (l) { return preferOwnLang(kind, l.filter(function (x) { return x.logo; }), 10); }).catch(function () { return []; }); }
+        Promise.all([mine('movie'), mine('series')]).then(function (r) {
+          var all = r[0].concat(r[1]);
           for (var i = 0; i < 40 && all.length; i++) self.pics.push(all.splice(Math.floor(Math.random() * all.length), 1)[0]);
           self.next();
         });
@@ -5760,10 +5803,12 @@
       front.classList.add('is-on'); back.classList.remove('is-on');
       // Karte rechts: Poster mit leuchtendem Rand, Name und Genre
       var g = String(it.genre || '').split(/\s*[,\/|]\s*/).filter(Boolean).slice(0, 2).join(' • ') || (it.kind === 'series' ? T('Serie') : T('Film'));
+      // „4K“/„HD“ nur im Kästchen – aus dem Titel nehmen, sonst stand es doppelt da
       var hd = /\b(4k|uhd|fhd|hd)\b/i.exec(String(it.name || ''));
+      var nm = hd ? String(it.name).replace(hd[0], '').replace(/[\s\-–|:([]+$/, '').replace(/\(\s*\)|\[\s*\]/g, '').replace(/\s{2,}/g, ' ').replace(/^\s+|\s+$/g, '') || it.name : it.name;
       var card = h('div', { class: 'sv-poster' },
         img(it.logo, '', function (i) { if (i.parentNode) i.parentNode.removeChild(i); }),
-        h('div', { class: 'sv-cap' }, h('div', null, h('b', { text: it.name }), h('small', { text: g })), hd ? h('em', { text: hd[1].toUpperCase() }) : null));
+        h('div', { class: 'sv-cap' }, h('div', null, h('b', { text: nm }), h('small', { text: g })), hd ? h('em', { text: hd[1].toUpperCase() }) : null));
       var old = this.cardBox.firstChild;
       if (old) { old.classList.add('is-out'); setTimeout(function () { if (old.parentNode) old.parentNode.removeChild(old); }, 900); }
       this.cardBox.appendChild(card);
@@ -5782,6 +5827,10 @@
       clear(this.date);
       this.date.appendChild(h('span', { class: 'sky-slot' }, Sky.el()));
       this.date.appendChild(document.createTextNode(d.toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' })));
+      // Einbrennschutz (OLED): jede Minute alles um wenige Pixel versetzt – fürs Auge bleibt die Uhr an ihrer Stelle
+      var mm = d.getHours() * 60 + d.getMinutes();
+      this.el.style.setProperty('--dx', ((mm * 7) % 11 - 5) + 'px');
+      this.el.style.setProperty('--dy', ((mm * 5) % 11 - 5) + 'px');
       // Statusanzeigen oben rechts nur als Symbole (Farbe = Zustand)
       clear(this.stat);
       var self = this;
@@ -9467,12 +9516,13 @@
       // „App beim Start“ (Live TV / Filme / Serien): bei mehreren Personen erst nach „Wer schaut?“ – sonst wird alles doppelt geladen
       startPending = soft ? 0 : Persons.multi() ? 2 : 1;
       startPendingUntil = Date.now() + 120000;   // „Wer schaut?“ nur weggeklickt: später nicht mehr umspringen
-      activateProfile(active, false);
-      if (Persons.multi()) setTimeout(function () { if (App.profile === active) showWhoWatches(); }, 300);
-      // Einstellung „Letzten Sender beim Start abspielen“ (nicht nach einem Neustart aus der App heraus)
-      var lastLive = !soft && startView() === 'last' && Recent.list()[0];
-      if (lastLive) setTimeout(function () {
-        function ok() { var top = Screens.top(); return !Player.el && App.profile === active && top && top.name === 'shell' && !Dialog.open; }
+      // Einstellung „Letzten Sender beim Start abspielen“ (nicht nach einem Neustart aus der App heraus).
+      // Startet, sobald die Startansicht aufgebaut ist (Shell.build) – bei mehreren Personen also erst nach „Wer schaut?“.
+      // Vorher lief der Zeitgeber nach 1,2 s, während „Wer schaut?“ noch offen war, und tat dann nichts.
+      startLast = soft || startView() !== 'last' ? null : function () { setTimeout(function () {
+        var lastLive = Recent.list()[0];
+        if (!lastLive) return;
+        function ok() { var top = Screens.top(); return !Player.el && top && top.name === 'shell' && !Dialog.open; }
         if (!ok()) return;
         // Mit der Senderliste der Kategorie starten – sonst kannte der Player nur diesen einen Sender und hoch/runter schaltete nicht um
         var cat = lastLive.catId !== undefined && lastLive.catId !== null && lastLive.catId !== '' ? lastLive.catId : '__all';
@@ -9484,7 +9534,9 @@
           if (idx < 0) playItem(lastLive, { list: [lastLive], index: 0 });
           else playItem(list[idx], { list: list, index: idx });
         });
-      }, 1200);
+      }, 1200); };
+      activateProfile(active, false);
+      if (Persons.multi()) setTimeout(function () { if (App.profile === active) showWhoWatches(); }, 300);
     }
     else showProfiles();
     Terms.check();
