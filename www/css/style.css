@@ -359,7 +359,7 @@ body.kbd .chip.f:focus, body.is-tv .chip.f:focus { transform: scale(1.06); }
 @keyframes qsIn { from { opacity: 0; transform: scaleX(.85); } }
 .qs.is-hidden, .qs-pop.is-hidden { display: none; }
 /* Seite unter der offenen Suche abdunkeln – sonst schien sie durch und überlappte das Suchfeld */
-.qs-dim { position: fixed; left: 0; right: 0; bottom: 0; top: var(--head-h, 0); z-index: 44; background: rgba(6, 6, 12, .93); pointer-events: none; }
+.qs-dim { position: fixed; left: 0; right: 0; bottom: 0; top: var(--head-h, 0); z-index: 44; background: rgba(6, 6, 12, .975); pointer-events: none; }
 .qs-dim.is-hidden { display: none; }
 .qs > .i { width: 1.2rem; height: 1.2rem; color: var(--muted); flex: none; margin-right: .6rem; }
 .qs input { flex: 1; min-width: 0; height: 100%; background: transparent; border: 0; color: var(--text); font: inherit; font-size: .98rem; outline: none; -webkit-appearance: none; appearance: none; }
