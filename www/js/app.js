@@ -2359,6 +2359,8 @@
           startPending = 0;
           var sv = startView();
           if (sv === 'live' || sv === 'movie' || sv === 'series') Shell.show(sv);
+          // „Letzter Sender“: hier wird die Startseite nicht neu aufgebaut – deshalb direkt starten
+          if (startLast) { var sl = startLast; startLast = null; sl(); }
         }
         return;
       }
