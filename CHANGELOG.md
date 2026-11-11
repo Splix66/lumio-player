@@ -7,6 +7,7 @@
 - **Live-Vorschau startet bei Sendern mit Dolby-Ton viel schneller:** Sender wie „Das Erste HD“ senden den Ton als EC-3 (Dolby Digital Plus), den hls.js nicht entpacken kann. Vorher gab es zwei Rettungsversuche und erst nach 8–13 s Bild; jetzt wechselt die Vorschau beim ersten Hinweis gleich auf das andere Format.
 - **Vorschau nach dem Vollbild:** Kommt man aus dem TV-Player zurück, läuft die Vorschau wieder – mit dem zuletzt geschauten Sender (vorher stand dort nur „Zum Abspielen auswählen“).
 - **Abgelaufene Playlist:** „Letzter Sender beim Start“ startet nicht mehr automatisch, wenn der Zugang abgelaufen oder gesperrt ist – statt der Ablauf-Meldung des Anbieters im Vollbild erscheint ein Hinweis.
+- **Suche sortiert besser:** Treffer, deren Name (oder ein Wort darin) mit dem Suchwort beginnt, stehen oben – bei „ard“ kommt „ARD-alpha“ jetzt vor „LeonARDo DiCaprio“.
 - **Neue Playlist:** Unter dem Titelbild der Startseite stehen Schnellzugriffe (Live TV, Filme, Serien), solange es noch kein „Weiterschauen“ und keine zuletzt gesehenen Sender gibt – vorher war die Fläche leer.
 
 ## 1.14.6 – 2026-11-11 · Filme und Serien sofort da, Menü mit gleitender Leuchtfläche, schlankere Fußleiste
