@@ -4979,8 +4979,15 @@
     }
     // Zurück aus dem Vollbild (TV-Player): Vorschau wieder starten – mit dem zuletzt geschauten Sender.
     // Vorher blieb das Vorschaufenster leer („Zum Abspielen auswählen“).
+    // Vorher frisch den Platzhalter-Clip setzen und abwarten (AwvHold) – sonst Ton, aber schwarzes Bild.
     if (kind === 'live') el._afterNative = function () {
-      if (panel && shown && shown.list && shown.list.length) setTimeout(function () { autoPreview(shown.list); }, 600);
+      var go = function () {
+        AwvHold.refresh();
+        AwvHold.ready(function () { setTimeout(function () { if (panel && shown && shown.list && shown.list.length) autoPreview(shown.list); }, 250); });
+      };
+      if (!document.hidden) { setTimeout(go, 50); return; }
+      var onv = function () { if (document.hidden) return; document.removeEventListener('visibilitychange', onv); setTimeout(go, 50); };
+      document.addEventListener('visibilitychange', onv);
     };
     // Zahlen hinter Sprachen und Kategorien: bei einer Sprache alle Einträge dieser Sprache, sonst je Kategorie
     onLocalChange(el, function () { paintCounts(); });
@@ -7946,9 +7953,18 @@
     refresh: function () {
       var v = this.el;
       if (!this.needed() || this.busy || this.otherActive()) return;
+      // zweimal kurz hintereinander (Rückkehr aus dem TV-Player + Sichtbarkeit): nicht den gerade gesetzten Clip wieder abreißen
+      if (this.at && Date.now() - this.at < 2000) return;
+      this.at = Date.now();
       if (v) { try { v.removeAttribute('src'); v.load(); if (v.parentNode) v.parentNode.removeChild(v); } catch (e) {} }
       this.el = null;
       this.start();
+    },
+    // erst weitermachen, wenn der Clip seine Ebene hat – startet die Vorschau vorher, bekommt sie die Ebene: Ton, aber
+    // schwarzes Bild (gemessen nach dem Zurückkommen aus dem TV-Player: Vorschau nach 600 ms, Clip erst danach fertig)
+    ready: function (fn) {
+      var self = this, n = 0;
+      (function chk() { if (!self.busy || ++n > 30) fn(); else setTimeout(chk, 100); })();
     }
   };
 
@@ -9641,7 +9657,7 @@
       // Live-Bild). Nach mehr als 20 s weg: Sender neu laden, damit wieder das aktuelle Programm läuft.
       if (hiddenAt && Date.now() - hiddenAt > 20000 && Player.el && Player.mini && Player.item && Player.item.kind === 'live') {
         var it = Player.item;
-        setTimeout(function () { if (Player.el && Player.mini && Player.item === it && !document.hidden) Player.load(it); }, 600);
+        setTimeout(function () { AwvHold.ready(function () { if (Player.el && Player.mini && Player.item === it && !document.hidden) Player.load(it); }); }, 600);
       }
       hiddenAt = 0;
     });
