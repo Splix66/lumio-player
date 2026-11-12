@@ -3,7 +3,9 @@
 ## 1.15.6 – 2026-11-13 · Neues Einstellungsmenü im TV-Player
 
 - **Neues Einstellungsmenü im TV-Player (Zahnrad):** Glasfläche rechts am Rand im Telvo-Stil statt des Standardmenüs, das über den Knöpfen lag. Tonspur (mit Sprache und z. B. „Dolby 5.1“), Untertitel, Bildformat (Original, Zoom, Strecken – wird gemerkt) und bei Filmen die Geschwindigkeit. Die Auswahl klappt links daneben auf, die aktive Wahl hat einen violetten Haken. Texte in der App-Sprache statt der Systemsprache des Geräts. Der Untertitel-Knopf öffnet direkt die Untertitel-Auswahl.
-- **Übersetzungen ergänzt:** „Aus“, „Automatisch“, „Unbekannt“ und „Nur bei Filmen“ fehlten in Englisch und Türkisch bzw. ganz.
+- **LIVE statt Puffer-Zeitleiste im TV-Player:** Bei Live-Sendern zeigte die Bedienleiste eine Zeitleiste wie „00:40 · 01:00“ – das war nur der Puffer des Players und wirkte wie eine Sendung von einer Minute. Jetzt steht dort ein rotes LIVE-Schild; den Fortschritt der Sendung zeigt das Banner darüber.
+- **Alle Texte in allen 13 Sprachen:** Eine Prüfung aller 877 Texte der App hat die letzten Lücken gefunden und gefüllt (u. a. „Aus“, „Automatisch“, „Unbekannt“, „Nur bei Filmen“, die Tipps im Bildschirmschoner und der Hinweis bei abgelaufener Playlist).
+- **Bauwerkzeuge aktualisiert:** Die GitHub-Bausteine (checkout, setup-node, setup-java, upload/download-artifact) auf Version 5 – die alten liefen auf einem veralteten Node.js und hätten irgendwann ohne Vorwarnung aufgehört zu funktionieren.
 - **Meldung bei abgelehnter Anmeldung in allen 13 Sprachen** (bisher nur Deutsch).
 - **Mac-Version wird wieder zuverlässig gebaut:** Der Bau lief auf den neuesten Apple-Silicon-Rechnern von GitHub, die seit 1.14.3 oft nicht frei waren – der Mac-Teil brach dann nach 15 Minuten ab. Jetzt auf Intel-Rechnern; die Mac-App bleibt „universal“ (läuft auf Intel und Apple Silicon).
 
