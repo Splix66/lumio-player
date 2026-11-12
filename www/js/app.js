@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Telvo Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.15.5',
+    version: '1.15.6',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     /* Bibliotheken: werden beim Bauen nach www/lib kopiert (scripts/copy-libs.js) und von dort geladen.
        Nur wenn sie fehlen, aus dem Internet – mit fester Version und Prüfsumme (SRI): eine veränderte Datei
@@ -7862,6 +7862,13 @@
         txtNoChannel: T('Sender {0} nicht gefunden'),
         txtNext: T('Danach: {0}', '').replace(/[:：\s]+$/, ''),   // vorhandene Übersetzung ohne „: …“
         epgShift: App.provider && App.provider.epgShift ? App.provider.epgShift() : 0,
+        // Einstellungsmenü (Zahnrad) im TV-Player in der App-Sprache
+        lang: Lang.cur || '',
+        menuTexts: {
+          title: T('Wiedergabe'), audio: T('Tonspur'), subs: T('Untertitel'), format: T('Bildformat'), speed: T('Geschwindigkeit'),
+          off: T('Aus'), auto: T('Automatisch'), unknown: T('Unbekannt'), onlyMovies: T('Nur bei Filmen'),
+          fit: T('Original'), zoom: T('Zoom'), fill: T('Strecken'), normal: T('Normal')
+        },
         sleepAt: Sleep.at || 0,
         autoNext: Settings.get('autoNext') !== false,
         sound: Settings.get('sound') || 'off'
