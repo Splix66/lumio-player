@@ -69,6 +69,9 @@ public class PlayerActivity extends Activity {
     private final List<String> names = new ArrayList<>();
     private final List<String> logos = new ArrayList<>();
     private final List<JSONArray> epgs = new ArrayList<>();
+    private final List<String> epgUrls = new ArrayList<>();
+    private final java.util.Set<Integer> epgLoading = new java.util.HashSet<>();
+    private long epgShift;           // Programm-Verschiebung in Sekunden (Einstellung der Playlist)
     private final java.util.Map<String, Bitmap> logoCache = new java.util.HashMap<>();
     private final java.util.concurrent.ExecutorService io = java.util.concurrent.Executors.newSingleThreadExecutor();
     private TextView status;
@@ -205,6 +208,7 @@ public class PlayerActivity extends Activity {
         if (t3 != null) txtNoChannel = t3;
         String t4 = in.getStringExtra("txtNext");
         if (t4 != null) txtNext = t4;
+        epgShift = in.getLongExtra("epgShift", 0L);
         long sleepAt = in.getLongExtra("sleepAt", 0L);
         if (sleepAt > System.currentTimeMillis()) handler.postDelayed(sleepEnd, sleepAt - System.currentTimeMillis());
         try {
@@ -218,6 +222,7 @@ public class PlayerActivity extends Activity {
                 names.add(o.optString("name", ""));
                 logos.add(o.optString("logo", ""));
                 epgs.add(o.optJSONArray("epg"));
+                epgUrls.add(o.optString("epgUrl", ""));
             }
         } catch (Exception e) {
             lastError = "items";
@@ -656,6 +661,7 @@ public class PlayerActivity extends Activity {
             bNow.setVisibility(View.GONE);
             bBarRow.setVisibility(View.GONE);
             bNext.setVisibility(View.GONE);
+            if (live) loadEpg(i);   // fehlt bzw. veraltet: beim Anbieter holen, Banner wird dann ergänzt
         }
         // Feste Breite wie im Entwurf: mit Programmdaten gut die Hälfte des Bildes, ohne schmal (nur Logo, Nummer, Name)
         int w = getResources().getDisplayMetrics().widthPixels * (cur != null ? 50 : 34) / 100;
@@ -683,6 +689,63 @@ public class PlayerActivity extends Activity {
         info.setVisibility(View.VISIBLE);
         handler.removeCallbacks(hideInfo);
         handler.postDelayed(hideInfo, 4000);
+    }
+
+    /* Programmdaten eines Senders beim Anbieter holen (Xtream: get_short_epg) – einmal je Sender und Sitzung,
+       erneut nur wenn die geholten Sendungen schon vorbei sind. Titel kommen Base64-kodiert. */
+    private void loadEpg(final int idx) {
+        if (idx < 0 || idx >= epgUrls.size()) return;
+        final String url = epgUrls.get(idx);
+        if (url.length() == 0 || epgLoading.contains(idx)) return;
+        epgLoading.add(idx);
+        try {
+            io.execute(() -> {
+                JSONArray out = new JSONArray();
+                try {
+                    java.net.HttpURLConnection c = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
+                    c.setConnectTimeout(5000);
+                    c.setReadTimeout(8000);
+                    java.io.InputStream s = c.getInputStream();
+                    java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();
+                    byte[] buf = new byte[8192];
+                    int n;
+                    while ((n = s.read(buf)) > 0 && bo.size() < 2_000_000) bo.write(buf, 0, n);
+                    s.close();
+                    c.disconnect();
+                    JSONArray l = new JSONObject(bo.toString("UTF-8")).optJSONArray("epg_listings");
+                    long now = System.currentTimeMillis() / 1000L;
+                    for (int k = 0; l != null && k < l.length() && out.length() < 4; k++) {
+                        JSONObject e = l.optJSONObject(k);
+                        if (e == null) continue;
+                        long st = e.optLong("start_timestamp") + epgShift, en = e.optLong("stop_timestamp") + epgShift;
+                        if (en <= now) continue;
+                        String t = e.optString("title", "");
+                        try { t = new String(android.util.Base64.decode(t, android.util.Base64.DEFAULT), "UTF-8"); } catch (Throwable ignored) { }
+                        out.put(new JSONArray().put(t.trim()).put(st).put(en));
+                    }
+                } catch (Throwable ignored) { }
+                final JSONArray res = out;
+                handler.post(() -> {
+                    if (closing) return;
+                    // nichts gefunden: nicht sofort erneut fragen; gefunden: nach Ablauf der Sendungen darf neu geholt werden
+                    if (res.length() > 0) {
+                        if (idx < epgs.size()) epgs.set(idx, res);
+                        epgLoading.remove(idx);
+                        if (player != null && player.getCurrentMediaItemIndex() == idx && info != null && info.getVisibility() == View.VISIBLE) refreshInfo();
+                    }
+                });
+            });
+        } catch (Throwable ignored) { epgLoading.remove(idx); }
+    }
+
+    /* Banner neu befüllen, ohne die Anzeigedauer zu verlängern */
+    private void refreshInfo() {
+        boolean vis = info.getVisibility() == View.VISIBLE;
+        showInfo();
+        if (vis && (view == null || !view.isControllerFullyVisible())) {
+            handler.removeCallbacks(hideInfo);
+            handler.postDelayed(hideInfo, 3000);
+        }
     }
 
     private void loadLogo(final String url) {
