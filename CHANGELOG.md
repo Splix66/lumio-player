@@ -2,7 +2,8 @@
 
 ## 1.15.4 – 2026-11-12 · Sender-Banner im Vollbild
 
-- **Neues Sender-Banner beim Umschalten im TV-Player:** Unten links erscheint sofort ein Banner im Glas-Stil der App – Senderlogo, Nummer, Name und Uhrzeit, dazu (wenn Programmdaten geladen sind) die laufende Sendung mit Fortschrittsbalken und was danach kommt. Beim schnellen Durchschalten wechselt nur der Inhalt, das Banner flackert nicht. Fehlt ein Logo, steht die Sendernummer im weißen Feld.
+- **Neues Sender-Banner beim Umschalten im TV-Player:** Unten links erscheint sofort ein Banner im Glas-Stil der App – Senderlogo, Nummer, Name und Uhrzeit, dazu (wenn Programmdaten geladen sind) die laufende Sendung mit Fortschrittsbalken und was danach kommt. Beim schnellen Durchschalten wechselt nur der Inhalt, das Banner flackert nicht. Fehlt ein Logo, steht die Sendernummer im weißen Feld. Fehlen die Programmdaten, holt der Player sie beim Umschalten selbst beim Anbieter.
+- **Dasselbe Banner im Telvo-Player** (Handy, PC, Browser): ersetzt die bisherige Senderanzeige oben links – beide Player sehen beim Öffnen und Umschalten gleich aus.
 - **Protokoll „bereit nach … ms“** beim Umschalten im TV-Player – zum Messen der Umschaltzeit.
 
 ## 1.15.2 – 2026-11-12 · Protokoll im TV-Player
