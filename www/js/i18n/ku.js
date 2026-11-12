@@ -686,6 +686,7 @@ window.LUMIO_I18N["ku"] = {
   "Deine Nachricht": "Peyama te",
   "Bitte beschreibe dein Anliegen etwas genauer.": "Ji kerema xwe daxwaza xwe hinekî bi hûrgilî binivîse.",
   "Maximal 5 Nachrichten pro Tag.": "Herî zêde 5 peyam di rojê de.",
+  "Maximal {0} Playlists pro Gerät.": "Herî zêde {0} playlist ji bo her cîhazê.",
   "Worum geht es?": "Mijar çi ye?",
   "Gerät nicht gefunden. Öffne die App einmal mit Internetverbindung.": "Cîhaz nehat dîtin. Sepanê carekê bi girêdana înternetê veke.",
   "Zu viele Fehlversuche. Bitte in einer Stunde erneut versuchen.": "Gelek ceribandinên şaş. Ji kerema xwe piştî saetekê dîsa biceribîne.",

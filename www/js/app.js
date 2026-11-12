@@ -1558,8 +1558,11 @@
   /* ==========================================================
      Profile, Favoriten, Verlauf
      ========================================================== */
+  var MAX_PLAYLISTS = 10;   // Obergrenze pro Gerät (Entscheidung Eray, 12.11.2026); der Online-Dienst prüft dieselbe Zahl
   var Profiles = {
     list: function () { return Store.get('profiles', []); },
+    // Ist die Obergrenze erreicht? Die Demo-Playlist zählt nicht mit.
+    full: function () { return this.list().filter(function (p) { return p.type !== 'demo'; }).length >= MAX_PLAYLISTS; },
     save: function (list) { Store.set('profiles', list); },
     add: function (p) { var l = this.list(); p.id = p.id || newId(); l.push(p); this.save(l); return p; },
     /* Reparatur für Geräte mit doppelten Kennungen (Fehler bis 1.13.0): jede weitere Playlist mit derselben Kennung
@@ -1973,6 +1976,7 @@
         var data = it.type === 'xtream' ? { type: 'xtream', server: normalizeServer(it.server), username: it.username, password: it.password } : { type: 'm3u', url: it.url };
         data.name = it.name;
         if (list.some(function (q) { return sameConnection(q, data); })) return;
+        if (list.filter(function (q) { return q.type !== 'demo'; }).length >= MAX_PLAYLISTS) return;
         data.id = newId(); list.push(data); added++;
       });
       if (b.settings) {
@@ -2344,12 +2348,12 @@
      und Erinnerungen. Playlists, Kategorien, ausgeblendete Sender und die Kindersicherung gelten für alle.
      Kinderprofil: gesperrte Kategorien (Erwachsene und selbst gesperrte) sind ganz ausgeblendet, entsperren geht nicht;
      zum Wechseln in ein anderes Profil und für die Einstellungen braucht es die PIN der Kindersicherung. */
-  var PERSON_COLORS = ['#a855f7', '#f97316', '#0ea5e9', '#22c55e', '#ec4899', '#eab308'];
+  var PERSON_COLORS = ['#a855f7', '#f97316', '#0ea5e9', '#22c55e', '#ec4899', '#eab308', '#14b8a6', '#ef4444'];
   // Profilbilder: Symbol statt Anfangsbuchstabe (frei wählbar beim Anlegen/Bearbeiten)
   var AVATAR_ICONS = ['avSmile', 'avCat', 'avDog', 'avGhost', 'avRocket', 'avCrown', 'avGame', 'avMusic', 'star', 'heart', 'ball', 'moon'];
   var PERSONAL_KEYS = ['fav', 'resume', 'recent', 'seen', 'last', 'upnext', 'swatch', 'remind', 'later', 'chcount'];
   var Persons = {
-    MAX: 6, pinOk: false,
+    MAX: 8, pinOk: false,
     list: function () {
       var l = Store.get('persons', null);
       return l && l.length ? l : [{ id: 'main', name: T('Ich'), color: PERSON_COLORS[0] }];
@@ -3984,6 +3988,7 @@
       }
       p.name = name || (p.type === 'xtream' ? p.username : T('Meine Playlist'));
       if (toWeb) p.cloud = true;
+      if (Profiles.full()) { err.textContent = T('Maximal {0} Playlists pro Gerät.', MAX_PLAYLISTS); return; }
       saveBtn.disabled = true; saveBtn.textContent = T('Verbinde …');
       makeProvider(p).login().then(function () {
         var saved = Profiles.add(p);

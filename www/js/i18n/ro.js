@@ -686,6 +686,7 @@ window.LUMIO_I18N["ro"] = {
   "Deine Nachricht": "Mesajul tău",
   "Bitte beschreibe dein Anliegen etwas genauer.": "Descrie-ți solicitarea ceva mai detaliat.",
   "Maximal 5 Nachrichten pro Tag.": "Maximum 5 mesaje pe zi.",
+  "Maximal {0} Playlists pro Gerät.": "Maximum {0} liste pe dispozitiv.",
   "Worum geht es?": "Despre ce e vorba?",
   "Gerät nicht gefunden. Öffne die App einmal mit Internetverbindung.": "Dispozitivul nu a fost găsit. Deschide o dată aplicația cu conexiune la internet.",
   "Zu viele Fehlversuche. Bitte in einer Stunde erneut versuchen.": "Prea multe încercări greșite. Încearcă din nou peste o oră.",

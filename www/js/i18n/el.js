@@ -686,6 +686,7 @@ window.LUMIO_I18N["el"] = {
   "Deine Nachricht": "Το μήνυμά σου",
   "Bitte beschreibe dein Anliegen etwas genauer.": "Περιέγραψε το αίτημά σου λίγο πιο αναλυτικά.",
   "Maximal 5 Nachrichten pro Tag.": "Έως 5 μηνύματα την ημέρα.",
+  "Maximal {0} Playlists pro Gerät.": "Έως {0} playlists ανά συσκευή.",
   "Worum geht es?": "Τι αφορά;",
   "Gerät nicht gefunden. Öffne die App einmal mit Internetverbindung.": "Η συσκευή δεν βρέθηκε. Άνοιξε την εφαρμογή μία φορά με σύνδεση στο ίντερνετ.",
   "Zu viele Fehlversuche. Bitte in einer Stunde erneut versuchen.": "Πάρα πολλές αποτυχημένες προσπάθειες. Δοκίμασε ξανά σε μία ώρα.",

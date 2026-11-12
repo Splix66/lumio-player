@@ -686,6 +686,7 @@ window.LUMIO_I18N["ar"] = {
   "Deine Nachricht": "رسالتك",
   "Bitte beschreibe dein Anliegen etwas genauer.": "يرجى وصف طلبك بمزيد من التفصيل.",
   "Maximal 5 Nachrichten pro Tag.": "5 رسائل كحد أقصى يوميًا.",
+  "Maximal {0} Playlists pro Gerät.": "{0} قوائم تشغيل كحد أقصى لكل جهاز.",
   "Worum geht es?": "ما الموضوع؟",
   "Gerät nicht gefunden. Öffne die App einmal mit Internetverbindung.": "لم يتم العثور على الجهاز. افتح التطبيق مرة واحدة وهو متصل بالإنترنت.",
   "Zu viele Fehlversuche. Bitte in einer Stunde erneut versuchen.": "محاولات فاشلة كثيرة جدًا. يرجى المحاولة مرة أخرى بعد ساعة.",
