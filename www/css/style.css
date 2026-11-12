@@ -3472,3 +3472,29 @@ body.kbd .gl-on > .ch-opt.f:focus small, body.is-tv .gl-on > .ch-opt.f:focus sma
   body.kbd .main-tabs .tab.f:focus .i, body.is-tv .main-tabs .tab.f:focus .i { color: var(--c1, #fff); }
   body.kbd .main-tabs .tab.k-home.f:focus .i, body.is-tv .main-tabs .tab.k-home.f:focus .i { color: #fff; }
 }
+
+/* ===== Sender-Banner beim Öffnen/Umschalten (gleich wie im TV-Player: PlayerActivity.buildBanner – immer beide anpassen) =====
+   Unten links, dunkles Glas mit feinem hellem Rand; weißes Logofeld; violetter Fortschritt auf gut sichtbarer heller Leiste */
+.player.is-zapping .osd { opacity: 0; visibility: hidden; }
+.zbn { position: absolute; left: 2.2rem; bottom: 2rem; z-index: 6; width: 50%; display: flex; align-items: center; gap: 1rem;
+  padding: .9rem 1.25rem .9rem 1rem; border-radius: 1rem; background: rgba(20, 20, 26, .85); border: 1px solid rgba(255, 255, 255, .15);
+  color: #fff; pointer-events: none; transition: opacity .25s ease; }
+.zbn.is-slim { width: 34%; }
+.player.is-mini .zbn { display: none; }
+.zbn.is-hidden { opacity: 0; visibility: hidden; transition: opacity .25s ease, visibility 0s linear .25s; }
+.zbn-logo { flex: none; width: 4rem; height: 4rem; border-radius: .75rem; background: rgba(255, 255, 255, .14); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.zbn-logo img { width: 100%; height: 100%; object-fit: contain; padding: .45rem; box-sizing: border-box; }
+.zbn-logo span { font-weight: 700; font-size: 1.05rem; color: #fff; }
+.zbn-col { flex: 1; min-width: 0; }
+.zbn-top { display: flex; align-items: baseline; gap: .65rem; }
+.zbn-num, .zbn-clock { font-size: .9rem; color: rgba(255, 255, 255, .6); font-variant-numeric: tabular-nums; flex: none; }
+.zbn-clock { margin-left: auto; padding-left: 1rem; font-size: .82rem; }
+.zbn-name { font-size: 1.25rem; font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.zbn-now { margin-top: .25rem; font-size: .95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.zbn-bar { display: flex; align-items: center; gap: .65rem; margin-top: .4rem; font-size: .82rem; color: rgba(255, 255, 255, .6); font-variant-numeric: tabular-nums; }
+.zbn-bar i { flex: 1; height: .32rem; border-radius: .2rem; background: rgba(255, 255, 255, .32); overflow: hidden; }
+.zbn-bar b { display: block; height: 100%; border-radius: .2rem; background: #a855f7; }
+.zbn-next { margin-top: .4rem; font-size: .82rem; color: rgba(255, 255, 255, .6); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 760px) {
+  .zbn, .zbn.is-slim { left: 1rem; right: 1rem; bottom: 1rem; width: auto; }
+}

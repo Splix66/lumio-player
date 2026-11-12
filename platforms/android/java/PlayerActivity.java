@@ -3,6 +3,7 @@ package de.lumio.player;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.res.ColorStateList;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
@@ -61,7 +62,18 @@ public class PlayerActivity extends Activity {
     private ExoPlayer player;
     private DynamicsProcessing sound;
     private PlayerView view;
-    private TextView info;
+    private View info;               // Sender-Banner (unten links)
+    private ImageView bLogo;
+    private TextView bLogoNum, bNum, bName, bClock, bNow, bStart, bEnd, bNext;
+    private View bBarRow, bFill, bRest;
+    private final List<String> names = new ArrayList<>();
+    private final List<String> logos = new ArrayList<>();
+    private final List<JSONArray> epgs = new ArrayList<>();
+    private final List<String> epgUrls = new ArrayList<>();
+    private final java.util.Set<Integer> epgLoading = new java.util.HashSet<>();
+    private long epgShift;           // Programm-Verschiebung in Sekunden (Einstellung der Playlist)
+    private final java.util.Map<String, Bitmap> logoCache = new java.util.HashMap<>();
+    private final java.util.concurrent.ExecutorService io = java.util.concurrent.Executors.newSingleThreadExecutor();
     private TextView status;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final List<String> urls = new ArrayList<>();
@@ -79,10 +91,12 @@ public class PlayerActivity extends Activity {
     private long readySince;         // seit wann der Stream ohne Unterbrechung läuft
     private long stuckPos = -1;      // Wiedergabeposition beim letzten Blick des Wächters
     private long stuckSince;         // seit wann sich die Position nicht mehr bewegt
+    private long zapAt;              // Zeitpunkt des Umschaltens (für das Protokoll „bereit nach … ms“)
     private String lastError;
     private String txtReconnect = "Verbindung wird wiederhergestellt …";
     private String txtFailed = "Wiedergabe nicht möglich.";
     private String txtNoChannel = "Sender {0} nicht gefunden";
+    private String txtNext = "Danach";
     private String digits = "";      // eingetippte Sendernummer
     private int lastIdx = -1;        // vorher geschauter Sender
     private boolean bySleep;         // vom Schlaf-Timer beendet
@@ -192,6 +206,9 @@ public class PlayerActivity extends Activity {
         if (t2 != null) txtFailed = t2;
         String t3 = in.getStringExtra("txtNoChannel");
         if (t3 != null) txtNoChannel = t3;
+        String t4 = in.getStringExtra("txtNext");
+        if (t4 != null) txtNext = t4;
+        epgShift = in.getLongExtra("epgShift", 0L);
         long sleepAt = in.getLongExtra("sleepAt", 0L);
         if (sleepAt > System.currentTimeMillis()) handler.postDelayed(sleepEnd, sleepAt - System.currentTimeMillis());
         try {
@@ -202,6 +219,10 @@ public class PlayerActivity extends Activity {
                 alts.add(o.optString("alt", ""));
                 titles.add(o.optString("title", ""));
                 nums.add(o.optString("num", ""));
+                names.add(o.optString("name", ""));
+                logos.add(o.optString("logo", ""));
+                epgs.add(o.optJSONArray("epg"));
+                epgUrls.add(o.optString("epgUrl", ""));
             }
         } catch (Exception e) {
             lastError = "items";
@@ -228,9 +249,10 @@ public class PlayerActivity extends Activity {
         styleControls();
         applySubtitleStyle(in);
 
-        info = makeLabel(24);
-        FrameLayout.LayoutParams lpInfo = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.TOP | Gravity.START);
-        lpInfo.setMargins(dp(28), dp(24), dp(28), 0);
+        info = buildBanner();
+        info.setVisibility(View.GONE);
+        FrameLayout.LayoutParams lpInfo = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM | Gravity.START);
+        lpInfo.setMargins(dp(40), 0, dp(40), dp(32));
         root.addView(info, lpInfo);
 
         status = makeLabel(20);
@@ -242,9 +264,12 @@ public class PlayerActivity extends Activity {
 
         view.setControllerVisibilityListener((PlayerView.ControllerVisibilityListener) visibility -> {
             osd = visibility == View.VISIBLE;
+            // Bedienleiste unten offen: Banner darüber schieben statt sie zu verdecken
+            info.setTranslationY(visibility == View.VISIBLE ? -dp(96) : 0);
             if (visibility == View.VISIBLE) {
                 handler.removeCallbacks(hideInfo);
-                info.setVisibility(View.VISIBLE);
+                showInfo();
+                handler.removeCallbacks(hideInfo);
             } else {
                 handler.postDelayed(hideInfo, 300);
                 hideSystemUi();
@@ -262,7 +287,8 @@ public class PlayerActivity extends Activity {
                 .setAllowCrossProtocolRedirects(true)
                 .setConnectTimeoutMs(15000)
                 .setReadTimeoutMs(20000);
-        // Nach einem Hänger etwas mehr Vorrat sammeln (6 s statt 4 s), bevor es weitergeht – sonst stockt es gleich wieder
+        // Nach einem Hänger etwas mehr Vorrat sammeln (6 s statt 4 s), bevor es weitergeht – sonst stockt es gleich wieder.
+        // (1 s statt 2 s beim Start wurde gemessen: kein Gewinn – der Player ist schon vor dem ersten Bild bereit.)
         DefaultLoadControl load = new DefaultLoadControl.Builder()
                 .setBufferDurationsMs(15000, 50000, 2000, 6000)
                 .build();
@@ -291,6 +317,7 @@ public class PlayerActivity extends Activity {
                 if (state != Player.STATE_READY) readySince = 0;
                 if (state == Player.STATE_READY) {
                     if (readySince == 0) readySince = System.currentTimeMillis();
+                    if (zapAt > 0) { Log.i(TAG, "bereit nach " + (System.currentTimeMillis() - zapAt) + " ms"); zapAt = 0; }
                     status.setVisibility(View.GONE);
                     retries = 0;
                     behindRetries = 0;
@@ -485,14 +512,274 @@ public class PlayerActivity extends Activity {
         return b.build();
     }
 
+    /* Sender-Banner: Logo, Nummer, Name, Uhrzeit – bei Live mit Programmdaten dazu laufende Sendung, Fortschritt und
+       „Danach“. Glas wie in der App (dunkel, leicht durchscheinend, feiner heller Rand), Fortschritt violett. */
+    private TextView text(int sp, int color, boolean bold) {
+        TextView t = new TextView(this);
+        t.setTextColor(color);
+        t.setTextSize(TypedValue.COMPLEX_UNIT_SP, sp);
+        if (bold) t.setTypeface(Typeface.DEFAULT_BOLD);
+        t.setSingleLine(true);
+        t.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        return t;
+    }
+
+    private View buildBanner() {
+        final int dim = 0x99FFFFFF;
+        android.widget.LinearLayout box = new android.widget.LinearLayout(this);
+        box.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+        box.setGravity(Gravity.CENTER_VERTICAL);
+        box.setPadding(dp(16), dp(14), dp(20), dp(14));
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xD914141A);
+        bg.setCornerRadius(dp(16));
+        bg.setStroke(dp(1), 0x26FFFFFF);
+        box.setBackground(bg);
+
+        FrameLayout logoBox = new FrameLayout(this);
+        GradientDrawable lb = new GradientDrawable();
+        // helles Glas statt Weiß: viele Senderlogos sind weiß auf durchsichtigem Grund und wären auf Weiß unsichtbar
+        lb.setColor(0x24FFFFFF);
+        lb.setStroke(dp(1), 0x1FFFFFFF);
+        lb.setCornerRadius(dp(12));
+        logoBox.setBackground(lb);
+        bLogo = new ImageView(this);
+        bLogo.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        bLogo.setPadding(dp(7), dp(7), dp(7), dp(7));
+        logoBox.addView(bLogo, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+        bLogoNum = text(17, Color.WHITE, true);
+        bLogoNum.setGravity(Gravity.CENTER);
+        logoBox.addView(bLogoNum, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+        android.widget.LinearLayout.LayoutParams lpLogo = new android.widget.LinearLayout.LayoutParams(dp(64), dp(64));
+        lpLogo.setMarginEnd(dp(16));
+        box.addView(logoBox, lpLogo);
+
+        android.widget.LinearLayout col = new android.widget.LinearLayout(this);
+        col.setOrientation(android.widget.LinearLayout.VERTICAL);
+        box.addView(col, new android.widget.LinearLayout.LayoutParams(android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT));
+
+        android.widget.LinearLayout top = new android.widget.LinearLayout(this);
+        top.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+        top.setGravity(Gravity.CENTER_VERTICAL);
+        bNum = text(14, dim, false);
+        bName = text(20, Color.WHITE, true);
+        bName.setMaxWidth(getResources().getDisplayMetrics().widthPixels * 2 / 5);
+        bClock = text(13, dim, false);
+        android.widget.LinearLayout.LayoutParams lpNum = new android.widget.LinearLayout.LayoutParams(-2, -2);
+        lpNum.setMarginEnd(dp(10));
+        top.addView(bNum, lpNum);
+        top.addView(bName, new android.widget.LinearLayout.LayoutParams(0, -2, 1f));
+        android.widget.LinearLayout.LayoutParams lpClock = new android.widget.LinearLayout.LayoutParams(-2, -2);
+        lpClock.setMarginStart(dp(16));
+        top.addView(bClock, lpClock);
+        col.addView(top, new android.widget.LinearLayout.LayoutParams(-1, -2));
+
+        bNow = text(15, Color.WHITE, false);
+        android.widget.LinearLayout.LayoutParams lpNow = new android.widget.LinearLayout.LayoutParams(-1, -2);
+        lpNow.topMargin = dp(4);
+        col.addView(bNow, lpNow);
+
+        android.widget.LinearLayout bar = new android.widget.LinearLayout(this);
+        bar.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+        bar.setGravity(Gravity.CENTER_VERTICAL);
+        bStart = text(13, dim, false);
+        bEnd = text(13, dim, false);
+        // Leiste: violett gelaufen, Rest deutlich hell (auch auf dunklen Fernsehern gut sichtbar)
+        android.widget.LinearLayout track = new android.widget.LinearLayout(this);
+        track.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+        GradientDrawable tr = new GradientDrawable();
+        tr.setColor(0x52FFFFFF);
+        tr.setCornerRadius(dp(3));
+        track.setBackground(tr);
+        bFill = new View(this);
+        GradientDrawable fl = new GradientDrawable();
+        fl.setColor(0xFFA855F7);
+        fl.setCornerRadius(dp(3));
+        bFill.setBackground(fl);
+        bRest = new View(this);
+        track.addView(bFill, new android.widget.LinearLayout.LayoutParams(0, -1, 0f));
+        track.addView(bRest, new android.widget.LinearLayout.LayoutParams(0, -1, 1f));
+        android.widget.LinearLayout.LayoutParams lpS = new android.widget.LinearLayout.LayoutParams(-2, -2);
+        lpS.setMarginEnd(dp(10));
+        bar.addView(bStart, lpS);
+        bar.addView(track, new android.widget.LinearLayout.LayoutParams(0, dp(5), 1f));
+        android.widget.LinearLayout.LayoutParams lpE = new android.widget.LinearLayout.LayoutParams(-2, -2);
+        lpE.setMarginStart(dp(10));
+        bar.addView(bEnd, lpE);
+        bBarRow = bar;
+        android.widget.LinearLayout.LayoutParams lpBar = new android.widget.LinearLayout.LayoutParams(-1, -2);
+        lpBar.topMargin = dp(6);
+        col.addView(bar, lpBar);
+
+        bNext = text(13, dim, false);
+        android.widget.LinearLayout.LayoutParams lpNext = new android.widget.LinearLayout.LayoutParams(-1, -2);
+        lpNext.topMargin = dp(6);
+        col.addView(bNext, lpNext);
+        return box;
+    }
+
+    private static String hhmm(long sec) {
+        return new java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault()).format(new java.util.Date(sec * 1000L));
+    }
+
     private void showInfo() {
         if (player == null || info == null) return;
         int i = player.getCurrentMediaItemIndex();
         if (i < 0 || i >= titles.size()) return;
-        info.setText(titles.get(i));
+        String name = i < names.size() && names.get(i).length() > 0 ? names.get(i) : titles.get(i);
+        String num = live ? nums.get(i) : "";
+        bNum.setText(num);
+        bNum.setVisibility(num.length() > 0 ? View.VISIBLE : View.GONE);
+        bName.setText(name);
+        bClock.setText(hhmm(System.currentTimeMillis() / 1000L));
+
+        // Programmdaten (nur Live): [[Titel, Start, Ende], …] in Sekunden
+        JSONArray ep = live && i < epgs.size() ? epgs.get(i) : null;
+        long now = System.currentTimeMillis() / 1000L;
+        JSONArray cur = null, next = null;
+        if (ep != null) {
+            for (int k = 0; k < ep.length(); k++) {
+                JSONArray e = ep.optJSONArray(k);
+                if (e == null) continue;
+                long s = e.optLong(1), en = e.optLong(2);
+                if (cur == null && s <= now && en > now) cur = e;
+                else if (cur != null && s >= cur.optLong(2) - 1) { next = e; break; }
+            }
+        }
+        if (cur != null) {
+            long s = cur.optLong(1), en = cur.optLong(2);
+            bNow.setText(cur.optString(0));
+            bStart.setText(hhmm(s));
+            bEnd.setText(hhmm(en));
+            float pct = en > s ? Math.max(0f, Math.min(1f, (now - s) / (float) (en - s))) : 0f;
+            ((android.widget.LinearLayout.LayoutParams) bFill.getLayoutParams()).weight = pct;
+            ((android.widget.LinearLayout.LayoutParams) bRest.getLayoutParams()).weight = 1f - pct;
+            bFill.requestLayout();
+            bNow.setVisibility(View.VISIBLE);
+            bBarRow.setVisibility(View.VISIBLE);
+            bNext.setText(next != null ? txtNext + "  " + hhmm(next.optLong(1)) + "  " + next.optString(0) : "");
+            bNext.setVisibility(next != null ? View.VISIBLE : View.GONE);
+        } else {
+            bNow.setVisibility(View.GONE);
+            bBarRow.setVisibility(View.GONE);
+            bNext.setVisibility(View.GONE);
+            if (live) loadEpg(i);   // fehlt bzw. veraltet: beim Anbieter holen, Banner wird dann ergänzt
+        }
+        // Feste Breite wie im Entwurf: mit Programmdaten gut die Hälfte des Bildes, ohne schmal (nur Logo, Nummer, Name)
+        int w = getResources().getDisplayMetrics().widthPixels * (cur != null ? 50 : 34) / 100;
+        if (info.getLayoutParams() != null && info.getLayoutParams().width != w) {
+            info.getLayoutParams().width = w;
+            info.requestLayout();
+        }
+
+        // Logo: sofort Platzhalter (Nummer bzw. Anfangsbuchstaben), Bild lädt im Hintergrund nach
+        View logoBox = (View) bLogo.getParent();
+        String logo = i < logos.size() ? logos.get(i) : "";
+        if (!live) {
+            logoBox.setVisibility(View.GONE);
+        } else {
+            logoBox.setVisibility(View.VISIBLE);
+            String ph = num.length() > 0 ? num : (name.length() > 3 ? name.substring(0, 3) : name);
+            bLogoNum.setText(ph);
+            Bitmap b = logo.length() > 0 ? logoCache.get(logo) : null;
+            bLogo.setTag(logo);
+            bLogo.setImageBitmap(b);
+            bLogoNum.setVisibility(b == null ? View.VISIBLE : View.GONE);
+            if (b == null && logo.startsWith("http")) loadLogo(logo);
+        }
+
         info.setVisibility(View.VISIBLE);
         handler.removeCallbacks(hideInfo);
         handler.postDelayed(hideInfo, 4000);
+    }
+
+    /* Programmdaten eines Senders beim Anbieter holen (Xtream: get_short_epg) – einmal je Sender und Sitzung,
+       erneut nur wenn die geholten Sendungen schon vorbei sind. Titel kommen Base64-kodiert. */
+    private void loadEpg(final int idx) {
+        if (idx < 0 || idx >= epgUrls.size()) return;
+        final String url = epgUrls.get(idx);
+        if (url.length() == 0 || epgLoading.contains(idx)) return;
+        epgLoading.add(idx);
+        try {
+            io.execute(() -> {
+                JSONArray out = new JSONArray();
+                try {
+                    java.net.HttpURLConnection c = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
+                    c.setConnectTimeout(5000);
+                    c.setReadTimeout(8000);
+                    java.io.InputStream s = c.getInputStream();
+                    java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();
+                    byte[] buf = new byte[8192];
+                    int n;
+                    while ((n = s.read(buf)) > 0 && bo.size() < 2_000_000) bo.write(buf, 0, n);
+                    s.close();
+                    c.disconnect();
+                    JSONArray l = new JSONObject(bo.toString("UTF-8")).optJSONArray("epg_listings");
+                    long now = System.currentTimeMillis() / 1000L;
+                    for (int k = 0; l != null && k < l.length() && out.length() < 4; k++) {
+                        JSONObject e = l.optJSONObject(k);
+                        if (e == null) continue;
+                        long st = e.optLong("start_timestamp") + epgShift, en = e.optLong("stop_timestamp") + epgShift;
+                        if (en <= now) continue;
+                        String t = e.optString("title", "");
+                        try { t = new String(android.util.Base64.decode(t, android.util.Base64.DEFAULT), "UTF-8"); } catch (Throwable ignored) { }
+                        out.put(new JSONArray().put(t.trim()).put(st).put(en));
+                    }
+                } catch (Throwable ignored) { }
+                final JSONArray res = out;
+                handler.post(() -> {
+                    if (closing) return;
+                    // nichts gefunden: nicht sofort erneut fragen; gefunden: nach Ablauf der Sendungen darf neu geholt werden
+                    if (res.length() > 0) {
+                        if (idx < epgs.size()) epgs.set(idx, res);
+                        epgLoading.remove(idx);
+                        if (player != null && player.getCurrentMediaItemIndex() == idx && info != null && info.getVisibility() == View.VISIBLE) refreshInfo();
+                    }
+                });
+            });
+        } catch (Throwable ignored) { epgLoading.remove(idx); }
+    }
+
+    /* Banner neu befüllen, ohne die Anzeigedauer zu verlängern */
+    private void refreshInfo() {
+        boolean vis = info.getVisibility() == View.VISIBLE;
+        showInfo();
+        if (vis && (view == null || !view.isControllerFullyVisible())) {
+            handler.removeCallbacks(hideInfo);
+            handler.postDelayed(hideInfo, 3000);
+        }
+    }
+
+    private void loadLogo(final String url) {
+        try {
+            io.execute(() -> {
+                Bitmap b = null;
+                try {
+                    java.net.HttpURLConnection c = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
+                    c.setConnectTimeout(4000);
+                    c.setReadTimeout(6000);
+                    c.setInstanceFollowRedirects(true);
+                    java.io.InputStream s = c.getInputStream();
+                    b = android.graphics.BitmapFactory.decodeStream(s);
+                    s.close();
+                    c.disconnect();
+                    if (b != null && (b.getWidth() > 256 || b.getHeight() > 256)) {
+                        float f = 256f / Math.max(b.getWidth(), b.getHeight());
+                        b = Bitmap.createScaledBitmap(b, Math.max(1, Math.round(b.getWidth() * f)), Math.max(1, Math.round(b.getHeight() * f)), true);
+                    }
+                } catch (Throwable ignored) { }
+                final Bitmap bm = b;
+                handler.post(() -> {
+                    if (bm == null || closing) return;
+                    if (logoCache.size() > 80) logoCache.clear();
+                    logoCache.put(url, bm);
+                    if (bLogo != null && url.equals(bLogo.getTag())) {
+                        bLogo.setImageBitmap(bm);
+                        bLogoNum.setVisibility(View.GONE);
+                    }
+                });
+            });
+        } catch (Throwable ignored) { }
     }
 
     private void showStatus(String text) {
@@ -573,6 +860,7 @@ public class PlayerActivity extends Activity {
         }
         lastIdx = cur;
         status.setVisibility(View.GONE);
+        zapAt = System.currentTimeMillis();
         player.seekTo(i, C.TIME_UNSET);
         player.prepare();
         player.play();
@@ -716,6 +1004,7 @@ public class PlayerActivity extends Activity {
     @Override
     protected void onDestroy() {
         handler.removeCallbacksAndMessages(null);
+        io.shutdownNow();
         if (sound != null) {
             try { sound.release(); } catch (Exception ignored) { }
             sound = null;

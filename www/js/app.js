@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Telvo Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.15.2',
+    version: '1.15.4',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     /* Bibliotheken: werden beim Bauen nach www/lib kopiert (scripts/copy-libs.js) und von dort geladen.
        Nur wenn sie fehlen, aus dem Internet – mit fester Version und Prüfsumme (SRI): eine veränderte Datei
@@ -889,6 +889,14 @@
           };
         });
       },
+      /* Adresse der Programmdaten eines Senders – für den TV-Player, der sie beim Umschalten selbst holt (Sender-Banner).
+         Antwort: { epg_listings: [{ title (Base64), start_timestamp, stop_timestamp }] }, Verschiebung übergibt die App extra. */
+      epgUrl: function (item) {
+        var sh = epgShiftOf(p);
+        return base + '/player_api.php?username=' + user + '&password=' + pass + '&action=' + (sh > 0 ? 'get_simple_data_table' : 'get_short_epg') +
+          '&stream_id=' + item.id + (sh > 0 ? '' : '&limit=' + (sh < 0 ? 5 : 4));
+      },
+      epgShift: function () { return epgShiftOf(p); },
       epg: function (item, limit) {
         // Verschiebung nach später: Der Server liefert „ab jetzt“ – darum dann das ganze Programm holen und selbst filtern
         var sh = epgShiftOf(p), n = limit || 3;
@@ -7783,7 +7791,28 @@
         var s = App.provider.streamUrl(it);
         var title = it.kind === 'episode' ? (it.seriesName ? it.seriesName + ' · ' : '') + 'S' + it.season + ' E' + it.num + ' – ' + it.name
           : (live && it.num ? it.num + '   ' : '') + it.name;
-        return { url: s.url, alt: s.alt || '', title: title, num: live && it.num != null && it.num !== '' ? String(Number(it.num)) : '' };
+        var o = { url: s.url, alt: s.alt || '', title: title, num: live && it.num != null && it.num !== '' ? String(Number(it.num)) : '' };
+        // Sender-Banner im TV-Player: Name, Logo und – soweit schon geladen – laufende und nächste Sendung
+        if (live) {
+          o.name = it.name || '';
+          if (it.logo && /^https?:\/\//i.test(it.logo)) o.logo = it.logo;
+          var ep = bannerEpg(it);
+          if (ep) o.epg = ep;
+          // fehlen sie noch: Adresse mitgeben, der TV-Player holt sie beim Umschalten selbst
+          if (App.provider && App.provider.epgUrl) { try { o.epgUrl = App.provider.epgUrl(it); } catch (e) {} }
+        }
+        return o;
+      }
+      function bannerEpg(it) {
+        try {
+          var now = Date.now() / 1000, out = [], c = EpgCache.data[pid() + ':' + it.id];
+          if (c && c.list) for (var k = 0; k < c.list.length && out.length < 3; k++) {
+            var e = c.list[k];
+            if (e.end > now) out.push([String(e.title || '').slice(0, 80), Math.floor(e.start), Math.floor(e.end)]);
+          }
+          if (!out.length) { var n = epgNowOf(it); if (n) out.push([String(n.title || '').slice(0, 80), Math.floor(n.start), Math.floor(n.end)]); }
+          return out.length ? out : null;
+        } catch (e) { return null; }
       }
       /* Android übergibt Daten an den TV-Player in einem Paket von höchstens 1 MB – größer = Absturz
          (TransactionTooLargeException). Darum nur die Nachbarn zum Umschalten (± 150) und zusätzlich nach Größe
@@ -7809,6 +7838,8 @@
         txtReconnect: T('Verbindung wird wiederhergestellt …'),
         txtFailed: T('Wiedergabe nicht möglich. Mit „Zurück“ schließen.'),
         txtNoChannel: T('Sender {0} nicht gefunden'),
+        txtNext: T('Danach: {0}', '').replace(/[:：\s]+$/, ''),   // vorhandene Übersetzung ohne „: …“
+        epgShift: App.provider && App.provider.epgShift ? App.provider.epgShift() : 0,
         sleepAt: Sleep.at || 0,
         autoNext: Settings.get('autoNext') !== false,
         sound: Settings.get('sound') || 'off'
@@ -8039,6 +8070,8 @@
       self.spinner = h('div', { class: 'loading' }, h('div', { class: 'spinner' }), self.loadTxt);
       self.err = h('div', { class: 'state', style: 'display:none' });
       self.zap = h('div', { class: 'zap is-hidden' });
+      // Sender-Banner (wie im TV-Player, PlayerActivity.buildBanner – Änderungen immer an beiden Stellen)
+      self.zbn = h('div', { class: 'zbn is-hidden', 'aria-live': 'polite' });
       // Ton & Untertitel: der Knopf erscheint nur, wenn der Stream wirklich mehrere Tonspuren oder Untertitel hat
       self.tracksBtn = h('button', { class: 'cbtn f is-gone', 'data-c': 'tracks', title: T('Ton & Untertitel'), 'aria-label': T('Ton & Untertitel'), onclick: function () { self.openTracks(); } }, icon('tracks'));
       // Bildformat (Original, Zoom, Strecken, 16:9, 4:3) und bei Live-Sendern das Stream-Format (HLS / MPEG-TS)
@@ -8064,7 +8097,7 @@
         h('button', { class: 'mini-open f', title: T('Vollbild'), onclick: function () { self.maximize(); } }, self.miniTitle),
         self.miniMute = h('button', { class: 'mini-mute f', title: T('Ton an/aus'), 'aria-label': T('Ton an/aus'), onclick: function () { self.setMuted(!self.video.muted); } }),
         h('button', { class: 'mini-close f', title: T('Schließen'), onclick: function () { self.close(); } }, icon('close')));
-      self.el = h('div', { class: 'player' }, video, self.spinner, self.osd, self.zap, self.err, self.miniUi);
+      self.el = h('div', { class: 'player' }, video, self.spinner, self.osd, self.zap, self.zbn, self.err, self.miniUi);
       self.paintVol();
       self.paintSleep();
       self.onResize = function () { self.applyAspect(); self.fitCtrls(); };
@@ -8370,6 +8403,8 @@
       self.bar.firstChild.style.width = '0%';
       clear(self.info);
       self.paintCtrls();
+      // Live: beim Öffnen und Umschalten das Sender-Banner statt der ganzen Bedienung
+      if (item.kind === 'live' && !self.mini) self.showZap(item);
       self.showOsd();
 
       var r = Resume.get(item);
@@ -9242,15 +9277,63 @@
     /* Senderwechsel: Logo groß in der Mitte, darunter Nummer, Name und laufende Sendung */
     showZap: function (it, index) {
       var self = this;
-      if (self.mini) return;
-      self.showOsd();
-      // nur die Kopfzeile zeigen (Logo, Nummer, Name, laufende Sendung) – die Knöpfe unten erst bei Bedienung
-      var now = epgNowOf(it);
-      self.zapNow.textContent = now && now.title ? now.title : '';
+      if (self.mini || !self.el) return;
+      // Bedienung ausblenden, nur das Banner zeigen; beim schnellen Durchschalten wechselt nur sein Inhalt
       self.zapAt = Date.now();
       self.el.classList.add('is-zapping');
+      self.osd.classList.add('is-hidden');
       clearTimeout(self.zapTimer);
       self.zapTimer = setTimeout(function () { if (self.el) self.el.classList.remove('is-zapping'); }, 3500);
+      self.paintBanner(it);
+      self.zbn.classList.remove('is-hidden');
+      clearTimeout(self.zbnTimer);
+      self.zbnTimer = setTimeout(function () { self.hideBanner(); }, 4000);
+    },
+    hideBanner: function () { clearTimeout(this.zbnTimer); if (this.zbn) this.zbn.classList.add('is-hidden'); },
+    /* Sender-Banner füllen: Logo (sonst Nummer), Nummer, Name, Uhrzeit – mit Programmdaten dazu laufende Sendung,
+       Fortschritt und „Danach“. Fehlen sie, werden sie geholt und das Banner ergänzt (ohne Flackern). */
+    paintBanner: function (it) {
+      var self = this, z = self.zbn;
+      if (!z || !it) return;
+      self.zbnItem = it;
+      function pick(list) {
+        var t = Date.now() / 1000, cur = null, next = null;
+        (list || []).forEach(function (e) {
+          if (!cur && e.start <= t && e.end > t) cur = e;
+          else if (cur && !next && e.start >= cur.end - 1) next = e;
+        });
+        return { cur: cur, next: next };
+      }
+      function paint(list) {
+        clear(z);
+        var p = pick(list), num = it.num != null && it.num !== '' ? String(Number(it.num)) : '';
+        var logo = h('div', { class: 'zbn-logo' }), ph = h('span', { text: num || String(it.name || '').slice(0, 3) });
+        logo.appendChild(ph);
+        if (it.logo) {
+          var im = img(it.logo, '', function () { im.style.display = 'none'; ph.style.display = ''; });
+          if (im) { ph.style.display = 'none'; logo.appendChild(im); }
+        }
+        var col = h('div', { class: 'zbn-col' },
+          h('div', { class: 'zbn-top' }, num ? h('span', { class: 'zbn-num', text: num }) : null,
+            h('span', { class: 'zbn-name', text: it.name || '' }), h('span', { class: 'zbn-clock', text: fmtClock(Date.now() / 1000) })));
+        if (p.cur) {
+          var pct = Math.max(0, Math.min(100, (Date.now() / 1000 - p.cur.start) / (p.cur.end - p.cur.start) * 100));
+          col.appendChild(h('div', { class: 'zbn-now', text: p.cur.title || '' }));
+          col.appendChild(h('div', { class: 'zbn-bar' }, h('span', { text: fmtClock(p.cur.start) }),
+            h('i', {}, h('b', { style: 'width:' + pct.toFixed(1) + '%' })), h('span', { text: fmtClock(p.cur.end) })));
+          if (p.next) col.appendChild(h('div', { class: 'zbn-next', text: T('Danach: {0}', '').replace(/[:：\s]+$/, '') + '  ' + fmtClock(p.next.start) + '  ' + (p.next.title || '') }));
+        }
+        z.classList.toggle('is-slim', !p.cur);
+        z.appendChild(logo);
+        z.appendChild(col);
+        return !!p.cur;
+      }
+      var c = EpgCache.data[pid() + ':' + it.id];
+      var list = c && c.list ? c.list : null;
+      if (!list) { var n = epgNowOf(it); if (n) list = [n]; }
+      if (!paint(list) && App.provider && App.provider.epg) {
+        EpgCache.get(it).then(function (l) { if (self.zbnItem === it && l && l.length) paint(l); }, function () {});
+      }
     },
     /* Direkt zu einem Sender (Nummer eingetippt, letzter Sender): in der aktuellen Liste, sonst in allen Sendern */
     zapTo: function (it) {
@@ -9277,7 +9360,10 @@
     showOsd: function (stay) {
       var self = this;
       if (self.mini || !self.el) return;
-      if (self.el && Date.now() - (self.zapAt || 0) > 700) self.el.classList.remove('is-zapping');
+      // direkt nach dem Umschalten (load ruft showOsd): nur das Banner zeigen, die Bedienung erst bei Tastendruck
+      if (self.el.classList.contains('is-zapping') && Date.now() - (self.zapAt || 0) <= 700) return;
+      self.el.classList.remove('is-zapping');
+      self.hideBanner();
       self.hidePause();
       if (self.video && self.video.paused && !self.video.ended) self.armPause(); else clearTimeout(self.pauseTimer);
       var wasHidden = self.osd.classList.contains('is-hidden');
