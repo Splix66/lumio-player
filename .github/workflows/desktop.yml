@@ -15,7 +15,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest]
+        # Mac auf Intel-Rechnern bauen: Die Apple-Silicon-Rechner (macos-latest) waren seit 1.14.3 oft 15 min lang
+        # nicht frei, der Mac-Bau brach dann ab. Die .dmg ist „universal“ (Intel + Apple Silicon) – das geht auch hier.
+        os: [windows-latest, macos-15-intel]
     runs-on: ${{ matrix.os }}
     defaults:
       run:
