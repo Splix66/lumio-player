@@ -79,6 +79,7 @@ public class PlayerActivity extends Activity {
     private long readySince;         // seit wann der Stream ohne Unterbrechung läuft
     private long stuckPos = -1;      // Wiedergabeposition beim letzten Blick des Wächters
     private long stuckSince;         // seit wann sich die Position nicht mehr bewegt
+    private long zapAt;              // Zeitpunkt des Umschaltens (für das Protokoll „bereit nach … ms“)
     private String lastError;
     private String txtReconnect = "Verbindung wird wiederhergestellt …";
     private String txtFailed = "Wiedergabe nicht möglich.";
@@ -262,9 +263,11 @@ public class PlayerActivity extends Activity {
                 .setAllowCrossProtocolRedirects(true)
                 .setConnectTimeoutMs(15000)
                 .setReadTimeoutMs(20000);
-        // Nach einem Hänger etwas mehr Vorrat sammeln (6 s statt 4 s), bevor es weitergeht – sonst stockt es gleich wieder
+        // Nach einem Hänger etwas mehr Vorrat sammeln (6 s statt 4 s), bevor es weitergeht – sonst stockt es gleich wieder.
+        // Live-Start/Umschalten: 1 s Vorrat genügt – Anbieter schicken beim Verbinden einen schnellen Schwall, der Puffer
+        // füllt sich danach sofort weiter (gemessen auf Fire TV: Bild bewegt sich so ~0,3–0,5 s früher)
         DefaultLoadControl load = new DefaultLoadControl.Builder()
-                .setBufferDurationsMs(15000, 50000, 2000, 6000)
+                .setBufferDurationsMs(15000, 50000, live ? 1000 : 2000, 6000)
                 .build();
         // Rohe TV-Signale (.ts, „RAW“-Sender): auch ohne IDR-Schlüsselbild einsteigen und Einzelbilder selbst erkennen –
         // sonst ruckelt oder stockt das Bild bei manchen Satelliten-Sendern
@@ -291,6 +294,7 @@ public class PlayerActivity extends Activity {
                 if (state != Player.STATE_READY) readySince = 0;
                 if (state == Player.STATE_READY) {
                     if (readySince == 0) readySince = System.currentTimeMillis();
+                    if (zapAt > 0) { Log.i(TAG, "bereit nach " + (System.currentTimeMillis() - zapAt) + " ms"); zapAt = 0; }
                     status.setVisibility(View.GONE);
                     retries = 0;
                     behindRetries = 0;
@@ -573,6 +577,7 @@ public class PlayerActivity extends Activity {
         }
         lastIdx = cur;
         status.setVisibility(View.GONE);
+        zapAt = System.currentTimeMillis();
         player.seekTo(i, C.TIME_UNSET);
         player.prepare();
         player.play();
