@@ -1,5 +1,9 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## 1.15.2 – 2026-11-12 · Protokoll im TV-Player
+
+- **Fehlersuche im TV-Player:** Der Vollbild-Player schreibt jetzt Trennungen durch den Server, Fehler, Neuverbindungen und Formatwechsel ins Android-Protokoll (`adb logcat -s TelvoPlayer`). So lässt sich bei Hängern sofort sehen, ob der Anbieter trennt oder der Player selbst einen Fehler meldet. Am Abspielen ändert sich nichts.
+
 ## 1.15.0 – 2026-11-11 · Live-Vorschau doppelt so schnell
 
 - **Live-Vorschau auf Fire TV und Android-Boxen startet etwa doppelt so schnell:** Dort läuft das Vollbild im TV-Player, der Web-Player zeigt nur noch die Vorschau. Die Vorschau nimmt jetzt zuerst den direkten .ts-Stream, der schon mit den ersten Daten ein Bild zeigt. Gemessen vom Vollbild zurück bis zum Vorschaubild: 1,9–2,1 s statt 4,4 s. Klappt das bei einem Sender nicht, nimmt die App den normalen Weg und merkt sich das.
