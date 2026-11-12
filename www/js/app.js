@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Telvo Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.15.4',
+    version: '1.15.5',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     /* Bibliotheken: werden beim Bauen nach www/lib kopiert (scripts/copy-libs.js) und von dort geladen.
        Nur wenn sie fehlen, aus dem Internet – mit fester Version und Prüfsumme (SRI): eine veränderte Datei
@@ -43,7 +43,9 @@
     ios: /iPhone|iPad|iPod/.test(UA) || (/Macintosh/.test(UA) && navigator.maxTouchPoints > 1),
     android: /Android/i.test(UA)
   };
-  Platform.androidTV = Platform.android && (/AFT|Android TV|BRAVIA|SHIELD|\bTV\b/i.test(UA) || navigator.maxTouchPoints === 0);
+  // „TelvoTV“ hängt die Android-App an, wenn Android selbst TV-Modus/Leanback meldet – erkennt auch Boxen, die einen
+  // Touchscreen vortäuschen und kein „TV“ im User-Agent haben (z. B. R69Q mit Rockchip)
+  Platform.androidTV = Platform.android && (/TelvoTV|AFT|Android TV|BRAVIA|SHIELD|\bTV\b/i.test(UA) || navigator.maxTouchPoints === 0);
   Platform.tv = Platform.tizen || Platform.webos || Platform.androidTV;
   Platform.safari = Platform.ios || (/Safari/.test(UA) && !/Chrome|Chromium|Android/.test(UA));
   // Wenig Arbeitsspeicher (≤ 2 GB) oder schwacher Prozessor (≤ 4 Kerne bei Android-Boxen) → Sparmodus für die Optik
@@ -629,7 +631,16 @@
     });
     var req = fetch(url, ctrl ? { signal: ctrl.signal } : {}).then(function (res) {
       clearTimeout(timer);
-      if (!res.ok) throw new Error(T('Server-Fehler (HTTP {0})', res.status));
+      if (!res.ok) {
+        // 401/403: Xtream-Server lehnen so falsche Zugangsdaten oder abgelaufene Zugänge ab – das verständlich sagen
+        var er = new Error(res.status === 401 || res.status === 403
+          ? T('Anmeldung abgelehnt – Benutzername oder Passwort falsch oder Zugang abgelaufen (HTTP {0}).', res.status)
+          : T('Server-Fehler (HTTP {0})', res.status));
+        er.status = res.status;
+        if (res.status === 401 || res.status === 403) { er.auth = true; App.authFail = Date.now(); }
+        throw er;
+      }
+      if (/player_api\.php|get\.php/.test(url)) App.authFail = 0;
       return res;
     }, function (err) {
       clearTimeout(timer);
@@ -1474,7 +1485,9 @@
   /* ----- Demo (öffentliche Test-Streams, damit man die App ohne Zugang ausprobieren kann) ----- */
   function DemoProvider() {
     var S = {
-      live1: 'https://cph-p2p-msl.akamaized.net/hls/live/2000341/test/master.m3u8',
+      // Live: zwei verschiedene, frei zugängliche Live-Quellen (die frühere Akamai-Testquelle lieferte nur noch 404)
+      live1: 'https://demo.unified-streaming.com/k8s/live/stable/live.isml/.m3u8',
+      live2: 'https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8',
       bbb: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
       bip: 'https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_16x9/bipbop_16x9_variant.m3u8',
       sintel: 'https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8',
@@ -1482,7 +1495,7 @@
     };
     var live = [
       [T('Demo Live 1'), 'news', S.live1], [T('Demo Test-Bild'), 'news', S.bip], [T('Demo Kino 24/7'), 'film', S.bbb],
-      [T('Demo Animation'), 'film', S.sintel], [T('Demo Science-Fiction'), 'film', S.tos], [T('Demo Live 2'), 'news', S.live1]
+      [T('Demo Animation'), 'film', S.sintel], [T('Demo Science-Fiction'), 'film', S.tos], [T('Demo Live 2'), 'news', S.live2]
     ].map(function (x, i) { return { kind: 'live', id: 'd' + i, name: x[0], catId: x[1], url: x[2], num: i + 1, archive: i === 2 || i === 3 ? 2 : 0 }; });
     var movies = [
       { id: 'm1', name: 'Big Buck Bunny', url: S.bbb, catId: 'anim', year: '2008', plot: T('Ein gutmütiger Riesenhase rächt sich mit viel Fantasie an drei frechen Nagern. Offener Animationsfilm der Blender Foundation.'), genre: T('Animation, Komödie'), duration: '00:09:56', rating: '7.2' },
@@ -3533,6 +3546,7 @@
       if (document.activeElement === document.body) Nav.focus($('.cat.is-on', side) || side.firstChild);
       catCounts(kind).then(function (c) { counts = c; paintCounts(); Shell.setCount(kind, fmtCount(c.total)); }).catch(function () {});
     }, function (e) {
+      ErrLog.add('Playlist', String(e && e.message || e) + ' | ' + kind);   // auch abgelehnte Anmeldung (401) ins Fehlerprotokoll
       clear(grid).appendChild(stateBox(T('Laden fehlgeschlagen'), e.message, T('Erneut versuchen'), function () { Shell.show(kind, true); }));
     });
     return el;
@@ -3583,6 +3597,8 @@
         var a = StatusLine.account(), days = a && a.expires ? Math.ceil((Number(a.expires) * 1000 - Date.now()) / 86400000) : null;
         // Ablauf zuerst: Xtream meldet abgelaufene Zugänge mit Status „Expired“ – das ist „abgelaufen“, nicht „gesperrt“
         if ((days !== null && days <= 0) || (a && /^expired$/i.test(String(a.status || '')))) plItem = ['off', 'playlist', T('Playlist abgelaufen'), 'playlist'];
+        // Server hat die Anmeldung zuletzt abgelehnt (HTTP 401/403) – nicht grün „aktiv“ zeigen
+        else if (App.authFail) plItem = ['off', 'playlist', T('Anmeldung abgelehnt'), 'playlist'];
         else if (a && a.status && !/^active$/i.test(String(a.status))) plItem = ['off', 'playlist', T('Zugang gesperrt'), 'playlist'];
         else if (days !== null && days <= 7) plItem = ['warn', 'playlist', T('Läuft bald ab'), 'playlist'];
         else plItem = ['ok', 'playlist', T('Playlist aktiv'), 'playlist'];
@@ -5176,6 +5192,7 @@
       if (document.activeElement === document.body) Nav.focus(activeButton() || cats.children[0]);
       catCounts(kind).then(function (c) { counts = c; paintCounts(); }).catch(function () {});
     }, function (e) {
+      ErrLog.add('Playlist', String(e && e.message || e) + ' | ' + kind);   // auch abgelehnte Anmeldung (401) ins Fehlerprotokoll
       clear(items).appendChild(stateBox(T('Laden fehlgeschlagen'), e.message, T('Erneut versuchen'), function () { Shell.show(kind, true); }));
     });
     return el;
