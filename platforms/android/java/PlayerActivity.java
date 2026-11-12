@@ -28,6 +28,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.media3.common.C;
+import androidx.media3.common.Format;
+import androidx.media3.common.TrackSelectionOverride;
+import androidx.media3.common.Tracks;
+import androidx.media3.ui.AspectRatioFrameLayout;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.MediaMetadata;
 import androidx.media3.common.MimeTypes;
@@ -97,6 +101,11 @@ public class PlayerActivity extends Activity {
     private String txtFailed = "Wiedergabe nicht möglich.";
     private String txtNoChannel = "Sender {0} nicht gefunden";
     private String txtNext = "Danach";
+    private JSONObject menuTexts;    // Texte des Einstellungsmenüs in der App-Sprache
+    private java.util.Locale appLocale = java.util.Locale.getDefault();
+    private FrameLayout menuLayer;
+    private android.widget.LinearLayout menuMain, menuSub;
+    private int menuSubKind = -1;    // offene Auswahl: 0 Tonspur, 1 Untertitel, 2 Bildformat, 3 Geschwindigkeit
     private String digits = "";      // eingetippte Sendernummer
     private int lastIdx = -1;        // vorher geschauter Sender
     private boolean bySleep;         // vom Schlaf-Timer beendet
@@ -209,6 +218,9 @@ public class PlayerActivity extends Activity {
         String t4 = in.getStringExtra("txtNext");
         if (t4 != null) txtNext = t4;
         epgShift = in.getLongExtra("epgShift", 0L);
+        try { String mt = in.getStringExtra("menuTexts"); if (mt != null) menuTexts = new JSONObject(mt); } catch (Exception ignored) { }
+        String al = in.getStringExtra("lang");
+        if (al != null && al.length() >= 2) appLocale = new java.util.Locale(al);
         long sleepAt = in.getLongExtra("sleepAt", 0L);
         if (sleepAt > System.currentTimeMillis()) handler.postDelayed(sleepEnd, sleepAt - System.currentTimeMillis());
         try {
@@ -254,6 +266,10 @@ public class PlayerActivity extends Activity {
         FrameLayout.LayoutParams lpInfo = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM | Gravity.START);
         lpInfo.setMargins(dp(40), 0, dp(40), dp(32));
         root.addView(info, lpInfo);
+
+        buildMenu(root);
+        // Bildformat wie zuletzt gewählt (Original, Zoom, Strecken)
+        view.setResizeMode(getSharedPreferences("telvo_player", MODE_PRIVATE).getInt("resize", AspectRatioFrameLayout.RESIZE_MODE_FIT));
 
         status = makeLabel(20);
         status.setVisibility(View.GONE);
@@ -488,6 +504,12 @@ public class PlayerActivity extends Activity {
             if (pos instanceof TextView) { ((TextView) pos).setTextColor(Color.WHITE); ((TextView) pos).setTypeface(Typeface.DEFAULT_BOLD); }
             View dur = exo("exo_duration");
             if (dur instanceof TextView) ((TextView) dur).setTextColor(0xB3FFFFFF);
+            // Zahnrad und Untertitel-Knopf öffnen das eigene Menü (statt des Media3-Menüs: lag über den Knöpfen,
+            // Standard-Optik, Texte in der Systemsprache statt der App-Sprache)
+            View gear = exo("exo_settings");
+            if (gear != null) gear.setOnClickListener(v -> openMenu(-1));
+            View cc = exo("exo_subtitle");
+            if (cc != null) cc.setOnClickListener(v -> openMenu(1));
             styleButton(exo("exo_play_pause"), true);
             for (String n : new String[] { "exo_prev", "exo_rew_with_amount", "exo_ffwd_with_amount", "exo_next",
                     "exo_subtitle", "exo_settings", "exo_overflow_show", "exo_overflow_hide", "exo_fullscreen" }) {
@@ -751,6 +773,244 @@ public class PlayerActivity extends Activity {
         }
     }
 
+    /* ---------- Einstellungsmenü (Zahnrad): Tonspur, Untertitel, Bildformat, Geschwindigkeit ----------
+       Glasfläche rechts am Rand; eine Auswahl klappt links daneben auf. Gewählt = weiß mit dunkler Schrift wie die
+       Knöpfe, aktive Wahl mit violettem Haken. Texte kommen aus der App (menuTexts), nicht aus der Systemsprache. */
+    private String mt(String k, String def) { return menuTexts != null ? menuTexts.optString(k, def) : def; }
+
+    private boolean menuOpen() { return menuLayer != null && menuLayer.getVisibility() == View.VISIBLE; }
+
+    private android.widget.LinearLayout menuPanel() {
+        android.widget.LinearLayout p = new android.widget.LinearLayout(this);
+        p.setOrientation(android.widget.LinearLayout.VERTICAL);
+        p.setPadding(dp(12), dp(12), dp(12), dp(12));
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xE014141A);
+        bg.setCornerRadius(dp(16));
+        bg.setStroke(dp(1), 0x24FFFFFF);
+        p.setBackground(bg);
+        return p;
+    }
+
+    private void buildMenu(FrameLayout root) {
+        int w = getResources().getDisplayMetrics().widthPixels;
+        menuLayer = new FrameLayout(this);
+        menuLayer.setVisibility(View.GONE);
+        menuMain = menuPanel();
+        FrameLayout.LayoutParams lm = new FrameLayout.LayoutParams(w * 30 / 100, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.END | Gravity.CENTER_VERTICAL);
+        lm.setMargins(0, 0, dp(40), 0);
+        menuLayer.addView(menuMain, lm);
+        menuSub = menuPanel();
+        menuSub.setVisibility(View.GONE);
+        FrameLayout.LayoutParams ls = new FrameLayout.LayoutParams(w * 24 / 100, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.END | Gravity.CENTER_VERTICAL);
+        ls.setMargins(0, 0, dp(40) + w * 30 / 100 + dp(14), 0);
+        menuLayer.addView(menuSub, ls);
+        root.addView(menuLayer, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+    }
+
+    private TextView menuHead(String t) {
+        TextView h = text(13, 0x8CFFFFFF, false);
+        h.setText(t);
+        h.setPadding(dp(10), dp(2), dp(10), dp(8));
+        return h;
+    }
+
+    /* Eine Zeile: Titel, darunter der aktuelle Wert (Hauptmenü) bzw. Haken + Name (Auswahl) */
+    private View menuRow(String title, String value, boolean enabled, Boolean checked, final Runnable onClick) {
+        android.widget.LinearLayout r = new android.widget.LinearLayout(this);
+        r.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+        r.setGravity(Gravity.CENTER_VERTICAL);
+        r.setPadding(dp(12), dp(10), dp(12), dp(10));
+        StateListDrawable s = new StateListDrawable();
+        GradientDrawable on = new GradientDrawable();
+        on.setColor(Color.WHITE);
+        on.setCornerRadius(dp(10));
+        s.addState(new int[] { android.R.attr.state_focused }, on);
+        s.addState(new int[] {}, new GradientDrawable());
+        r.setBackground(s);
+        r.setFocusable(enabled);
+        r.setClickable(enabled);
+        if (checked != null) {
+            TextView ck = text(16, 0xFFA855F7, true);
+            ck.setText(checked ? "✓" : "");
+            ck.setDuplicateParentStateEnabled(true);
+            r.addView(ck, new android.widget.LinearLayout.LayoutParams(dp(24), -2));
+        }
+        android.widget.LinearLayout col = new android.widget.LinearLayout(this);
+        col.setOrientation(android.widget.LinearLayout.VERTICAL);
+        col.setDuplicateParentStateEnabled(true);
+        TextView t = text(16, Color.WHITE, checked == null);
+        t.setText(title);
+        t.setDuplicateParentStateEnabled(true);
+        t.setTextColor(new ColorStateList(new int[][] { new int[] { android.R.attr.state_focused }, new int[] {} },
+                new int[] { 0xFF120F1A, enabled ? Color.WHITE : 0x66FFFFFF }));
+        col.addView(t);
+        if (value != null && value.length() > 0) {
+            TextView v = text(13, 0x99FFFFFF, false);
+            v.setText(value);
+            v.setDuplicateParentStateEnabled(true);
+            v.setTextColor(new ColorStateList(new int[][] { new int[] { android.R.attr.state_focused }, new int[] {} },
+                    new int[] { 0xFF4B4658, enabled ? 0x99FFFFFF : 0x59FFFFFF }));
+            col.addView(v);
+        }
+        r.addView(col, new android.widget.LinearLayout.LayoutParams(0, -2, 1f));
+        if (checked == null && enabled) {
+            TextView ar = text(18, Color.WHITE, false);
+            ar.setText("›");
+            ar.setDuplicateParentStateEnabled(true);
+            ar.setTextColor(new ColorStateList(new int[][] { new int[] { android.R.attr.state_focused }, new int[] {} }, new int[] { 0xFF120F1A, 0x99FFFFFF }));
+            r.addView(ar);
+        }
+        if (enabled) r.setOnClickListener(v -> onClick.run());
+        return r;
+    }
+
+    private String trackName(Format f, boolean audio) {
+        String name = f.label;
+        if (name == null || name.trim().length() == 0) {
+            String l = f.language;
+            if (l != null && l.length() > 0 && !"und".equals(l)) {
+                name = new java.util.Locale(l).getDisplayLanguage(appLocale);
+                if (name.length() > 0) name = name.substring(0, 1).toUpperCase(appLocale) + name.substring(1);
+            } else name = mt("unknown", "Unbekannt");
+        }
+        if (!audio) return name;
+        String ch = f.channelCount == 1 ? "Mono" : f.channelCount == 2 ? "Stereo" : f.channelCount == 6 ? "5.1" : f.channelCount == 8 ? "7.1" : "";
+        String mime = f.sampleMimeType != null ? f.sampleMimeType : "";
+        String extra = (mime.contains("ac3") || mime.contains("eac3") || mime.contains("ac4")) ? ("Dolby" + (ch.length() > 0 ? " " + ch : "")) : ch;
+        return extra.length() > 0 ? name + " · " + extra : name;
+    }
+
+    /* Spuren eines Typs: [Gruppe, Index, Name, gewählt?] */
+    private List<Object[]> tracksOf(int type) {
+        List<Object[]> out = new ArrayList<>();
+        if (player == null) return out;
+        for (Tracks.Group g : player.getCurrentTracks().getGroups()) {
+            if (g.getType() != type) continue;
+            for (int i = 0; i < g.length; i++) {
+                if (!g.isTrackSupported(i)) continue;
+                out.add(new Object[] { g, i, trackName(g.getTrackFormat(i), type == C.TRACK_TYPE_AUDIO), g.isTrackSelected(i) });
+            }
+        }
+        return out;
+    }
+
+    private String selectedName(int type, String none) {
+        for (Object[] t : tracksOf(type)) if ((Boolean) t[3]) return (String) t[2];
+        return none;
+    }
+
+    private static final int[] RESIZE = { AspectRatioFrameLayout.RESIZE_MODE_FIT, AspectRatioFrameLayout.RESIZE_MODE_ZOOM, AspectRatioFrameLayout.RESIZE_MODE_FILL };
+    private String[] resizeNames() { return new String[] { mt("fit", "Original"), mt("zoom", "Zoom"), mt("fill", "Strecken") }; }
+    private static final float[] SPEEDS = { 0.75f, 1f, 1.25f, 1.5f, 2f };
+    private String speedName(float s) { return s == 1f ? mt("normal", "Normal") : (String.valueOf(s).replace(".0", "").replace('.', ',') + "×"); }
+
+    private void fillMain() {
+        menuMain.removeAllViews();
+        menuMain.addView(menuHead(mt("title", "Wiedergabe")));
+        menuMain.addView(menuRow(mt("audio", "Tonspur"), selectedName(C.TRACK_TYPE_AUDIO, mt("auto", "Automatisch")), !tracksOf(C.TRACK_TYPE_AUDIO).isEmpty(), null, () -> openSub(0)));
+        boolean subsOff = player != null && player.getTrackSelectionParameters().disabledTrackTypes.contains(C.TRACK_TYPE_TEXT);
+        menuMain.addView(menuRow(mt("subs", "Untertitel"), subsOff ? mt("off", "Aus") : selectedName(C.TRACK_TYPE_TEXT, mt("off", "Aus")), !tracksOf(C.TRACK_TYPE_TEXT).isEmpty(), null, () -> openSub(1)));
+        int rm = view.getResizeMode(), ri = 0;
+        for (int i = 0; i < RESIZE.length; i++) if (RESIZE[i] == rm) ri = i;
+        menuMain.addView(menuRow(mt("format", "Bildformat"), resizeNames()[ri], true, null, () -> openSub(2)));
+        menuMain.addView(menuRow(mt("speed", "Geschwindigkeit"), live ? mt("onlyMovies", "Nur bei Filmen") : speedName(player != null ? player.getPlaybackParameters().speed : 1f), !live, null, () -> openSub(3)));
+    }
+
+    private void focusMain(int kind) {
+        // Zeile 0 ist die Überschrift
+        int i = kind >= 0 ? kind + 1 : 1;
+        View v = i < menuMain.getChildCount() ? menuMain.getChildAt(i) : null;
+        if (v == null || !v.isFocusable()) for (int k = 1; k < menuMain.getChildCount(); k++) if (menuMain.getChildAt(k).isFocusable()) { v = menuMain.getChildAt(k); break; }
+        if (v != null) v.requestFocus();
+    }
+
+    private void openMenu(int kind) {
+        if (menuLayer == null || player == null) return;
+        view.hideController();
+        fillMain();
+        menuSub.setVisibility(View.GONE);
+        menuSubKind = -1;
+        menuLayer.setVisibility(View.VISIBLE);
+        menuLayer.bringToFront();
+        if (kind >= 0 && menuMain.getChildAt(kind + 1) != null && menuMain.getChildAt(kind + 1).isFocusable()) openSub(kind);
+        else focusMain(-1);
+    }
+
+    private void closeMenu() {
+        if (menuLayer == null) return;
+        menuLayer.setVisibility(View.GONE);
+        menuSub.setVisibility(View.GONE);
+        menuSubKind = -1;
+    }
+
+    /* Nach einer Wahl: Auswahl schließen, Hauptmenü mit neuem Wert, Fokus zurück auf die Zeile */
+    private void chosen(int kind) {
+        menuSub.setVisibility(View.GONE);
+        menuSubKind = -1;
+        fillMain();
+        focusMain(kind);
+    }
+
+    private void openSub(final int kind) {
+        menuSub.removeAllViews();
+        menuSubKind = kind;
+        View sel = null;
+        if (kind == 0 || kind == 1) {
+            final int type = kind == 0 ? C.TRACK_TYPE_AUDIO : C.TRACK_TYPE_TEXT;
+            menuSub.addView(menuHead(kind == 0 ? mt("audio", "Tonspur") : mt("subs", "Untertitel")));
+            boolean off = player.getTrackSelectionParameters().disabledTrackTypes.contains(type);
+            if (kind == 1) {
+                View r = menuRow(mt("off", "Aus"), null, true, off, () -> {
+                    player.setTrackSelectionParameters(player.getTrackSelectionParameters().buildUpon()
+                            .clearOverridesOfType(C.TRACK_TYPE_TEXT).setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true).build());
+                    chosen(1);
+                });
+                menuSub.addView(r);
+                if (off) sel = r;
+            }
+            for (Object[] t : tracksOf(type)) {
+                final Tracks.Group g = (Tracks.Group) t[0];
+                final int idx = (Integer) t[1];
+                boolean on = !off && (Boolean) t[3];
+                View r = menuRow((String) t[2], null, true, on, () -> {
+                    player.setTrackSelectionParameters(player.getTrackSelectionParameters().buildUpon()
+                            .setTrackTypeDisabled(type, false)
+                            .setOverrideForType(new TrackSelectionOverride(g.getMediaTrackGroup(), idx)).build());
+                    chosen(kind);
+                });
+                menuSub.addView(r);
+                if (on && sel == null) sel = r;
+            }
+        } else if (kind == 2) {
+            menuSub.addView(menuHead(mt("format", "Bildformat")));
+            String[] names = resizeNames();
+            for (int i = 0; i < RESIZE.length; i++) {
+                final int m = RESIZE[i];
+                boolean on = view.getResizeMode() == m;
+                View r = menuRow(names[i], null, true, on, () -> {
+                    view.setResizeMode(m);
+                    getSharedPreferences("telvo_player", MODE_PRIVATE).edit().putInt("resize", m).apply();
+                    chosen(2);
+                });
+                menuSub.addView(r);
+                if (on) sel = r;
+            }
+        } else if (kind == 3) {
+            menuSub.addView(menuHead(mt("speed", "Geschwindigkeit")));
+            float cur = player.getPlaybackParameters().speed;
+            for (final float s : SPEEDS) {
+                boolean on = Math.abs(cur - s) < 0.01f;
+                View r = menuRow(speedName(s), null, true, on, () -> { player.setPlaybackSpeed(s); chosen(3); });
+                menuSub.addView(r);
+                if (on) sel = r;
+            }
+        }
+        menuSub.setVisibility(View.VISIBLE);
+        if (sel == null && menuSub.getChildCount() > 1) sel = menuSub.getChildAt(1);
+        if (sel != null) sel.requestFocus();
+    }
+
     private void loadLogo(final String url) {
         try {
             io.execute(() -> {
@@ -914,6 +1174,8 @@ public class PlayerActivity extends Activity {
     @Override
     public boolean dispatchKeyEvent(KeyEvent ev) {
         int k = ev.getKeyCode();
+        // Einstellungsmenü offen: Tasten gehen nur ans Menü (kein Umschalten, keine Bedienleiste)
+        if (menuOpen() && k != KeyEvent.KEYCODE_BACK) return super.dispatchKeyEvent(ev);
         if (ev.getAction() == KeyEvent.ACTION_UP && k == consumedKey) {
             consumedKey = -1;
             return true;
@@ -951,6 +1213,12 @@ public class PlayerActivity extends Activity {
 
     @Override
     public void onBackPressed() {
+        if (menuOpen()) {
+            // erst die Auswahl schließen, dann das Menü
+            if (menuSub.getVisibility() == View.VISIBLE) { int k = menuSubKind; menuSub.setVisibility(View.GONE); menuSubKind = -1; focusMain(k); }
+            else closeMenu();
+            return;
+        }
         if (view != null && view.isControllerFullyVisible()) {
             view.hideController();
             return;
