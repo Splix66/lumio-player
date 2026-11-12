@@ -104,6 +104,7 @@ public class PlayerActivity extends Activity {
     private JSONObject menuTexts;    // Texte des Einstellungsmenüs in der App-Sprache
     private java.util.Locale appLocale = java.util.Locale.getDefault();
     private FrameLayout menuLayer;
+    private TextView liveTag;        // LIVE-Schild statt Zeitleiste (nur Live, nur bei offener Bedienleiste)
     private android.widget.LinearLayout menuMain, menuSub;
     private int menuSubKind = -1;    // offene Auswahl: 0 Tonspur, 1 Untertitel, 2 Bildformat, 3 Geschwindigkeit
     private String digits = "";      // eingetippte Sendernummer
@@ -267,6 +268,26 @@ public class PlayerActivity extends Activity {
         lpInfo.setMargins(dp(40), 0, dp(40), dp(32));
         root.addView(info, lpInfo);
 
+        // Live: statt Puffer-Zeitleiste („00:40 · 01:00“ – wirkte wie eine Sendung von einer Minute) ein LIVE-Schild.
+        // Den Fortschritt der laufenden Sendung zeigt das Banner, das bei offener Bedienleiste darüber steht.
+        if (live) {
+            for (String n : new String[] { "exo_progress", "exo_time", "exo_position", "exo_duration" }) {
+                View x = exo(n);
+                if (x != null) x.setVisibility(View.INVISIBLE);
+            }
+            liveTag = text(13, Color.WHITE, true);
+            liveTag.setText("LIVE");
+            liveTag.setLetterSpacing(0.08f);
+            liveTag.setPadding(dp(10), dp(4), dp(10), dp(4));
+            GradientDrawable lt = new GradientDrawable();
+            lt.setColor(0xFFFF4D6D);
+            lt.setCornerRadius(dp(6));
+            liveTag.setBackground(lt);
+            liveTag.setVisibility(View.GONE);
+            FrameLayout.LayoutParams lpl = new FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM | Gravity.START);
+            lpl.setMargins(dp(40), 0, 0, dp(30));
+            root.addView(liveTag, lpl);
+        }
         buildMenu(root);
         // Bildformat wie zuletzt gewählt (Original, Zoom, Strecken)
         view.setResizeMode(getSharedPreferences("telvo_player", MODE_PRIVATE).getInt("resize", AspectRatioFrameLayout.RESIZE_MODE_FIT));
@@ -282,6 +303,7 @@ public class PlayerActivity extends Activity {
             osd = visibility == View.VISIBLE;
             // Bedienleiste unten offen: Banner darüber schieben statt sie zu verdecken
             info.setTranslationY(visibility == View.VISIBLE ? -dp(96) : 0);
+            if (liveTag != null) liveTag.setVisibility(visibility == View.VISIBLE ? View.VISIBLE : View.GONE);
             if (visibility == View.VISIBLE) {
                 handler.removeCallbacks(hideInfo);
                 showInfo();
