@@ -29,9 +29,33 @@ public class NativePlayerPlugin extends Plugin {
      */
     @Override
     public void load() {
+        markTv();
         Thread.UncaughtExceptionHandler prev = Thread.getDefaultUncaughtExceptionHandler();
         if (prev instanceof CrashSaver) return;
         Thread.setDefaultUncaughtExceptionHandler(new CrashSaver(getContext().getApplicationContext(), prev));
+    }
+
+    /**
+     * Fernseher erkennen und der App mitteilen: Viele Android-TV-Boxen (z. B. R69Q, Rockchip) melden weder „Android TV“
+     * im User-Agent noch „kein Touchscreen“ – die App hielt sie für ein Handy (Handy-Layout, Touch-Bedienung).
+     * Android selbst weiß es (TV-Modus bzw. Leanback): dann „TelvoTV“ an den User-Agent hängen. load() läuft vor dem
+     * Laden der Seite, navigator.userAgent enthält den Zusatz also schon beim Start.
+     */
+    private void markTv() {
+        try {
+            android.content.Context c = getContext();
+            android.content.pm.PackageManager pm = c.getPackageManager();
+            android.app.UiModeManager um = (android.app.UiModeManager) c.getSystemService(android.content.Context.UI_MODE_SERVICE);
+            boolean tv = (um != null && um.getCurrentModeType() == android.content.res.Configuration.UI_MODE_TYPE_TELEVISION)
+                    || pm.hasSystemFeature(android.content.pm.PackageManager.FEATURE_LEANBACK)
+                    || pm.hasSystemFeature("android.software.leanback_only");
+            if (!tv || getBridge() == null || getBridge().getWebView() == null) return;
+            android.webkit.WebSettings s = getBridge().getWebView().getSettings();
+            String ua = s.getUserAgentString();
+            if (ua != null && !ua.contains("TelvoTV")) s.setUserAgentString(ua + " TelvoTV");
+        } catch (Throwable ignored) {
+            // Erkennung ist Zusatz – die App startet in jedem Fall
+        }
     }
 
     static class CrashSaver implements Thread.UncaughtExceptionHandler {

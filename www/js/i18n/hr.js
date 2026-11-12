@@ -686,6 +686,7 @@ window.LUMIO_I18N["hr"] = {
   "Deine Nachricht": "Tvoja poruka",
   "Bitte beschreibe dein Anliegen etwas genauer.": "Opiši svoj upit malo detaljnije.",
   "Maximal 5 Nachrichten pro Tag.": "Najviše 5 poruka dnevno.",
+  "Maximal {0} Playlists pro Gerät.": "Najviše {0} playlista po uređaju.",
   "Worum geht es?": "O čemu se radi?",
   "Gerät nicht gefunden. Öffne die App einmal mit Internetverbindung.": "Uređaj nije pronađen. Otvori aplikaciju jednom uz internetsku vezu.",
   "Zu viele Fehlversuche. Bitte in einer Stunde erneut versuchen.": "Previše neuspjelih pokušaja. Pokušaj ponovno za sat vremena.",

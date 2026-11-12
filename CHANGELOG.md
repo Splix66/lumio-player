@@ -1,5 +1,13 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## 1.15.5 – 2026-11-12 · Android-TV-Boxen richtig erkannt
+
+- **Android-TV-Boxen werden als Fernseher erkannt:** Manche Boxen (z. B. R69Q mit Rockchip) melden einen Touchscreen und kein „TV“ im Browser-Kennzeichen – die App zeigte dort das Handy-Layout mit Touch-Bedienung. Jetzt fragt die App Android selbst (TV-Modus bzw. Leanback) und nutzt dann die Fernseher-Oberfläche. Fehlerberichte solcher Boxen laufen damit auch als Android-TV.
+- **Klare Meldung bei falschem Zugang:** Lehnt der Server die Anmeldung ab (HTTP 401/403), steht jetzt „Anmeldung abgelehnt – Benutzername oder Passwort falsch oder Zugang abgelaufen“ statt „Server-Fehler“. Die Statusleiste zeigt dann nicht mehr grün „Playlist aktiv“, und der Fehler landet im Fehlerprotokoll.
+- **Bis zu 10 Playlists und 8 Benutzer pro Gerät:** Benutzer vorher 6, Playlists jetzt einheitlich höchstens 10 in App und Portal. Die Demo-Playlist zählt nicht mit; ist die Grenze erreicht, sagt die App das beim Anlegen. Zwei neue Farben für die zusätzlichen Benutzer. Die Webseite nennt die neue Zahl.
+- **Sender-Banner:** Im schmalen Banner (Sender ohne Programmdaten) steht die Uhrzeit jetzt rechts am Rand statt direkt hinter dem Namen.
+- **Demo-Playlist: Live-Sender laufen wieder:** Die alte Testquelle lieferte nur noch Fehler. „Demo Live 1“ und „Demo Live 2“ nutzen jetzt zwei verschiedene, frei zugängliche Live-Quellen.
+
 ## 1.15.4 – 2026-11-12 · Sender-Banner im Vollbild
 
 - **Neues Sender-Banner beim Umschalten im TV-Player:** Unten links erscheint sofort ein Banner im Glas-Stil der App – Senderlogo, Nummer, Name und Uhrzeit, dazu (wenn Programmdaten geladen sind) die laufende Sendung mit Fortschrittsbalken und was danach kommt. Beim schnellen Durchschalten wechselt nur der Inhalt, das Banner flackert nicht. Fehlt ein Logo, steht die Sendernummer im Logofeld (helles Glas, damit auch weiße Logos sichtbar sind). Fehlen die Programmdaten, holt der Player sie beim Umschalten selbst beim Anbieter.

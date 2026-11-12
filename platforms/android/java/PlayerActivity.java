@@ -556,7 +556,8 @@ public class PlayerActivity extends Activity {
 
         android.widget.LinearLayout col = new android.widget.LinearLayout(this);
         col.setOrientation(android.widget.LinearLayout.VERTICAL);
-        box.addView(col, new android.widget.LinearLayout.LayoutParams(android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT));
+        // Spalte füllt die feste Bannerbreite – so steht die Uhrzeit auch im schmalen Banner rechts am Rand
+        box.addView(col, new android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
 
         android.widget.LinearLayout top = new android.widget.LinearLayout(this);
         top.setOrientation(android.widget.LinearLayout.HORIZONTAL);

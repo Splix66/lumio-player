@@ -27,3 +27,6 @@ $Q -f tests/sql/bewertung.test.sql
 $Q -f server/schutz-2026-11.sql
 $Q -f server/schutz-2026-11.sql   # muss wiederholbar sein
 $Q -f tests/sql/schutz.test.sql
+$Q -f server/grenzen-2026-11.sql
+$Q -f server/grenzen-2026-11.sql   # muss wiederholbar sein
+$Q -f tests/sql/grenzen.test.sql

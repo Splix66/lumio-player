@@ -686,6 +686,7 @@ window.LUMIO_I18N["ru"] = {
   "Deine Nachricht": "Ваше сообщение",
   "Bitte beschreibe dein Anliegen etwas genauer.": "Опишите, пожалуйста, проблему подробнее.",
   "Maximal 5 Nachrichten pro Tag.": "Не более 5 сообщений в день.",
+  "Maximal {0} Playlists pro Gerät.": "Не более {0} плейлистов на устройство.",
   "Worum geht es?": "Что случилось?",
   "Gerät nicht gefunden. Öffne die App einmal mit Internetverbindung.": "Устройство не найдено. Откройте приложение хотя бы раз при подключении к интернету.",
   "Zu viele Fehlversuche. Bitte in einer Stunde erneut versuchen.": "Слишком много неудачных попыток. Попробуйте снова через час.",
