@@ -1,5 +1,10 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## 1.15.4 – 2026-11-12 · Sender-Banner im Vollbild
+
+- **Neues Sender-Banner beim Umschalten im TV-Player:** Unten links erscheint sofort ein Banner im Glas-Stil der App – Senderlogo, Nummer, Name und Uhrzeit, dazu (wenn Programmdaten geladen sind) die laufende Sendung mit Fortschrittsbalken und was danach kommt. Beim schnellen Durchschalten wechselt nur der Inhalt, das Banner flackert nicht. Fehlt ein Logo, steht die Sendernummer im weißen Feld.
+- **Protokoll „bereit nach … ms“** beim Umschalten im TV-Player – zum Messen der Umschaltzeit.
+
 ## 1.15.2 – 2026-11-12 · Protokoll im TV-Player
 
 - **Fehlersuche im TV-Player:** Der Vollbild-Player schreibt jetzt Trennungen durch den Server, Fehler, Neuverbindungen und Formatwechsel ins Android-Protokoll (`adb logcat -s TelvoPlayer`). So lässt sich bei Hängern sofort sehen, ob der Anbieter trennt oder der Player selbst einen Fehler meldet. Am Abspielen ändert sich nichts.
