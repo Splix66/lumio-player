@@ -1,5 +1,9 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## 1.15.3 – 2026-11-12 · Schneller umschalten im Vollbild
+
+- **Umschalten im Vollbild schneller:** Beim Sender-Start wartete der TV-Player, bis 2 Sekunden Video vorrätig waren, und hielt so lange das erste Bild an. Jetzt genügt bei Live 1 Sekunde – Anbieter schicken beim Verbinden ohnehin einen schnellen Schwall, der Vorrat füllt sich sofort weiter. Filme und Serien bleiben unverändert.
+
 ## 1.15.2 – 2026-11-12 · Protokoll im TV-Player
 
 - **Fehlersuche im TV-Player:** Der Vollbild-Player schreibt jetzt Trennungen durch den Server, Fehler, Neuverbindungen und Formatwechsel ins Android-Protokoll (`adb logcat -s TelvoPlayer`). So lässt sich bei Hängern sofort sehen, ob der Anbieter trennt oder der Player selbst einen Fehler meldet. Am Abspielen ändert sich nichts.
