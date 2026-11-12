@@ -14,6 +14,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -98,6 +99,22 @@ public class PlayerActivity extends Activity {
         @Override
         public void run() {
             jumpToNumber();
+        }
+    };
+
+    private static final String TAG = "TelvoPlayer";
+
+    /* Live: verzögertes Neuverbinden. Zugänge mit nur einer Verbindung zählen eine eben geschlossene Verbindung
+       beim Anbieter noch 10–20 s mit. Sofortiges Neuverbinden erzeugte so eine Schleife (alle ~12 s getrennt,
+       Bild steht) – mit kurzer Pause verfällt die alte Verbindung und der Sender läuft wieder. */
+    private final Runnable liveRetry = new Runnable() {
+        @Override
+        public void run() {
+            if (player == null || closing) return;
+            Log.i(TAG, "live: neu verbinden (Versuch " + hangs + ")");
+            player.seekToDefaultPosition();
+            player.prepare();
+            player.play();
         }
     };
 
@@ -312,11 +329,22 @@ public class PlayerActivity extends Activity {
             @Override
             public void onMediaItemTransition(MediaItem mediaItem, int reason) {
                 if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_REPEAT) {
-                    // Live-Stream ist zu Ende gegangen und wird neu verbunden – zählt wie ein Hänger
-                    if (live && ++hangs > 3) failOver("ended");
-                    else if (live) showStatus(txtReconnect);
+                    // Live-Stream ist zu Ende gegangen (Server hat getrennt) – zählt wie ein Hänger.
+                    // Erstes Mal sofort neu verbinden, danach mit wachsender Pause (3, 6, 10 s), damit der Anbieter
+                    // die alte Verbindung freigibt; erst dann das andere Format probieren.
+                    if (!live) return;
+                    hangs++;
+                    Log.i(TAG, "live: Server hat getrennt (" + hangs + ")");
+                    if (hangs > 4) { failOver("ended"); return; }
+                    showStatus(txtReconnect);
+                    if (hangs >= 2) {
+                        player.stop();
+                        handler.removeCallbacks(liveRetry);
+                        handler.postDelayed(liveRetry, hangs == 2 ? 3000 : hangs == 3 ? 6000 : 10000);
+                    }
                     return;
                 }
+                handler.removeCallbacks(liveRetry);
                 // Austausch gegen das andere Format (PLAYLIST_CHANGED) ist kein neuer Sender – Zähler behalten
                 if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED) return;
                 retries = 0;
@@ -498,6 +526,8 @@ public class PlayerActivity extends Activity {
 
     private void reconnect() {
         if (player == null) return;
+        Log.i(TAG, "Wächter: hängt im Laden – neu verbinden (" + hangs + ")");
+        handler.removeCallbacks(liveRetry);
         showStatus(txtReconnect);
         player.stop();
         if (live) player.seekToDefaultPosition();
@@ -507,12 +537,22 @@ public class PlayerActivity extends Activity {
 
     private void handleError(PlaybackException e) {
         if (player == null || closing) return;
+        Log.i(TAG, "Fehler: " + e.getErrorCodeName() + " (Versuch " + retries + ")");
+        handler.removeCallbacks(liveRetry);
         if (e.errorCode == PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW && behindRetries++ < 5) {
             player.seekToDefaultPosition();
             player.prepare();
             return;
         }
         final int idx = player.getCurrentMediaItemIndex();
+        // Live: Abbrüche zählen über „läuft wieder“ hinaus (erst nach 1 min flüssig zurückgesetzt) und
+        // werden mit wachsender Pause neu verbunden – sonst Schleife bei Zugängen mit nur einer Verbindung
+        if (live) {
+            if (++hangs > 4) { failOver(e.getErrorCodeName()); return; }
+            showStatus(txtReconnect);
+            handler.postDelayed(liveRetry, hangs <= 1 ? 1500 : hangs == 2 ? 3000 : hangs == 3 ? 6000 : 10000);
+            return;
+        }
         if (retries < 3) {
             retries++;
             showStatus(txtReconnect);
@@ -531,6 +571,8 @@ public class PlayerActivity extends Activity {
     /* Aufgeben beim aktuellen Sender: einmal das andere Format probieren (HLS ↔ MPEG-TS), sonst Fehler zeigen */
     private void failOver(String why) {
         if (player == null || closing) return;
+        Log.i(TAG, "failOver: " + why + (triedAlt ? " (aufgegeben)" : " (anderes Format)"));
+        handler.removeCallbacks(liveRetry);
         final int idx = player.getCurrentMediaItemIndex();
         if (!triedAlt && idx >= 0 && idx < alts.size() && alts.get(idx).length() > 0) {
             triedAlt = true;
@@ -564,6 +606,7 @@ public class PlayerActivity extends Activity {
             return;
         }
         lastIdx = cur;
+        handler.removeCallbacks(liveRetry);
         status.setVisibility(View.GONE);
         player.seekTo(i, C.TIME_UNSET);
         player.prepare();
