@@ -6,6 +6,10 @@ on:
   push:
     branches: [main, master]
   workflow_dispatch:
+  # Jede Nacht neu bauen: Nachmittags hat GitHub oft keinen Mac-Rechner frei (Abbruch nach 15 Min.).
+  # Nachts klappt es; gebaut wird immer der aktuelle Stand von main, die Versionsnummer bleibt gleich.
+  schedule:
+    - cron: '17 2 * * *'
 
 permissions:
   contents: write
