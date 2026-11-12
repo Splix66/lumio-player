@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Telvo Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.15.2',
+    version: '1.15.4',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     /* Bibliotheken: werden beim Bauen nach www/lib kopiert (scripts/copy-libs.js) und von dort geladen.
        Nur wenn sie fehlen, aus dem Internet – mit fester Version und Prüfsumme (SRI): eine veränderte Datei
@@ -7783,7 +7783,26 @@
         var s = App.provider.streamUrl(it);
         var title = it.kind === 'episode' ? (it.seriesName ? it.seriesName + ' · ' : '') + 'S' + it.season + ' E' + it.num + ' – ' + it.name
           : (live && it.num ? it.num + '   ' : '') + it.name;
-        return { url: s.url, alt: s.alt || '', title: title, num: live && it.num != null && it.num !== '' ? String(Number(it.num)) : '' };
+        var o = { url: s.url, alt: s.alt || '', title: title, num: live && it.num != null && it.num !== '' ? String(Number(it.num)) : '' };
+        // Sender-Banner im TV-Player: Name, Logo und – soweit schon geladen – laufende und nächste Sendung
+        if (live) {
+          o.name = it.name || '';
+          if (it.logo && /^https?:\/\//i.test(it.logo)) o.logo = it.logo;
+          var ep = bannerEpg(it);
+          if (ep) o.epg = ep;
+        }
+        return o;
+      }
+      function bannerEpg(it) {
+        try {
+          var now = Date.now() / 1000, out = [], c = EpgCache.data[pid() + ':' + it.id];
+          if (c && c.list) for (var k = 0; k < c.list.length && out.length < 3; k++) {
+            var e = c.list[k];
+            if (e.end > now) out.push([String(e.title || '').slice(0, 80), Math.floor(e.start), Math.floor(e.end)]);
+          }
+          if (!out.length) { var n = epgNowOf(it); if (n) out.push([String(n.title || '').slice(0, 80), Math.floor(n.start), Math.floor(n.end)]); }
+          return out.length ? out : null;
+        } catch (e) { return null; }
       }
       /* Android übergibt Daten an den TV-Player in einem Paket von höchstens 1 MB – größer = Absturz
          (TransactionTooLargeException). Darum nur die Nachbarn zum Umschalten (± 150) und zusätzlich nach Größe
@@ -7809,6 +7828,7 @@
         txtReconnect: T('Verbindung wird wiederhergestellt …'),
         txtFailed: T('Wiedergabe nicht möglich. Mit „Zurück“ schließen.'),
         txtNoChannel: T('Sender {0} nicht gefunden'),
+        txtNext: T('Danach: {0}', '').replace(/[:：\s]+$/, ''),   // vorhandene Übersetzung ohne „: …“
         sleepAt: Sleep.at || 0,
         autoNext: Settings.get('autoNext') !== false,
         sound: Settings.get('sound') || 'off'
