@@ -538,14 +538,16 @@ public class PlayerActivity extends Activity {
 
         FrameLayout logoBox = new FrameLayout(this);
         GradientDrawable lb = new GradientDrawable();
-        lb.setColor(Color.WHITE);
+        // helles Glas statt Weiß: viele Senderlogos sind weiß auf durchsichtigem Grund und wären auf Weiß unsichtbar
+        lb.setColor(0x24FFFFFF);
+        lb.setStroke(dp(1), 0x1FFFFFFF);
         lb.setCornerRadius(dp(12));
         logoBox.setBackground(lb);
         bLogo = new ImageView(this);
         bLogo.setScaleType(ImageView.ScaleType.FIT_CENTER);
         bLogo.setPadding(dp(7), dp(7), dp(7), dp(7));
         logoBox.addView(bLogo, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
-        bLogoNum = text(17, 0xFF2B2B2B, true);
+        bLogoNum = text(17, Color.WHITE, true);
         bLogoNum.setGravity(Gravity.CENTER);
         logoBox.addView(bLogoNum, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
         android.widget.LinearLayout.LayoutParams lpLogo = new android.widget.LinearLayout.LayoutParams(dp(64), dp(64));
