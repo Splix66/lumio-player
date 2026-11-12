@@ -889,6 +889,14 @@
           };
         });
       },
+      /* Adresse der Programmdaten eines Senders – für den TV-Player, der sie beim Umschalten selbst holt (Sender-Banner).
+         Antwort: { epg_listings: [{ title (Base64), start_timestamp, stop_timestamp }] }, Verschiebung übergibt die App extra. */
+      epgUrl: function (item) {
+        var sh = epgShiftOf(p);
+        return base + '/player_api.php?username=' + user + '&password=' + pass + '&action=' + (sh > 0 ? 'get_simple_data_table' : 'get_short_epg') +
+          '&stream_id=' + item.id + (sh > 0 ? '' : '&limit=' + (sh < 0 ? 5 : 4));
+      },
+      epgShift: function () { return epgShiftOf(p); },
       epg: function (item, limit) {
         // Verschiebung nach später: Der Server liefert „ab jetzt“ – darum dann das ganze Programm holen und selbst filtern
         var sh = epgShiftOf(p), n = limit || 3;
@@ -7790,6 +7798,8 @@
           if (it.logo && /^https?:\/\//i.test(it.logo)) o.logo = it.logo;
           var ep = bannerEpg(it);
           if (ep) o.epg = ep;
+          // fehlen sie noch: Adresse mitgeben, der TV-Player holt sie beim Umschalten selbst
+          if (App.provider && App.provider.epgUrl) { try { o.epgUrl = App.provider.epgUrl(it); } catch (e) {} }
         }
         return o;
       }
@@ -7829,6 +7839,7 @@
         txtFailed: T('Wiedergabe nicht möglich. Mit „Zurück“ schließen.'),
         txtNoChannel: T('Sender {0} nicht gefunden'),
         txtNext: T('Danach: {0}', '').replace(/[:：\s]+$/, ''),   // vorhandene Übersetzung ohne „: …“
+        epgShift: App.provider && App.provider.epgShift ? App.provider.epgShift() : 0,
         sleepAt: Sleep.at || 0,
         autoNext: Settings.get('autoNext') !== false,
         sound: Settings.get('sound') || 'off'
