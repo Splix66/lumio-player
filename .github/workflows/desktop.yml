@@ -24,7 +24,7 @@ jobs:
         shell: bash
     steps:
       - name: Projekt holen
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Node.js einrichten
         uses: actions/setup-node@v4
@@ -71,7 +71,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Projekt holen
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Versionsnummer lesen
         id: ver
