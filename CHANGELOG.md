@@ -1,5 +1,9 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## 1.15.1 – 2026-11-12 · Live im Vollbild hängt nicht mehr fest
+
+- **Kein Dauer-„Verbindung wird wiederhergestellt“ mehr im Vollbild:** Bei Zugängen mit nur einer Verbindung zählt der Anbieter eine eben geschlossene Verbindung (Vorschau oder vorheriger Sender) noch 10–20 s mit und trennt die neue. Der TV-Player verband bisher sofort neu – so entstand eine Schleife, alle ~12 s getrennt, das Bild stand. Jetzt verbindet er beim ersten Mal sofort, danach mit kurzer, wachsender Pause (3, 6, 10 s), bis die alte Verbindung verfallen ist.
+
 ## 1.15.0 – 2026-11-11 · Live-Vorschau doppelt so schnell
 
 - **Live-Vorschau auf Fire TV und Android-Boxen startet etwa doppelt so schnell:** Dort läuft das Vollbild im TV-Player, der Web-Player zeigt nur noch die Vorschau. Die Vorschau nimmt jetzt zuerst den direkten .ts-Stream, der schon mit den ersten Daten ein Bild zeigt. Gemessen vom Vollbild zurück bis zum Vorschaubild: 1,9–2,1 s statt 4,4 s. Klappt das bei einem Sender nicht, nimmt die App den normalen Weg und merkt sich das.
