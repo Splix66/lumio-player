@@ -156,6 +156,7 @@ public class NativePlayerPlugin extends Plugin {
         intent.putExtra("txtFailed", call.getString("txtFailed", "Wiedergabe nicht möglich."));
         intent.putExtra("txtNoChannel", call.getString("txtNoChannel", "Sender {0} nicht gefunden"));
         intent.putExtra("txtNext", call.getString("txtNext", "Danach"));
+        intent.putExtra("epgShift", call.getData().optLong("epgShift", 0L));
         // Schlaf-Timer: Uhrzeit (ms seit 1970), zu der sich der Player schließt – 0 = aus
         long sleepAt = call.getData().optLong("sleepAt", 0L);
         intent.putExtra("sleepAt", sleepAt);
