@@ -652,12 +652,16 @@ public class PlayerActivity extends Activity {
             bBarRow.setVisibility(View.VISIBLE);
             bNext.setText(next != null ? txtNext + "  " + hhmm(next.optLong(1)) + "  " + next.optString(0) : "");
             bNext.setVisibility(next != null ? View.VISIBLE : View.GONE);
-            info.setMinimumWidth(getResources().getDisplayMetrics().widthPixels * 11 / 20);
         } else {
             bNow.setVisibility(View.GONE);
             bBarRow.setVisibility(View.GONE);
             bNext.setVisibility(View.GONE);
-            info.setMinimumWidth(0);
+        }
+        // Feste Breite wie im Entwurf: mit Programmdaten gut die Hälfte des Bildes, ohne schmal (nur Logo, Nummer, Name)
+        int w = getResources().getDisplayMetrics().widthPixels * (cur != null ? 50 : 34) / 100;
+        if (info.getLayoutParams() != null && info.getLayoutParams().width != w) {
+            info.getLayoutParams().width = w;
+            info.requestLayout();
         }
 
         // Logo: sofort Platzhalter (Nummer bzw. Anfangsbuchstaben), Bild lädt im Hintergrund nach
