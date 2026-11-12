@@ -14,6 +14,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -100,6 +101,9 @@ public class PlayerActivity extends Activity {
             jumpToNumber();
         }
     };
+
+    /* Protokoll (adb logcat -s TelvoPlayer): Trennungen, Fehler und Neuverbindungen – für die Fehlersuche auf echten Geräten */
+    private static final String TAG = "TelvoPlayer";
 
     private final Runnable hideStatus = new Runnable() {
         @Override
@@ -313,6 +317,7 @@ public class PlayerActivity extends Activity {
             public void onMediaItemTransition(MediaItem mediaItem, int reason) {
                 if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_REPEAT) {
                     // Live-Stream ist zu Ende gegangen und wird neu verbunden – zählt wie ein Hänger
+                    if (live) Log.i(TAG, "live: Server hat getrennt, neu verbinden (" + (hangs + 1) + ")");
                     if (live && ++hangs > 3) failOver("ended");
                     else if (live) showStatus(txtReconnect);
                     return;
@@ -498,6 +503,7 @@ public class PlayerActivity extends Activity {
 
     private void reconnect() {
         if (player == null) return;
+        Log.i(TAG, "Wächter: hängt im Laden – neu verbinden (" + hangs + ")");
         showStatus(txtReconnect);
         player.stop();
         if (live) player.seekToDefaultPosition();
@@ -507,6 +513,7 @@ public class PlayerActivity extends Activity {
 
     private void handleError(PlaybackException e) {
         if (player == null || closing) return;
+        Log.i(TAG, "Fehler: " + e.getErrorCodeName() + " (Versuch " + retries + ")");
         if (e.errorCode == PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW && behindRetries++ < 5) {
             player.seekToDefaultPosition();
             player.prepare();
@@ -531,6 +538,7 @@ public class PlayerActivity extends Activity {
     /* Aufgeben beim aktuellen Sender: einmal das andere Format probieren (HLS ↔ MPEG-TS), sonst Fehler zeigen */
     private void failOver(String why) {
         if (player == null || closing) return;
+        Log.i(TAG, "failOver: " + why + (triedAlt ? " (aufgegeben)" : " (anderes Format)"));
         final int idx = player.getCurrentMediaItemIndex();
         if (!triedAlt && idx >= 0 && idx < alts.size() && alts.get(idx).length() > 0) {
             triedAlt = true;
