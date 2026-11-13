@@ -768,6 +768,7 @@ public class PlayerActivity extends Activity {
                         if (en <= now) continue;
                         String t = e.optString("title", "");
                         try { t = new String(android.util.Base64.decode(t, android.util.Base64.DEFAULT), "UTF-8"); } catch (Throwable ignored) { }
+                        if (isPlaceholder(t)) continue;
                         out.put(new JSONArray().put(t.trim()).put(st).put(en));
                     }
                 } catch (Throwable ignored) { }
@@ -783,6 +784,16 @@ public class PlayerActivity extends Activity {
                 });
             });
         } catch (Throwable ignored) { epgLoading.remove(idx); }
+    }
+
+    /* Platzhalter statt Sendung („No Data“ u. Ä.) – nicht anzeigen (gleiche Regel in app.js: epgReal) */
+    private static final java.util.regex.Pattern PLACEHOLDER = java.util.regex.Pattern.compile(
+            "^(no\\s*(data|info(rmation)?|epg|programm?e?|program)|n/a|keine\\s+(daten|informationen|sendungsinformationen)|kein\\s+programm|tba|to be announced)\\.?$",
+            java.util.regex.Pattern.CASE_INSENSITIVE);
+
+    private static boolean isPlaceholder(String t) {
+        String s = t == null ? "" : t.trim();
+        return s.isEmpty() || PLACEHOLDER.matcher(s).matches();
     }
 
     /* Banner neu befüllen, ohne die Anzeigedauer zu verlängern */
