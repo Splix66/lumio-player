@@ -302,7 +302,9 @@ public class PlayerActivity extends Activity {
         view.setControllerVisibilityListener((PlayerView.ControllerVisibilityListener) visibility -> {
             osd = visibility == View.VISIBLE;
             // Bedienleiste unten offen: Banner darüber schieben statt sie zu verdecken
-            info.setTranslationY(visibility == View.VISIBLE ? -dp(96) : 0);
+            info.setTranslationY(visibility == View.VISIBLE ? bannerLift() : 0);
+            // beim ersten Einblenden sind die Knöpfe evtl. noch nicht ausgemessen – nach dem Layout nachjustieren
+            if (visibility == View.VISIBLE) info.post(() -> { if (osd) info.setTranslationY(bannerLift()); });
             if (liveTag != null) liveTag.setVisibility(visibility == View.VISIBLE ? View.VISIBLE : View.GONE);
             if (visibility == View.VISIBLE) {
                 handler.removeCallbacks(hideInfo);
@@ -784,6 +786,24 @@ public class PlayerActivity extends Activity {
                 });
             });
         } catch (Throwable ignored) { epgLoading.remove(idx); }
+    }
+
+    /* Wie weit das Banner bei offener Bedienleiste nach oben rutscht: über die Leiste unten, aber nie in die runden
+       Knöpfe in der Mitte (⏮ ⏸ ⏭) – auf kleinen Bildschirmen (z. B. Boxen mit 960×540) stieß es sonst an sie. */
+    private float bannerLift() {
+        float ty = -dp(96);
+        try {
+            View cc = exo("exo_center_controls");
+            if (cc != null && cc.getHeight() > 0 && info != null && info.getHeight() > 0) {
+                int[] a = new int[2], b = new int[2];
+                cc.getLocationOnScreen(a);
+                info.getLocationOnScreen(b);
+                float top = b[1] - info.getTranslationY();          // Oberkante ohne bisherige Verschiebung
+                float min = a[1] + cc.getHeight() + dp(12) - top;    // so weit darf es höchstens hoch
+                if (ty < min) ty = Math.min(0f, min);
+            }
+        } catch (Throwable ignored) { }
+        return ty;
     }
 
     /* Platzhalter statt Sendung („No Data“ u. Ä.) – nicht anzeigen (gleiche Regel in app.js: epgReal) */
