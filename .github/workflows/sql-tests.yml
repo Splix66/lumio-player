@@ -33,7 +33,7 @@ jobs:
       PGDATABASE: postgres
     steps:
       - name: Projekt holen
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Datenbank-Skripte einspielen und prüfen
         run: tests/sql/run.sh

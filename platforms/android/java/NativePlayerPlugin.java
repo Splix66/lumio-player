@@ -181,6 +181,10 @@ public class NativePlayerPlugin extends Plugin {
         intent.putExtra("txtNoChannel", call.getString("txtNoChannel", "Sender {0} nicht gefunden"));
         intent.putExtra("txtNext", call.getString("txtNext", "Danach"));
         intent.putExtra("epgShift", call.getData().optLong("epgShift", 0L));
+        // Einstellungsmenü des TV-Players: Texte und Sprache der App (nicht die Systemsprache des Geräts)
+        org.json.JSONObject mt = call.getData().optJSONObject("menuTexts");
+        if (mt != null) intent.putExtra("menuTexts", mt.toString());
+        intent.putExtra("lang", call.getString("lang", ""));
         // Schlaf-Timer: Uhrzeit (ms seit 1970), zu der sich der Player schließt – 0 = aus
         long sleepAt = call.getData().optLong("sleepAt", 0L);
         intent.putExtra("sleepAt", sleepAt);

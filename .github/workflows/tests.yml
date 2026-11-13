@@ -18,7 +18,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Projekt holen
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Testserver starten
         run: |
@@ -42,7 +42,7 @@ jobs:
 
       - name: Testbericht aufheben (nur bei Fehlern)
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: testbericht
           path: ergebnis.html

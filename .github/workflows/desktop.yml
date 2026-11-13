@@ -15,17 +15,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest]
+        # Mac auf Intel-Rechnern bauen: Die Apple-Silicon-Rechner (macos-latest) waren seit 1.14.3 oft 15 min lang
+        # nicht frei, der Mac-Bau brach dann ab. Die .dmg ist „universal“ (Intel + Apple Silicon) – das geht auch hier.
+        os: [windows-latest, macos-15-intel]
     runs-on: ${{ matrix.os }}
     defaults:
       run:
         shell: bash
     steps:
       - name: Projekt holen
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Node.js einrichten
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 20
 
@@ -52,7 +54,7 @@ jobs:
           npx electron-builder --publish never
 
       - name: Ergebnis sichern
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: pc-${{ matrix.os }}
           path: |
@@ -69,7 +71,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Projekt holen
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Versionsnummer lesen
         id: ver
@@ -78,7 +80,7 @@ jobs:
           echo "v=${V:-neu}" >> "$GITHUB_OUTPUT"
 
       - name: Ergebnisse holen
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           path: out
           merge-multiple: true

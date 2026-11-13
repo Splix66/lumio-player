@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Telvo Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.15.5',
+    version: '1.15.6',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     /* Bibliotheken: werden beim Bauen nach www/lib kopiert (scripts/copy-libs.js) und von dort geladen.
        Nur wenn sie fehlen, aus dem Internet – mit fester Version und Prüfsumme (SRI): eine veränderte Datei
@@ -3000,6 +3000,12 @@
   };
 
   /* Laufende Sendung eines Senders: aus dem Programmführer der Playlist (M3U) oder aus dem Zwischenspeicher (Xtream) */
+  /* Echte Sendung? Manche Anbieter füllen Lücken mit Platzhaltern wie „No Data“ – die zeigt das Sender-Banner nicht an
+     (gleiche Regel im TV-Player: PlayerActivity.isPlaceholder) */
+  function epgReal(title) {
+    var s = String(title || '').trim();
+    return !!s && !/^(no\s*(data|info(rmation)?|epg|programm?e?|program)|n\/a|keine\s+(daten|informationen|sendungsinformationen)|kein\s+programm|tba|to be announced)\.?$/i.test(s);
+  }
   function epgNowOf(item) {
     return EpgCache.now(item) || (App.provider && App.provider.epgNow ? App.provider.epgNow(item) : null);
   }
@@ -7830,9 +7836,9 @@
           var now = Date.now() / 1000, out = [], c = EpgCache.data[pid() + ':' + it.id];
           if (c && c.list) for (var k = 0; k < c.list.length && out.length < 3; k++) {
             var e = c.list[k];
-            if (e.end > now) out.push([String(e.title || '').slice(0, 80), Math.floor(e.start), Math.floor(e.end)]);
+            if (e.end > now && epgReal(e.title)) out.push([String(e.title || '').slice(0, 80), Math.floor(e.start), Math.floor(e.end)]);
           }
-          if (!out.length) { var n = epgNowOf(it); if (n) out.push([String(n.title || '').slice(0, 80), Math.floor(n.start), Math.floor(n.end)]); }
+          if (!out.length) { var n = epgNowOf(it); if (n && epgReal(n.title)) out.push([String(n.title || '').slice(0, 80), Math.floor(n.start), Math.floor(n.end)]); }
           return out.length ? out : null;
         } catch (e) { return null; }
       }
@@ -7862,6 +7868,13 @@
         txtNoChannel: T('Sender {0} nicht gefunden'),
         txtNext: T('Danach: {0}', '').replace(/[:：\s]+$/, ''),   // vorhandene Übersetzung ohne „: …“
         epgShift: App.provider && App.provider.epgShift ? App.provider.epgShift() : 0,
+        // Einstellungsmenü (Zahnrad) im TV-Player in der App-Sprache
+        lang: Lang.cur || '',
+        menuTexts: {
+          title: T('Wiedergabe'), audio: T('Tonspur'), subs: T('Untertitel'), format: T('Bildformat'), speed: T('Geschwindigkeit'),
+          off: T('Aus'), auto: T('Automatisch'), unknown: T('Unbekannt'), onlyMovies: T('Nur bei Filmen'),
+          fit: T('Original'), zoom: T('Zoom'), fill: T('Strecken'), normal: T('Normal')
+        },
         sleepAt: Sleep.at || 0,
         autoNext: Settings.get('autoNext') !== false,
         sound: Settings.get('sound') || 'off'
@@ -9321,6 +9334,7 @@
       function pick(list) {
         var t = Date.now() / 1000, cur = null, next = null;
         (list || []).forEach(function (e) {
+          if (!epgReal(e.title)) return;
           if (!cur && e.start <= t && e.end > t) cur = e;
           else if (cur && !next && e.start >= cur.end - 1) next = e;
         });
