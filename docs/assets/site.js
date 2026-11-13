@@ -338,7 +338,9 @@
               if (x.tag !== rel.tag_name) return;
               // Neuer Dateiname hat Vorrang; der alte zählt nur, solange es den neuen noch nicht gibt
               if (a.name === x.file || (a.name === x.old && !(d[x.id] && d[x.id].file === x.file))) {
-                d[x.id] = { size: a.size, date: a.updated_at, v: v, file: a.name };
+                // Windows und Mac werden einzeln veröffentlicht – die Version steht an der Datei (Bezeichnung), sonst am Release
+                var av = (/(\d+\.\d+\.\d+)/.exec(a.label || '') || [])[1] || v;
+                d[x.id] = { size: a.size, date: a.updated_at, v: av, file: a.name };
               }
             });
           });

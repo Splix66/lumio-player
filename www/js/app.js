@@ -6588,6 +6588,13 @@
         .then(function (j) {
           var m = /(\d+\.\d+\.\d+)/.exec(j && j.name || '');
           var v = m ? m[1] : null;
+          // PC: Windows und Mac werden einzeln veröffentlicht – maßgeblich ist die Version an der eigenen Datei
+          // (sonst meldete ein Mac „neue Version“, solange dort noch die alte .dmg liegt)
+          var file = self.url().split('/').pop();
+          ((j && j.assets) || []).forEach(function (a) {
+            var l = a && a.name === file && /(\d+\.\d+\.\d+)/.exec(a.label || '');
+            if (l) v = l[1];
+          });
           Store.set('update', { v: v, at: Date.now() });
           return v && self.newer(v, CONFIG.version) ? v : null;
         });

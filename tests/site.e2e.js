@@ -73,7 +73,11 @@ async function newPage(browser, opts, backend) {
   const errors = [];
   await ctx.route('https://api.github.com/**', r => r.fulfill({
     status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' },
-    body: JSON.stringify([{ tag_name: 'neueste', name: 'Telvo Player 9.9.9', assets: [{ name: 'telvo-player.apk', size: 9000000, updated_at: '2030-01-01T10:00:00Z' }] }])
+    body: JSON.stringify([{ tag_name: 'neueste', name: 'Telvo Player 9.9.9', assets: [{ name: 'telvo-player.apk', size: 9000000, updated_at: '2030-01-01T10:00:00Z' }] },
+      // PC: Windows schon neu, Mac noch alt – die Version steht an der Datei
+      { tag_name: 'pc', name: 'Telvo Player 9.9.9 – PC-Version', assets: [
+        { name: 'telvo-player-setup.exe', label: 'Windows 9.9.9 (telvo-player-setup.exe)', size: 80000000, updated_at: '2030-01-01T10:00:00Z' },
+        { name: 'telvo-player-mac.dmg', label: 'Mac 9.9.7 (telvo-player-mac.dmg)', size: 170000000, updated_at: '2029-12-30T10:00:00Z' }] }])
   }));
   await ctx.route('https://oofzhklrbrpxjoicwbsf.supabase.co/**', r => {
     const req = r.request();
@@ -137,6 +141,11 @@ async function newPage(browser, opts, backend) {
       check('Knopf „App herunterladen“ öffnet Download', (await cur())[0] === 'viewDl');
       await page.waitForTimeout(400);
       check('Download zeigt Version aus GitHub', /9\.9\.9/.test(await page.textContent('#dlList')));
+      {
+        const pc = await page.$$eval('#dlList li', ls => ls.map(l => l.textContent));
+        const win = pc.find(t => /Windows/.test(t)) || '', mac = pc.find(t => /Mac/.test(t)) || '';
+        check('PC: Version je Datei (Windows neu, Mac noch alt)', /9\.9\.9/.test(win) && /9\.9\.7/.test(mac) && !/9\.9\.9/.test(mac), win.slice(0, 80) + ' | ' + mac.slice(0, 80));
+      }
       await page.goto(base + '#hilfe'); await page.waitForTimeout(150);
       check('Direktlink #hilfe öffnet Hilfe', (await cur())[0] === 'viewHelp');
       check('keine Fehler', !errors.length, errors[0]);

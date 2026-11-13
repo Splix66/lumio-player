@@ -62,49 +62,30 @@ jobs:
             desktop/dist/telvo-player-mac.dmg
           if-no-files-found: ignore
 
-  release:
-    needs: build
-    # Nur von main aus veröffentlichen – Test-Zweige behalten die Dateien nur als Download am Lauf.
-    # always(): Auch veröffentlichen, wenn einer der Bauten ausfällt (z. B. GitHub hat lange keinen Mac-Rechner frei
-    # und bricht ab) – dann wird nur das ersetzt, was fertig gebaut wurde; der Rest folgt beim nächsten Lauf.
-    if: always() && !cancelled() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
-    runs-on: ubuntu-latest
-    steps:
-      - name: Projekt holen
-        uses: actions/checkout@v5
-
-      - name: Versionsnummer lesen
-        id: ver
+      # Jeder Rechner veröffentlicht seine Datei selbst, sobald sie fertig ist – Windows wartet nicht mehr auf den Mac
+      # (GitHub hat oft lange keinen Mac-Rechner frei; vorher blieb dann auch Windows tagelang alt).
+      # Die Versionsnummer steht an jeder Datei (Bezeichnung „Windows 1.2.3 (…)“); Webseite und App lesen sie dort.
+      # Von main → Release „pc“. Per Klick auf einem Test-Zweig → Vorab-Release „pc-test“ (Kunden sehen es nicht).
+      - name: Veröffentlichen (nur die Datei dieses Rechners)
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && 'pc' || 'pc-test' }}
         run: |
           V=$(grep -oE "version: '[^']+'" www/js/app.js | head -n 1 | cut -d"'" -f2)
-          echo "v=${V:-neu}" >> "$GITHUB_OUTPUT"
-
-      - name: Ergebnisse holen
-        uses: actions/download-artifact@v5
-        with:
-          path: out
-          merge-multiple: true
-
-      - name: Gibt es etwas zu veröffentlichen?
-        id: files
-        run: |
+          V=${V:-neu}
+          if [ "$RUNNER_OS" = "Windows" ]; then N=Windows; F=telvo-player-setup.exe; O=lumio-player-setup.exe
+          else N=Mac; F=telvo-player-mac.dmg; O=lumio-player-mac.dmg; fi
+          [ -f "desktop/dist/$F" ] || { echo "desktop/dist/$F fehlt"; exit 1; }
           # Ältere App-Versionen holen Updates unter dem früheren Namen – dieselbe Datei auch so ablegen
-          [ -f out/telvo-player-setup.exe ] && cp out/telvo-player-setup.exe out/lumio-player-setup.exe
-          [ -f out/telvo-player-mac.dmg ] && cp out/telvo-player-mac.dmg out/lumio-player-mac.dmg
-          ls -la out || true
-          if ls out/* >/dev/null 2>&1; then echo "any=true" >> "$GITHUB_OUTPUT"; else echo "any=false" >> "$GITHUB_OUTPUT"; fi
-          echo "win=$([ -f out/telvo-player-setup.exe ] && echo ja || echo 'nicht neu gebaut')" >> "$GITHUB_OUTPUT"
-          echo "mac=$([ -f out/telvo-player-mac.dmg ] && echo ja || echo 'nicht neu gebaut')" >> "$GITHUB_OUTPUT"
-
-      - name: Unter "Releases" bereitstellen
-        if: steps.files.outputs.any == 'true'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: pc
-          name: Telvo Player ${{ steps.ver.outputs.v }} – PC-Version
-          body: |
-            Version ${{ steps.ver.outputs.v }}
-            Windows: telvo-player-setup.exe (in diesem Lauf neu gebaut: ${{ steps.files.outputs.win }})
-            Mac: telvo-player-mac.dmg (in diesem Lauf neu gebaut: ${{ steps.files.outputs.mac }})
-          files: out/*
-          make_latest: false
+          cp "desktop/dist/$F" "desktop/dist/$O"
+          NOTES="Windows und Mac werden einzeln veröffentlicht, sobald ihr Bau fertig ist. Welche Version gerade bereitliegt, steht an jeder Datei."
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            EXTRA=""; [ "$TAG" = "pc" ] || EXTRA="--prerelease"
+            # Beide Rechner können gleichzeitig hier ankommen – schlägt das Anlegen fehl, gibt es das Release schon
+            gh release create "$TAG" --target "$GITHUB_SHA" --title "Telvo Player $V – PC-Version" --notes "$NOTES" --latest=false $EXTRA || true
+          fi
+          gh release upload "$TAG" "desktop/dist/$F#$N $V ($F)" "desktop/dist/$O#$N $V ($O, früherer Name)" --clobber
+          gh release edit "$TAG" --title "Telvo Player $V – PC-Version" --notes "$NOTES"
+          echo "$N $V als $TAG veröffentlicht"

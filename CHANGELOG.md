@@ -1,5 +1,9 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## 1.15.7 – in Vorbereitung
+
+- **PC-Version: Windows wartet nicht mehr auf den Mac.** Bisher wurden Windows- und Mac-Datei erst gemeinsam veröffentlicht. Hatte GitHub keinen Mac-Rechner frei, blieb auch Windows auf der Webseite alt (bei 1.15.6 zeigte die Seite noch den Stand vom 12.11.). Jetzt veröffentlicht jeder Rechner seine Datei, sobald sie fertig ist. Die Versionsnummer steht an jeder Datei; Webseite und PC-App lesen sie dort – ein Mac meldet also keine „neue Version“ mehr, solange für ihn noch die alte Datei bereitliegt. Probelauf auf Test-Zweigen per Klick in ein verstecktes Vorab-Release „pc-test“. Neuer Test für die Download-Seite.
+
 ## 1.15.6 – 2026-11-13 · Neues Einstellungsmenü im TV-Player
 
 - **Neues Einstellungsmenü im TV-Player (Zahnrad):** Glasfläche rechts am Rand im Telvo-Stil statt des Standardmenüs, das über den Knöpfen lag. Tonspur (mit Sprache und z. B. „Dolby 5.1“), Untertitel, Bildformat (Original, Zoom, Strecken – wird gemerkt) und bei Filmen die Geschwindigkeit. Die Auswahl klappt links daneben auf, die aktive Wahl hat einen violetten Haken. Texte in der App-Sprache statt der Systemsprache des Geräts. Der Untertitel-Knopf öffnet direkt die Untertitel-Auswahl.
