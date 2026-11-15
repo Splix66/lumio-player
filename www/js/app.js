@@ -8331,6 +8331,9 @@
       }
       self.mini = false; self.pip = false;
       self.maxAt = Date.now();
+      // Vorschau lief vom Wächter stumm geschaltet weiter? Im Vollbild wieder mit der eigenen Ton-Einstellung,
+      // sonst bliebe derselbe Sender groß stumm (kein neues load(), das den Ton zurückholt)
+      self.restoreSound();
       clearInterval(self.placeTimer);
       self.el.classList.remove('is-mini', 'is-docked');
       document.body.classList.remove('has-mini');
@@ -8404,7 +8407,7 @@
       self.netRetries = 0; self.stallRetries = 0; self.swappedCodec = false; self.mediaRecoverAt = 0; self.reconnect = false;
       self.errTrail = []; self.errInfo = '';
       // vom Wächter stumm geschaltet (Ton blockiert)? Beim nächsten Sender wieder die eigene Einstellung
-      if (self.autoMuted) { self.autoMuted = false; if (self.video) { self.video.muted = !!Settings.get('muted'); self.paintVol(); } }
+      self.restoreSound();
       self.closeTracks();
       if (self.nextCancel) self.nextCancel();
       if (self.tracksBtn) self.tracksBtn.classList.add('is-gone');
@@ -9514,6 +9517,12 @@
       if (v > 0 && this.video.muted) { this.video.muted = false; Settings.set('muted', false); }
       if (this.range) this.range.value = String(Math.round(v * 100));
       this.paintVol();
+    },
+    /* Stummschaltung durch den Wächter (autoMuted) aufheben: zurück zur gespeicherten Ton-Einstellung */
+    restoreSound: function () {
+      if (!this.autoMuted) return;
+      this.autoMuted = false;
+      if (this.video) { this.video.muted = !!Settings.get('muted'); this.paintVol(); }
     },
     setMuted: function (m) {
       // Ton wieder an, aber die gespeicherte Lautstärke ist 0 → auf eine hörbare Stärke springen
