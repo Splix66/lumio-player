@@ -1,6 +1,6 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
-## Noch nicht veröffentlicht (Test-Zweig rel-1158-folgen) · Folgentexte bei Serien
+## 1.15.8 – noch nicht veröffentlicht
 
 - **Serien: Beschreibung neben jeder Folge auch bei weiteren Anbietern.** Bisher las die App den Folgentext nur aus dem Feld `info.plot` der Xtream-Antwort – bei Anbietern, die ihn anders liefern, blieb die Zeile unter dem Folgentitel leer (Meldung Eray: „bei keiner Serie steht das“, eine andere App zeigt die Texte beim selben Anbieter). Jetzt liest die App auch `overview`, `description`, `desc`, `summary`, `storyline` und Texte direkt an der Folge; `info` darf auch eine leere Liste oder JSON-Text sein. Platzhalter wie „N/A“ oder „No Data“ werden nicht angezeigt (neue Funktion `epPlot`). Die Demo-Serie zeigt jetzt ebenfalls Folgentexte. Neuer Test. Nicht geprüft: mit Erays echter Playlist (die genaue Antwort seines Anbieters ist unbekannt).
 
