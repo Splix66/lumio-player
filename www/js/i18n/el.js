@@ -1,6 +1,12 @@
 /* Telvo Player – Übersetzung: Griechisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["el"] = {
+  "Vorheriger Titel": "Προηγούμενος τίτλος",
+  "Nächster Titel": "Επόμενος τίτλος",
+  "Nicht in deiner Playlist": "Δεν υπάρχει στη λίστα σου",
+  "„{0}“ ist nicht in deiner Playlist.": "Το «{0}» δεν υπάρχει στη λίστα σου.",
+  "Deutschland · Woche {0} · Filme und Serien aus getrennten Listen": "Γερμανία · Εβδομάδα {0} · Ταινίες και σειρές από ξεχωριστές λίστες",
+  "Deutschland · {0}": "Γερμανία · {0}",
   "Fehlerberichte senden": "Αποστολή αναφορών σφαλμάτων",
   "Hilft, Fehler schnell zu beheben – ohne Links, Namen oder Passwörter": "Βοηθά να διορθώνονται γρήγορα τα σφάλματα – χωρίς συνδέσμους, ονόματα ή κωδικούς",
   "Klang": "Ήχος",

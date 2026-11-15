@@ -188,6 +188,30 @@
     });
   });
 
+  t(G, 'Serien: Folgentext aus verschiedenen Feldern der Anbieter (plot, overview, description, an der Folge)', function () {
+    eq(D.epPlot({ info: { plot: '  Ein  Mord im Hafen. ' } }), 'Ein Mord im Hafen.', 'info.plot, Leerraum bereinigt');
+    eq(D.epPlot({ info: { overview: 'Neue Spur.' } }), 'Neue Spur.', 'info.overview');
+    eq(D.epPlot({ info: { plot: 'N/A', description: 'Das Finale.' } }), 'Das Finale.', 'Platzhalter übersprungen');
+    eq(D.epPlot({ info: [], plot: 'Direkt an der Folge.' }), 'Direkt an der Folge.', 'info als leere Liste, Text an der Folge');
+    eq(D.epPlot({ info: '{"plot":"Als JSON-Text."}' }), 'Als JSON-Text.', 'info als JSON-Text');
+    eq(D.epPlot({ info: { plot: 'No Data' } }), '', 'nur Platzhalter → kein Text');
+    eq(D.epPlot(null), '', 'ohne Daten');
+    var realFetch = window.fetch;
+    window.fetch = function (url) {
+      var body = /get_series_info/.test(url) ? { info: { plot: 'Serie' }, episodes: { '1': [
+        { id: '11', episode_num: 2, title: 'Serie - S01E02 - Zwei', info: { overview: 'Text zwei' } },
+        { id: '10', episode_num: 1, title: 'Serie - S01E01 - Eins', info: { plot: 'Text eins' } },
+        { id: '12', episode_num: 3, title: 'Serie - S01E03 - Drei', info: [] }
+      ] } } : { user_info: { auth: 1, status: 'Active' } };
+      return Promise.resolve({ ok: true, status: 200, body: null, text: function () { return Promise.resolve(JSON.stringify(body)); } });
+    };
+    var p = D.makeProvider({ type: 'xtream', server: 'http://serien.invalid:8080', username: 'u', password: 'p' });
+    return p.seriesInfo({ id: '5', name: 'Serie' }).then(function (d) {
+      window.fetch = realFetch;
+      eq(d.seasons[0].episodes.map(function (e) { return [e.num, e.name, e.plot]; }), [[1, 'Eins', 'Text eins'], [2, 'Zwei', 'Text zwei'], [3, 'Drei', '']], 'jede Folge mit ihrem eigenen Text');
+    }, function (e) { window.fetch = realFetch; throw e; });
+  });
+
   t(G, 'Fehlerprotokoll: keine Links, Benutzernamen oder Passwörter – und nur die letzten 15', function () {
     var L = D.ErrLog, before = L.list();
     try {
@@ -665,5 +689,59 @@
     eq(D.epgText('Echter\nUmbruch bleibt'), 'Echter\nUmbruch bleibt');
     eq(D.epgText(''), '');
     eq(D.epgText(null), '');
+  });
+
+  /* Startseite 1.15.8: Top-10-Reihen nur aus echten Ranglisten, 5 Filme + 5 Serien, nur Playlist-Titel öffnen */
+  t('Startseite', 'Top 10: echte Plätze, Filme und Serien abwechselnd, nichts aufgefüllt; Abgleich mit der Playlist', function () {
+    var T10 = D.Top10, M = D.Top10Match, keep = D.Store.get('top10.de', null);
+    var keepM = M.get('movie'), keepS = M.get('series');
+    var data = { v: 1, country: 'DE', services: [
+      { id: 'prime', name: 'Prime Video', week: '2026-11-08', movies: [{ rank: 1, title: 'P1' }], series: [] },
+      { id: 'netflix', name: 'Netflix', week: '2026-11-08', separate: true,
+        movies: [1, 2, 3, 4, 5, 6, 7].map(function (n) { return { rank: n, title: 'Film ' + n }; }).concat([]),
+        series: [{ rank: 1, title: 'Lupin', de: 'Lupin', year: 2021 }, { rank: 3, title: 'Black Doves' }, { rank: 4, title: 'Ghosts' }] },
+      { id: 'leer', name: 'Leer', movies: [], series: [] }
+    ] };
+    data.services[1].movies[0] = { rank: 1, title: 'Collision Course', de: 'Kollisionskurs', year: 2025 };
+    data.services[1].movies[1] = { rank: 2, title: 'Sinners', de: 'Blood & Sinners', year: 2025 };
+    D.Store.set('top10.de', { at: Date.now(), d: data });
+    // Reihenfolge der Dienste: Netflix vor Prime Video, leere Dienste fallen weg
+    eq(T10.services(data).map(function (s) { return s.id; }), ['netflix', 'prime']);
+    var row = T10.row(data.services[1]);
+    eq(row.map(function (x) { return x.kind[0] + x.rank; }), ['m1', 's1', 'm2', 's3', 'm3', 's4', 'm4', 'm5'], '5 Filme, nur 3 Serien – kein Auffüllen, echte Plätze');
+    ok(D.t10Key('DE - Kollisionskurs (2025)') === D.t10Key('Kollisionskurs'), 'Sprachkürzel und Jahr fallen weg');
+    var list = [
+      { kind: 'movie', id: 11, name: 'DE - Kollisionskurs', year: '2025', catId: 1, logo: '' },
+      { kind: 'movie', id: 12, name: 'Blood and Sinners', year: '1999', catId: 1 },     // falsches Jahr → anderer Film
+      { kind: 'movie', id: 13, name: 'Film 3 4K', catId: 1 },
+      // ohne bekanntes Jahr zwei gleichnamige Filme → unklar, welcher gemeint ist → kein Treffer
+      { kind: 'movie', id: 14, name: 'Film 4', year: '2001', catId: 1 },
+      { kind: 'movie', id: 15, name: 'Film 4', year: '2019', catId: 1 }
+    ];
+    return M.save('movie', list).then(function () {
+      eq(M.item('movie', 'netflix', 1).id, 11, 'deutscher Titel gefunden');
+      eq(M.item('movie', 'netflix', 2), null, 'gleicher Name, falsches Jahr: kein Treffer');
+      eq(M.item('movie', 'netflix', 3).id, 13, 'Qualitätsangabe stört nicht');
+      eq(M.item('movie', 'netflix', 4), null, 'zwei gleichnamige Filme ohne Jahr: kein Treffer');
+      ok(M.fresh('movie', data), 'Abgleich passt zur Liste');
+      var hit = D.top10Tile(data.services[1], row[0]), miss = D.top10Tile(data.services[1], row[2]);
+      eq(hit.querySelector('.t10-n').textContent, '1');
+      ok(/film/i.test(hit.querySelector('.t10-tag').textContent), 'Schild FILM');
+      ok(!hit.classList.contains('is-missing'), 'Treffer nicht gedimmt');
+      ok(miss.classList.contains('is-missing') && miss.querySelector('.t10-miss'), 'kein Treffer: gedimmt mit Hinweis');
+      var ser = D.top10Tile(data.services[1], row[1]);
+      ok(/serie/i.test(ser.querySelector('.t10-tag').textContent), 'Schild SERIE');
+      // kein Treffer: Antippen öffnet nichts (kein Player, keine Detailseite)
+      var before = D.Screens.top();
+      miss.click();
+      return Test.wait(50).then(function () {
+        ok(!D.Player.el, 'kein Player');
+        eq(D.Screens.top(), before, 'keine Detailseite');
+      });
+    }).then(function () {
+      if (keep) D.Store.set('top10.de', keep); else D.Store.del('top10.de');
+      if (keepM) D.Store.set(M.key('movie'), keepM); else D.Store.del(M.key('movie'));
+      if (keepS) D.Store.set(M.key('series'), keepS); else D.Store.del(M.key('series'));
+    });
   });
 })();

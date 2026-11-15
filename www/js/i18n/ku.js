@@ -1,6 +1,12 @@
 /* Telvo Player – Übersetzung: Kurdisch (Kurmandschi). Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["ku"] = {
+  "Vorheriger Titel": "Sernavê berê",
+  "Nächster Titel": "Sernavê pêş",
+  "Nicht in deiner Playlist": "Di lîsteya te de tune",
+  "„{0}“ ist nicht in deiner Playlist.": "„{0}“ di lîsteya te de tune.",
+  "Deutschland · Woche {0} · Filme und Serien aus getrennten Listen": "Almanya · Hefte {0} · Fîlm û rêzefîlm ji lîsteyên cuda",
+  "Deutschland · {0}": "Almanya · {0}",
   "Fehlerberichte senden": "Raporên çewtiyan bişîne",
   "Hilft, Fehler schnell zu beheben – ohne Links, Namen oder Passwörter": "Alîkarî dike ku çewtî zû werin rastkirin – bê girêdan, nav an şîfre",
   "Klang": "Deng",
