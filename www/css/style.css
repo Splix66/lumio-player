@@ -3498,3 +3498,57 @@ body.kbd .gl-on > .ch-opt.f:focus small, body.is-tv .gl-on > .ch-opt.f:focus sma
 @media (max-width: 760px) {
   .zbn, .zbn.is-slim { left: 1rem; right: 1rem; bottom: 1rem; width: auto; }
 }
+
+/* ==========================================================
+   Startseite 1.15.8 (Auftrag 15.11.2026): erster Bildschirm nur das große, abgerundete Titelbild mit Pfeilen
+   und die kompakte Reihe „Weiterschauen“; darunter (erst beim Herunterscrollen) nur Top-10-Reihen.
+   ========================================================== */
+.hm-first { display: flex; flex-direction: column; min-height: 100%; }
+.hm-first .hm-heroslot { flex: 1 1 auto; display: flex; flex-direction: column; }
+.hm-first > .hm-rows { flex: none; padding-bottom: 1.4rem; }
+.hm-hero { position: relative; flex: 1 1 auto; display: flex; min-height: 17rem; margin: .9rem var(--pad) 0; border-radius: 1.6rem; overflow: hidden;
+  background: var(--surface); box-shadow: inset 0 0 0 1px var(--line), 0 1.2rem 3rem -1.6rem rgba(0, 0, 0, .8); }
+.hm-stage { flex: 1 1 auto; display: flex; min-width: 0; }
+.hm-stage > .fhero.is-home { flex: 1 1 auto; height: auto; min-height: 0; max-height: none; }
+.hm-hero.has-arrows .fhero.is-home .fh-in { padding-left: calc(var(--pad) + 2.6rem); }
+.hm-arrow { position: absolute; top: 50%; z-index: 3; width: 3.1rem; height: 3.1rem; margin-top: -1.55rem; display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; background: rgba(15, 13, 24, .55); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .28); color: #fff;
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); transition: transform .18s ease, background-color .18s ease; }
+.hm-arrow .i { width: 1.35rem; height: 1.35rem; }
+.hm-arrow.is-prev { left: 1.1rem; }
+.hm-arrow.is-next { right: 1.1rem; }
+@media (hover: hover) { .hm-arrow:hover { background: rgba(139, 92, 246, .85); } }
+body.kbd .hm-arrow.f:focus, body.is-tv .hm-arrow.f:focus { background: #fff; color: #120f1a; transform: scale(1.1); box-shadow: 0 0 0 .2rem rgba(168, 85, 247, .65), 0 .6rem 1.8rem -.3rem rgba(139, 92, 246, .8); }
+body.lite .hm-arrow { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(15, 13, 24, .8); }
+
+/* Top-10-Reihen: Titelbild, Platz und Schild FILM/SERIE – einheitlich im Telvo-Violett */
+.hm-t10rows { padding-top: .2rem; padding-bottom: 2.4rem; }
+.hm-t10row { margin-top: 1.5rem; }
+.hm-t10row .hm-rhead { align-items: baseline; }
+.hm-t10info { margin-left: 1.2rem; color: var(--muted); font-size: .86rem; text-align: right; }
+.hm-t10 { --k: var(--accent-2); }
+.hm-t10 .t10-n { font-size: 6.8rem; margin-right: -1rem; }
+.hm-t10 .art { width: 7.8rem; height: 11.7rem; }
+.hm-t10 .art .ph { font-size: .82rem; padding: .6rem .6rem 1.9rem; }
+.hm-t10.is-missing .art .ph { padding-bottom: 2.6rem; }
+.hm-t10.is-missing .art img, .hm-t10.is-missing .art .ph { opacity: .42; filter: grayscale(.7); }
+.hm-t10.is-missing .t10-n { opacity: .55; }
+.hm-track > .hm-t10 + .hm-t10 { margin-left: 1.3rem; }
+.t10-tag { position: absolute; top: .45rem; left: .45rem; z-index: 2; padding: .18rem .45rem; border-radius: .4rem; font-size: .66rem; font-weight: 800; line-height: 1.2;
+  letter-spacing: .07em; text-transform: uppercase; color: #fff; background: rgba(124, 58, 237, .95); box-shadow: 0 .2rem .6rem rgba(0, 0, 0, .35); }
+.t10-tag.k-series { color: #2e1065; background: rgba(237, 233, 254, .96); }
+.t10-miss { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; padding: .4rem .35rem; font-size: .66rem; font-weight: 700; line-height: 1.2; text-align: center;
+  color: rgba(255, 255, 255, .86); background: rgba(10, 9, 16, .82); }
+
+@media (max-width: 900px) {
+  html:not(.tv) .hm-hero { min-height: 18rem; margin: .6rem var(--pad) 0; border-radius: 1.1rem; }
+  html:not(.tv) .hm-stage > .fhero.is-home { height: auto; max-height: none; align-items: flex-end; }     /* Text unten über dem Bild wie bei Streaming-Apps */
+  html:not(.tv) .hm-hero.has-arrows .fhero.is-home .fh-in { padding-left: calc(var(--pad) + 1.6rem); padding-right: calc(var(--pad) + 1.6rem); }
+  html:not(.tv) .hm-arrow { width: 2.4rem; height: 2.4rem; margin-top: -1.2rem; }
+  html:not(.tv) .hm-arrow.is-prev { left: .5rem; }
+  html:not(.tv) .hm-arrow.is-next { right: .5rem; }
+  html:not(.tv) .hm-t10 .t10-n { font-size: 4.8rem; margin-right: -.75rem; }
+  html:not(.tv) .hm-t10 .art { width: 5.8rem; height: 8.7rem; }
+  html:not(.tv) .hm-t10row .hm-rhead { flex-direction: column; align-items: flex-start; }
+  html:not(.tv) .hm-t10info { margin: .15rem 0 0; text-align: left; font-size: .78rem; }
+}

@@ -7,6 +7,12 @@
 window.LUMIO_I18N = {
   /* ---------------- English ---------------- */
   en: {
+    "Vorheriger Titel": "Previous title",
+    "Nächster Titel": "Next title",
+    "Nicht in deiner Playlist": "Not in your playlist",
+    "„{0}“ ist nicht in deiner Playlist.": "“{0}” is not in your playlist.",
+    "Deutschland · Woche {0} · Filme und Serien aus getrennten Listen": "Germany · Week {0} · Movies and series from separate lists",
+    "Deutschland · {0}": "Germany · {0}",
     "Fehlerberichte senden": "Send error reports",
     "Hilft, Fehler schnell zu beheben – ohne Links, Namen oder Passwörter": "Helps fix problems quickly – without links, names or passwords",
     "Klang": "Sound",
@@ -1071,6 +1077,12 @@ window.LUMIO_I18N = {
 
   /* ---------------- Türkçe ---------------- */
   tr: {
+    "Vorheriger Titel": "Önceki başlık",
+    "Nächster Titel": "Sonraki başlık",
+    "Nicht in deiner Playlist": "Playlist'inde yok",
+    "„{0}“ ist nicht in deiner Playlist.": "“{0}” playlist'inde yok.",
+    "Deutschland · Woche {0} · Filme und Serien aus getrennten Listen": "Almanya · Hafta {0} · Filmler ve diziler ayrı listelerden",
+    "Deutschland · {0}": "Almanya · {0}",
     "Fehlerberichte senden": "Hata raporları gönder",
     "Hilft, Fehler schnell zu beheben – ohne Links, Namen oder Passwörter": "Hataların hızla giderilmesine yardımcı olur – bağlantı, ad veya şifre olmadan",
     "Klang": "Ses",

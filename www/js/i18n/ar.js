@@ -1,6 +1,12 @@
 /* Telvo Player – Übersetzung: Arabisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["ar"] = {
+  "Vorheriger Titel": "العنوان السابق",
+  "Nächster Titel": "العنوان التالي",
+  "Nicht in deiner Playlist": "غير موجود في قائمة التشغيل",
+  "„{0}“ ist nicht in deiner Playlist.": "«{0}» غير موجود في قائمة التشغيل.",
+  "Deutschland · Woche {0} · Filme und Serien aus getrennten Listen": "ألمانيا · أسبوع {0} · أفلام ومسلسلات من قوائم منفصلة",
+  "Deutschland · {0}": "ألمانيا · {0}",
   "Fehlerberichte senden": "إرسال تقارير الأخطاء",
   "Hilft, Fehler schnell zu beheben – ohne Links, Namen oder Passwörter": "يساعد على إصلاح الأخطاء بسرعة – بدون روابط أو أسماء أو كلمات مرور",
   "Klang": "الصوت",

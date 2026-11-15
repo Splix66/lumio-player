@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Telvo Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.15.7',
+    version: '1.15.8',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     /* Bibliotheken: werden beim Bauen nach www/lib kopiert (scripts/copy-libs.js) und von dort geladen.
        Nur wenn sie fehlen, aus dem Internet – mit fester Version und Prüfsumme (SRI): eine veränderte Datei
@@ -1586,6 +1586,7 @@
     dropData: function (id) {
       this.DATA_KEYS.forEach(function (k) { Store.del(k + '.' + id); });
       Store.del('hero.' + id + '.movie'); Store.del('hero.' + id + '.series');   // Auswahl fürs Titelbild der Startseite
+      Store.del('t10m.' + id + '.movie'); Store.del('t10m.' + id + '.series');   // Top-10-Abgleich der Startseite
       Persons.list().forEach(function (pe) { PERSONAL_KEYS.forEach(function (k) { Store.del(k + '.' + id + '~' + pe.id); }); });
       EpgStore.del('epg.' + id);   // zwischengespeicherter Programmführer
       if (Store.get('active') === id) Store.del('active');
@@ -4377,25 +4378,154 @@
     }
   };
 
-  // Großes Titelbild der Startseite: wechselt alle 9 Sekunden – aber nie, während die Knöpfe darin gewählt sind
+  /* ==========================================================
+     Top 10 der Streamingdienste (Startseite unter dem Titelbild, Auftrag 15.11.2026).
+     Nur echte Ranglisten: Ein GitHub-Ablauf (scripts/top10.js, täglich) legt sie als de.json in den Zweig
+     „top10-daten“. Zurzeit veröffentlicht nur Netflix eine eigene Top 10 für Deutschland (wöchentlich, Filme
+     und Serien getrennt) – für andere Dienste gibt es keine Reihe, bis eine echte Quelle dazukommt.
+     Jede Reihe: bis zu 5 Filme und 5 Serien mit ihrem echten Platz; fehlende Plätze werden nicht aufgefüllt.
+     ========================================================== */
+  var Top10 = {
+    url: 'https://raw.githubusercontent.com/Splix66/lumio-player/top10-daten/de.json',
+    maxAge: 6 * 3600000,          // höchstens alle 6 Stunden neu laden (Netflix erneuert wöchentlich)
+    ORDER: ['netflix', 'prime', 'disney', 'apple', 'wow', 'paramount', 'rtlplus'],
+    cached: function () { var c = Store.get('top10.de', null); return c && c.d && c.d.services ? c : null; },
+    // Liste holen; ohne Netz die letzte gespeicherte. Testmodus (?nocloud): nie ins Netz.
+    load: function (force) {
+      var self = this, c = this.cached();
+      if (c && !force && Date.now() - c.at < this.maxAge) return Promise.resolve(c.d);
+      if (!CONFIG.cloudUrl) return Promise.resolve(c ? c.d : null);
+      if (this._p) return this._p;
+      this._p = fetchJson(this.url + '?h=' + Math.floor(Date.now() / 3600000)).then(function (d) {
+        if (!self.valid(d)) throw new Error('top10');
+        Store.set('top10.de', { at: Date.now(), d: d });
+        return d;
+      }).then(null, function () { return c ? c.d : null; }).then(function (d) { self._p = null; return d; });
+      return this._p;
+    },
+    valid: function (d) { return !!(d && d.v === 1 && d.services && d.services.length !== undefined); },
+    // Dienste in der gewünschten Reihenfolge (Netflix, Prime Video, Disney+, Apple TV+, WOW, Paramount+, RTL+, weitere)
+    services: function (d) {
+      var order = this.ORDER;
+      return ((d && d.services) || []).filter(function (s) { return s && s.id && ((s.movies || []).length || (s.series || []).length); })
+        .sort(function (a, b) {
+          var x = order.indexOf(a.id), y = order.indexOf(b.id);
+          return (x < 0 ? 99 : x) - (y < 0 ? 99 : y);
+        });
+    },
+    stamp: function (d) { return this.services(d).map(function (s) { return s.id + '@' + (s.week || s.date || ''); }).join('|'); },
+    /* Reihe zusammenstellen: Film 1, Serie 1, Film 2, Serie 2 … – je bis zu 5, jeweils mit dem echten Platz */
+    row: function (s) {
+      var m = (s.movies || []).slice(0, 5), se = (s.series || []).slice(0, 5), out = [];
+      for (var i = 0; i < 5; i++) {
+        if (m[i]) out.push({ kind: 'movie', rank: m[i].rank, e: m[i] });
+        if (se[i]) out.push({ kind: 'series', rank: se[i].rank, e: se[i] });
+      }
+      return out;
+    }
+  };
+  /* Titel vergleichbar machen: Sprachkürzel vorne („DE - “, „|DE|“), Jahr, Qualität und Satzzeichen weg */
+  function t10Key(s) {
+    var n = String(s || '').replace(/^\s*[\[(|]?\s*(de|ger|deu|en|eng|multi|nf|netflix)\s*[\])|:\-–]+\s*/i, '');
+    return titleKey(cleanTitle(n).replace(/&/g, ' and '));
+  }
+  /* Welche Top-10-Titel stehen in der aktiven Playlist? Wird beim Laden der Film- bzw. Serienliste berechnet
+     (wie das Titelbild) und klein gespeichert – die Startseite muss die großen Listen dafür nicht laden.
+     Ausgeblendete und gesperrte Kategorien zählen nicht (lieber „nicht in der Playlist“ als ein gesperrter Titel). */
+  var Top10Match = {
+    key: function (kind, owner) { return 't10m.' + (owner || pid()) + '.' + kind; },
+    get: function (kind, owner) { return Store.get(this.key(kind, owner), null); },
+    fresh: function (kind, d) { var m = this.get(kind); return !!(m && m.stamp === Top10.stamp(d)); },
+    save: function (kind, list, owner) {
+      var self = this;
+      return Top10.load().then(function (d) {
+        if (!d || !Top10.services(d).length) return;
+        return HeroPicks.blocked(kind).then(function (bad) {
+          // gesuchte Namen → Einträge (englischer Titel, deutscher Titel, weitere deutsche Namen)
+          var want = {}, found = {};
+          Top10.services(d).forEach(function (s) {
+            ((kind === 'movie' ? s.movies : s.series) || []).forEach(function (e) {
+              var id = s.id + ':' + e.rank;
+              [e.title, e.de].concat(e.aka || []).forEach(function (n) { var k = t10Key(n); if (k.length > 1) (want[k] = want[k] || []).push({ id: id, year: Number(e.year) || 0 }); });
+            });
+          });
+          list.forEach(function (x) {
+            if (bad[String(x.catId)]) return;
+            var hits = want[t10Key(x.name)];
+            if (!hits) return;
+            var y = Number(String(x.year || '').slice(0, 4)) || 0;
+            hits.forEach(function (w) {
+              // Jahr bekannt und weit weg → anderer Film mit gleichem Namen (z. B. Remake)
+              var off = w.year && y ? Math.abs(w.year - y) : 0;
+              if (off > 1) return;
+              var score = (w.year && y ? 2 : 0) - off + (Number(x.rating) > 0 ? 0.5 : 0);
+              var f = found[w.id] || (found[w.id] = { s: -99, it: null, years: {}, noYear: !w.year });
+              f.years[y || '?'] = 1;
+              if (score > f.s) { f.s = score; f.it = slim(x); }
+            });
+          });
+          var m = {};
+          Object.keys(found).forEach(function (k) {
+            // Ohne bekanntes Jahr und mehrere gleichnamige Titel mit verschiedenen Jahren in der Playlist:
+            // unklar, welcher gemeint ist → lieber „nicht in der Playlist“ als den falschen Film öffnen
+            if (found[k].noYear && Object.keys(found[k].years).length > 1) return;
+            m[k] = found[k].it;
+          });
+          Store.set(self.key(kind, owner), { stamp: Top10.stamp(d), m: m });
+          if (self.onChange) self.onChange();     // Startseite offen: Reihen neu zeichnen
+        });
+      }).then(null, function () {});
+    },
+    item: function (kind, svc, rank, owner) { var m = this.get(kind, owner); return (m && m.m && m.m[svc + ':' + rank]) || null; }
+  };
+  // Woche lesbar: „02.11.–08.11.“ (Netflix nennt den letzten Tag der Woche Montag–Sonntag)
+  function t10Week(s) {
+    var end = s.week ? new Date(s.week + 'T12:00:00') : null;
+    if (!end || isNaN(end.getTime())) return '';
+    var start = new Date(end.getTime() - 6 * 86400000), o = { day: '2-digit', month: '2-digit' };
+    return start.toLocaleDateString(locale(), o) + '–' + end.toLocaleDateString(locale(), o);
+  }
+  /* Kachel: Titelbild, Platz und Schild FILM/SERIE. Nicht in der Playlist → gedimmt, ohne Abspielen. */
+  function top10Tile(svc, x) {
+    var it = Top10Match.item(x.kind, svc.id, x.rank);
+    var name = it ? it.name : (x.e.de || x.e.title);
+    var tag = h('span', { class: 't10-tag k-' + x.kind, text: x.kind === 'movie' ? T('Film') : T('Serie') });
+    var art = posterArt(it || { name: name }, [tag, it ? null : h('span', { class: 't10-miss', text: T('Nicht in deiner Playlist') })]);
+    var label = x.rank + '. ' + name + ' – ' + (x.kind === 'movie' ? T('Film') : T('Serie')) + (it ? '' : ' – ' + T('Nicht in deiner Playlist'));
+    return h('button', { class: 't10 hm-t10 f k-' + x.kind + (it ? '' : ' is-missing'), 'data-key': 't10:' + svc.id + ':' + x.kind + ':' + x.rank, title: label, 'aria-label': label,
+      onclick: function () {
+        // Nur was in der Playlist steht, öffnet die Detailseite – sonst keine (falsche) Wiedergabemöglichkeit
+        if (it) openItem(it); else toast(T('„{0}“ ist nicht in deiner Playlist.', name));
+      } },
+      h('span', { class: 't10-n' + (x.rank > 9 ? ' is-wide' : ''), text: String(x.rank) }), art);
+  }
+
+  // Großes Titelbild der Startseite: wechselt alle 9 Sekunden – aber nie, während die Knöpfe darin gewählt sind.
+  // Abgerundet, mit Pfeilen links und rechts zum Blättern (Auftrag 15.11.2026).
   function homeHero(items) {
-    var box = h('div', { class: 'hm-hero' }), dots = h('div', { class: 'hm-dots', 'aria-hidden': 'true' }), idx = 0, timer = null;
+    var stage = h('div', { class: 'hm-stage' }), dots = h('div', { class: 'hm-dots', 'aria-hidden': 'true' }), idx = 0, timer = null;
+    var box = h('div', { class: 'hm-hero' + (items.length > 1 ? ' has-arrows' : '') }, stage);
     function show(i) {
       idx = (i + items.length) % items.length;
       clear(dots);
       items.forEach(function (x, j) { dots.appendChild(h('i', { class: j === idx ? 'is-on' : '' })); });
       var fh = featureHero(items[idx], { home: true, bottom: items.length > 1 ? dots : null });
-      clear(box).appendChild(fh);
+      clear(stage).appendChild(fh);
     }
     show(0);
-    if (items.length > 1) timer = setInterval(function () {
-      if (!document.body.contains(box)) { clearInterval(timer); return; }
-      // nicht wechseln, solange man dort steht, etwas darüber offen ist (Details, Player, Dialog) oder die App im Hintergrund ist –
-      // sonst verschwindet der gemerkte Knopf und der Fokus springt beim Zurückkommen in die Menüleiste
-      var top = Screens.top();
-      if (box.contains(document.activeElement) || Player.el || Dialog.open || document.hidden || !top || !top.el.contains(box)) return;
-      show(idx + 1);
-    }, 9000);
+    if (items.length > 1) {
+      // Pfeile nach dem Titelbild im Ablauf: „Runter“ aus der Menüleiste landet weiter auf „Jetzt ansehen“
+      box.appendChild(h('button', { class: 'hm-arrow is-prev f', 'data-key': 'hero:prev', title: T('Vorheriger Titel'), 'aria-label': T('Vorheriger Titel'), onclick: function () { show(idx - 1); } }, icon('back')));
+      box.appendChild(h('button', { class: 'hm-arrow is-next f', 'data-key': 'hero:next', title: T('Nächster Titel'), 'aria-label': T('Nächster Titel'), onclick: function () { show(idx + 1); } }, icon('next')));
+      timer = setInterval(function () {
+        if (!document.body.contains(box)) { clearInterval(timer); return; }
+        // nicht wechseln, solange man dort steht, etwas darüber offen ist (Details, Player, Dialog) oder die App im Hintergrund ist –
+        // sonst verschwindet der gemerkte Knopf und der Fokus springt beim Zurückkommen in die Menüleiste
+        var top = Screens.top();
+        if (box.contains(document.activeElement) || Player.el || Dialog.open || document.hidden || !top || !top.el.contains(box)) return;
+        show(idx + 1);
+      }, 9000);
+    }
     box._dispose = function () { clearInterval(timer); };
     return box;
   }
@@ -4408,7 +4538,9 @@
 
     var heroSlot = h('div', { class: 'hm-heroslot' });
     var rows = h('div', { class: 'hm-rows' });
-    var el = h('div', { class: 'launcher hm' }, heroSlot, rows);
+    // Erster Bildschirm: nur Titelbild und „Weiterschauen“ – die Top-10-Reihen kommen erst beim Herunterscrollen
+    var t10Slot = h('div', { class: 'hm-rows hm-t10rows' });
+    var el = h('div', { class: 'launcher hm' }, h('div', { class: 'hm-first' }, heroSlot, rows), t10Slot);
 
     function row(title, ic, kids, more) {
       return h('section', { class: 'hm-row' },
@@ -4474,13 +4606,10 @@
           return c;
         }), h('button', { class: 'lr-all f', 'data-key': 'lr:all', onclick: showAllRecent }, h('span', { text: T('Alle anzeigen') }), icon('next'))));
       }
-      // „Top Sender“ steht nicht mehr auf der Startseite (gewünscht) – die Zählung (ChanCount) läuft weiter
-      var recent = Recent.list();
-      function done(rc) {
+      // „Top Sender“ und „Zuletzt gesehene Sender“ stehen nicht mehr auf der Startseite (Auftrag 15.11.2026: unter dem
+      // Titelbild nur „Weiterschauen“ und die Top-10-Reihen) – die Zählung (ChanCount) und der Verlauf laufen weiter
+      function done() {
         if (my !== rowsReq) return;
-        if (rc.length) out.push(row(T('Zuletzt gesehene Sender'), null, rc.map(function (c) { return chanTile(c); })));
-        // Neue Playlist, noch nichts geschaut: statt leerer Fläche unter dem Titelbild die Schnellzugriffe (Live TV, Filme, Serien)
-        if (!out.length && !(heroSlot.firstChild && heroSlot.firstChild.classList && heroSlot.firstChild.classList.contains('hm-quickrow'))) out.push(quickRow());
         clear(rows); out.forEach(function (x) { rows.appendChild(x); });
         el.classList.toggle('is-empty', !out.length);
         var k = fkey || wantKey, top0 = Screens.top();
@@ -4496,9 +4625,48 @@
           }
         }
       }
-      Promise.all([visibleItems('live', Promise.resolve(recent.slice(0, 12)))])
-        .then(function (r) { done(r[0] || []); }, function () { done([]); });
+      done();
     }
+
+    /* Top-10-Reihen (nur echte Ranglisten, siehe Top10). Fokus bleibt beim Neuzeichnen auf derselben Kachel. */
+    var t10Req = 0, t10Painted = '';
+    function paintTop10(force) {
+      var my = ++t10Req;
+      Top10.load().then(function (d) {
+        if (my !== t10Req || disposed) return;
+        var svcs = Top10.services(d);
+        // Neue Woche (oder neue Liste) und Abgleich noch vom alten Stand: im Hintergrund neu abgleichen
+        ['movie', 'series'].forEach(function (kind) {
+          if (svcs.length && Stats.get()[kind] && !Top10Match.fresh(kind, d)) t10Recheck(kind);
+        });
+        var mm = Top10Match.get('movie'), ms = Top10Match.get('series');
+        var sig = Top10.stamp(d) + '#' + JSON.stringify([mm && mm.m, ms && ms.m]).length + ':' + Lang.cur;
+        if (!force && sig === t10Painted) return;
+        t10Painted = sig;
+        var foc = document.activeElement, fkey = t10Slot.contains(foc) && foc.getAttribute('data-key');
+        var out = svcs.map(function (s) {
+          var tiles = Top10.row(s).map(function (x) { return top10Tile(s, x); });
+          if (!tiles.length) return null;
+          var info = s.separate ? T('Deutschland · Woche {0} · Filme und Serien aus getrennten Listen', t10Week(s)) : T('Deutschland · {0}', t10Week(s));
+          return h('section', { class: 'hm-row hm-t10row', 'data-svc': s.id },
+            h('div', { class: 'hm-rhead' }, h('h2', { class: 'hm-rtitle' }, h('span', { text: s.name + ' – Top 10' })), h('small', { class: 'hm-t10info', text: info })),
+            h('div', { class: 'hm-track' }, tiles));
+        }).filter(Boolean);
+        clear(t10Slot); out.forEach(function (x) { t10Slot.appendChild(x); });
+        if (fkey) { var t = $('[data-key="' + fkey + '"]', t10Slot) || $('.f', t10Slot); if (t) Nav.focus(t); }
+      });
+    }
+    var recheckT = {};
+    function t10Recheck(kind) {
+      if (recheckT[kind]) return;
+      recheckT[kind] = setTimeout(function () {
+        if (disposed || busy) return;
+        App.provider.items(kind, '__all').then(function (list) { return Top10Match.save(kind, list); }, function () {});
+      }, 2500);
+      disposers.push(function () { clearTimeout(recheckT[kind]); });
+    }
+    Top10Match.onChange = function () { if (!disposed && document.body.contains(el)) paintTop10(); };
+    disposers.push(function () { Top10Match.onChange = null; });
 
     // byUser: Knopf gedrückt (mit Bestätigung). quiet: automatisch im Hintergrund (ohne Fehlermeldung)
     function doRefresh(byUser, quiet) {
@@ -4521,7 +4689,7 @@
       doRefresh(false, !first);
     }
 
-    paintHero(); paintRows();
+    paintHero(); paintRows(); paintTop10();
     // Nach einem Update ist noch keine Auswahl fürs Titelbild gespeichert: einmal im Hintergrund berechnen
     if (!HeroPicks.computed('movie') && !HeroPicks.computed('series') && (Stats.get().movie || Stats.get().series)) {
       var pickT = setTimeout(function () {
@@ -4568,10 +4736,11 @@
           }
         }
       }
+      paintTop10();     // nur neu zeichnen, wenn sich Liste oder Abgleich geändert haben
       setTimeout(autoCheck, 1500);
     };
     // App kommt aus dem Hintergrund zurück (z. B. Box-Fernbedienung, Handy entsperrt)
-    el._wake = function () { setTimeout(autoCheck, 800); };
+    el._wake = function () { setTimeout(autoCheck, 800); paintTop10(); };
     el._dispose = function () {
       disposed = true;
       clearInterval(timer);
@@ -4926,6 +5095,8 @@
         // Ergebnis gehört zur Playlist, die beim Start aktiv war (Wechsel während des Ladens → keine falschen Zahlen)
         Stats.set(kind, list.length, newest, owner);
         var heroSaved = kind !== 'live' ? HeroPicks.save(kind, list, owner) : null;   // Auswahl fürs Titelbild der Startseite
+        // Abgleich mit den Top-10-Listen (welche Titel in der Playlist stehen) – wartet nicht auf das Netz
+        if (kind !== 'live') Top10Match.save(kind, list, owner);
         var out = { by: by, total: list.length, kind: kind };
         if (r[1]) {
           var ids = radioIds(r[1]), n = 0;
@@ -9900,7 +10071,7 @@
     parseM3U: parseM3U, catchupUrl: catchupUrl, parseXtreamLink: parseXtreamLink, normalizeServer: normalizeServer, Nav: Nav, Screens: Screens, StillWatching: StillWatching,
     Xmltv: Xmltv, chanKey: chanKey, trackLabel: trackLabel, cleanTitle: cleanTitle, cleanEpName: cleanEpName, fmtDur: fmtDur, isRadio: isRadio, Sky: Sky, icon: icon, Terms: Terms, editPerson: editPerson, EpgStore: EpgStore, makeProvider: makeProvider, Profiles: Profiles, PinGuard: PinGuard, Store: Store, Cloud: Cloud,
     decodeBytes: decodeBytes, readText: readText, fetchText: fetchText, sameConnection: sameConnection, NativePlayer: NativePlayer, App: App, ensureTs: ensureTs, migrateM3uIds: migrateM3uIds,
-    ErrLog: ErrLog, techInfo: techInfo, epgText: epgText, ChanCount: ChanCount, clearHistory: clearHistory, startView: startView, startTab: startTab,
+    ErrLog: ErrLog, techInfo: techInfo, epgText: epgText, ChanCount: ChanCount, Top10: Top10, Top10Match: Top10Match, top10Tile: top10Tile, t10Key: t10Key, clearHistory: clearHistory, startView: startView, startTab: startTab,
     CatPrefs: CatPrefs, visibleCats: visibleCats, Parental: Parental, ChanHide: ChanHide, initials: initials, statusError: statusError, isVisible: isVisible,
     Backup: Backup, profileFp: profileFp, Settings: Settings,
     Seen: Seen, Resume: Resume, UpNext: UpNext, SeriesWatch: SeriesWatch, sortVod: sortVod,

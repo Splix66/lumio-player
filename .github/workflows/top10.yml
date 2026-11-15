@@ -1,0 +1,54 @@
+# Holt täglich die echten Top-10-Listen der Streamingdienste für Deutschland (zurzeit nur Netflix – die anderen
+# Dienste veröffentlichen keine eigene Rangliste) und legt sie als de.json in den Zweig „top10-daten“.
+# Die App lädt die Datei von dort (raw.githubusercontent.com). main wird dabei nie verändert.
+# Schlägt der Abruf fehl, bleibt die letzte Datei stehen und der Lauf ist rot (sichtbar unter „Actions“).
+name: Top 10 abrufen
+
+on:
+  schedule:
+    - cron: '23 6 * * *'        # täglich 06:23 UTC (Netflix erneuert die Liste dienstags)
+  workflow_dispatch:
+  push:
+    branches: [rel-1158]        # Test-Zweig: einmal laufen lassen, damit die Datei schon vor der Veröffentlichung da ist
+    paths: [scripts/top10.js, .github/workflows/top10.yml]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: top10
+  cancel-in-progress: false
+
+jobs:
+  top10:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Projekt holen
+        uses: actions/checkout@v5
+
+      - name: Node.js einrichten
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      - name: Ranglisten holen
+        run: node scripts/top10.js /tmp/de.json
+
+      - name: In den Zweig top10-daten legen
+        run: |
+          git config user.name "telvo-top10"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git fetch --depth=1 origin top10-daten 2>/dev/null; then
+            git worktree add daten FETCH_HEAD
+            cd daten && git switch -c top10-daten
+          else
+            git worktree add --detach daten
+            cd daten && git switch --orphan top10-daten
+          fi
+          cp /tmp/de.json de.json
+          git add de.json
+          # Nur neu speichern, wenn sich die Liste geändert hat ([skip ci]: keine Tests für reine Daten)
+          if git diff --cached --quiet -I '"generated"'; then echo "Keine Änderung."; exit 0; fi
+          git commit -q -m "Top 10 aktualisiert [skip ci]"
+          git push origin HEAD:top10-daten
