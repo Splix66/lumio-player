@@ -1,7 +1,7 @@
 {
  "v": 1,
  "country": "DE",
- "generated": "2026-11-15T21:31:01.924Z",
+ "generated": "2026-11-15T21:34:09.218Z",
  "services": [
   {
    "id": "netflix",
@@ -14,13 +14,7 @@
     {
      "rank": 1,
      "title": "Collision Course",
-     "season": "",
-     "wd": "Q1201522",
-     "de": "Detroit City – Ein irrer Job",
-     "aka": [
-      "Detroit City - Ein irrer Job"
-     ],
-     "year": 1989
+     "season": ""
     },
     {
      "rank": 2,
@@ -33,17 +27,12 @@
     {
      "rank": 3,
      "title": "Sinners",
-     "season": "",
-     "wd": "Q7524696",
-     "year": 2007
+     "season": ""
     },
     {
      "rank": 4,
      "title": "My Best Friend",
-     "season": "",
-     "wd": "Q1662399",
-     "de": "Mein bester Freund",
-     "year": 2006
+     "season": ""
     },
     {
      "rank": 5,
@@ -60,20 +49,12 @@
     {
      "rank": 6,
      "title": "Christmas at the Palace",
-     "season": "",
-     "wd": "Q104771209",
-     "de": "Der König und die Eisprinzessin"
+     "season": ""
     },
     {
      "rank": 7,
      "title": "A Minecraft Movie",
-     "season": "",
-     "wd": "Q40083273",
-     "de": "Minecraft",
-     "aka": [
-      "Minecraft: Der Film"
-     ],
-     "year": 2025
+     "season": ""
     },
     {
      "rank": 8,
