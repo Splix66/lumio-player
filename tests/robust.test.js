@@ -648,6 +648,15 @@
     } finally { s.set('startView', keepV === undefined ? null : keepV); s.set('autoLast', keepA); }
   });
 
+  t('Startseite', '„App beim Start: Letzter Sender“ öffnet Live TV (kleiner Player) statt Vollbild', function () {
+    eq(D.startTab('last'), 'live', 'Letzter Sender → Reiter Live TV');
+    eq(D.startTab('live'), 'live', 'Live TV bleibt Live TV');
+    eq(D.startTab('movie'), 'movie', 'Filme');
+    eq(D.startTab('series'), 'series', 'Serien');
+    eq(D.startTab('home'), 'home', 'Startseite');
+    eq(D.startTab('quatsch'), 'home', 'Unbekannt → Startseite');
+  });
+
   t('Programmführer', 'Beschreibung: „\\n“ als Text wird zum echten Zeilenumbruch', function () {
     eq(D.epgText('Leben hinter Stacheldraht.\\n\\nManch ein Gefangener'), 'Leben hinter Stacheldraht.\n\nManch ein Gefangener');
     eq(D.epgText('Zeile 1\\r\\nZeile 2'), 'Zeile 1\nZeile 2', 'Windows-Umbruch');
