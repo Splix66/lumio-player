@@ -1,6 +1,12 @@
 /* Telvo Player – Übersetzung: Bosnisch / Kroatisch / Serbisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["hr"] = {
+  "Vorheriger Titel": "Prethodni naslov",
+  "Nächster Titel": "Sljedeći naslov",
+  "Nicht in deiner Playlist": "Nije u tvojoj playlisti",
+  "„{0}“ ist nicht in deiner Playlist.": "„{0}” nije u tvojoj playlisti.",
+  "Deutschland · Woche {0} · Filme und Serien aus getrennten Listen": "Njemačka · Tjedan {0} · Filmovi i serije iz zasebnih lista",
+  "Deutschland · {0}": "Njemačka · {0}",
   "Fehlerberichte senden": "Šalji izvješća o greškama",
   "Hilft, Fehler schnell zu beheben – ohne Links, Namen oder Passwörter": "Pomaže brzo ispraviti greške – bez linkova, imena i lozinki",
   "Klang": "Zvuk",

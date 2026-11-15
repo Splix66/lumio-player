@@ -1,5 +1,12 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## 1.15.8 – 2026-11-15 · Neue Startseite mit Top 10 (Test-Version, nicht veröffentlicht)
+
+- **Startseite neu aufgeteilt:** Auf dem ersten Bildschirm stehen nur noch das große Titelbild und die kompakte Reihe „Weiterschauen“. Das Titelbild hat jetzt abgerundete Ecken und Pfeile links und rechts zum Blättern (mit der Fernbedienung erreichbar); es wechselt weiter von selbst, aber nie, während man darin steht. „Zuletzt gesehene Sender“ steht nicht mehr auf der Startseite.
+- **Top 10 der Streamingdienste:** Unter dem ersten Bildschirm folgen nur noch Top-10-Reihen. Jede Reihe zeigt bis zu 5 Filme und 5 Serien mit ihrem echten Platz, jede Kachel mit Titelbild, Platz und dem Schild FILM bzw. SERIE; waagerecht blättern, die Seite bleibt senkrecht scrollbar. Zurzeit gibt es nur die Reihe „Netflix – Top 10“: Netflix ist der einzige Dienst, der eine eigene Rangliste für Deutschland veröffentlicht (wöchentlich, Filme und Serien getrennt – die Reihe sagt das dazu). Für Prime Video, Disney+, Apple TV+, WOW, Paramount+ und RTL+ gibt es keine frei nutzbare echte Rangliste; dort wird nichts erfunden, die Reihen kommen dazu, sobald es eine Quelle gibt.
+- **Nur was in der Playlist ist, lässt sich öffnen:** Die App sucht jeden Top-10-Titel in der aktiven Playlist (englischer und deutscher Titel, Jahr; ausgeblendete und gesperrte Kategorien zählen nicht). Gefunden → Detailseite in Telvo. Nicht gefunden → Kachel gedimmt mit „Nicht in deiner Playlist“, ohne Abspielen.
+- **Täglicher Abruf:** Neuer GitHub-Ablauf „Top 10 abrufen“ (scripts/top10.js) holt die Liste jeden Morgen und legt sie in den Zweig „top10-daten“; deutsche Titel und Jahr kommen von Wikidata. main wird dabei nie verändert. Neue Tests.
+
 ## 1.15.7 – 2026-11-15 · Letzter Sender im kleinen Player
 
 - **„App beim Start: Letzter Sender“ startet nicht mehr im Vollbild.** Die App öffnet jetzt den Reiter Live TV, und der zuletzt gesehene Sender läuft dort im kleinen Player (Vorschaufenster rechts). Mit OK bzw. einem Klick auf den Sender geht er wie gewohnt ins Vollbild. Gilt auch, wenn die Live-Vorschau in den Einstellungen ausgeschaltet ist. Auf dem Handy gibt es kein Vorschaufenster – dort öffnet sich nur Live TV. Neuer Test.

@@ -1,6 +1,12 @@
 /* Telvo Player – Übersetzung: Ukrainisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["uk"] = {
+  "Vorheriger Titel": "Попередній",
+  "Nächster Titel": "Наступний",
+  "Nicht in deiner Playlist": "Немає у вашому плейлисті",
+  "„{0}“ ist nicht in deiner Playlist.": "«{0}» немає у вашому плейлисті.",
+  "Deutschland · Woche {0} · Filme und Serien aus getrennten Listen": "Німеччина · Тиждень {0} · Фільми та серіали з окремих списків",
+  "Deutschland · {0}": "Німеччина · {0}",
   "Fehlerberichte senden": "Надсилати звіти про помилки",
   "Hilft, Fehler schnell zu beheben – ohne Links, Namen oder Passwörter": "Допомагає швидко виправляти помилки – без посилань, імен і паролів",
   "Klang": "Звук",

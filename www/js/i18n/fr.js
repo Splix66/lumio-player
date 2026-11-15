@@ -1,6 +1,12 @@
 /* Telvo Player – Übersetzung: Französisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["fr"] = {
+  "Vorheriger Titel": "Titre précédent",
+  "Nächster Titel": "Titre suivant",
+  "Nicht in deiner Playlist": "Absent de votre playlist",
+  "„{0}“ ist nicht in deiner Playlist.": "« {0} » ne figure pas dans votre playlist.",
+  "Deutschland · Woche {0} · Filme und Serien aus getrennten Listen": "Allemagne · Semaine {0} · Films et séries issus de classements séparés",
+  "Deutschland · {0}": "Allemagne · {0}",
   "Fehlerberichte senden": "Envoyer les rapports d’erreur",
   "Hilft, Fehler schnell zu beheben – ohne Links, Namen oder Passwörter": "Aide à corriger rapidement les problèmes – sans liens, noms ni mots de passe",
   "Klang": "Son",

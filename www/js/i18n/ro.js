@@ -1,6 +1,12 @@
 /* Telvo Player – Übersetzung: Rumänisch. Wird nur geladen, wenn diese Sprache gewählt ist. */
 window.LUMIO_I18N = window.LUMIO_I18N || {};
 window.LUMIO_I18N["ro"] = {
+  "Vorheriger Titel": "Titlul anterior",
+  "Nächster Titel": "Titlul următor",
+  "Nicht in deiner Playlist": "Nu e în playlistul tău",
+  "„{0}“ ist nicht in deiner Playlist.": "„{0}” nu e în playlistul tău.",
+  "Deutschland · Woche {0} · Filme und Serien aus getrennten Listen": "Germania · Săptămâna {0} · Filme și seriale din liste separate",
+  "Deutschland · {0}": "Germania · {0}",
   "Fehlerberichte senden": "Trimite rapoarte de erori",
   "Hilft, Fehler schnell zu beheben – ohne Links, Namen oder Passwörter": "Ajută la remedierea rapidă a erorilor – fără linkuri, nume sau parole",
   "Klang": "Sunet",
