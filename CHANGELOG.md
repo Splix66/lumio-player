@@ -1,5 +1,9 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## 1.15.8 – Test · Menüleiste zeigt gefüllt, wo man ist
+
+- **Haus und Herz oben gefüllt:** In der Menüleiste ist das Haus (Start) jetzt weiß gefüllt, wenn man auf der Startseite ist oder es mit der Fernbedienung bzw. Tastatur ansteuert – so sieht man sofort, wo man ist. Das Herz (Favoriten) ist im selben Fall rot gefüllt. Vorher waren beide nur Umrisse. Auf der hellen Leuchtfläche der Fernbedienung ist das Haus dunkel gefüllt, damit es sichtbar bleibt; im hellen Design in der Schriftfarbe.
+
 ## 1.15.7 – 2026-11-15 · Letzter Sender im kleinen Player
 
 - **„App beim Start: Letzter Sender“ startet nicht mehr im Vollbild.** Die App öffnet jetzt den Reiter Live TV, und der zuletzt gesehene Sender läuft dort im kleinen Player (Vorschaufenster rechts). Mit OK bzw. einem Klick auf den Sender geht er wie gewohnt ins Vollbild. Gilt auch, wenn die Live-Vorschau in den Einstellungen ausgeschaltet ist. Auf dem Handy gibt es kein Vorschaufenster – dort öffnet sich nur Live TV. Neuer Test.

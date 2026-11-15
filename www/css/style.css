@@ -3498,3 +3498,15 @@ body.kbd .gl-on > .ch-opt.f:focus small, body.is-tv .gl-on > .ch-opt.f:focus sma
 @media (max-width: 760px) {
   .zbn, .zbn.is-slim { left: 1rem; right: 1rem; bottom: 1rem; width: auto; }
 }
+
+/* ==========================================================
+   Menüleiste oben (1.15.8): Start (Haus) und Favoriten (Herz) zeigen gefüllt, wo man ist.
+   Haus: gefüllt in der Schriftfarbe (dunkles Design weiß; mit der Fernbedienung auf der hellen
+   Leuchtfläche dunkel, damit es sichtbar bleibt). Herz: rot gefüllt.
+   Gilt, wenn der Reiter gewählt ist oder den Fokus der Fernbedienung bzw. Tastatur hat.
+   ========================================================== */
+.main-tabs .tab.k-home.is-on svg.i, .main-tabs .tab.k-home.f:focus-visible svg.i,
+body.kbd .main-tabs .tab.k-home.f:focus svg.i, body.is-tv .main-tabs .tab.k-home.f:focus svg.i { fill: currentColor; }
+.main-tabs .tab.k-favs.is-on svg.i, .main-tabs .tab.k-favs.f:focus-visible svg.i,
+body.kbd .main-tabs .tab.k-favs.f:focus svg.i, body.is-tv .main-tabs .tab.k-favs.f:focus svg.i { fill: #ff3b30; stroke: #ff3b30; color: #ff3b30; }
+.main-tabs .tab.k-home svg.i, .main-tabs .tab.k-favs svg.i { transition: fill .2s ease, stroke .2s ease, color .2s ease; }
