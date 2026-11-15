@@ -1,5 +1,9 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## Noch nicht veröffentlicht (Test-Zweig rel-1158-banner) · Fire-TV-Kachel randlos
+
+- **Fire TV / Android TV: App-Kachel im Startbildschirm randlos.** Das Banner reichte auf dem Fire TV Stick links und rechts nicht sichtbar bis zum Kachelrand: Es war fast schwarz an den Rändern (verschwamm mit dem dunklen Startbildschirm) und mit 320x180 Pixeln ohne Dichteangabe auf dem 4K Max unscharf hochgerechnet. Neu: 640x360 Pixel in `drawable-xhdpi` (= 320x180 dp, Vorgabe von Android TV), lila Fläche bis an alle Ränder, Logo und „Telvo Player“ mittig.
+
 ## 1.15.7 – 2026-11-15 · Letzter Sender im kleinen Player
 
 - **„App beim Start: Letzter Sender“ startet nicht mehr im Vollbild.** Die App öffnet jetzt den Reiter Live TV, und der zuletzt gesehene Sender läuft dort im kleinen Player (Vorschaufenster rechts). Mit OK bzw. einem Klick auf den Sender geht er wie gewohnt ins Vollbild. Gilt auch, wenn die Live-Vorschau in den Einstellungen ausgeschaltet ist. Auf dem Handy gibt es kein Vorschaufenster – dort öffnet sich nur Live TV. Neuer Test.

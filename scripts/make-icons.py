@@ -168,22 +168,28 @@ sd.text((sx + w_b, 1366 + 260), 'Player', font=f_r, fill=(201, 184, 251), anchor
 sp.convert('RGB').save(p('assets', 'splash.png'))
 sp.convert('RGB').save(p('assets', 'splash-dark.png'))
 
-# Android-TV-/Fire-TV-Banner 320x180: gefüllte Kachel mit Namen (wie Netflix oder YouTube im Startmenü) –
-# dunkler Verlauf mit lila Lichtschein, Logo links, daneben „Telvo“ groß und „Player“ darunter
+# Android-TV-/Fire-TV-Banner: gefüllte 16:9-Kachel mit Namen (wie Netflix oder YouTube im Startmenü).
+# 640x360 Pixel, kommt nach res/drawable-xhdpi (= 320x180 dp, Vorgabe von Android TV; scripts/patch-android.js).
+# Fläche bis an alle vier Ränder gefüllt: lila Verlauf ohne fast schwarze Ecken – der Fire-TV-Startbildschirm
+# ist selbst dunkel, dunkle Ränder sahen dort aus, als reiche das Bild links und rechts nicht bis zum Kachelrand.
+# Logo und Schriftzug als Gruppe waagerecht mittig, damit beim Zuschneiden (abgerundete Ecken, Zoom) nichts fehlt.
 S = 4
-W, H = 320, 180
-ban = background(W * S, H * S).convert('RGBA')
+W, H = 640, 360
+ban = gradient(W * S, H * S, (64, 34, 140), (34, 18, 78), vertical=False).convert('RGBA')
 glow = Image.new('L', (W * S, H * S), 0)
-ImageDraw.Draw(glow).ellipse([int(W * .18) * S, int(-H * .35) * S, int(W * 1.15) * S, int(H * 1.05) * S], fill=150)
-glow = glow.filter(ImageFilter.GaussianBlur(34 * S))
-ban.paste(Image.new('RGBA', (W * S, H * S), (124, 58, 237, 255)), (0, 0), glow)
-bm = mark(int(H * 0.5) * S)
-x0 = int(W * 0.07) * S
-ban.alpha_composite(bm, (x0, (H * S - bm.height) // 2))
-tx = x0 + bm.width + int(W * 0.035) * S
+ImageDraw.Draw(glow).ellipse([int(-W * .1) * S, int(-H * .6) * S, int(W * 1.1) * S, int(H * .9) * S], fill=120)
+glow = glow.filter(ImageFilter.GaussianBlur(60 * S))
+ban.paste(Image.new('RGBA', (W * S, H * S), (150, 96, 255, 255)), (0, 0), glow)
+bm = mark(int(H * 0.46) * S)
+f_name, f_sub = brand_font(92 * S), brand_font(56 * S, bold=False)
 dr = ImageDraw.Draw(ban)
-dr.text((tx, int(H * 0.55) * S), NAME, font=brand_font(48 * S), fill=(246, 245, 250), anchor='ls')
-dr.text((tx + 2 * S, int(H * 0.6) * S), 'Player', font=brand_font(30 * S, bold=False), fill=(214, 200, 255), anchor='lt')
+gap = int(W * 0.03) * S
+text_w = max(dr.textlength(NAME, font=f_name), dr.textlength('Player', font=f_sub) + 4 * S)
+x0 = int((W * S - (bm.width + gap + text_w)) / 2)
+ban.alpha_composite(bm, (x0, (H * S - bm.height) // 2))
+tx = x0 + bm.width + gap
+dr.text((tx, int(H * 0.54) * S), NAME, font=f_name, fill=(255, 255, 255), anchor='ls')
+dr.text((tx + 4 * S, int(H * 0.59) * S), 'Player', font=f_sub, fill=(226, 214, 255), anchor='lt')
 ban.resize((W, H), Image.LANCZOS).convert('RGB').save(p('assets', 'banner.png'))
 
 # Samsung (512x423), LG (80x80, 130x130), Webseite/App (192x192)

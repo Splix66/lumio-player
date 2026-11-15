@@ -64,10 +64,15 @@ if (fs.existsSync(stylesPath)) {
   }
 }
 
-// Banner-Bild kopieren
-const drawable = path.join(base, 'android', 'app', 'src', 'main', 'res', 'drawable');
+// Banner-Bild kopieren: 640x360 Pixel nach drawable-xhdpi (= 320x180 dp, wie Android TV es vorgibt).
+// Früher lag ein 320x180-Bild ohne Dichte in drawable/ – auf dem Fire TV Stick 4K Max (Dichte 320) unscharf
+// hochgerechnet. Eine alte Kopie in drawable/ wird entfernt, damit nur noch das neue Bild im Paket ist.
+const res = path.join(base, 'android', 'app', 'src', 'main', 'res');
+const drawable = path.join(res, 'drawable-xhdpi');
 fs.mkdirSync(drawable, { recursive: true });
 fs.copyFileSync(path.join(base, 'assets', 'banner.png'), path.join(drawable, 'banner.png'));
+const oldBanner = path.join(res, 'drawable', 'banner.png');
+if (fs.existsSync(oldBanner)) fs.unlinkSync(oldBanner);
 
 // 5) TV-Player (ExoPlayer): Java-Dateien, Bildschirm im Manifest und Bibliotheken
 const javaDir = path.join(base, 'android', 'app', 'src', 'main', 'java', 'de', 'lumio', 'player');
