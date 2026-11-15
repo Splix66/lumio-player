@@ -30,12 +30,31 @@ m = m.replace(/<application([^>]*)>/, (all, attrs) => {
   return '<application' + attrs + '>';
 });
 
-// 3) App im TV-Startmenü anzeigen (LEANBACK_LAUNCHER)
-if (!m.includes('LEANBACK_LAUNCHER')) {
-  m = m.replace(
-    /(<category android:name="android\.intent\.category\.LAUNCHER"\s*\/>)/,
-    '$1\n                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />'
-  );
+// 3) App im TV-Startmenü anzeigen: eigener TV-Eintrag (activity-alias „.TvStart“, öffnet dieselbe MainActivity).
+//    Grund: Fire TV nimmt bei Apps, die nicht aus dem Amazon Appstore kommen, NICHT android:banner, sondern das
+//    android:icon des TV-Starteintrags und setzt es mittig in die 16:9-Kachel – mit dem quadratischen Symbol
+//    entstanden graue Balken links und rechts (Foto Eray, Fire TV Stick 4K Max, Fire OS 8, 15.11.2026).
+//    Der TV-Eintrag bekommt deshalb das breite Banner als Symbol; das Handy (LAUNCHER an der MainActivity) behält
+//    das quadratische Symbol. LEANBACK_LAUNCHER steht nur noch am TV-Eintrag, nicht mehr an der MainActivity.
+if (!m.includes('android:name=".TvStart"')) {
+  // ältere Fassung dieses Skripts hatte LEANBACK_LAUNCHER an die MainActivity gehängt (nur beim ersten Lauf entfernen,
+  // sonst träfe es beim zweiten Lauf auch den TV-Eintrag)
+  m = m.replace(/\s*<category android:name="android\.intent\.category\.LEANBACK_LAUNCHER"\s*\/>/g, '');
+  m = m.replace(/<\/application>/, [
+    '    <activity-alias',
+    '            android:name=".TvStart"',
+    '            android:targetActivity=".MainActivity"',
+    '            android:exported="true"',
+    '            android:label="@string/app_name"',
+    '            android:icon="@drawable/banner"',
+    '            android:banner="@drawable/banner">',
+    '            <intent-filter>',
+    '                <action android:name="android.intent.action.MAIN" />',
+    '                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />',
+    '            </intent-filter>',
+    '        </activity-alias>',
+    '    </application>'
+  ].join('\n'));
 }
 
 // 3b) Handy und Tablet nur im Querformat (seitlich, beide Richtungen). Fernseher sind ohnehin quer.
