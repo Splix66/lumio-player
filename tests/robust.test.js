@@ -188,6 +188,30 @@
     });
   });
 
+  t(G, 'Serien: Folgentext aus verschiedenen Feldern der Anbieter (plot, overview, description, an der Folge)', function () {
+    eq(D.epPlot({ info: { plot: '  Ein  Mord im Hafen. ' } }), 'Ein Mord im Hafen.', 'info.plot, Leerraum bereinigt');
+    eq(D.epPlot({ info: { overview: 'Neue Spur.' } }), 'Neue Spur.', 'info.overview');
+    eq(D.epPlot({ info: { plot: 'N/A', description: 'Das Finale.' } }), 'Das Finale.', 'Platzhalter übersprungen');
+    eq(D.epPlot({ info: [], plot: 'Direkt an der Folge.' }), 'Direkt an der Folge.', 'info als leere Liste, Text an der Folge');
+    eq(D.epPlot({ info: '{"plot":"Als JSON-Text."}' }), 'Als JSON-Text.', 'info als JSON-Text');
+    eq(D.epPlot({ info: { plot: 'No Data' } }), '', 'nur Platzhalter → kein Text');
+    eq(D.epPlot(null), '', 'ohne Daten');
+    var realFetch = window.fetch;
+    window.fetch = function (url) {
+      var body = /get_series_info/.test(url) ? { info: { plot: 'Serie' }, episodes: { '1': [
+        { id: '11', episode_num: 2, title: 'Serie - S01E02 - Zwei', info: { overview: 'Text zwei' } },
+        { id: '10', episode_num: 1, title: 'Serie - S01E01 - Eins', info: { plot: 'Text eins' } },
+        { id: '12', episode_num: 3, title: 'Serie - S01E03 - Drei', info: [] }
+      ] } } : { user_info: { auth: 1, status: 'Active' } };
+      return Promise.resolve({ ok: true, status: 200, body: null, text: function () { return Promise.resolve(JSON.stringify(body)); } });
+    };
+    var p = D.makeProvider({ type: 'xtream', server: 'http://serien.invalid:8080', username: 'u', password: 'p' });
+    return p.seriesInfo({ id: '5', name: 'Serie' }).then(function (d) {
+      window.fetch = realFetch;
+      eq(d.seasons[0].episodes.map(function (e) { return [e.num, e.name, e.plot]; }), [[1, 'Eins', 'Text eins'], [2, 'Zwei', 'Text zwei'], [3, 'Drei', '']], 'jede Folge mit ihrem eigenen Text');
+    }, function (e) { window.fetch = realFetch; throw e; });
+  });
+
   t(G, 'Fehlerprotokoll: keine Links, Benutzernamen oder Passwörter – und nur die letzten 15', function () {
     var L = D.ErrLog, before = L.list();
     try {
