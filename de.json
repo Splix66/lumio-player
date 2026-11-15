@@ -1,0 +1,147 @@
+{
+ "v": 1,
+ "country": "DE",
+ "generated": "2026-11-15T21:31:01.924Z",
+ "services": [
+  {
+   "id": "netflix",
+   "name": "Netflix",
+   "period": "week",
+   "week": "2026-11-08",
+   "source": "Netflix Top 10 (offiziell)",
+   "separate": true,
+   "movies": [
+    {
+     "rank": 1,
+     "title": "Collision Course",
+     "season": "",
+     "wd": "Q1201522",
+     "de": "Detroit City – Ein irrer Job",
+     "aka": [
+      "Detroit City - Ein irrer Job"
+     ],
+     "year": 1989
+    },
+    {
+     "rank": 2,
+     "title": "The Birthday Gift",
+     "season": "",
+     "wd": "Q141561460",
+     "de": "Das Geschenk",
+     "year": 2026
+    },
+    {
+     "rank": 3,
+     "title": "Sinners",
+     "season": "",
+     "wd": "Q7524696",
+     "year": 2007
+    },
+    {
+     "rank": 4,
+     "title": "My Best Friend",
+     "season": "",
+     "wd": "Q1662399",
+     "de": "Mein bester Freund",
+     "year": 2006
+    },
+    {
+     "rank": 5,
+     "title": "A Dog's Perfect Christmas",
+     "season": "",
+     "wd": "Q141567333",
+     "de": "Winstead – Ein Hund feiert Weihnachten",
+     "aka": [
+      "A Dog’s Perfect Christmas",
+      "Winstead - Ein Hund feiert Weihnachten"
+     ],
+     "year": 2026
+    },
+    {
+     "rank": 6,
+     "title": "Christmas at the Palace",
+     "season": "",
+     "wd": "Q104771209",
+     "de": "Der König und die Eisprinzessin"
+    },
+    {
+     "rank": 7,
+     "title": "A Minecraft Movie",
+     "season": "",
+     "wd": "Q40083273",
+     "de": "Minecraft",
+     "aka": [
+      "Minecraft: Der Film"
+     ],
+     "year": 2025
+    },
+    {
+     "rank": 8,
+     "title": "Sing 2",
+     "season": ""
+    },
+    {
+     "rank": 9,
+     "title": "Extrawurst",
+     "season": ""
+    },
+    {
+     "rank": 10,
+     "title": "The Perfect Storm",
+     "season": "",
+     "wd": "Q508349",
+     "de": "Der Sturm",
+     "year": 2000
+    }
+   ],
+   "series": [
+    {
+     "rank": 1,
+     "title": "A Couple of Lies",
+     "season": "A Couple of Lies: Limited Series",
+     "wd": "Q137425416"
+    },
+    {
+     "rank": 2,
+     "title": "Lupin",
+     "season": "Lupin: Part 4",
+     "wd": "Q104082429"
+    },
+    {
+     "rank": 3,
+     "title": "Taken: Natalee Holloway",
+     "season": "Taken: Natalee Holloway: Season 1"
+    },
+    {
+     "rank": 4,
+     "title": "Anaesthesia",
+     "season": "Anaesthesia: Season 1"
+    },
+    {
+     "rank": 5,
+     "title": "Dead-End Job",
+     "season": "Dead-End Job: Limited Series",
+     "wd": "Q140867557"
+    },
+    {
+     "rank": 6,
+     "title": "Black Doves",
+     "season": "Black Doves: Season 2",
+     "wd": "Q123153922"
+    },
+    {
+     "rank": 7,
+     "title": "Ghosts",
+     "season": "Ghosts: Season 5",
+     "wd": "Q107122133"
+    },
+    {
+     "rank": 10,
+     "title": "Will Trent",
+     "season": "Will Trent: Season 1",
+     "wd": "Q116136764"
+    }
+   ]
+  }
+ ]
+}
