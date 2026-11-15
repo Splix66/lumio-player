@@ -3552,3 +3552,15 @@ body.lite .hm-arrow { -webkit-backdrop-filter: none; backdrop-filter: none; back
   html:not(.tv) .hm-t10row .hm-rhead { flex-direction: column; align-items: flex-start; }
   html:not(.tv) .hm-t10info { margin: .15rem 0 0; text-align: left; font-size: .78rem; }
 }
+
+/* ==========================================================
+   Menüleiste oben (1.15.8): Start (Haus) und Favoriten (Herz) zeigen gefüllt, wo man ist.
+   Haus: gefüllt in der Schriftfarbe (dunkles Design weiß; mit der Fernbedienung auf der hellen
+   Leuchtfläche dunkel, damit es sichtbar bleibt). Herz: rot gefüllt.
+   Gilt, wenn der Reiter gewählt ist oder den Fokus der Fernbedienung bzw. Tastatur hat.
+   ========================================================== */
+.main-tabs .tab.k-home.is-on svg.i, .main-tabs .tab.k-home.f:focus-visible svg.i,
+body.kbd .main-tabs .tab.k-home.f:focus svg.i, body.is-tv .main-tabs .tab.k-home.f:focus svg.i { fill: currentColor; }
+.main-tabs .tab.k-favs.is-on svg.i, .main-tabs .tab.k-favs.f:focus-visible svg.i,
+body.kbd .main-tabs .tab.k-favs.f:focus svg.i, body.is-tv .main-tabs .tab.k-favs.f:focus svg.i { fill: #ff3b30; stroke: #ff3b30; color: #ff3b30; }
+.main-tabs .tab.k-home svg.i, .main-tabs .tab.k-favs svg.i { transition: fill .2s ease, stroke .2s ease, color .2s ease; }
