@@ -1,5 +1,11 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## 1.15.7 – 2026-11-15 · Letzter Sender im kleinen Player
+
+- **„App beim Start: Letzter Sender“ startet nicht mehr im Vollbild.** Die App öffnet jetzt den Reiter Live TV, und der zuletzt gesehene Sender läuft dort im kleinen Player (Vorschaufenster rechts). Mit OK bzw. einem Klick auf den Sender geht er wie gewohnt ins Vollbild. Gilt auch, wenn die Live-Vorschau in den Einstellungen ausgeschaltet ist. Auf dem Handy gibt es kein Vorschaufenster – dort öffnet sich nur Live TV. Neuer Test.
+
+- **Live TV: Ton fehlte nach dem Großmachen der Vorschau.** Hing die Live-Vorschau in der Senderliste, schaltete der eingebaute Player sie stumm, damit sie weiterläuft. Machte man danach genau diesen Sender groß, blieb er stumm – der Ton kam erst beim nächsten Senderwechsel zurück. Jetzt gilt im Vollbild wieder die eigene Ton-Einstellung. Betrifft Handy, Tablet und PC (der TV-Player auf Fire TV und Android-TV-Boxen war nicht betroffen). Neuer Test.
+
 ## 1.15.6 – 2026-11-13 · Neues Einstellungsmenü im TV-Player
 
 - **Neues Einstellungsmenü im TV-Player (Zahnrad):** Glasfläche rechts am Rand im Telvo-Stil statt des Standardmenüs, das über den Knöpfen lag. Tonspur (mit Sprache und z. B. „Dolby 5.1“), Untertitel, Bildformat (Original, Zoom, Strecken – wird gemerkt) und bei Filmen die Geschwindigkeit. Die Auswahl klappt links daneben auf, die aktive Wahl hat einen violetten Haken. Texte in der App-Sprache statt der Systemsprache des Geräts. Der Untertitel-Knopf öffnet direkt die Untertitel-Auswahl.

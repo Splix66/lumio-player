@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Telvo Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.15.6',
+    version: '1.15.7',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     /* Bibliotheken: werden beim Bauen nach www/lib kopiert (scripts/copy-libs.js) und von dort geladen.
        Nur wenn sie fehlen, aus dem Internet – mit fester Version und Prüfsumme (SRI): eine veränderte Datei
@@ -2405,9 +2405,8 @@
         if (startPending > 0 && Date.now() <= startPendingUntil) {
           startPending = 0;
           var sv = startView();
-          if (sv === 'live' || sv === 'movie' || sv === 'series') Shell.show(sv);
-          // „Letzter Sender“: hier wird die Startseite nicht neu aufgebaut – deshalb direkt starten
-          if (startLast) { var sl = startLast; startLast = null; sl(); }
+          startMini = sv === 'last';
+          if (startTab(sv) !== 'home') Shell.show(startTab(sv));
         }
         return;
       }
@@ -4048,7 +4047,13 @@
     return Settings.get('autoLast') !== false ? 'last' : 'home';
   }
   // Wie viele Shell.open() noch bis zur eingestellten Startansicht (nur beim App-Start gesetzt, s. boot)
-  var startPending = 0, startPendingUntil = 0, startLast = null;   // startLast: „Letzten Sender abspielen“, sobald die Startansicht steht
+  var startPending = 0, startPendingUntil = 0, startMini = false;   // startMini: „Letzter Sender“ – Vorschau in Live TV auch bei ausgeschalteter Live-Vorschau
+  /* Reiter für die Startansicht. „Letzter Sender“ öffnet Live TV; dort läuft der zuletzt gesehene Sender im kleinen
+     Player (autoPreview). Früher startete er sofort im Vollbild – Erays Wunsch 15.11.2026: erst Live TV, kleiner Player. */
+  function startTab(sv) {
+    if (sv === 'last') return 'live';
+    return sv === 'live' || sv === 'movie' || sv === 'series' ? sv : 'home';
+  }
 
   var Shell = {
     el: null, view: null, current: null, buttons: {}, pendingFocus: null,
@@ -4131,9 +4136,8 @@
       if (Date.now() > startPendingUntil) startPending = 0;
       var justStarted = startPending > 0 && --startPending === 0;
       var sv = justStarted ? startView() : 'home';
-      self.show(sv === 'live' || sv === 'movie' || sv === 'series' ? sv : 'home');
-      // „Letzter Sender“: erst jetzt – bei mehreren Personen also nach „Wer schaut?“ (vorher lief der Zeitgeber ins Leere)
-      if (startLast && startPending === 0) { var sl = startLast; startLast = null; if (justStarted) sl(); }
+      startMini = sv === 'last';
+      self.show(startTab(sv));
     },
     show: function (name, focusContent, keepFocus) {
       var self = this, prev = self.current;
@@ -4991,7 +4995,8 @@
     /* Live TV öffnen: im Vorschaufenster rechts läuft sofort etwas – der zuletzt gesehene Sender, sonst der erste der Liste.
        Nur wenn noch nichts läuft, das Fenster sichtbar ist (nicht auf dem Handy) und der eingebaute Player spielt. */
     function autoPreview(list) {
-      if (Player.el || Settings.get('livePreview') === false || Dialog.open || !list.length) return;
+      var force = startMini; startMini = false;   // „App beim Start: Letzter Sender“ – kleiner Player auch bei ausgeschalteter Live-Vorschau
+      if (Player.el || (Settings.get('livePreview') === false && !force) || Dialog.open || !list.length) return;
       var top = Screens.top(), slot = panel && $('.mini-slot-box', panel.el);
       if (!top || !top.el.contains(el) || !slot || !slot.offsetWidth) return;
       var r = Recent.list()[0], at = -1;
@@ -8331,6 +8336,9 @@
       }
       self.mini = false; self.pip = false;
       self.maxAt = Date.now();
+      // Vorschau lief vom Wächter stumm geschaltet weiter? Im Vollbild wieder mit der eigenen Ton-Einstellung,
+      // sonst bliebe derselbe Sender groß stumm (kein neues load(), das den Ton zurückholt)
+      self.restoreSound();
       clearInterval(self.placeTimer);
       self.el.classList.remove('is-mini', 'is-docked');
       document.body.classList.remove('has-mini');
@@ -8404,7 +8412,7 @@
       self.netRetries = 0; self.stallRetries = 0; self.swappedCodec = false; self.mediaRecoverAt = 0; self.reconnect = false;
       self.errTrail = []; self.errInfo = '';
       // vom Wächter stumm geschaltet (Ton blockiert)? Beim nächsten Sender wieder die eigene Einstellung
-      if (self.autoMuted) { self.autoMuted = false; if (self.video) { self.video.muted = !!Settings.get('muted'); self.paintVol(); } }
+      self.restoreSound();
       self.closeTracks();
       if (self.nextCancel) self.nextCancel();
       if (self.tracksBtn) self.tracksBtn.classList.add('is-gone');
@@ -9515,6 +9523,12 @@
       if (this.range) this.range.value = String(Math.round(v * 100));
       this.paintVol();
     },
+    /* Stummschaltung durch den Wächter (autoMuted) aufheben: zurück zur gespeicherten Ton-Einstellung */
+    restoreSound: function () {
+      if (!this.autoMuted) return;
+      this.autoMuted = false;
+      if (this.video) { this.video.muted = !!Settings.get('muted'); this.paintVol(); }
+    },
     setMuted: function (m) {
       // Ton wieder an, aber die gespeicherte Lautstärke ist 0 → auf eine hörbare Stärke springen
       if (!m && this.video.volume === 0) { this.video.volume = 0.5; Settings.set('volume', 0.5); }
@@ -9851,36 +9865,10 @@
       // Neustart aus der App heraus (z. B. Sprache gewechselt)? Dann weder „App beim Start“ noch letzten Sender
       var soft = false;
       try { soft = sessionStorage.getItem('lumio.soft') === '1'; sessionStorage.removeItem('lumio.soft'); } catch (e) {}
-      // „App beim Start“ (Live TV / Filme / Serien): bei mehreren Personen erst nach „Wer schaut?“ – sonst wird alles doppelt geladen
+      // „App beim Start“ (Live TV / Filme / Serien / Letzter Sender): bei mehreren Personen erst nach „Wer schaut?“ – sonst wird alles doppelt geladen.
+      // „Letzter Sender“ öffnet Live TV; der Sender läuft dort im kleinen Player (autoPreview), nicht mehr im Vollbild.
       startPending = soft ? 0 : Persons.multi() ? 2 : 1;
       startPendingUntil = Date.now() + 120000;   // „Wer schaut?“ nur weggeklickt: später nicht mehr umspringen
-      // Einstellung „Letzten Sender beim Start abspielen“ (nicht nach einem Neustart aus der App heraus).
-      // Startet, sobald die Startansicht aufgebaut ist (Shell.build) – bei mehreren Personen also erst nach „Wer schaut?“.
-      // Vorher lief der Zeitgeber nach 1,2 s, während „Wer schaut?“ noch offen war, und tat dann nichts.
-      startLast = soft || startView() !== 'last' ? null : function () { setTimeout(function () {
-        var lastLive = Recent.list()[0];
-        if (!lastLive) return;
-        function ok() { var top = Screens.top(); return !Player.el && top && top.name === 'shell' && !Dialog.open; }
-        if (!ok()) return;
-        // Mit der Senderliste der Kategorie starten – sonst kannte der Player nur diesen einen Sender und hoch/runter schaltete nicht um
-        var cat = lastLive.catId !== undefined && lastLive.catId !== null && lastLive.catId !== '' ? lastLive.catId : '__all';
-        var load = App.provider && App.provider.items ? App.provider.items('live', cat).then(null, function () { return null; }) : Promise.resolve(null);
-        // Abgelaufener oder gesperrter Zugang: nicht automatisch starten – sonst lief nur die Ablauf-Meldung des Anbieters
-        // im Vollbild. Kontodaten nur kurz abwarten (2,5 s); ohne Antwort wie bisher starten.
-        var acc = App.provider && App.provider.account ? Promise.race([App.provider.account().then(null, function () { return null; }), wait(2500).then(function () { return null; })]) : Promise.resolve(null);
-        Promise.all([Promise.race([load, wait(3000).then(function () { return null; })]), acc]).then(function (r) {
-          var list = r[0], a = r[1];
-          if (!ok()) return;
-          if (a && ((a.expires && Number(a.expires) > 0 && Number(a.expires) * 1000 < Date.now()) || (a.status && !/^active$/i.test(String(a.status))))) {
-            toast(T('Deine Playlist ist abgelaufen – der letzte Sender wird nicht automatisch gestartet.'), 6000);
-            return;
-          }
-          var idx = -1;
-          for (var i = 0; list && i < list.length; i++) if (String(list[i].id) === String(lastLive.id)) { idx = i; break; }
-          if (idx < 0) playItem(lastLive, { list: [lastLive], index: 0 });
-          else playItem(list[idx], { list: list, index: idx });
-        });
-      }, 1200); };
       activateProfile(active, false);
       if (Persons.multi()) setTimeout(function () { if (App.profile === active) showWhoWatches(); }, 300);
     }
@@ -9912,7 +9900,7 @@
     parseM3U: parseM3U, catchupUrl: catchupUrl, parseXtreamLink: parseXtreamLink, normalizeServer: normalizeServer, Nav: Nav, Screens: Screens, StillWatching: StillWatching,
     Xmltv: Xmltv, chanKey: chanKey, trackLabel: trackLabel, cleanTitle: cleanTitle, cleanEpName: cleanEpName, fmtDur: fmtDur, isRadio: isRadio, Sky: Sky, icon: icon, Terms: Terms, editPerson: editPerson, EpgStore: EpgStore, makeProvider: makeProvider, Profiles: Profiles, PinGuard: PinGuard, Store: Store, Cloud: Cloud,
     decodeBytes: decodeBytes, readText: readText, fetchText: fetchText, sameConnection: sameConnection, NativePlayer: NativePlayer, App: App, ensureTs: ensureTs, migrateM3uIds: migrateM3uIds,
-    ErrLog: ErrLog, techInfo: techInfo, epgText: epgText, ChanCount: ChanCount, clearHistory: clearHistory, startView: startView,
+    ErrLog: ErrLog, techInfo: techInfo, epgText: epgText, ChanCount: ChanCount, clearHistory: clearHistory, startView: startView, startTab: startTab,
     CatPrefs: CatPrefs, visibleCats: visibleCats, Parental: Parental, ChanHide: ChanHide, initials: initials, statusError: statusError, isVisible: isVisible,
     Backup: Backup, profileFp: profileFp, Settings: Settings,
     Seen: Seen, Resume: Resume, UpNext: UpNext, SeriesWatch: SeriesWatch, sortVod: sortVod,

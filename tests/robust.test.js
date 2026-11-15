@@ -528,6 +528,31 @@
     ok(D.trackLabel('English Commentary', 'en', 0).indexOf('English Commentary') >= 0, 'Zusatz bleibt sichtbar');
   });
 
+  t('Player', 'Live-Vorschau vom Wächter stumm geschaltet: im Vollbild kommt der eigene Ton zurück', function () {
+    var P = D.Player, before = D.Settings.data.muted, painted = 0;
+    try {
+      D.Settings.data.muted = false;
+      var fake = { autoMuted: true, video: { muted: true }, paintVol: function () { painted++; } };
+      P.restoreSound.call(fake);
+      ok(!fake.video.muted, 'Ton wieder an (eigene Einstellung: Ton an)');
+      ok(!fake.autoMuted, 'Wächter-Stummschaltung aufgehoben');
+      eq(painted, 1, 'Ton-Knopf neu gezeichnet');
+      // eigene Einstellung „stumm“ bleibt stumm
+      D.Settings.data.muted = true;
+      fake = { autoMuted: true, video: { muted: true }, paintVol: function () {} };
+      P.restoreSound.call(fake);
+      ok(fake.video.muted, 'selbst stumm geschaltet: bleibt stumm');
+      // ohne Wächter-Stummschaltung nichts anfassen (z. B. Ton gerade per Knopf aus)
+      D.Settings.data.muted = false;
+      fake = { autoMuted: false, video: { muted: true }, paintVol: function () {} };
+      P.restoreSound.call(fake);
+      ok(fake.video.muted, 'ohne Wächter: unverändert');
+      // Vorschau groß machen (derselbe Sender, kein neues load) und Senderwechsel holen den Ton zurück
+      ok(String(P.maximize).indexOf('restoreSound') >= 0, 'maximize() ruft restoreSound()');
+      ok(String(P.load).indexOf('restoreSound') >= 0, 'load() ruft restoreSound()');
+    } finally { D.Settings.data.muted = before; }
+  });
+
   t('Titel', 'Jahr raus aus dem Titel, Folgen ohne Seriennamen, Dauer lesbar, Radio nur echte Radiosender', function () {
     eq(D.cleanTitle('Rocky III (1982)'), 'Rocky III');
     eq(D.cleanTitle('Blade Runner 2049', '2017'), 'Blade Runner 2049', 'Jahreszahl als Teil des Titels bleibt');
@@ -621,6 +646,15 @@
       s.set('startView', 'quatsch');
       eq(D.startView(), 'home', 'unbekannter Wert → zurück zum Schalter');
     } finally { s.set('startView', keepV === undefined ? null : keepV); s.set('autoLast', keepA); }
+  });
+
+  t('Startseite', '„App beim Start: Letzter Sender“ öffnet Live TV (kleiner Player) statt Vollbild', function () {
+    eq(D.startTab('last'), 'live', 'Letzter Sender → Reiter Live TV');
+    eq(D.startTab('live'), 'live', 'Live TV bleibt Live TV');
+    eq(D.startTab('movie'), 'movie', 'Filme');
+    eq(D.startTab('series'), 'series', 'Serien');
+    eq(D.startTab('home'), 'home', 'Startseite');
+    eq(D.startTab('quatsch'), 'home', 'Unbekannt → Startseite');
   });
 
   t('Programmführer', 'Beschreibung: „\\n“ als Text wird zum echten Zeilenumbruch', function () {
