@@ -30,31 +30,38 @@ m = m.replace(/<application([^>]*)>/, (all, attrs) => {
   return '<application' + attrs + '>';
 });
 
-// 3) App im TV-Startmenü anzeigen: eigener TV-Eintrag (activity-alias „.TvStart“, öffnet dieselbe MainActivity).
+// 3) Start-Einträge (Handy-Startmenü LAUNCHER und TV-Startmenü LEANBACK_LAUNCHER) als zwei activity-alias,
+//    beide öffnen dieselbe MainActivity:
+//    - „.Start“: quadratisches App-Symbol, an (Handy, Tablet, PC-ähnliche Geräte und TV vor dem ersten Start).
+//    - „.TvStart“: breites Banner als Symbol, aus. MainActivity.tvStartEintrag() schaltet auf Fernsehern beim Start
+//      um (TvStart an, Start aus).
 //    Grund: Fire TV nimmt bei Apps, die nicht aus dem Amazon Appstore kommen, NICHT android:banner, sondern das
-//    android:icon des TV-Starteintrags und setzt es mittig in die 16:9-Kachel – mit dem quadratischen Symbol
-//    entstanden graue Balken links und rechts (Foto Eray, Fire TV Stick 4K Max, Fire OS 8, 15.11.2026).
-//    Der TV-Eintrag bekommt deshalb das breite Banner als Symbol; das Handy (LAUNCHER an der MainActivity) behält
-//    das quadratische Symbol. LEANBACK_LAUNCHER steht nur noch am TV-Eintrag, nicht mehr an der MainActivity.
-if (!m.includes('android:name=".TvStart"')) {
-  // ältere Fassung dieses Skripts hatte LEANBACK_LAUNCHER an die MainActivity gehängt (nur beim ersten Lauf entfernen,
-  // sonst träfe es beim zweiten Lauf auch den TV-Eintrag)
-  m = m.replace(/\s*<category android:name="android\.intent\.category\.LEANBACK_LAUNCHER"\s*\/>/g, '');
-  m = m.replace(/<\/application>/, [
+//    android:icon des Start-Eintrags und setzt es mittig in die 16:9-Kachel – mit dem quadratischen Symbol entstanden
+//    graue Balken links und rechts (Foto Eray, Fire TV Stick 4K Max, Fire OS 8, 15.11.2026). Das Bild speichert der
+//    Startbildschirm pro Eintrag; erst ein Eintrag mit neuem Namen bekommt das neue Bild ohne Deinstallieren.
+if (!m.includes('android:name=".Start"')) {
+  // Start-Filter der MainActivity (von Capacitor) und ältere Fassungen dieses Skripts entfernen
+  m = m.replace(/(<activity\b[^>]*android:name="\.MainActivity"[^>]*>)\s*<intent-filter>[\s\S]*?<\/intent-filter>/, '$1');
+  m = m.replace(/\s*<activity-alias\b[\s\S]*?<\/activity-alias>/g, '');
+  const alias = (name, extra, enabled) => [
     '    <activity-alias',
-    '            android:name=".TvStart"',
+    '            android:name="' + name + '"',
     '            android:targetActivity=".MainActivity"',
     '            android:exported="true"',
-    '            android:label="@string/app_name"',
-    '            android:icon="@drawable/banner"',
+    '            android:enabled="' + enabled + '"',
+    '            android:label="@string/app_name"'
+  ].concat(extra).concat([
     '            android:banner="@drawable/banner">',
     '            <intent-filter>',
     '                <action android:name="android.intent.action.MAIN" />',
+    '                <category android:name="android.intent.category.LAUNCHER" />',
     '                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />',
     '            </intent-filter>',
-    '        </activity-alias>',
-    '    </application>'
-  ].join('\n'));
+    '        </activity-alias>'
+  ]).join('\n');
+  m = m.replace(/<\/application>/,
+    alias('.Start', [], 'true') + '\n    ' +
+    alias('.TvStart', ['            android:icon="@drawable/banner"'], 'false') + '\n    </application>');
 }
 
 // 3b) Handy und Tablet nur im Querformat (seitlich, beide Richtungen). Fernseher sind ohnehin quer.
