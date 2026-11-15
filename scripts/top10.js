@@ -19,12 +19,8 @@ const fs = require('fs');
 const COUNTRY = 'DE';
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36';
 const NETFLIX_TSV = 'https://www.netflix.com/tudum/top10/data/all-weeks-countries.tsv';
-const WD = 'https://www.wikidata.org/w/api.php';
+const WD_SPARQL = 'https://query.wikidata.org/sparql';
 const WD_UA = 'TelvoPlayerTop10/1.0 (https://github.com/Splix66/lumio-player)';
-
-// Wikidata-Arten: Film bzw. Serie (P31 „ist ein(e)“)
-const FILM = ['Q11424', 'Q24869', 'Q506240', 'Q202866', 'Q93204', 'Q24862', 'Q17123180', 'Q130232', 'Q157443', 'Q188473', 'Q1054574', 'Q200092', 'Q959790', 'Q2484376', 'Q1361932', 'Q20650540', 'Q622548', 'Q29168811'];
-const SERIES = ['Q5398426', 'Q63952888', 'Q581714', 'Q1259759', 'Q117467246', 'Q526877', 'Q15416', 'Q3464665', 'Q21191270', 'Q1366112', 'Q24856', 'Q7725310', 'Q29982117', 'Q1407245', 'Q113687694', 'Q2635894'];
 
 function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
 
@@ -76,34 +72,34 @@ function parseNetflix(tsv) {
   return { week: week, movies: movies, series: series };
 }
 
-/* Deutscher Titel, weitere Namen und Jahr über Wikidata. Treffer nur, wenn die Art passt (Film bzw. Serie);
-   Einträge mit Netflix-Kennung (P1874) gehen vor. Kein sicherer Treffer → nur der englische Titel. */
+/* Deutscher Titel, weitere deutsche Namen und Jahr über Wikidata. Nur Einträge mit Netflix-Kennung (P1874),
+   deren englischer Name genau passt und deren Art stimmt (Film bzw. Serie). Kein eindeutiger Treffer → nur der
+   englische Titel (lieber kein deutscher Titel als ein falscher – sonst fände die App einen anderen Film). */
+function sparql(title) {
+  const t = title.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  return 'SELECT ?item (SAMPLE(?deL) AS ?de) (GROUP_CONCAT(DISTINCT ?deA; separator="|") AS ?aka) (MIN(YEAR(?date)) AS ?year)' +
+    ' (SAMPLE(?f) AS ?film) (SAMPLE(?s) AS ?series) WHERE {' +
+    ' ?item rdfs:label|skos:altLabel "' + t + '"@en ; wdt:P1874 ?nf .' +
+    ' BIND(EXISTS { ?item wdt:P31/wdt:P279* wd:Q11424 } AS ?f)' +
+    ' BIND(EXISTS { VALUES ?r { wd:Q5398426 wd:Q526877 wd:Q1259759 } ?item wdt:P31/wdt:P279* ?r } AS ?s)' +
+    ' OPTIONAL { ?item rdfs:label ?deL FILTER(LANG(?deL) = "de") }' +
+    ' OPTIONAL { ?item skos:altLabel ?deA FILTER(LANG(?deA) = "de") }' +
+    ' OPTIONAL { ?item wdt:P577 ?date }' +
+    ' } GROUP BY ?item';
+}
 async function wikidata(title, kind) {
   try {
-    const q = WD + '?action=wbsearchentities&format=json&language=en&uselang=en&type=item&limit=7&search=' + encodeURIComponent(title);
-    const s = await (await get(q, { 'User-Agent': WD_UA })).json();
-    const ids = (s.search || []).map((x) => x.id);
-    if (!ids.length) return null;
-    const e = await (await get(WD + '?action=wbgetentities&format=json&props=labels|aliases|claims&languages=de|en&ids=' + ids.join('|'), { 'User-Agent': WD_UA })).json();
-    const want = kind === 'movie' ? FILM : SERIES;
-    let best = null, bestScore = -1;
-    ids.forEach((id, pos) => {
-      const it = e.entities && e.entities[id];
-      if (!it || !it.claims) return;
-      const types = (it.claims.P31 || []).map((c) => c.mainsnak && c.mainsnak.datavalue && c.mainsnak.datavalue.value.id);
-      if (!types.some((t) => want.indexOf(t) >= 0)) return;
-      const en = it.labels && it.labels.en && it.labels.en.value;
-      const enAliases = ((it.aliases && it.aliases.en) || []).map((a) => a.value);
-      const nameFits = [en].concat(enAliases).some((n) => n && n.toLowerCase() === title.toLowerCase());
-      if (!nameFits) return;
-      const score = (it.claims.P1874 ? 10 : 0) + (7 - pos);
-      if (score > bestScore) { bestScore = score; best = it; }
-    });
-    if (!best) return null;
-    const de = best.labels && best.labels.de && best.labels.de.value;
-    const deAliases = ((best.aliases && best.aliases.de) || []).map((a) => a.value).slice(0, 4);
-    const years = (best.claims.P577 || []).map((c) => { const v = c.mainsnak && c.mainsnak.datavalue && c.mainsnak.datavalue.value; return v && v.time ? Number(v.time.slice(1, 5)) : 0; }).filter(Boolean);
-    return { wd: best.id, de: de || '', aka: deAliases, year: years.length ? Math.min.apply(null, years) : 0 };
+    const s = await (await get(WD_SPARQL + '?format=json&query=' + encodeURIComponent(sparql(title)), { 'User-Agent': WD_UA, 'Accept': 'application/sparql-results+json' })).json();
+    const rows = ((s.results && s.results.bindings) || []).filter((b) => (kind === 'movie' ? b.film : b.series) && (kind === 'movie' ? b.film : b.series).value === 'true');
+    // Genau ein passender Eintrag – sonst lieber keinen (z. B. zwei Filme „Collision Course“ von 1989 und 2025)
+    if (rows.length !== 1) return null;
+    const b = rows[0];
+    return {
+      wd: b.item.value.split('/').pop(),
+      de: b.de ? b.de.value : '',
+      aka: b.aka && b.aka.value ? b.aka.value.split('|').filter(Boolean).slice(0, 4) : [],
+      year: b.year ? Number(b.year.value) || 0 : 0
+    };
   } catch (err) {
     console.warn('Wikidata nicht erreichbar für „' + title + '“: ' + err.message);
     return null;
@@ -120,7 +116,7 @@ async function enrich(list, kind) {
       if (aka.length) x.aka = aka;
       if (w.year) x.year = w.year;
     }
-    await sleep(250);
+    await sleep(400);
   }
   return list;
 }

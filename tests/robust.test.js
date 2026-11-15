@@ -689,12 +689,16 @@
     var list = [
       { kind: 'movie', id: 11, name: 'DE - Kollisionskurs', year: '2025', catId: 1, logo: '' },
       { kind: 'movie', id: 12, name: 'Blood and Sinners', year: '1999', catId: 1 },     // falsches Jahr → anderer Film
-      { kind: 'movie', id: 13, name: 'Film 3 4K', catId: 1 }
+      { kind: 'movie', id: 13, name: 'Film 3 4K', catId: 1 },
+      // ohne bekanntes Jahr zwei gleichnamige Filme → unklar, welcher gemeint ist → kein Treffer
+      { kind: 'movie', id: 14, name: 'Film 4', year: '2001', catId: 1 },
+      { kind: 'movie', id: 15, name: 'Film 4', year: '2019', catId: 1 }
     ];
     return M.save('movie', list).then(function () {
       eq(M.item('movie', 'netflix', 1).id, 11, 'deutscher Titel gefunden');
       eq(M.item('movie', 'netflix', 2), null, 'gleicher Name, falsches Jahr: kein Treffer');
       eq(M.item('movie', 'netflix', 3).id, 13, 'Qualitätsangabe stört nicht');
+      eq(M.item('movie', 'netflix', 4), null, 'zwei gleichnamige Filme ohne Jahr: kein Treffer');
       ok(M.fresh('movie', data), 'Abgleich passt zur Liste');
       var hit = D.top10Tile(data.services[1], row[0]), miss = D.top10Tile(data.services[1], row[2]);
       eq(hit.querySelector('.t10-n').textContent, '1');

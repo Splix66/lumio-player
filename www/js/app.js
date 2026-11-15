@@ -4459,11 +4459,18 @@
               var off = w.year && y ? Math.abs(w.year - y) : 0;
               if (off > 1) return;
               var score = (w.year && y ? 2 : 0) - off + (Number(x.rating) > 0 ? 0.5 : 0);
-              if (!found[w.id] || score > found[w.id].s) found[w.id] = { s: score, it: slim(x) };
+              var f = found[w.id] || (found[w.id] = { s: -99, it: null, years: {}, noYear: !w.year });
+              f.years[y || '?'] = 1;
+              if (score > f.s) { f.s = score; f.it = slim(x); }
             });
           });
           var m = {};
-          Object.keys(found).forEach(function (k) { m[k] = found[k].it; });
+          Object.keys(found).forEach(function (k) {
+            // Ohne bekanntes Jahr und mehrere gleichnamige Titel mit verschiedenen Jahren in der Playlist:
+            // unklar, welcher gemeint ist → lieber „nicht in der Playlist“ als den falschen Film öffnen
+            if (found[k].noYear && Object.keys(found[k].years).length > 1) return;
+            m[k] = found[k].it;
+          });
           Store.set(self.key(kind, owner), { stamp: Top10.stamp(d), m: m });
           if (self.onChange) self.onChange();     // Startseite offen: Reihen neu zeichnen
         });
