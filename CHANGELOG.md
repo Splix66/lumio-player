@@ -1,6 +1,6 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
-## 1.15.7 – in Vorbereitung
+## 1.15.7 – 2026-11-15 · Letzter Sender im kleinen Player
 
 - **„App beim Start: Letzter Sender“ startet nicht mehr im Vollbild.** Die App öffnet jetzt den Reiter Live TV, und der zuletzt gesehene Sender läuft dort im kleinen Player (Vorschaufenster rechts). Mit OK bzw. einem Klick auf den Sender geht er wie gewohnt ins Vollbild. Gilt auch, wenn die Live-Vorschau in den Einstellungen ausgeschaltet ist. Auf dem Handy gibt es kein Vorschaufenster – dort öffnet sich nur Live TV. Neuer Test.
 
