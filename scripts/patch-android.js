@@ -23,7 +23,17 @@ if (!m.includes('android.software.leanback')) {
   ].join('\n'));
 }
 
-// 2) TV-Banner und http-Streams erlauben
+// 2) TV-Banner und http-Streams erlauben.
+//    App-Symbol (application android:icon) = breites Banner: Die App-Bibliothek des Fire-TV-Startbildschirms führt
+//    Apps pro Paket und nahm das quadratische App-Symbol, auch als der Start-Eintrag schon das Banner hatte (geprüft
+//    auf Erays Stick, 15.11.2026). Handy-Startmenü und Vollbild-Activities haben ihr quadratisches Symbol einzeln
+//    (Alias „.Start“, MainActivity, PlayerActivity).
+m = m.replace(/(<application\b[^>]*?android:icon=")@mipmap\/ic_launcher(")/, '$1@drawable/banner$2');
+m = m.replace(/(<application\b[^>]*?)\s*android:roundIcon="[^"]*"/, '$1');
+m = m.replace(/<activity\b[^>]*android:name="\.MainActivity"[^>]*>/, (tag) => {
+  if (tag.includes('android:icon')) return tag;
+  return tag.replace(/<activity\b/, '<activity\n            android:icon="@mipmap/ic_launcher"');
+});
 m = m.replace(/<application([^>]*)>/, (all, attrs) => {
   if (!attrs.includes('android:banner')) attrs += '\n        android:banner="@drawable/banner"';
   if (!attrs.includes('usesCleartextTraffic')) attrs += '\n        android:usesCleartextTraffic="true"';
@@ -60,7 +70,7 @@ if (!m.includes('android:name=".Start"')) {
     '        </activity-alias>'
   ]).join('\n');
   m = m.replace(/<\/application>/,
-    alias('.Start', [], 'true') + '\n    ' +
+    alias('.Start', ['            android:icon="@mipmap/ic_launcher"', '            android:roundIcon="@mipmap/ic_launcher_round"'], 'true') + '\n    ' +
     alias('.TvStart', ['            android:icon="@drawable/banner"'], 'false') + '\n    </application>');
 }
 
@@ -113,6 +123,7 @@ if (!m2.includes('.PlayerActivity')) {
   m2 = m2.replace(/<\/application>/, [
     '    <activity',
     '            android:name=".PlayerActivity"',
+    '            android:icon="@mipmap/ic_launcher"',
     '            android:exported="false"',
     '            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboard|keyboardHidden|navigation|uiMode"',
     '            android:screenOrientation="sensorLandscape"',
