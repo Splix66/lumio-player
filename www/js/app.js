@@ -210,6 +210,22 @@
     if (m) n = m[2].trim();
     return n || T('Folge {0}', num);
   }
+  /* Folgentext („Worum geht es?“) aus get_series_info. Die Panels schreiben ihn verschieden: meist info.plot, manche
+     info.overview/description, manche direkt an der Folge; „info“ kommt teils als leere Liste [] oder als JSON-Text.
+     Platzhalter wie „N/A“ oder „No Data“ zählen nicht. */
+  function epPlot(e) {
+    e = e || {};
+    var ei = e.info;
+    if (typeof ei === 'string') { try { ei = JSON.parse(ei); } catch (x) { ei = null; } }
+    if (!ei || typeof ei !== 'object' || Array.isArray(ei)) ei = {};
+    var c = [ei.plot, ei.overview, ei.description, ei.desc, ei.summary, ei.storyline, e.plot, e.overview, e.description];
+    for (var i = 0; i < c.length; i++) {
+      if (typeof c[i] !== 'string') continue;
+      var s = c[i].replace(/\s+/g, ' ').trim();
+      if (s && !/^(n\/?a|null|undefined|none|-+|\.+|no\s*(data|info(rmation)?|plot|description|overview)( available)?|keine\s+(daten|beschreibung|informationen))\.?$/i.test(s)) return s;
+    }
+    return '';
+  }
   /* Dauer lesbar: „01:58:00“ oder Sekunden → „1 Std. 58 Min.“ / „45 Min.“ */
   function durSec(v) {
     var s = String(v == null ? '' : v).trim();
@@ -881,11 +897,11 @@
             return {
               num: Number(k),
               episodes: (groups[k] || []).map(function (e) {
-                var ei = e.info || {};
+                var ei = (e.info && typeof e.info === 'object' && !Array.isArray(e.info)) ? e.info : {};
                 return {
                   kind: 'episode', id: String(e.id), num: Number(e.episode_num) || 0, season: Number(k),
                   name: cleanEpName(e.title, item.name, Number(e.episode_num) || 0), ext: e.container_extension || 'mp4',
-                  plot: ei.plot, duration: ei.duration_secs || ei.duration, seriesId: item.id, seriesName: item.name, logo: ei.movie_image || item.logo,
+                  plot: epPlot(e), duration: ei.duration_secs || ei.duration, seriesId: item.id, seriesName: item.name, logo: ei.movie_image || item.logo,
                   backdrop: Array.isArray(i.backdrop_path) ? i.backdrop_path[0] : i.backdrop_path
                 };
               }).sort(function (a, b) { return a.num - b.num; })
@@ -1507,7 +1523,12 @@
     var eps = [
       { season: 1, num: 1, name: 'Big Buck Bunny', url: S.bbb }, { season: 1, num: 2, name: 'Sintel', url: S.sintel },
       { season: 2, num: 1, name: 'Tears of Steel', url: S.tos }
-    ].map(function (e, i) { e.kind = 'episode'; e.id = 'e' + i; e.seriesId = 's1'; e.seriesName = 'Open Movie Classics'; return e; });
+    ].map(function (e, i) {
+      e.kind = 'episode'; e.id = 'e' + i; e.seriesId = 's1'; e.seriesName = 'Open Movie Classics';
+      // Folgentext wie beim gleichnamigen Demo-Film, damit man die Anzeige auch ohne echte Playlist sieht
+      e.plot = (movies.filter(function (m) { return m.url === e.url; })[0] || {}).plot || '';
+      return e;
+    });
     var cats = {
       live: [{ id: 'news', name: T('Demo Nachrichten') }, { id: 'film', name: T('Demo Filmkanäle') }],
       movie: [{ id: 'anim', name: T('Animation') }, { id: 'scifi', name: T('Science-Fiction') }],
@@ -10069,7 +10090,7 @@
   // Für automatische Tests von außen erreichbar
   window.LumioDebug = {
     parseM3U: parseM3U, catchupUrl: catchupUrl, parseXtreamLink: parseXtreamLink, normalizeServer: normalizeServer, Nav: Nav, Screens: Screens, StillWatching: StillWatching,
-    Xmltv: Xmltv, chanKey: chanKey, trackLabel: trackLabel, cleanTitle: cleanTitle, cleanEpName: cleanEpName, fmtDur: fmtDur, isRadio: isRadio, Sky: Sky, icon: icon, Terms: Terms, editPerson: editPerson, EpgStore: EpgStore, makeProvider: makeProvider, Profiles: Profiles, PinGuard: PinGuard, Store: Store, Cloud: Cloud,
+    Xmltv: Xmltv, chanKey: chanKey, trackLabel: trackLabel, cleanTitle: cleanTitle, cleanEpName: cleanEpName, epPlot: epPlot, fmtDur: fmtDur, isRadio: isRadio, Sky: Sky, icon: icon, Terms: Terms, editPerson: editPerson, EpgStore: EpgStore, makeProvider: makeProvider, Profiles: Profiles, PinGuard: PinGuard, Store: Store, Cloud: Cloud,
     decodeBytes: decodeBytes, readText: readText, fetchText: fetchText, sameConnection: sameConnection, NativePlayer: NativePlayer, App: App, ensureTs: ensureTs, migrateM3uIds: migrateM3uIds,
     ErrLog: ErrLog, techInfo: techInfo, epgText: epgText, ChanCount: ChanCount, Top10: Top10, Top10Match: Top10Match, top10Tile: top10Tile, t10Key: t10Key, clearHistory: clearHistory, startView: startView, startTab: startTab,
     CatPrefs: CatPrefs, visibleCats: visibleCats, Parental: Parental, ChanHide: ChanHide, initials: initials, statusError: statusError, isVisible: isVisible,
