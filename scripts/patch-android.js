@@ -44,8 +44,12 @@ m = m.replace(/<activity\b[^>]*android:name="\.MainActivity"[^>]*>/, (tag) => {
   return tag.replace(/<activity\b/, '<activity\n            android:screenOrientation="sensorLandscape"');
 });
 
-// 3c) TV-Banner auch direkt an der Start-Activity: Der Fire-TV-Startbildschirm nimmt sonst teils nur das kleine
-//     App-Symbol (Logo auf grauer Kachel) statt der gefüllten Banner-Kachel mit Namen wie bei Netflix oder YouTube.
+// 3c) TV-Banner auch direkt an der Start-Activity (Android TV / Google TV zeigen es als Kachel).
+//     Fire TV (Fire OS 8) zeigt bei Apps, die nicht aus dem Amazon Appstore kommen, das Banner NICHT: Es setzt das
+//     App-Symbol in ein festes Quadrat mitten in die 16:9-Kachel, links und rechts grau (Kacheltyp „sideloaded“).
+//     Geprüft auf Erays Fire TV Stick 4K Max am 15.11.2026: Auch ein breites Bild als App- oder Start-Symbol wird nur
+//     ins Quadrat gequetscht. Randlose Kacheln wie Netflix oder YouTube gibt es nur für Appstore-Apps (Typ „locker“,
+//     Bild kommt von Amazon). Fire TV merkt sich das Kachelbild pro App bis zum Deinstallieren.
 m = m.replace(/<activity\b[^>]*android:name="\.MainActivity"[^>]*>/, (tag) => {
   if (tag.includes('android:banner')) return tag;
   return tag.replace(/<activity\b/, '<activity\n            android:banner="@drawable/banner"');
@@ -64,10 +68,15 @@ if (fs.existsSync(stylesPath)) {
   }
 }
 
-// Banner-Bild kopieren
-const drawable = path.join(base, 'android', 'app', 'src', 'main', 'res', 'drawable');
+// Banner-Bild kopieren: 640x360 Pixel nach drawable-xhdpi (= 320x180 dp, wie Android TV es vorgibt).
+// Früher lag ein 320x180-Bild ohne Dichte in drawable/ – auf dem Fire TV Stick 4K Max (Dichte 320) unscharf
+// hochgerechnet. Eine alte Kopie in drawable/ wird entfernt, damit nur noch das neue Bild im Paket ist.
+const res = path.join(base, 'android', 'app', 'src', 'main', 'res');
+const drawable = path.join(res, 'drawable-xhdpi');
 fs.mkdirSync(drawable, { recursive: true });
 fs.copyFileSync(path.join(base, 'assets', 'banner.png'), path.join(drawable, 'banner.png'));
+const oldBanner = path.join(res, 'drawable', 'banner.png');
+if (fs.existsSync(oldBanner)) fs.unlinkSync(oldBanner);
 
 // 5) TV-Player (ExoPlayer): Java-Dateien, Bildschirm im Manifest und Bibliotheken
 const javaDir = path.join(base, 'android', 'app', 'src', 'main', 'java', 'de', 'lumio', 'player');
