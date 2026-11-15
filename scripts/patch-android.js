@@ -23,55 +23,19 @@ if (!m.includes('android.software.leanback')) {
   ].join('\n'));
 }
 
-// 2) TV-Banner und http-Streams erlauben.
-//    App-Symbol (application android:icon) = breites Banner: Die App-Bibliothek des Fire-TV-Startbildschirms führt
-//    Apps pro Paket und nahm das quadratische App-Symbol, auch als der Start-Eintrag schon das Banner hatte (geprüft
-//    auf Erays Stick, 15.11.2026). Handy-Startmenü und Vollbild-Activities haben ihr quadratisches Symbol einzeln
-//    (Alias „.Start“, MainActivity, PlayerActivity).
-m = m.replace(/(<application\b[^>]*?android:icon=")@mipmap\/ic_launcher(")/, '$1@drawable/banner$2');
-m = m.replace(/(<application\b[^>]*?)\s*android:roundIcon="[^"]*"/, '$1');
-m = m.replace(/<activity\b[^>]*android:name="\.MainActivity"[^>]*>/, (tag) => {
-  if (tag.includes('android:icon')) return tag;
-  return tag.replace(/<activity\b/, '<activity\n            android:icon="@mipmap/ic_launcher"');
-});
+// 2) TV-Banner und http-Streams erlauben
 m = m.replace(/<application([^>]*)>/, (all, attrs) => {
   if (!attrs.includes('android:banner')) attrs += '\n        android:banner="@drawable/banner"';
   if (!attrs.includes('usesCleartextTraffic')) attrs += '\n        android:usesCleartextTraffic="true"';
   return '<application' + attrs + '>';
 });
 
-// 3) Start-Einträge (Handy-Startmenü LAUNCHER und TV-Startmenü LEANBACK_LAUNCHER) als zwei activity-alias,
-//    beide öffnen dieselbe MainActivity:
-//    - „.Start“: quadratisches App-Symbol, an (Handy, Tablet, PC-ähnliche Geräte und TV vor dem ersten Start).
-//    - „.TvStart“: breites Banner als Symbol, aus. MainActivity.tvStartEintrag() schaltet auf Fernsehern beim Start
-//      um (TvStart an, Start aus).
-//    Grund: Fire TV nimmt bei Apps, die nicht aus dem Amazon Appstore kommen, NICHT android:banner, sondern das
-//    android:icon des Start-Eintrags und setzt es mittig in die 16:9-Kachel – mit dem quadratischen Symbol entstanden
-//    graue Balken links und rechts (Foto Eray, Fire TV Stick 4K Max, Fire OS 8, 15.11.2026). Das Bild speichert der
-//    Startbildschirm pro Eintrag; erst ein Eintrag mit neuem Namen bekommt das neue Bild ohne Deinstallieren.
-if (!m.includes('android:name=".Start"')) {
-  // Start-Filter der MainActivity (von Capacitor) und ältere Fassungen dieses Skripts entfernen
-  m = m.replace(/(<activity\b[^>]*android:name="\.MainActivity"[^>]*>)\s*<intent-filter>[\s\S]*?<\/intent-filter>/, '$1');
-  m = m.replace(/\s*<activity-alias\b[\s\S]*?<\/activity-alias>/g, '');
-  const alias = (name, extra, enabled) => [
-    '    <activity-alias',
-    '            android:name="' + name + '"',
-    '            android:targetActivity=".MainActivity"',
-    '            android:exported="true"',
-    '            android:enabled="' + enabled + '"',
-    '            android:label="@string/app_name"'
-  ].concat(extra).concat([
-    '            android:banner="@drawable/banner">',
-    '            <intent-filter>',
-    '                <action android:name="android.intent.action.MAIN" />',
-    '                <category android:name="android.intent.category.LAUNCHER" />',
-    '                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />',
-    '            </intent-filter>',
-    '        </activity-alias>'
-  ]).join('\n');
-  m = m.replace(/<\/application>/,
-    alias('.Start', ['            android:icon="@mipmap/ic_launcher"', '            android:roundIcon="@mipmap/ic_launcher_round"'], 'true') + '\n    ' +
-    alias('.TvStart', ['            android:icon="@drawable/banner"'], 'false') + '\n    </application>');
+// 3) App im TV-Startmenü anzeigen (LEANBACK_LAUNCHER)
+if (!m.includes('LEANBACK_LAUNCHER')) {
+  m = m.replace(
+    /(<category android:name="android\.intent\.category\.LAUNCHER"\s*\/>)/,
+    '$1\n                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />'
+  );
 }
 
 // 3b) Handy und Tablet nur im Querformat (seitlich, beide Richtungen). Fernseher sind ohnehin quer.
@@ -80,8 +44,12 @@ m = m.replace(/<activity\b[^>]*android:name="\.MainActivity"[^>]*>/, (tag) => {
   return tag.replace(/<activity\b/, '<activity\n            android:screenOrientation="sensorLandscape"');
 });
 
-// 3c) TV-Banner auch direkt an der Start-Activity: Der Fire-TV-Startbildschirm nimmt sonst teils nur das kleine
-//     App-Symbol (Logo auf grauer Kachel) statt der gefüllten Banner-Kachel mit Namen wie bei Netflix oder YouTube.
+// 3c) TV-Banner auch direkt an der Start-Activity (Android TV / Google TV zeigen es als Kachel).
+//     Fire TV (Fire OS 8) zeigt bei Apps, die nicht aus dem Amazon Appstore kommen, das Banner NICHT: Es setzt das
+//     App-Symbol in ein festes Quadrat mitten in die 16:9-Kachel, links und rechts grau (Kacheltyp „sideloaded“).
+//     Geprüft auf Erays Fire TV Stick 4K Max am 15.11.2026: Auch ein breites Bild als App- oder Start-Symbol wird nur
+//     ins Quadrat gequetscht. Randlose Kacheln wie Netflix oder YouTube gibt es nur für Appstore-Apps (Typ „locker“,
+//     Bild kommt von Amazon). Fire TV merkt sich das Kachelbild pro App bis zum Deinstallieren.
 m = m.replace(/<activity\b[^>]*android:name="\.MainActivity"[^>]*>/, (tag) => {
   if (tag.includes('android:banner')) return tag;
   return tag.replace(/<activity\b/, '<activity\n            android:banner="@drawable/banner"');
@@ -123,7 +91,6 @@ if (!m2.includes('.PlayerActivity')) {
   m2 = m2.replace(/<\/application>/, [
     '    <activity',
     '            android:name=".PlayerActivity"',
-    '            android:icon="@mipmap/ic_launcher"',
     '            android:exported="false"',
     '            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboard|keyboardHidden|navigation|uiMode"',
     '            android:screenOrientation="sensorLandscape"',

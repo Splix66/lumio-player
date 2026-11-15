@@ -2,7 +2,8 @@
 
 ## Noch nicht veröffentlicht (Test-Zweig rel-1158-banner) · Fire-TV-Kachel randlos
 
-- **Fire TV / Android TV: App-Kachel im Startbildschirm randlos.** Auf dem Fire TV Stick zeigte die Kachel „Meine Apps und Sender“ das quadratische App-Symbol mit grauen Balken links und rechts. Grund: Fire TV nutzt bei Apps, die nicht aus dem Amazon Appstore kommen, nicht das Banner (`android:banner`), sondern das Symbol des TV-Starteintrags. Das Bild speichert der Startbildschirm pro Start-Eintrag zwischen. Neu: zwei Start-Einträge (`activity-alias`), beide öffnen dieselbe App – `.Start` mit quadratischem Symbol (an) und `.TvStart` mit dem breiten Banner als Symbol (aus). Auf einem Fernseher schaltet die App beim Start einmalig um (`MainActivity.tvStartEintrag()`); weil der Eintrag neu ist, lädt der Startbildschirm das neue Bild ohne Deinstallieren. Handys bleiben unverändert. Hinweis: Eine angepinnte Kachel kann dabei ans Ende der App-Liste rutschen. Das Banner selbst ist neu: 640x360 Pixel in `drawable-xhdpi` (= 320x180 dp, Vorgabe von Android TV), lila Fläche bis an alle Ränder, Logo und „Telvo Player“ mittig.
+- **Android TV / Google TV: schärferes, randloses Banner.** 640x360 Pixel in `drawable-xhdpi` (= 320x180 dp, Vorgabe von Android TV) statt 320x180 ohne Dichte; lila Fläche bis an alle Ränder, Logo und „Telvo Player“ mittig.
+- **Fire TV: graue Balken neben dem Symbol lassen sich in der App nicht beheben.** Fire OS 8 setzt bei Apps, die nicht aus dem Amazon Appstore kommen, das App-Symbol in ein festes Quadrat mitten in die Kachel und füllt links und rechts grau auf – auch ein breites Bild als Symbol wird nur ins Quadrat gequetscht (auf dem Fire TV Stick 4K Max geprüft, siehe Hinweis in `scripts/patch-android.js`). Randlose Kacheln wie Netflix gibt es nur über den Amazon Appstore. Versuche mit eigenem TV-Start-Eintrag und breitem App-Symbol wieder entfernt.
 
 ## 1.15.7 – 2026-11-15 · Letzter Sender im kleinen Player
 
