@@ -98,6 +98,8 @@ begin
   if not public.lumio_is_admin() then return public.lumio_denied(); end if;
   return json_build_object('ok', true,
     'devices',     (select count(*) from public.devices),
+    'online',      (select count(*) from public.devices where last_seen > now() - interval '3 minutes'),
+    'active1h',    (select count(*) from public.devices where last_seen > now() - interval '1 hour'),
     'active1',     (select count(*) from public.devices where last_seen > now() - interval '1 day'),
     'active7',     (select count(*) from public.devices where last_seen > now() - interval '7 days'),
     'new7',        (select count(*) from public.devices where created_at > now() - interval '7 days'),
@@ -159,7 +161,7 @@ begin
   return json_build_object('ok', true);
 end $$;
 
--- Geräteliste. p_filter: all | active (7 Tage) | inactive (30+ Tage) | locked
+-- Geräteliste. p_filter: all | online (3 Minuten) | active (7 Tage) | inactive (30+ Tage) | locked
 create or replace function public.admin_list_devices(
   p_search text default null, p_filter text default 'all', p_limit int default 50, p_offset int default 0)
 returns json language plpgsql stable security definer set search_path = public as $$
@@ -174,6 +176,7 @@ begin
       from public.devices d
       where (q is null or d.mac like '%' || q || '%' or replace(d.mac, ':', '') like '%' || replace(q, ':', '') || '%')
         and (coalesce(p_filter, 'all') = 'all'
+             or (p_filter = 'online' and d.last_seen > now() - interval '3 minutes')
              or (p_filter = 'active' and d.last_seen > now() - interval '7 days')
              or (p_filter = 'inactive' and d.last_seen <= now() - interval '30 days')
              or (p_filter = 'locked' and (d.locked_until > now() or d.fails > 0)))

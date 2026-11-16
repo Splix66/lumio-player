@@ -289,7 +289,7 @@
   /* ---------------- Übersicht ---------------- */
   function kpi(label, value, sub, opts) {
     opts = opts || {};
-    var k = el(opts.onClick ? 'button' : 'div', 'kpi' + (opts.alert ? ' is-alert' : ''));
+    var k = el(opts.onClick ? 'button' : 'div', 'kpi' + (opts.alert ? ' is-alert' : '') + (opts.live ? ' is-live' : ''));
     if (opts.onClick) { k.type = 'button'; k.addEventListener('click', opts.onClick); }
     k.appendChild(el('small', null, label));
     k.appendChild(el('b', null, value));
@@ -299,10 +299,16 @@
   function loadOverview() {
     var box = $('kpis');
     clear(box);
-    for (var i = 0; i < 5; i++) box.appendChild(el('div', 'skeleton'));
+    for (var i = 0; i < 6; i++) box.appendChild(el('div', 'skeleton'));
     clear($('chart'));
     api('admin_stats').then(function (s) {
       clear(box);
+      // „Gerade online“: last_seen jünger als 3 Minuten (die App meldet sich alle 30 s, beim Schauen alle 2 min).
+      // Fehlen die Felder, ist server/online-2026-11.sql noch nicht eingespielt.
+      var hasOnline = s.online != null;
+      box.appendChild(kpi('Gerade online', hasOnline ? num(s.online) : '–',
+        hasOnline ? num(s.active1h) + ' in der letzten Stunde' : 'Datenbank-Update fehlt',
+        { live: hasOnline && s.online > 0, onClick: function () { Devices.filter = 'online'; paintSeg('dfilter', 'online'); showTab('devices', true); } }));
       box.appendChild(kpi('Geräte gesamt', num(s.devices), '+' + num(s.new7) + ' in 7 Tagen'));
       box.appendChild(kpi('Aktiv heute', num(s.active1), num(s.active7) + ' in 7 Tagen'));
       box.appendChild(kpi('Playlists', num(s.playlists), 'Xtream ' + num(s.xtream) + ' · M3U ' + num(s.m3u)));
@@ -500,14 +506,16 @@
   });
   $('deviceSearch').addEventListener('input', debounce(function () { Devices.q = $('deviceSearch').value.trim(); loadDevices(); }, 300));
   $('deviceMore').addEventListener('click', function () { loadDevices(true); });
+  var ONLINE_MS = 3 * 60 * 1000;   // „online“ = in den letzten 3 Minuten gemeldet (wie admin_stats.online)
   function statusBadges(dv) {
     var box = el('span', 'row');
     var locked = dv.locked_until && d(dv.locked_until) > new Date();
     function badge(cls, ic, text) { var b = el('span', 'badge ' + cls); if (ic) b.appendChild(icon(ic)); b.appendChild(el('span', null, text)); box.appendChild(b); }
     if (locked) badge('bad', 'lock', 'Gesperrt bis ' + TF.format(d(dv.locked_until)));
     else if (dv.fails > 0) badge('warn', null, dv.fails === 1 ? '1 Fehlversuch' : dv.fails + ' Fehlversuche');
-    var active = dv.last_seen && Date.now() - d(dv.last_seen).getTime() < 7 * 864e5;
-    badge(active ? 'ok' : 'mute', null, active ? 'Aktiv' : 'Inaktiv');
+    var since = dv.last_seen ? Date.now() - d(dv.last_seen).getTime() : Infinity;
+    if (since < ONLINE_MS) badge('ok live', null, 'Online');
+    else badge(since < 7 * 864e5 ? 'ok' : 'mute', null, since < 7 * 864e5 ? 'Aktiv' : 'Inaktiv');
     if (dv.support_open > 0) badge('warn', 'mail', dv.support_open + ' offen');
     return box;
   }
@@ -730,6 +738,8 @@
           type: x ? 'xtream' : 'm3u', host: pick(['iptv.example.net', 'tv.example.org', 'stream.example.com', 'm3u.example.de']), created_at: iso(created + rnd() * (now - created)) });
       }
     }
+    // ein paar Geräte „gerade online“ (Kachel und grüner Punkt), ohne die übrigen Zufallsdaten zu verschieben
+    [0, 1, 2].forEach(function (n) { devices[n * 7].last_seen = iso(now - (20 + n * 40) * 1000); });
     var TOPICS = ['Playlist', 'Wiedergabe', 'Konto & Gerät', 'Sonstiges'];
     var TEXTS = [
       'Beispieltext: Die Playlist erscheint nach dem Hochladen nicht auf dem Fernseher.',
@@ -759,6 +769,8 @@
           daily.push({ day: iso(day.getTime()).slice(0, 10), n: devices.filter(function (x) { var c = d(x.created_at).getTime(); return c >= day.getTime() && c < next; }).length });
         }
         return { ok: true, devices: devices.length,
+          online: devices.filter(function (x) { return t - d(x.last_seen) < 3 * 60 * 1000; }).length,
+          active1h: devices.filter(function (x) { return t - d(x.last_seen) < 3600 * 1000; }).length,
           active1: devices.filter(function (x) { return t - d(x.last_seen) < DAY; }).length,
           active7: devices.filter(function (x) { return t - d(x.last_seen) < 7 * DAY; }).length,
           new7: devices.filter(function (x) { return t - d(x.created_at) < 7 * DAY; }).length,
@@ -789,7 +801,7 @@
         var q = String(b.p_search || '').toUpperCase().replace(/:/g, ''), f = b.p_filter || 'all', t = Date.now();
         var list = devices.filter(function (x) {
           return (!q || x.mac.replace(/:/g, '').indexOf(q) >= 0) &&
-            (f === 'all' || (f === 'active' && t - d(x.last_seen) < 7 * DAY) || (f === 'inactive' && t - d(x.last_seen) >= 30 * DAY) ||
+            (f === 'all' || (f === 'online' && t - d(x.last_seen) < 3 * 60 * 1000) || (f === 'active' && t - d(x.last_seen) < 7 * DAY) || (f === 'inactive' && t - d(x.last_seen) >= 30 * DAY) ||
              (f === 'locked' && ((x.locked_until && d(x.locked_until) > t) || x.fails > 0)));
         }).sort(function (a, b2) { return d(b2.last_seen) - d(a.last_seen); }).map(function (x) {
           return { mac: x.mac, created_at: x.created_at, last_seen: x.last_seen, fails: x.fails, locked_until: x.locked_until,

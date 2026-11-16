@@ -33,3 +33,6 @@ $Q -f tests/sql/grenzen.test.sql
 $Q -f server/verschluesselung-2026-11.sql
 $Q -f server/verschluesselung-2026-11.sql   # muss wiederholbar sein
 $Q -f tests/sql/verschluesselung.test.sql
+$Q -f server/online-2026-11.sql
+$Q -f server/online-2026-11.sql   # muss wiederholbar sein
+$Q -f tests/sql/online.test.sql
