@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Telvo Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.15.8',
+    version: '1.15.9',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     /* Bibliotheken: werden beim Bauen nach www/lib kopiert (scripts/copy-libs.js) und von dort geladen.
        Nur wenn sie fehlen, aus dem Internet – mit fester Version und Prüfsumme (SRI): eine veränderte Datei
@@ -29,6 +29,7 @@
     qrCdn: 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js',
     qrSri: 'sha384-8FWZA6BGMXhsfO+BLtrJK0We6gg5o1JyO8xQm6peWDEUs17ACA5ziE/NIAkl9z2k',
     syncInterval: 30000,
+    pingInterval: 120000,            // Lebenszeichen bei verdeckter Seite während der Wiedergabe (Cloud.tick)
     cloudTimeout: 15000              // Zeitlimit für Anfragen an den Online-Dienst
   };
   // Zum Testen ohne Online-Dienst: …/index.html?nocloud (es wird dann kein Gerät angemeldet)
@@ -1779,11 +1780,37 @@
         }, function () { delete self.uploading[p.id]; });
       });
     },
+    /* „Online“-Zeichen für den Server (devices.last_seen, Kennzahl „gerade aktiv“ im Verwaltungsbereich):
+       Sichtbar gleicht die App ohnehin alle 30 s ab. Läuft die Wiedergabe im TV-Player (eigenes Android-Fenster)
+       oder ist das Fenster bei offenem Player verdeckt, ist die Seite „hidden“ – dann nur ein kurzes Lebenszeichen
+       alle 2 Minuten, ohne Playlists anzuwenden (sonst könnte im Hintergrund ein Neuladen ausgelöst werden). */
+    lastPing: 0,
+    watching: function () { return !!(NativePlayer.active || Player.el); },
+    ping: function () {
+      var self = this;
+      if (!self.registered || !CONFIG.cloudUrl) return Promise.resolve(false);
+      self.lastPing = Date.now();
+      return self.call('list_playlists', { p_mac: Device.mac() }).then(function (r) { return !!(r && r.ok); }, function () { return false; });
+    },
+    /* Dasselbe Lebenszeichen als fertige Anfrage für den TV-Player (Android): Gerätetest 16.11.2026 – im TV-Player
+       laufen die Zeitgeber der Seite nur noch etwa 1 Minute, danach meldet sich die App nicht mehr. Der Android-Teil
+       schickt die Anfrage darum selbst, solange der TV-Player offen ist (nur im Arbeitsspeicher, nichts gespeichert). */
+    pingReq: function () {
+      if (!this.registered || !CONFIG.cloudUrl) return null;
+      var fn = 'list_playlists', b = { p_mac: Device.mac() };
+      if (this.mode === 'token') { fn = 'app_' + fn; b.p_token = Device.token(); } else b.p_key = Device.key();
+      return { url: CONFIG.cloudUrl + fn, key: CONFIG.cloudKey, body: JSON.stringify(b), every: CONFIG.pingInterval };
+    },
+    tick: function () {
+      if (!document.hidden) return this.sync();
+      if (this.watching() && Date.now() - this.lastPing >= CONFIG.pingInterval) return this.ping();
+      return Promise.resolve(null);
+    },
     start: function () {
       var self = this;
       self.sync();
       clearInterval(self.timer);
-      self.timer = setInterval(function () { if (!document.hidden) self.sync(); }, CONFIG.syncInterval);
+      self.timer = setInterval(function () { self.tick(); }, CONFIG.syncInterval);
     }
   };
 
@@ -2816,7 +2843,8 @@
       }
       // Startseite: Runter aus der Menüleiste führt ins Titelbild („Jetzt ansehen“) – sonst sprang der Fokus
       // über das Titelbild hinweg auf die erste Karte darunter (die liegt waagerecht näher am Herz/Live TV)
-      if (dir === 'down' && cur.closest && cur.closest('.topnav')) {
+      // (seit 1.15.9 nur ohne „Weiterschauen“ – sonst liegen Weiterschauen links und Titelbild rechts nebeneinander, Runter wählt das nähere)
+      if (dir === 'down' && cur.closest && cur.closest('.topnav') && $('.launcher.hm.is-empty')) {
         var heroBtn = $('.launcher.hm .hm-heroslot .f');
         if (heroBtn && list.indexOf(heroBtn) >= 0) { this.focus(heroBtn); return true; }
       }
@@ -4456,12 +4484,16 @@
   var Top10Match = {
     key: function (kind, owner) { return 't10m.' + (owner || pid()) + '.' + kind; },
     get: function (kind, owner) { return Store.get(this.key(kind, owner), null); },
-    fresh: function (kind, d) { var m = this.get(kind); return !!(m && m.stamp === Top10.stamp(d)); },
+    // Abgleich gilt für eine Liste UND eine App-Sprache (bei mehreren Fassungen gewinnt die der App-Sprache);
+    // „v2“: ältere Abgleiche ohne Sprachvorrang werden nach dem Update einmal neu gerechnet
+    stamp: function (d) { return 'v2#' + Top10.stamp(d) + '#' + Lang.cur; },
+    fresh: function (kind, d) { var m = this.get(kind); return !!(m && m.stamp === this.stamp(d)); },
     save: function (kind, list, owner) {
       var self = this;
       return Top10.load().then(function (d) {
         if (!d || !Top10.services(d).length) return;
-        return HeroPicks.blocked(kind).then(function (bad) {
+        return Promise.all([HeroPicks.blocked(kind), ownLangCats(kind)]).then(function (r) {
+          var bad = r[0] || {}, own = r[1] || {};
           // gesuchte Namen → Einträge (englischer Titel, deutscher Titel, weitere deutsche Namen)
           var want = {}, found = {};
           Top10.services(d).forEach(function (s) {
@@ -4479,7 +4511,9 @@
               // Jahr bekannt und weit weg → anderer Film mit gleichem Namen (z. B. Remake)
               var off = w.year && y ? Math.abs(w.year - y) : 0;
               if (off > 1) return;
-              var score = (w.year && y ? 2 : 0) - off + (Number(x.rating) > 0 ? 0.5 : 0);
+              // Gleicher Titel mehrfach (z. B. „Lupin“ deutsch, türkisch, italienisch): die Fassung aus einer Kategorie in
+              // der App-Sprache gewinnt (Gerätetest 15.11.2026: vorher öffnete sich die italienische)
+              var score = (w.year && y ? 2 : 0) - off + (Number(x.rating) > 0 ? 0.5 : 0) + (own[String(x.catId)] ? 3 : 0);
               var f = found[w.id] || (found[w.id] = { s: -99, it: null, years: {}, noYear: !w.year });
               f.years[y || '?'] = 1;
               if (score > f.s) { f.s = score; f.it = slim(x); }
@@ -4492,7 +4526,7 @@
             if (found[k].noYear && Object.keys(found[k].years).length > 1) return;
             m[k] = found[k].it;
           });
-          Store.set(self.key(kind, owner), { stamp: Top10.stamp(d), m: m });
+          Store.set(self.key(kind, owner), { stamp: self.stamp(d), m: m });
           if (self.onChange) self.onChange();     // Startseite offen: Reihen neu zeichnen
         });
       }).then(null, function () {});
@@ -4521,8 +4555,31 @@
       h('span', { class: 't10-n' + (x.rank > 9 ? ' is-wide' : ''), text: String(x.rank) }), art);
   }
 
-  // Großes Titelbild der Startseite: wechselt alle 9 Sekunden – aber nie, während die Knöpfe darin gewählt sind.
-  // Abgerundet, mit Pfeilen links und rechts zum Blättern (Auftrag 15.11.2026).
+  // Titelbild der Startseite: wechselt alle 6 Sekunden – aber nie, während die Knöpfe darin gewählt sind.
+  // Abgerundet, mit Pfeilen links und rechts zum Blättern (Auftrag 15.11.2026). Seit 1.15.9 kleiner, oben rechts
+  // neben „Weiterschauen“, und mit den Top-10-Titeln aus der Playlist (Schild „Netflix · Top 10 · #3“).
+  var HERO_EVERY = 6000;
+  /* Titelbild-Auswahl aus den Top-10-Ranglisten (Erays Wunsch 15.11.2026): nur Titel, die in der aktiven Playlist
+     gefunden wurden (Top10Match), nach Platz – Film und Serie im Wechsel, Dienste in der festen Reihenfolge.
+     Weniger als 2 Treffer: null (dann bleibt die bisherige Auswahl aus der Playlist). */
+  function top10Hero(max) {
+    var c = Top10.cached(), out = [], seen = {};
+    if (!c) return null;
+    var rows = Top10.services(c.d).map(function (s) { return { s: s, r: Top10.row(s) }; });
+    for (var i = 0; i < 10 && out.length < max; i++) {
+      rows.forEach(function (x) {
+        var e = x.r[i];
+        if (!e || out.length >= max) return;
+        var it = Top10Match.item(e.kind, x.s.id, e.rank);
+        if (!it || seen[e.kind + ':' + it.id]) return;
+        seen[e.kind + ':' + it.id] = 1;
+        var o = {}; for (var k in it) if (Object.prototype.hasOwnProperty.call(it, k)) o[k] = it[k];
+        o._t10 = x.s.name + ' · Top 10 · #' + e.rank;
+        out.push(o);
+      });
+    }
+    return out.length >= 2 ? out : null;
+  }
   function homeHero(items) {
     var stage = h('div', { class: 'hm-stage' }), dots = h('div', { class: 'hm-dots', 'aria-hidden': 'true' }), idx = 0, timer = null;
     var box = h('div', { class: 'hm-hero' + (items.length > 1 ? ' has-arrows' : '') }, stage);
@@ -4530,7 +4587,9 @@
       idx = (i + items.length) % items.length;
       clear(dots);
       items.forEach(function (x, j) { dots.appendChild(h('i', { class: j === idx ? 'is-on' : '' })); });
-      var fh = featureHero(items[idx], { home: true, bottom: items.length > 1 ? dots : null });
+      var x = items[idx];
+      var fh = featureHero(x, { home: true, bottom: items.length > 1 ? dots : null,
+        top: x._t10 ? h('span', { class: 'hm-badge k-' + x.kind, text: x._t10 }) : null });
       clear(stage).appendChild(fh);
     }
     show(0);
@@ -4545,7 +4604,7 @@
         var top = Screens.top();
         if (box.contains(document.activeElement) || Player.el || Dialog.open || document.hidden || !top || !top.el.contains(box)) return;
         show(idx + 1);
-      }, 9000);
+      }, HERO_EVERY);
     }
     box._dispose = function () { clearInterval(timer); };
     return box;
@@ -4559,9 +4618,10 @@
 
     var heroSlot = h('div', { class: 'hm-heroslot' });
     var rows = h('div', { class: 'hm-rows' });
-    // Erster Bildschirm: nur Titelbild und „Weiterschauen“ – die Top-10-Reihen kommen erst beim Herunterscrollen
+    // Oben ein Block: links „Weiterschauen“, rechts das kleine Titelbild (Erays Wunsch 15.11.2026); darunter die Top-10-Reihen.
+    // Auf schmalen Bildschirmen (Handy) steht das Titelbild per CSS weiter über „Weiterschauen“.
     var t10Slot = h('div', { class: 'hm-rows hm-t10rows' });
-    var el = h('div', { class: 'launcher hm' }, h('div', { class: 'hm-first' }, heroSlot, rows), t10Slot);
+    var el = h('div', { class: 'launcher hm' }, h('div', { class: 'hm-first' }, rows, heroSlot), t10Slot);
 
     function row(title, ic, kids, more) {
       return h('section', { class: 'hm-row' },
@@ -4588,6 +4648,10 @@
     function paintHero() {
       HeroPicks.load().then(function (items) {
         if (disposed) return;      // Startseite schon verlassen: kein Titelbild mehr bauen (Timer, Bilder, Anfragen)
+        var t10 = top10Hero(8);
+        if (t10) items = t10;
+        var sig = items.map(function (x) { return x.kind + ':' + x.id; }).join(',');
+        if (heroSlot.firstChild && heroSlot.firstChild._sig === sig) return;   // gleiche Auswahl: nicht neu aufbauen
         var had = heroSlot.firstChild, inside = had && had.contains(document.activeElement);
         // im Titelbild unterwegs: nicht austauschen
         if (inside && had.classList.contains('hm-hero')) return;
@@ -4600,16 +4664,18 @@
         var fkey = inside && document.activeElement.getAttribute('data-key');
         if (had && had._dispose) had._dispose();
         clear(heroSlot);
-        if (items.length) heroSlot.appendChild(homeHero(items));
+        if (items.length) { var hb = homeHero(items); hb._sig = sig; heroSlot.appendChild(hb); }
         el.classList.toggle('no-hero', !items.length);
         if (!items.length) heroSlot.appendChild(quickRow());
         if (inside) { var fq = (fkey && $('[data-key="' + fkey + '"]', heroSlot)) || $('.f', heroSlot); if (fq) Nav.focus(fq); }
-        // Beim Öffnen steht der Fokus auf „Jetzt ansehen“ (das Titelbild kommt erst kurz nach dem Aufbau dazu)
-        // (erst nach den 20/30 ms, nach denen Screens/Shell selbst den ersten Knopf wählen)
+        // Beim Öffnen steht der Fokus oben links: auf der ersten „Weiterschauen“-Kachel, ohne sie auf „Jetzt ansehen“
+        // (das Titelbild kommt erst kurz nach dem Aufbau dazu; erst nach den 20/30 ms, nach denen Screens/Shell selbst
+        // den ersten Knopf wählen – der wäre sonst „Alle anzeigen“ in der Überschrift von „Weiterschauen“)
         if (firstHero) setTimeout(function () {
           var a = document.activeElement, top0 = Screens.top();
-          if (top0 && top0.el.contains(el) && (!a || a === document.body || (a.closest && a.closest('.topnav') && a.classList.contains('tab-home')))) {
-            var f0 = $('.f', heroSlot); if (f0) Nav.focus(f0);
+          var auto = !a || a === document.body || (a.closest && a.closest('.topnav') && a.classList.contains('tab-home')) || (a.getAttribute && a.getAttribute('data-key') === 'lr:all');
+          if (top0 && top0.el.contains(el) && auto) {
+            var f0 = $('.lr-card.f', rows) || $('.f', heroSlot); if (f0) Nav.focus(f0);
           }
         }, 70);
         firstHero = false;
@@ -4686,7 +4752,7 @@
       }, 2500);
       disposers.push(function () { clearTimeout(recheckT[kind]); });
     }
-    Top10Match.onChange = function () { if (!disposed && document.body.contains(el)) paintTop10(); };
+    Top10Match.onChange = function () { if (!disposed && document.body.contains(el)) { paintTop10(); paintHero(); } };
     disposers.push(function () { Top10Match.onChange = null; });
 
     // byUser: Knopf gedrückt (mit Bestätigung). quiet: automatisch im Hintergrund (ohne Fehlermeldung)
@@ -8057,6 +8123,7 @@
       if (item.kind === 'episode') { UpNext.hint(full); SeriesWatch.touch(item.seriesId); }
       Last.set(item);
       var sub = SubStyle.native();
+      self.active = true;   // TV-Player offen: Cloud.tick meldet weiter „online“, obwohl die Seite verdeckt ist
       return self.plugin().play({
         items: items, index: idx, startMs: startMs, live: live,
         subScale: sub.subScale, subColor: sub.subColor, subBg: sub.subBg,
@@ -8074,8 +8141,10 @@
         },
         sleepAt: Sleep.at || 0,
         autoNext: Settings.get('autoNext') !== false,
-        sound: Settings.get('sound') || 'off'
+        sound: Settings.get('sound') || 'off',
+        ping: Cloud.pingReq()
       }).then(function (res) {
+        self.active = false;
         res = res || {};
         if (res.sleep) Sleep.fire(true);
         // TV-Player hat aufgegeben (z. B. „stuck“ = Quelle liefert kein Bild): ins Fehlerprotokoll
@@ -8100,7 +8169,7 @@
           var row = $('.chan[data-cid="' + String(cur.id).replace(/"/g, '') + '"]');
           if (row && (!Screens.top() || Screens.top().name === 'shell')) Nav.focus(row);
         }, 120);
-      });
+      }, function (e) { self.active = false; throw e; });
     }
   };
 
@@ -10092,7 +10161,7 @@
     parseM3U: parseM3U, catchupUrl: catchupUrl, parseXtreamLink: parseXtreamLink, normalizeServer: normalizeServer, Nav: Nav, Screens: Screens, StillWatching: StillWatching,
     Xmltv: Xmltv, chanKey: chanKey, trackLabel: trackLabel, cleanTitle: cleanTitle, cleanEpName: cleanEpName, epPlot: epPlot, fmtDur: fmtDur, isRadio: isRadio, Sky: Sky, icon: icon, Terms: Terms, editPerson: editPerson, EpgStore: EpgStore, makeProvider: makeProvider, Profiles: Profiles, PinGuard: PinGuard, Store: Store, Cloud: Cloud,
     decodeBytes: decodeBytes, readText: readText, fetchText: fetchText, sameConnection: sameConnection, NativePlayer: NativePlayer, App: App, ensureTs: ensureTs, migrateM3uIds: migrateM3uIds,
-    ErrLog: ErrLog, techInfo: techInfo, epgText: epgText, ChanCount: ChanCount, Top10: Top10, Top10Match: Top10Match, top10Tile: top10Tile, t10Key: t10Key, clearHistory: clearHistory, startView: startView, startTab: startTab,
+    ErrLog: ErrLog, techInfo: techInfo, epgText: epgText, ChanCount: ChanCount, Top10: Top10, Top10Match: Top10Match, Lang: Lang, top10Tile: top10Tile, top10Hero: top10Hero, HERO_EVERY: HERO_EVERY, t10Key: t10Key, clearHistory: clearHistory, startView: startView, startTab: startTab,
     CatPrefs: CatPrefs, visibleCats: visibleCats, Parental: Parental, ChanHide: ChanHide, initials: initials, statusError: statusError, isVisible: isVisible,
     Backup: Backup, profileFp: profileFp, Settings: Settings,
     Seen: Seen, Resume: Resume, UpNext: UpNext, SeriesWatch: SeriesWatch, sortVod: sortVod,

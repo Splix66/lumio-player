@@ -691,6 +691,35 @@
     eq(D.epgText(null), '');
   });
 
+  /* Startseite 1.15.9 (Erays Wunsch 15.11.2026): kleines Titelbild mit Top-10-Titeln aus der Playlist, Wechsel alle 6 s */
+  t('Startseite', 'Titelbild zeigt nur Top-10-Titel aus der Playlist, nach Platz, mit Schild – sonst die bisherige Auswahl', function () {
+    var M = D.Top10Match, keep = D.Store.get('top10.de', null), keepM = M.get('movie'), keepS = M.get('series');
+    var data = { v: 1, country: 'DE', services: [{ id: 'netflix', name: 'Netflix', week: '2026-11-08', separate: true,
+      movies: [{ rank: 1, title: 'A' }, { rank: 2, title: 'B' }, { rank: 3, title: 'C' }],
+      series: [{ rank: 1, title: 'S' }, { rank: 2, title: 'T' }] }] };
+    var stamp = D.Top10.stamp(data);
+    try {
+      D.Store.set('top10.de', { at: Date.now(), d: data });
+      eq(D.HERO_EVERY, 6000, 'wechselt alle 6 Sekunden');
+      // nur ein Treffer: keine Top-10-Auswahl (dann bleibt die Auswahl aus der Playlist)
+      D.Store.set(M.key('movie'), { stamp: stamp, m: { 'netflix:1': { kind: 'movie', id: 'a', name: 'A' } } });
+      D.Store.set(M.key('series'), { stamp: stamp, m: {} });
+      eq(D.top10Hero(8), null, 'unter 2 Treffern: null');
+      // Treffer Film 1, Film 3 (doppelt als Platz 2 – zählt nur einmal), Serie 1; Film 2 und Serie 2 fehlen in der Playlist
+      D.Store.set(M.key('movie'), { stamp: stamp, m: { 'netflix:1': { kind: 'movie', id: 'a', name: 'A' }, 'netflix:3': { kind: 'movie', id: 'c', name: 'C' }, 'netflix:2': { kind: 'movie', id: 'a', name: 'A' } } });
+      D.Store.set(M.key('series'), { stamp: stamp, m: { 'netflix:1': { kind: 'series', id: 's', name: 'S' } } });
+      var it = D.top10Hero(8);
+      eq(it.map(function (x) { return x.kind[0] + ':' + x.id; }), ['m:a', 's:s', 'm:c'], 'nach Platz, Film und Serie im Wechsel, ohne Doppelte');
+      eq(it[2]._t10, 'Netflix · Top 10 · #3', 'Schild mit Dienst und Platz');
+      eq(D.top10Hero(2).length, 2, 'Obergrenze');
+      ok(!M.item('movie', 'netflix', 1)._t10, 'gespeicherter Treffer bleibt unverändert');
+    } finally {
+      if (keep) D.Store.set('top10.de', keep); else D.Store.del('top10.de');
+      if (keepM) D.Store.set(M.key('movie'), keepM); else D.Store.del(M.key('movie'));
+      if (keepS) D.Store.set(M.key('series'), keepS); else D.Store.del(M.key('series'));
+    }
+  });
+
   /* Startseite 1.15.8: Top-10-Reihen nur aus echten Ranglisten, 5 Filme + 5 Serien, nur Playlist-Titel öffnen */
   t('Startseite', 'Top 10: echte Plätze, Filme und Serien abwechselnd, nichts aufgefüllt; Abgleich mit der Playlist', function () {
     var T10 = D.Top10, M = D.Top10Match, keep = D.Store.get('top10.de', null);
@@ -742,6 +771,41 @@
       if (keep) D.Store.set('top10.de', keep); else D.Store.del('top10.de');
       if (keepM) D.Store.set(M.key('movie'), keepM); else D.Store.del(M.key('movie'));
       if (keepS) D.Store.set(M.key('series'), keepS); else D.Store.del(M.key('series'));
+    });
+  });
+
+  /* 1.15.9 (Gerätetest 15.11.2026): „Lupin“ stand dreimal in der Playlist (deutsch, türkisch, italienisch) –
+     der Abgleich öffnete die italienische Fassung. Jetzt gewinnt die Fassung aus einer Kategorie der App-Sprache. */
+  t('Startseite', 'Top 10: bei mehreren Fassungen gewinnt die in der App-Sprache', function () {
+    var M = D.Top10Match, keep = D.Store.get('top10.de', null), keepS = M.get('series'), realProv = D.App.provider, realLang = D.Lang.cur;
+    var data = { v: 1, country: 'DE', services: [{ id: 'netflix', name: 'Netflix', week: '2026-11-08', separate: true,
+      movies: [], series: [{ rank: 2, title: 'Lupin', year: 2021 }] }] };
+    D.Store.set('top10.de', { at: Date.now(), d: data });
+    var cats = [{ id: 440, name: 'IT | SERIE TV' }, { id: 355, name: 'TR | DİZİLER' }, { id: 346, name: 'DE | SERIEN' }];
+    D.App.provider = Object.create(realProv || {});
+    D.App.provider.categories = function () { return Promise.resolve(cats); };
+    D.Lang.cur = 'de';
+    // italienische Fassung mit höherer Bewertung zuerst – trotzdem muss die deutsche gewinnen
+    var list = [
+      { kind: 'series', id: 13047, name: 'Lupin', year: '2021', rating: '8.5', catId: 440 },
+      { kind: 'series', id: 13045, name: 'Lupin', year: '2021', rating: '8', catId: 355 },
+      { kind: 'series', id: 1147, name: 'Lupin', year: '2021', rating: '8', catId: 346 }
+    ];
+    return M.save('series', list).then(function () {
+      eq(M.item('series', 'netflix', 2).id, 1147, 'deutsche Fassung');
+      ok(M.fresh('series', data), 'Abgleich passt zu Liste und Sprache');
+      D.Lang.cur = 'tr';
+      ok(!M.fresh('series', data), 'andere App-Sprache → neu abgleichen');
+      return M.save('series', list);
+    }).then(function () {
+      eq(M.item('series', 'netflix', 2).id, 13045, 'App auf Türkisch → türkische Fassung');
+    }).then(function () {
+      D.Lang.cur = realLang; D.App.provider = realProv;
+      if (keep) D.Store.set('top10.de', keep); else D.Store.del('top10.de');
+      if (keepS) D.Store.set(M.key('series'), keepS); else D.Store.del(M.key('series'));
+    }, function (e) {
+      D.Lang.cur = realLang; D.App.provider = realProv;
+      throw e;
     });
   });
 })();

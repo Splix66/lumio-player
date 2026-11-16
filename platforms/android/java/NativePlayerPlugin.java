@@ -198,7 +198,66 @@ public class NativePlayerPlugin extends Plugin {
         intent.putExtra("subBg", call.getString("subBg", "#00000000"));
         // Klang: off | balance (Lautstärke angleichen) | voice (klare Sprache) | night (Nachtmodus)
         intent.putExtra("sound", call.getString("sound", "off"));
+        startBeat(call.getData().optJSONObject("ping"));
         startActivityForResult(call, intent, "onPlayerResult");
+    }
+
+    /**
+     * „Online“-Zeichen während der Wiedergabe: Solange der TV-Player vorne ist, ist die Seite verdeckt und ihre
+     * Zeitgeber stehen nach etwa einer Minute still (Gerätetest Fire TV Stick, 16.11.2026: 5 von 36 Takten).
+     * Dann schickt der Android-Teil das Lebenszeichen selbst – dieselbe Anfrage, die die App sonst schickt
+     * (nur Abruf, ändert nichts). Die Anfrage liegt nur im Arbeitsspeicher und endet mit dem TV-Player.
+     */
+    private java.util.concurrent.ScheduledExecutorService beat;
+
+    private synchronized void startBeat(org.json.JSONObject p) {
+        stopBeat();
+        if (p == null) return;
+        final String url = p.optString("url", ""), key = p.optString("key", ""), body = p.optString("body", "");
+        if (!url.startsWith("https://") || body.isEmpty()) return;
+        long every = Math.max(60000L, p.optLong("every", 120000L));
+        beat = java.util.concurrent.Executors.newSingleThreadScheduledExecutor();
+        // erstes Zeichen nach 1 Minute (bis dahin meldet sich noch die Seite selbst), dann im festen Abstand
+        beat.scheduleWithFixedDelay(new Runnable() {
+            @Override
+            public void run() {
+                sendBeat(url, key, body);
+            }
+        }, 60000L, every, java.util.concurrent.TimeUnit.MILLISECONDS);
+    }
+
+    private synchronized void stopBeat() {
+        if (beat != null) {
+            beat.shutdownNow();
+            beat = null;
+        }
+    }
+
+    private static void sendBeat(String url, String key, String body) {
+        java.net.HttpURLConnection c = null;
+        try {
+            c = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
+            c.setRequestMethod("POST");
+            c.setConnectTimeout(10000);
+            c.setReadTimeout(10000);
+            c.setDoOutput(true);
+            c.setRequestProperty("apikey", key);
+            c.setRequestProperty("Content-Type", "application/json");
+            java.io.OutputStream o = c.getOutputStream();
+            o.write(body.getBytes("UTF-8"));
+            o.close();
+            c.getResponseCode();
+        } catch (Throwable ignored) {
+            // kein Netz: beim nächsten Mal wieder versuchen
+        } finally {
+            if (c != null) c.disconnect();
+        }
+    }
+
+    @Override
+    protected void handleOnDestroy() {
+        stopBeat();
+        super.handleOnDestroy();
     }
 
     /**
@@ -260,6 +319,7 @@ public class NativePlayerPlugin extends Plugin {
 
     @ActivityCallback
     private void onPlayerResult(PluginCall call, ActivityResult result) {
+        stopBeat();
         if (call == null) return;
         JSObject r = new JSObject();
         Intent data = result.getData();

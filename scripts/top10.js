@@ -75,11 +75,11 @@ function parseNetflix(tsv) {
 /* Deutscher Titel, weitere deutsche Namen und Jahr über Wikidata. Nur Einträge mit Netflix-Kennung (P1874),
    deren englischer Name genau passt und deren Art stimmt (Film bzw. Serie). Kein eindeutiger Treffer → nur der
    englische Titel (lieber kein deutscher Titel als ein falscher – sonst fände die App einen anderen Film). */
-function sparql(title) {
+function sparql(title, anyItem) {
   const t = title.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
   return 'SELECT ?item (SAMPLE(?deL) AS ?de) (GROUP_CONCAT(DISTINCT ?deA; separator="|") AS ?aka) (MIN(YEAR(?date)) AS ?year)' +
     ' (SAMPLE(?f) AS ?film) (SAMPLE(?s) AS ?series) WHERE {' +
-    ' ?item rdfs:label|skos:altLabel "' + t + '"@en ; wdt:P1874 ?nf .' +
+    ' ?item rdfs:label|skos:altLabel "' + t + '"@en' + (anyItem ? '' : ' ; wdt:P1874 ?nf') + ' .' +
     ' BIND(EXISTS { ?item wdt:P31/wdt:P279* wd:Q11424 } AS ?f)' +
     ' BIND(EXISTS { VALUES ?r { wd:Q5398426 wd:Q526877 wd:Q1259759 } ?item wdt:P31/wdt:P279* ?r } AS ?s)' +
     ' OPTIONAL { ?item rdfs:label ?deL FILTER(LANG(?deL) = "de") }' +
@@ -87,28 +87,45 @@ function sparql(title) {
     ' OPTIONAL { ?item wdt:P577 ?date }' +
     ' } GROUP BY ?item';
 }
-async function wikidata(title, kind) {
+/* Einträge zu einem englischen Titel holen. anyItem: auch ohne Netflix-Kennung (für den zweiten Schritt). */
+async function wdRows(title, kind, anyItem) {
+  const s = await (await get(WD_SPARQL + '?format=json&query=' + encodeURIComponent(sparql(title, anyItem)), { 'User-Agent': WD_UA, 'Accept': 'application/sparql-results+json' })).json();
+  return ((s.results && s.results.bindings) || []).filter((b) => (kind === 'movie' ? b.film : b.series) && (kind === 'movie' ? b.film : b.series).value === 'true');
+}
+function wdOut(b) {
+  return {
+    wd: b.item.value.split('/').pop(),
+    de: b.de ? b.de.value : '',
+    aka: b.aka && b.aka.value ? b.aka.value.split('|').filter(Boolean).slice(0, 4) : [],
+    year: b.year ? Number(b.year.value) || 0 : 0
+  };
+}
+/* Neuheit: erschienen höchstens 2 Jahre vor der Netflix-Woche (z. B. Woche 2026 → 2024, 2025, 2026) */
+function recent(b, weekYear) { const y = b.year ? Number(b.year.value) || 0 : 0; return y >= weekYear - 2 && y <= weekYear + 1; }
+/* Zwei Schritte:
+   1. Einträge MIT Netflix-Kennung: genau einer passt → nehmen.
+   2. Sonst (lizenzierte Filme haben oft keine Netflix-Kennung, z. B. „Sinners“ = „Blood & Sinners“, 2025):
+      Einträge ohne Kennung, aber nur Neuheiten. Genau eine Neuheit mit diesem Namen → nehmen; ältere
+      gleichnamige Filme zählen dabei nicht (die App prüft das Jahr ohnehin gegen die Playlist, ±1 Jahr).
+   Mehrere oder keine → nur der englische Titel (lieber kein deutscher Titel als ein falscher). */
+async function wikidata(title, kind, weekYear) {
   try {
-    const s = await (await get(WD_SPARQL + '?format=json&query=' + encodeURIComponent(sparql(title)), { 'User-Agent': WD_UA, 'Accept': 'application/sparql-results+json' })).json();
-    const rows = ((s.results && s.results.bindings) || []).filter((b) => (kind === 'movie' ? b.film : b.series) && (kind === 'movie' ? b.film : b.series).value === 'true');
+    const rows = await wdRows(title, kind, false);
     // Genau ein passender Eintrag – sonst lieber keinen (z. B. zwei Filme „Collision Course“ von 1989 und 2025)
-    if (rows.length !== 1) return null;
-    const b = rows[0];
-    return {
-      wd: b.item.value.split('/').pop(),
-      de: b.de ? b.de.value : '',
-      aka: b.aka && b.aka.value ? b.aka.value.split('|').filter(Boolean).slice(0, 4) : [],
-      year: b.year ? Number(b.year.value) || 0 : 0
-    };
+    if (rows.length === 1) return wdOut(rows[0]);
+    if (rows.length > 1 || !weekYear) return null;
+    await sleep(400);
+    const fresh = (await wdRows(title, kind, true)).filter((b) => recent(b, weekYear));
+    return fresh.length === 1 ? wdOut(fresh[0]) : null;
   } catch (err) {
     console.warn('Wikidata nicht erreichbar für „' + title + '“: ' + err.message);
     return null;
   }
 }
 
-async function enrich(list, kind) {
+async function enrich(list, kind, weekYear) {
   for (const x of list) {
-    const w = await wikidata(x.title, kind);
+    const w = await wikidata(x.title, kind, weekYear);
     if (w) {
       x.wd = w.wd;
       if (w.de && w.de !== x.title) x.de = w.de;
@@ -125,8 +142,9 @@ async function main() {
   const out = process.argv[2] || 'de.json';
   const tsv = await (await get(NETFLIX_TSV, { 'User-Agent': UA, 'Accept': 'text/tab-separated-values,text/plain,*/*' })).text();
   const nf = parseNetflix(tsv);
-  await enrich(nf.movies, 'movie');
-  await enrich(nf.series, 'series');
+  const weekYear = Number(String(nf.week).slice(0, 4)) || 0;
+  await enrich(nf.movies, 'movie', weekYear);
+  await enrich(nf.series, 'series', weekYear);
   const data = {
     v: 1,
     country: COUNTRY,
@@ -148,4 +166,4 @@ async function main() {
 }
 
 if (require.main === module) main().catch((e) => { console.error('Fehler: ' + e.message); process.exit(1); });
-module.exports = { parseNetflix: parseNetflix };
+module.exports = { parseNetflix: parseNetflix, recent: recent };

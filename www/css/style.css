@@ -3564,3 +3564,64 @@ body.kbd .main-tabs .tab.k-home.f:focus svg.i, body.is-tv .main-tabs .tab.k-home
 .main-tabs .tab.k-favs.is-on svg.i, .main-tabs .tab.k-favs.f:focus-visible svg.i,
 body.kbd .main-tabs .tab.k-favs.f:focus svg.i, body.is-tv .main-tabs .tab.k-favs.f:focus svg.i { fill: #ff3b30; stroke: #ff3b30; color: #ff3b30; }
 .main-tabs .tab.k-home svg.i, .main-tabs .tab.k-favs svg.i { transition: fill .2s ease, stroke .2s ease, color .2s ease; }
+
+/* ==========================================================
+   Startseite 1.15.9 (Erays Wunsch 15.11.2026): oben ein Block – links „Weiterschauen“, rechts ein kleines
+   Titelbild (statt über die ganze Breite); darunter beginnen gleich die Top-10-Reihen.
+   Gilt für Fernseher und breite Fenster; auf dem Handy steht das Titelbild weiter über „Weiterschauen“.
+   ========================================================== */
+.hm-badge { display: inline-block; align-self: flex-start; margin-bottom: .45rem; padding: .2rem .55rem; border-radius: .45rem; font-size: .72rem; font-weight: 800;
+  letter-spacing: .06em; text-transform: uppercase; color: #fff; background: rgba(124, 58, 237, .95); box-shadow: 0 .2rem .6rem rgba(0, 0, 0, .35); }
+.hm-badge.k-series { color: #2e1065; background: rgba(237, 233, 254, .96); }
+html.tv .hm-first { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 44%); column-gap: 1.8rem; align-items: start; min-height: 0; padding: .9rem var(--pad) 0; }
+html.tv .hm-first > .hm-rows { grid-column: 1; grid-row: 1; padding: 0; }
+html.tv .hm-first > .hm-rows .hm-row { margin-top: 0; }
+html.tv .hm-first > .hm-heroslot { grid-column: 2; grid-row: 1; display: block; }
+html.tv .launcher.hm.is-empty .hm-first { grid-template-columns: minmax(0, 1fr); }
+html.tv .launcher.hm.is-empty .hm-first > .hm-heroslot { grid-column: 1; }
+html.tv .hm-first .hm-hero { height: 17.5rem; min-height: 0; margin: 0; border-radius: 1.25rem; }
+html.tv .hm-first .fhero.is-home .fh-bg { left: 0; }
+html.tv .hm-first .fhero.is-home .fh-in { padding: .9rem 1.2rem .9rem; max-width: 70%; }
+html.tv .hm-first .hm-hero.has-arrows .fhero.is-home .fh-in { padding-left: 3.6rem; }
+html.tv .hm-first .fhero.is-home .fh-title { font-size: 1.75rem; margin-top: .2rem; }
+html.tv .hm-first .fhero.is-home .fh-plot { font-size: .92rem; -webkit-line-clamp: 2; }
+html.tv .hm-first .fhero.is-home .fh-actions { margin-top: .75rem; }
+html.tv .hm-first .fhero.is-home .btn { font-size: .92rem; }
+html.tv .hm-first .hm-kick { font-size: .86rem; }
+html.tv .hm-first .hm-dots { margin-top: .7rem; }
+html.tv .hm-first .hm-arrow { width: 2.5rem; height: 2.5rem; margin-top: -1.25rem; }
+html.tv .hm-first .hm-arrow.is-prev { left: .6rem; }
+html.tv .hm-first .hm-arrow.is-next { right: .6rem; }
+/* „Weiterschauen“ als Raster 3×2 – genauso hoch wie das Titelbild daneben; mehr gibt es unter „Alle anzeigen“ */
+html.tv .hm-first > .hm-rows .hm-track { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-gap: 1rem; gap: 1rem; overflow: visible; margin: 0; padding: 0; }
+html.tv .hm-first > .hm-rows .hm-track > * + * { margin-left: 0; }
+html.tv .hm-first > .hm-rows .hm-track > :nth-child(n+7) { display: none; }
+html.tv .hm-first > .hm-rows .lr-card { width: auto; height: 7.15rem; }
+html.tv .hm-t10rows { padding-top: 0; }
+@media (min-width: 901px) {
+  html:not(.tv) .hm-first { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 44%); column-gap: 1.6rem; align-items: start; min-height: 0; padding: .9rem var(--pad) 0; }
+  html:not(.tv) .hm-first > .hm-rows { grid-column: 1; grid-row: 1; padding: 0; }
+  html:not(.tv) .hm-first > .hm-rows .hm-row { margin-top: 0; }
+  html:not(.tv) .hm-first > .hm-heroslot { grid-column: 2; grid-row: 1; display: block; }
+  html:not(.tv) .launcher.hm.is-empty .hm-first { grid-template-columns: minmax(0, 1fr); }
+  html:not(.tv) .launcher.hm.is-empty .hm-first > .hm-heroslot { grid-column: 1; }
+  html:not(.tv) .hm-first .hm-hero { height: 17.5rem; min-height: 0; margin: 0; border-radius: 1.25rem; }
+  html:not(.tv) .hm-first .fhero.is-home .fh-bg { left: 0; }
+  html:not(.tv) .hm-first .fhero.is-home .fh-in { padding: .9rem 1.2rem; max-width: 72%; }
+  html:not(.tv) .hm-first .hm-hero.has-arrows .fhero.is-home .fh-in { padding-left: 3.4rem; }
+  html:not(.tv) .hm-first .fhero.is-home .fh-title { font-size: 1.6rem; }
+  html:not(.tv) .hm-first .fhero.is-home .fh-plot { font-size: .9rem; -webkit-line-clamp: 2; }
+  html:not(.tv) .hm-first .hm-arrow { width: 2.3rem; height: 2.3rem; margin-top: -1.15rem; }
+  html:not(.tv) .hm-first .hm-arrow.is-prev { left: .5rem; }
+  html:not(.tv) .hm-first .hm-arrow.is-next { right: .5rem; }
+  html:not(.tv) .hm-first > .hm-rows .hm-track { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-gap: 1rem; gap: 1rem; overflow: visible; margin: 0; padding: 0; }
+  html:not(.tv) .hm-first > .hm-rows .hm-track > * + * { margin-left: 0; }
+  html:not(.tv) .hm-first > .hm-rows .hm-track > :nth-child(n+7) { display: none; }
+  html:not(.tv) .hm-first > .hm-rows .lr-card { width: auto; height: 7.15rem; }
+}
+@media (max-width: 900px) {
+  html:not(.tv) .hm-first > .hm-heroslot { order: -1; }
+}
+/* Fehler bis 1.15.8: „body.kbd/is-tv .f:focus“ setzt position: relative – der gewählte Pfeil im Titelbild sprang dadurch
+   aus dem Bild (nach rechts neben den anderen Pfeil), und von dort kam man mit Rechts nicht mehr zu „Jetzt ansehen“ */
+body.kbd .hm-arrow.f:focus, body.is-tv .hm-arrow.f:focus { position: absolute; }

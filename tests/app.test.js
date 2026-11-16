@@ -69,3 +69,80 @@
     D.Store.del('test-kaputt');
   });
 })();
+
+/* Tests: „Online“-Zeichen an den Online-Dienst (devices.last_seen) */
+(function () {
+  var D = window.LumioDebug, t = Test.test, eq = Test.eq;
+  var G = 'Online-Dienst';
+
+  t(G, 'Online-Zeichen: sichtbar normaler Abgleich, verdeckt nur bei Wiedergabe und höchstens alle 2 Minuten', function () {
+    var C = D.Cloud, calls = [], syncs = 0;
+    var keep = { call: C.call, sync: C.sync, registered: C.registered, lastPing: C.lastPing, url: D.config.cloudUrl, active: D.NativePlayer.active };
+    var hidden = true;
+    Object.defineProperty(document, 'hidden', { configurable: true, get: function () { return hidden; } });
+    C.call = function (fn) { calls.push(fn); return Promise.resolve({ ok: true, items: [] }); };
+    C.sync = function () { syncs++; return Promise.resolve(null); };
+    C.registered = true; C.lastPing = 0; D.config.cloudUrl = 'https://test.invalid/';
+    function restore() {
+      delete document.hidden;
+      C.call = keep.call; C.sync = keep.sync; C.registered = keep.registered; C.lastPing = keep.lastPing;
+      D.config.cloudUrl = keep.url; D.NativePlayer.active = keep.active;
+    }
+    return Promise.resolve().then(function () {
+      D.NativePlayer.active = false;
+      return C.tick();
+    }).then(function () {
+      eq(calls.length, 0, 'verdeckt ohne Wiedergabe: nichts senden');
+      D.NativePlayer.active = true;
+      return C.tick();
+    }).then(function (r) {
+      eq(r, true, 'Lebenszeichen gesendet');
+      eq(calls, ['list_playlists'], 'TV-Player offen: ein Lebenszeichen');
+      return C.tick();
+    }).then(function () {
+      eq(calls.length, 1, 'gleich danach kein zweites');
+      C.lastPing = Date.now() - D.config.pingInterval - 1;
+      return C.tick();
+    }).then(function () {
+      eq(calls.length, 2, 'nach 2 Minuten wieder');
+      eq(syncs, 0, 'verdeckt: kein voller Abgleich (keine Playlist-Änderung im Hintergrund)');
+      hidden = false;
+      return C.tick();
+    }).then(function () {
+      eq(syncs, 1, 'sichtbar: normaler Abgleich');
+      eq(calls.length, 2, 'sichtbar: kein zusätzliches Lebenszeichen');
+      C.registered = false; hidden = true; C.lastPing = 0;
+      return C.tick();
+    }).then(function (r) {
+      eq(r, false, 'nicht angemeldet: nichts senden');
+      eq(calls.length, 2);
+      restore();
+    }, function (e) { restore(); throw e; });
+  });
+})();
+
+/* Test: Lebenszeichen für den TV-Player (Android schickt es selbst, weil die Seite dort nach ~1 min stillsteht) */
+(function () {
+  var D = window.LumioDebug, t = Test.test, eq = Test.eq;
+  t('Online-Dienst', 'TV-Player bekommt das Lebenszeichen als fertige Anfrage – nur angemeldet, nur Abruf, gleicher Abstand', function () {
+    var C = D.Cloud, keep = { registered: C.registered, mode: C.mode, url: D.config.cloudUrl };
+    try {
+      C.registered = false; D.config.cloudUrl = 'https://test.invalid/rpc/';
+      eq(C.pingReq(), null, 'nicht angemeldet: keine Anfrage');
+      C.registered = true; D.config.cloudUrl = '';
+      eq(C.pingReq(), null, 'ohne Online-Dienst: keine Anfrage');
+      D.config.cloudUrl = 'https://test.invalid/rpc/'; C.mode = null;
+      var r = C.pingReq(), b = JSON.parse(r.body);
+      eq(r.url, 'https://test.invalid/rpc/list_playlists', 'nur Abruf (list_playlists)');
+      eq(r.every, D.config.pingInterval, 'gleicher Abstand wie die Seite');
+      eq(r.key, D.config.cloudKey);
+      eq(Object.keys(b).sort(), ['p_key', 'p_mac'], 'alter Weg: MAC + KEY');
+      C.mode = 'token';
+      r = C.pingReq(); b = JSON.parse(r.body);
+      eq(r.url, 'https://test.invalid/rpc/app_list_playlists', 'sicherer Weg: app_-Funktion');
+      eq(Object.keys(b).sort(), ['p_mac', 'p_token'], 'sicherer Weg: MAC + Token, kein KEY');
+    } finally {
+      C.registered = keep.registered; C.mode = keep.mode; D.config.cloudUrl = keep.url;
+    }
+  });
+})();
