@@ -54,6 +54,7 @@ button.big { padding: .85rem 1.4rem; font-size: 1rem; }
 button.icon { padding: .5rem; }
 button.link { background: none; padding: 0; color: var(--accent-2); font-weight: 600; font-size: .85rem; }
 button.link:hover { text-decoration: underline; background: none; }
+button.link.center { align-self: center; margin-top: 0; }
 button:disabled { opacity: .55; cursor: default; }
 button:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus-visible, a:focus-visible, tr:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
 label { display: flex; flex-direction: column; gap: .35rem; font-size: .85rem; color: var(--muted); font-weight: 600; }

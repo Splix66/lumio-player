@@ -120,6 +120,27 @@ async function newPage(browser, opts, backend) {
       await ctx.close();
     }
 
+    /* ---------- Verwaltung: Passwort vergessen ---------- */
+    group('Verwaltung: Passwort vergessen');
+    {
+      const { ctx, page, errors } = await newPage(browser);
+      const vis = () => page.evaluate(() => ['loginForm', 'forgotForm', 'newPwForm'].filter(i => !document.getElementById(i).hidden).join());
+      await page.goto(base + 'admin.html?demo'); await page.waitForTimeout(200);
+      await page.click('#forgotLink');
+      check('„Passwort vergessen?“ öffnet die Anfrage', await vis() === 'forgotForm');
+      await page.fill('#forgotEmail', 'admin@example.com'); await page.click('#forgotBtn'); await page.waitForTimeout(150);
+      check('Nach dem Senden: neutrale Bestätigung, Knopf weg', /kommt gleich eine E-Mail/.test(await page.textContent('#forgotMsg')) && await page.isHidden('#forgotBtn'));
+      // Link aus der Mail landet auf der Startseite → weiter zur Verwaltung, Schlüssel sofort aus der Adresse
+      await page.goto(base + '?r=1#access_token=demo&expires_in=3600&refresh_token=demo&type=recovery'); await page.waitForURL(/admin\.html/); await page.waitForTimeout(200);
+      check('Link von der Startseite → Formular „Neues Passwort“, Adresse ohne Schlüssel', await vis() === 'newPwForm' && !/access_token/.test(page.url()), page.url());
+      await page.fill('#newPw', 'kurz'); await page.fill('#newPw2', 'kurz'); await page.click('#newPwBtn');
+      check('Zu kurzes Passwort wird abgelehnt', /mindestens 10/.test(await page.textContent('#newPwMsg')));
+      await page.goto(base + 'admin.html?r=2#error=access_denied&error_code=otp_expired'); await page.waitForTimeout(200);
+      check('Abgelaufener Link: Hinweis auf der Anmeldung', await vis() === 'loginForm' && /abgelaufen/.test(await page.textContent('#loginMsg')));
+      check('Keine Fehler in der Konsole', !errors.length, errors[0]);
+      await ctx.close();
+    }
+
     /* ---------- 3. Navigation ---------- */
     group('Navigation');
     {

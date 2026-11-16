@@ -137,10 +137,27 @@
       try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(this.s)); } catch (e) {}
     },
     clear: function () { this.s = null; try { sessionStorage.removeItem(SESSION_KEY); } catch (e) {} },
-    call: function (path, body, token) {
+    call: function (path, body, token, method) {
       var headers = { apikey: KEY, 'Content-Type': 'application/json' };
       if (token) headers.Authorization = 'Bearer ' + token;
-      return request(SUPABASE + '/auth/v1/' + path, { method: 'POST', headers: headers, body: JSON.stringify(body || {}) });
+      return request(SUPABASE + '/auth/v1/' + path, { method: method || 'POST', headers: headers, body: JSON.stringify(body || {}) });
+    },
+    /* Passwort vergessen: Supabase schickt eine E-Mail mit Link zurück auf diese Seite (#…&type=recovery).
+       Die Antwort verrät absichtlich nicht, ob es zu der Adresse ein Konto gibt. */
+    recover: function (email) {
+      if (DEMO) return Promise.resolve();
+      var back = location.origin + location.pathname;
+      return this.call('recover?redirect_to=' + encodeURIComponent(back), { email: email }).then(function (res) {
+        if (res.status === 429) throw new Error('Zu viele Anfragen. Bitte ein paar Minuten warten und erneut versuchen.');
+        if (!res.ok) throw new Error(authError(res));
+      });
+    },
+    /* Neues Passwort mit der Sitzung aus dem E-Mail-Link setzen */
+    setPassword: function (password) {
+      if (DEMO) return Promise.resolve();
+      return this.call('user', { password: password }, this.s && this.s.access, 'PUT').then(function (res) {
+        if (!res.ok) throw new Error(pwError(res));
+      });
     },
     login: function (email, password) {
       var self = this;
@@ -182,6 +199,14 @@
     return text || ('Anmeldung fehlgeschlagen (HTTP ' + res.status + ').');
   }
 
+  function pwError(res) {
+    var j = res.json || {}, code = String(j.error_code || j.code || ''), text = String(j.msg || j.message || j.error_description || '');
+    if (code === 'same_password') return 'Das neue Passwort muss sich vom alten unterscheiden.';
+    if (code === 'weak_password') return 'Das Passwort ist zu schwach. Bitte länger oder abwechslungsreicher wählen.';
+    if (res.status === 401 || code === 'session_not_found' || code === 'bad_jwt') return 'Der Link ist abgelaufen. Bitte unter „Passwort vergessen?“ einen neuen anfordern.';
+    return text || ('Speichern fehlgeschlagen (HTTP ' + res.status + ').');
+  }
+
   function api(fn, body, retried) {
     if (DEMO) return Mock.call(fn, body || {});
     return Auth.token().then(function (tok) {
@@ -215,9 +240,13 @@
       if (Date.now() - lastActive > IDLE_MINUTES * 60000) signOut('Aus Sicherheitsgründen abgemeldet (' + IDLE_MINUTES + ' Minuten ohne Aktivität).');
     }, 30000);
   }
+  function showCard(id) {
+    ['loginForm', 'forgotForm', 'newPwForm'].forEach(function (f) { $(f).hidden = f !== id; });
+  }
   function showLogin(msg) {
     $('app').hidden = true; closeDrawer(true);
     $('login').hidden = false;
+    showCard('loginForm');
     $('demoNote').hidden = !DEMO;
     var m = $('loginMsg'); m.textContent = msg || ''; m.className = 'msg' + (msg ? ' bad' : '');
     $('password').value = '';
@@ -258,6 +287,69 @@
     });
   });
   $('logoutBtn').addEventListener('click', function () { signOut('Du wurdest abgemeldet.'); });
+
+  /* ---------------- Passwort vergessen / neues Passwort ---------------- */
+  function msgTo(id, text, ok) { var m = $(id); m.textContent = text || ''; m.className = 'msg' + (text ? (ok ? ' ok' : ' bad') : ''); }
+  $('forgotLink').addEventListener('click', function () {
+    showCard('forgotForm');
+    $('forgotEmail').value = $('email').value.trim();
+    msgTo('forgotMsg', '');
+    $('forgotBtn').hidden = false;
+    setTimeout(function () { $('forgotEmail').focus(); }, 30);
+  });
+  $('forgotBack').addEventListener('click', function () { showLogin(); });
+  $('newPwBack').addEventListener('click', function () { Auth.clear(); $('newPw').value = ''; $('newPw2').value = ''; showLogin(); $('forgotLink').click(); });
+  $('forgotForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var email = $('forgotEmail').value.trim(), b = $('forgotBtn');
+    if (!isEmail(email)) { msgTo('forgotMsg', 'Bitte eine gültige E-Mail-Adresse eingeben.'); return; }
+    b.disabled = true; b.textContent = 'Wird gesendet …'; msgTo('forgotMsg', '');
+    Auth.recover(email).then(function () {
+      b.disabled = false; b.textContent = 'Link senden'; b.hidden = true;
+      msgTo('forgotMsg', 'Wenn zu dieser Adresse ein Admin-Konto gehört, kommt gleich eine E-Mail mit dem Link. Schau auch im Spam-Ordner nach.', true);
+    }, function (err) {
+      b.disabled = false; b.textContent = 'Link senden';
+      msgTo('forgotMsg', err.message);
+    });
+  });
+  $('newPwForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var a = $('newPw').value, c = $('newPw2').value, b = $('newPwBtn');
+    if (a.length < 10) { msgTo('newPwMsg', 'Bitte mindestens 10 Zeichen.'); return; }
+    if (a !== c) { msgTo('newPwMsg', 'Die beiden Eingaben stimmen nicht überein.'); return; }
+    b.disabled = true; b.textContent = 'Wird gespeichert …'; msgTo('newPwMsg', '');
+    Auth.setPassword(a).then(function () { return api('admin_whoami'); }).then(function (r) {
+      b.disabled = false; b.textContent = 'Passwort speichern';
+      $('newPw').value = ''; $('newPw2').value = '';
+      enter(r.email);
+    }, function (err) {
+      b.disabled = false; b.textContent = 'Passwort speichern';
+      if (/Berechtigung/.test(err.message)) {   // Passwort gesetzt, aber kein Admin-Konto
+        Auth.logout(); $('newPw').value = ''; $('newPw2').value = '';
+        showLogin('Passwort geändert, aber dieses Konto hat keine Admin-Berechtigung.');
+        return;
+      }
+      msgTo('newPwMsg', err.message);
+    });
+  });
+  /* Kommt man über den Link aus der E-Mail, steht die Sitzung im Adress-Anker (#access_token=…&type=recovery)
+     oder ein Fehler (#error_code=otp_expired …). Sofort aus der Adresse entfernen, damit der Schlüssel nicht
+     im Verlauf oder in Lesezeichen landet. */
+  function takeRecovery() {
+    var h = location.hash.slice(1);
+    if (!/(^|&)(type=recovery|error_code=|error=)/.test(h)) return null;
+    var p = {};
+    h.split('&').forEach(function (kv) { var i = kv.indexOf('='); if (i > 0) p[decodeURIComponent(kv.slice(0, i))] = decodeURIComponent(kv.slice(i + 1).replace(/\+/g, ' ')); });
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { location.hash = ''; }
+    if (p.error || p.error_code) return { error: p.error_code === 'otp_expired' ? 'Der Link ist abgelaufen oder wurde schon benutzt. Bitte einen neuen anfordern.' : (p.error_description || 'Der Link ist ungültig. Bitte einen neuen anfordern.') };
+    if (p.type !== 'recovery' || !p.access_token) return null;
+    return { session: { access_token: p.access_token, refresh_token: p.refresh_token, expires_at: Number(p.expires_at) || 0, expires_in: Number(p.expires_in) || 3600 } };
+  }
+  function showNewPassword() {
+    $('app').hidden = true; $('login').hidden = false;
+    showCard('newPwForm'); msgTo('newPwMsg', '');
+    setTimeout(function () { $('newPw').focus(); }, 30);
+  }
 
   /* ---------------- Bereiche ---------------- */
   var TABS = ['overview', 'support', 'devices', 'log'];
@@ -848,7 +940,10 @@
   })();
 
   /* ---------------- Start ---------------- */
-  if (Auth.load()) {
+  var rec = takeRecovery();
+  if (rec && rec.session) { Auth.clear(); Auth.set(rec.session); showNewPassword(); }
+  else if (rec && rec.error) { Auth.clear(); showLogin(rec.error); }
+  else if (Auth.load()) {
     api('admin_whoami').then(function (r) { enter(r.email); }, function (err) {
       Auth.clear();
       showLogin(/Berechtigung/.test(err.message) ? 'Dieses Konto hat keine Admin-Berechtigung.' : err.message);

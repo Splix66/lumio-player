@@ -1,7 +1,10 @@
 /* Telvo-Webseite – Bereiche, Kundenportal (Playlists per MAC + KEY), Download, Hilfe & Support */
 (function () {
   'use strict';
-  var API = 'https://oofzhklrbrpxjoicwbsf.supabase.co/rest/v1/rpc/';
+  // Link „Passwort vergessen“ aus der Supabase-Mail landet je nach Einstellung auf der Startseite:
+  // dann sofort zur Verwaltungsseite weiter, die das neue Passwort setzt (Anker bleibt nur im Browser).
+  if (/(^|&)(type=recovery|error_code=)/.test(location.hash.slice(1))) { location.replace('admin.html' + location.hash); return; }
+  var API ='https://oofzhklrbrpxjoicwbsf.supabase.co/rest/v1/rpc/';
   var KEY = 'sb_publishable_cx6n8buREFat_yE7kKW6FA_SnMsOQX7';
   // Support-Adresse für Besucher ohne App (z. B. 'support@lumio-player.de'). Leer = Kontakt-Kasten bleibt ausgeblendet.
   var CONTACT_EMAIL = 'telvo.support@gmail.com';

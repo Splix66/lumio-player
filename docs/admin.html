@@ -48,7 +48,37 @@
       <label>Passwort <input id="password" type="password" autocomplete="current-password" required></label>
       <p id="loginMsg" class="msg" role="alert"></p>
       <button id="loginBtn" class="primary big" type="submit">Anmelden</button>
+      <button id="forgotLink" class="link center" type="button">Passwort vergessen?</button>
       <p id="demoNote" class="hint" hidden>Demo-Modus: erfundene Daten, keine Verbindung zum Online-Dienst. Beliebige Anmeldedaten funktionieren.</p>
+    </form>
+
+    <!-- Passwort vergessen: Link per E-Mail anfordern -->
+    <form id="forgotForm" class="login-card" novalidate hidden>
+      <div class="brand">
+        <span class="mark"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M17 25H70a12 12 0 0 1 12 12M42 25v50" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/><path class="play" transform="translate(16.5 11.5) scale(.78)" d="M50 38.5c0-3.3 3.6-5.3 6.4-3.6l25.4 15.6c2.7 1.7 2.7 5.6 0 7.2L56.4 73.4C53.6 75.1 50 73.1 50 69.8z"/></svg></span>
+        <span>Telvo</span><span>Admin</span>
+      </div>
+      <h1>Passwort vergessen</h1>
+      <p class="muted">Gib die E-Mail-Adresse deines Admin-Kontos ein. Du bekommst einen Link, mit dem du ein neues Passwort setzt.</p>
+      <label>E-Mail <input id="forgotEmail" type="email" autocomplete="username" required></label>
+      <p id="forgotMsg" class="msg" role="alert"></p>
+      <button id="forgotBtn" class="primary big" type="submit">Link senden</button>
+      <button id="forgotBack" class="link center" type="button">Zurück zur Anmeldung</button>
+    </form>
+
+    <!-- Neues Passwort setzen (nach dem Link aus der E-Mail) -->
+    <form id="newPwForm" class="login-card" novalidate hidden>
+      <div class="brand">
+        <span class="mark"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M17 25H70a12 12 0 0 1 12 12M42 25v50" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/><path class="play" transform="translate(16.5 11.5) scale(.78)" d="M50 38.5c0-3.3 3.6-5.3 6.4-3.6l25.4 15.6c2.7 1.7 2.7 5.6 0 7.2L56.4 73.4C53.6 75.1 50 73.1 50 69.8z"/></svg></span>
+        <span>Telvo</span><span>Admin</span>
+      </div>
+      <h1>Neues Passwort</h1>
+      <p class="muted">Mindestens 10 Zeichen. Speichere es danach in deinem Passwort-Manager.</p>
+      <label>Neues Passwort <input id="newPw" type="password" autocomplete="new-password" minlength="10" required></label>
+      <label>Wiederholen <input id="newPw2" type="password" autocomplete="new-password" minlength="10" required></label>
+      <p id="newPwMsg" class="msg" role="alert"></p>
+      <button id="newPwBtn" class="primary big" type="submit">Passwort speichern</button>
+      <button id="newPwBack" class="link center" type="button">Neuen Link anfordern</button>
     </form>
   </main>
 
