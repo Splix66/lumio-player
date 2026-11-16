@@ -1,7 +1,7 @@
 {
  "v": 1,
  "country": "DE",
- "generated": "2026-11-15T21:34:09.218Z",
+ "generated": "2026-11-16T09:10:34.793Z",
  "services": [
   {
    "id": "netflix",
@@ -27,7 +27,10 @@
     {
      "rank": 3,
      "title": "Sinners",
-     "season": ""
+     "season": "",
+     "wd": "Q125473145",
+     "de": "Blood & Sinners",
+     "year": 2025
     },
     {
      "rank": 4,
@@ -54,7 +57,13 @@
     {
      "rank": 7,
      "title": "A Minecraft Movie",
-     "season": ""
+     "season": "",
+     "wd": "Q40083273",
+     "de": "Minecraft",
+     "aka": [
+      "Minecraft: Der Film"
+     ],
+     "year": 2025
     },
     {
      "rank": 8,
