@@ -2893,6 +2893,15 @@
       }
       var hit = this.pick(cur, list, dir);
       if (hit) this.focus(hit.el);
+      // TV-Programm: „Hoch“ am oberen Rand schließt das Programm und führt in die Leiste (Reiter Live TV)
+      if (!hit && dir === 'up' && !Dialog.open) {
+        var tp = Screens.top();
+        if (tp && tp.name === 'guide' && tp.el.classList.contains('gd-under') && Shell.buttons.live) {
+          goBack();
+          setTimeout(function () { if (Shell.buttons.live && document.body.contains(Shell.buttons.live)) Nav.focus(Shell.buttons.live); }, 60);
+          return true;
+        }
+      }
       return !!hit;
     }
   };
@@ -5803,7 +5812,12 @@
         pump();
       }, { root: body, rootMargin: '300px 0px' });
     }
+    // Seit 1.15.10 bleibt die Leiste oben auch im TV-Programm sichtbar: Die Seite liegt als Ebene unter der Leiste über Live TV
+    // (auf dem Handy weiter über den ganzen Bildschirm, per CSS). Mit „Hoch“ am oberen Rand kommt man zurück in die Leiste (siehe Nav.move).
+    var underBar = !!(Screens.top() && Screens.top().name === 'shell');
+    if (underBar) el.classList.add('gd-under');
     Screens.push('guide', el, {
+      overlay: underBar,
       onLeave: function () { clearInterval(timer); if (obs) obs.disconnect(); if (chunker) chunker.dispose(); queue = []; }
     });
     function start(l) {
