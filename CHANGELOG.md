@@ -32,8 +32,15 @@
 - **Profil in den Einstellungen:** Playlist mit Laufzeit, „Playlist wechseln“ und – neu – der rote Knopf **„Playlist löschen“** mit Rückfrage („Abbrechen“ ist vorgewählt). Darunter „Mein Zugang“ und „Dieses Gerät“ (MAC, KEY, Gerätetyp, Version); bei M3U-Playlists auch der Programmführer. „Daten neu laden“ entfällt.
 - **Hinweis „Playlist abgelaufen“:** Fenster mit Name und Datum, Knöpfe „Zum Profil“ und „Später“. Kommt bei jedem Start der App wieder, solange die Playlist abgelaufen ist (im selben Lauf nur einmal). Vorher: einmaliges Fenster „Dein Zugang ist abgelaufen“ ohne Weg ins Profil.
 - **Favoriten, Film- und Serien-Details, Auswahl-Fenster, „Wer schaut?“:** Glas-Look passend zum Rest (Umschalter nur mit Text, Fenster mit feinem lila Rand).
-- Noch nicht umgebaut: Das TV-Programm öffnet weiter als eigene Seite ohne die Leiste; die Bedienleiste des Players ist unverändert.
-- Technik: neue Tests in `tests/seiten.test.js` (11 Tests).
+- **TV-Programm:** Die Leiste oben bleibt sichtbar; „Hoch“ am oberen Rand schließt das Programm und führt in die Leiste. Auf dem Handy weiter über den ganzen Bildschirm.
+- **Willkommensseite:** nur das Logo-Zeichen und drei Statuszeichen oben links, Glas-Knöpfe, lila Hauptknopf.
+- Technik: neue Tests in `tests/seiten.test.js` (12 Tests).
+
+**Neues Aussehen, Teil 3 – erster Schritt** (Erays Auftrag vom 17.11.2026: „2 und 3“).
+
+- **Fernseher: Die Vorschau wird ohne Neustart groß.** Läuft ein Sender schon sichtbar in der Vorschau bei Live TV, macht OK auf diesem Sender das Bild nur groß – derselbe Stream, kein zweites Laden. Vorher schloss die App die Vorschau und startete den TV-Player neu. Zeigt die Vorschau (noch) kein Bild oder einen Fehler, oder wählt man einen anderen Sender, startet wie bisher der TV-Player. Hinweis: Das große Bild läuft in diesem Fall im eingebauten Player (wie die Vorschau), nicht im TV-Player – der große Umbau „ein TV-Player für Vorschau und Vollbild“ steht noch aus und braucht Tests auf dem Gerät.
+- **Handy (hoch): Bei Live TV läuft der Sender klein oben**, darunter Kategorien und Senderliste. Richtet sich nach „Vorschau bei Live TV“ (Einstellungen → Wiedergabe).
+- **Eingebauter Player:** Bedienleiste mit Glas-Knöpfen passend zum neuen Aussehen. Die Bedienleiste des TV-Players (Android) ist unverändert.
 
 ## 1.15.9 – 2026-11-16 · Kleineres Titelbild, Top 10 auf Deutsch, Online-Zeichen
 

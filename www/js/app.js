@@ -8331,6 +8331,15 @@
       playExternal(item);
       return;
     }
+    /* Fernseher (Fire TV, Android-Boxen), seit 1.15.10 – Erays Wunsch 16.11.2026: „das Bild soll ohne Neustart groß werden,
+       derselbe Stream“. Läuft genau dieser Sender schon sichtbar in der Vorschau (eingebauter Player), wird sie nur groß gemacht.
+       Vorher: Vorschau schließen, TV-Player neu starten → der Sender lud ein zweites Mal.
+       Zeigt die Vorschau (noch) kein Bild oder einen Fehler, oder ist es ein anderer Sender, startet wie bisher der TV-Player. */
+    if (item.kind === 'live' && NativePlayer.use(item) && Player.el && Player.mini && Player.item && Player.item.kind === 'live' &&
+        String(Player.item.id) === String(item.id) && Player.showsPicture()) {
+      Player.maximize();
+      return;
+    }
     if (NativePlayer.use(item)) {
       if (Player.el) Player.close();
       NativePlayer.play(item, ctx).catch(function (e) {
@@ -8741,6 +8750,11 @@
       self.placeTimer = setInterval(function () { self.place(); }, 300);
     },
 
+    /* Zeigt der eingebaute Player gerade wirklich ein laufendes Bild? (geladen, läuft, kein Fehler) */
+    showsPicture: function () {
+      var v = this.video;
+      return !!(v && !v.error && v.readyState >= 2 && v.currentTime > 0 && !v.paused);
+    },
     maximize: function () {
       var self = this;
       if (!self.el || !self.mini) return;
@@ -10328,7 +10342,7 @@
     decodeBytes: decodeBytes, readText: readText, fetchText: fetchText, sameConnection: sameConnection, NativePlayer: NativePlayer, App: App, ensureTs: ensureTs, migrateM3uIds: migrateM3uIds,
     ErrLog: ErrLog, techInfo: techInfo, epgText: epgText, ChanCount: ChanCount, Top10: Top10, Top10Match: Top10Match, Lang: Lang, top10Tile: top10Tile, top10Hero: top10Hero, HERO_EVERY: HERO_EVERY, t10Key: t10Key, clearHistory: clearHistory, startView: startView, startTab: startTab,
     CatPrefs: CatPrefs, visibleCats: visibleCats, Parental: Parental, ChanHide: ChanHide, initials: initials, statusError: statusError, isVisible: isVisible,
-    Backup: Backup, profileFp: profileFp, Settings: Settings, Shell: Shell, StatusLine: StatusLine, Theme: Theme, Expiry: Expiry, openProfile: openProfile, top10Rows: top10Rows, startTabNow: startTabNow, extMode: extMode, clockStr: clockStr, Skeleton: Skeleton, refreshInline: refreshInline,
+    Backup: Backup, profileFp: profileFp, Settings: Settings, Shell: Shell, StatusLine: StatusLine, Theme: Theme, Expiry: Expiry, openProfile: openProfile, top10Rows: top10Rows, startTabNow: startTabNow, playItemNow: playItemNow, extMode: extMode, clockStr: clockStr, Skeleton: Skeleton, refreshInline: refreshInline,
     Seen: Seen, Resume: Resume, UpNext: UpNext, SeriesWatch: SeriesWatch, sortVod: sortVod,
     Reminders: Reminders, NumEntry: NumEntry, Sleep: Sleep, Later: Later, Saver: Saver, trailerQuery: trailerQuery, Persons: Persons, Favs: Favs, Recent: Recent, showGuide: showGuide, Player: Player, Dialog: Dialog,
     config: CONFIG

@@ -280,4 +280,33 @@
       });
     }, { id: 'tst-offline', type: 'demo', name: 'Demo' });
   });
+
+  t(G, 'Fernseher: läuft der Sender schon in der Vorschau, wird das Bild mit OK nur groß – derselbe Stream, kein Neustart im TV-Player', function () {
+    var P = D.Player, N = D.NativePlayer;
+    var keep = { mini: P.mini, item: P.item, video: P.video, el: P.el, max: P.maximize, close: P.close, use: N.use, play: N.play };
+    var ch = { kind: 'live', id: 'c1', name: 'Sender 1' }, other = { kind: 'live', id: 'c2', name: 'Sender 2' }, log = [];
+    try {
+      N.use = function () { return true; };                       // wie auf Fire TV / Box: sonst spielt der TV-Player
+      N.play = function (it) { log.push('tv:' + it.id); return Promise.resolve({}); };
+      P.maximize = function () { log.push('gross'); };
+      P.close = function () { log.push('zu'); };
+      P.el = document.createElement('div'); P.mini = true; P.item = ch;
+      P.video = { error: null, readyState: 4, currentTime: 12, paused: false };
+      D.playItemNow(ch, { list: [ch, other], index: 0 });
+      eq(log, ['gross'], 'Vorschau zeigt schon ein Bild → nur groß machen');
+      log = [];
+      D.playItemNow(other, { list: [ch, other], index: 1 });
+      eq(log, ['zu', 'tv:c2'], 'anderer Sender → wie bisher der TV-Player');
+      log = [];
+      P.video = { error: null, readyState: 0, currentTime: 0, paused: false };
+      D.playItemNow(ch, { list: [ch, other], index: 0 });
+      eq(log, ['zu', 'tv:c1'], 'Vorschau hat (noch) kein Bild → wie bisher der TV-Player');
+      log = [];
+      P.video = { error: { code: 4 }, readyState: 4, currentTime: 3, paused: false };
+      D.playItemNow(ch, { list: [ch, other], index: 0 });
+      eq(log, ['zu', 'tv:c1'], 'Vorschau mit Fehler → TV-Player');
+    } finally {
+      P.mini = keep.mini; P.item = keep.item; P.video = keep.video; P.el = keep.el; P.maximize = keep.max; P.close = keep.close; N.use = keep.use; N.play = keep.play;
+    }
+  });
 })();
