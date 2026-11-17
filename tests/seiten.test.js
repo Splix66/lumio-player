@@ -135,4 +135,129 @@
       });
     }, prof);
   });
+
+  function demoMovie() { return D.App.provider.items('movie', '__all').then(function (l) { return l[0]; }); }
+
+  t(G, 'Filme und Serien: nur Kategorien und Cover – keine Reihen „Weiterschauen“ und „Top 10“ mehr', function () {
+    return withShell(function () {
+      return demoMovie().then(function (m) {
+        D.Resume.set(m, 300, 3000);
+        D.Shell.show('movie');
+        return wait(400).then(function () {
+          var v = D.Shell.view;
+          ok(v.querySelector('.mv-side .cat'), 'Kategorien links');
+          ok(v.querySelector('.mv-grid'), 'Cover-Raster');
+          ok(!v.querySelector('.mv-resume') || !v.querySelector('.mv-resume').firstChild, 'keine Reihe „Weiterschauen“');
+          ok(!v.querySelector('.mv-top') || !v.querySelector('.mv-top').firstChild, 'keine Reihe „Top 10“');
+          ok(v.textContent.indexOf('Weiterschauen') < 0, 'Wort „Weiterschauen“ steht nirgends');
+          ok(v.querySelector('.mv-head .sort-wrap, .mv-head .sort-btn, .mv-head button'), '„Sortieren“ bleibt in der Kopfzeile');
+          D.Resume.set(m, 0, 0);
+        });
+      });
+    });
+  });
+
+  t(G, 'Startseite: oben der Vorschlag, darunter nur Reihen – kein „Alle anzeigen“, keine Pfeile, nie die drei Kacheln', function () {
+    return withShell(function () {
+      D.Store.set('stats.tst-seiten', { live: { n: 6, at: Date.now() }, movie: { n: 4, at: Date.now() }, series: { n: 1, at: Date.now() } });
+      return demoMovie().then(function (m) {
+        D.Resume.set(m, 300, 3000);
+        D.Shell.show('home');
+        return wait(500).then(function () {
+          var el = D.Shell.view.querySelector('.launcher');
+          ok(el.classList.contains('hm2'), 'neuer Aufbau');
+          eq(Array.prototype.map.call(el.children, function (c) { return c.className.split(' ')[0] + (c.className.indexOf('hm-t10rows') >= 0 ? ':t10' : ''); }),
+            ['hm-heroslot', 'hm-rows', 'hm-rows:t10', 'hm-empty'], 'Reihenfolge: Vorschlag, Weiterschauen, Top 10');
+          ok(!el.querySelector('.hm-quickrow, .hm-quick'), 'keine drei Kacheln');
+          ok(!el.querySelector('.lr-all'), 'kein „Alle anzeigen“');
+          ok(!el.querySelector('.hm-arrow'), 'keine Pfeile am Vorschlag');
+          var row = el.querySelector('.hm-rows .hm-row');
+          ok(row && row.querySelector('.hm-rtitle').textContent === 'Weiterschauen', 'Reihe „Weiterschauen“');
+          ok(row.querySelectorAll('.lr-card').length >= 1 && row.querySelectorAll('.lr-card').length <= 10, 'höchstens 10 Kacheln');
+          var play = el.querySelector('[data-key="hero:play"]');
+          if (play) eq(play.textContent.trim(), 'Jetzt ansehen', 'oben nie „Weiter bei …“');
+          ok(!el.classList.contains('is-loading'), 'fertig geladen');
+          ok(!el.querySelector('.hm-w'), 'keine Felder der leeren Startseite');
+          eq(D.Store.get('homeEmpty.tst-seiten', null), false, 'gemerkt: Startseite hat Inhalt');
+          D.Resume.set(m, 0, 0); D.Store.del('stats.tst-seiten'); D.Store.del('homeEmpty.tst-seiten');
+        });
+      });
+    });
+  });
+
+  t(G, 'Startseite Top 10: je Dienst zwei Reihen (Filme, Serien), bis zu 10 Plätze, nur Titel aus der Playlist mit echtem Platz', function () {
+    var M = D.Top10Match, keep = D.Store.get('top10.de', null);
+    var data = { v: 1, country: 'DE', services: [{ id: 'netflix', name: 'Netflix', week: '2026-11-08', separate: true,
+      movies: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(function (n) { return { rank: n, title: 'Film ' + n }; }),
+      series: [{ rank: 1, title: 'S1' }, { rank: 2, title: 'S2' }] }] };
+    return withShell(function () {
+      var stamp = M.stamp(data);
+      D.Store.set('top10.de', { at: Date.now(), d: data });
+      D.Store.set('stats.tst-seiten', { movie: { n: 4, at: Date.now() } });
+      D.Store.set(M.key('movie'), { stamp: stamp, m: { 'netflix:1': { kind: 'movie', id: 'a', name: 'Film 1' }, 'netflix:3': { kind: 'movie', id: 'c', name: 'Film 3' }, 'netflix:9': { kind: 'movie', id: 'i', name: 'Film 9' } } });
+      D.Store.set(M.key('series'), { stamp: stamp, m: {} });
+      var rows = D.top10Rows(data.services[0]);
+      eq(rows.map(function (r) { return r.kind + ':' + r.total + ':' + r.hits.map(function (x) { return x.rank; }).join(','); }), ['movie:10:1,3,9', 'series:2:'], 'Treffer mit echtem Platz, auch jenseits von Platz 5');
+      D.Shell.show('home');
+      return wait(500).then(function () {
+        var el = D.Shell.view.querySelector('.launcher'), t10 = el.querySelectorAll('.hm-t10row');
+        eq(t10.length, 1, 'Reihe ohne Treffer (Serien) entfällt');
+        eq(t10[0].querySelector('.hm-rtitle').textContent, 'Top 10 Filme');
+        var info = t10[0].querySelector('.hm-t10info').textContent;
+        ok(info.indexOf('Netflix') >= 0 && info.indexOf('3 von 10') >= 0, 'Hinweis rechts: ' + info);
+        eq(Array.prototype.map.call(t10[0].querySelectorAll('.t10-n'), function (n) { return n.textContent; }), ['1', '3', '9'], 'nur die Treffer, Plätze nicht doppelt');
+        ok(!t10[0].querySelector('.is-missing'), 'keine grauen Kacheln');
+        D.Store.del(M.key('movie')); D.Store.del(M.key('series')); D.Store.del('stats.tst-seiten'); D.Store.del('homeEmpty.tst-seiten');
+        if (keep) D.Store.set('top10.de', keep); else D.Store.del('top10.de');
+      });
+    });
+  });
+
+  t(G, 'Startseite beim Laden: Platzhalter in derselben Form, keine Kacheln; „leer“ wird erst nach dem Laden festgestellt', function () {
+    var keep = D.Store.get('top10.de', null);
+    return withShell(function () {
+      D.Store.set('top10.de', { at: Date.now(), d: { v: 1, country: 'DE', services: [] } });
+      D.Store.del('stats.tst-laden'); D.Store.del('homeEmpty.tst-laden');
+      var hold = D.App.provider.items;
+      D.App.provider.items = function () { return new Promise(function () {}); };   // lädt „ewig“
+      D.Shell.show('home');
+      return wait(400).then(function () {
+        var el = D.Shell.view.querySelector('.launcher');
+        ok(el.classList.contains('is-loading'), 'Startseite lädt noch');
+        ok(el.querySelectorAll('.sk').length >= 5, 'Platzhalter stehen da (' + el.querySelectorAll('.sk').length + ')');
+        ok(!el.querySelector('.hm-quick'), 'keine drei Kacheln');
+        ok(!el.querySelector('.hm-w'), 'noch keine Felder „leere Startseite“');
+        eq(D.Store.get('homeEmpty.tst-laden', null), null, 'noch nichts gemerkt');
+        D.App.provider.items = hold;
+        if (keep) D.Store.set('top10.de', keep); else D.Store.del('top10.de');
+      });
+    }, { id: 'tst-laden', type: 'demo', name: 'Demo' });
+  });
+
+  t(G, 'Leere Startseite (z. B. Playlist nur mit Sendern): drei Felder statt Kacheln; beim nächsten Start öffnet die App Live TV', function () {
+    var keep = D.Store.get('top10.de', null);
+    return withShell(function () {
+      D.Store.set('top10.de', { at: Date.now(), d: { v: 1, country: 'DE', services: [] } });
+      D.Store.set('stats.tst-leer', { live: { n: 120, at: Date.now() } });
+      D.Store.del('homeEmpty.tst-leer');
+      D.Shell.show('home');
+      return wait(600).then(function () {
+        var el = D.Shell.view.querySelector('.launcher'), w = el.querySelectorAll('.hm-empty .hm-w');
+        ok(!el.classList.contains('is-loading'), 'fertig geladen');
+        eq(Array.prototype.map.call(w, function (x) { return x.querySelector('h2').textContent; }), ['Neuigkeiten', 'Deine Playlist', 'Zuletzt gesehene Sender'], 'drei Felder');
+        ok(el.querySelector('.hm-w-pl').textContent.indexOf('120') >= 0, 'Zahl der Sender steht bei „Deine Playlist“');
+        ok(el.querySelector('.hm-w-pl .btn'), 'Knopf Aktualisieren');
+        ok(el.textContent.indexOf('Wusstest du schon') < 0, 'kein Feld „Wusstest du schon?“');
+        ok(!el.querySelector('.hm-quick'), 'keine drei Kacheln');
+        eq(D.Store.get('homeEmpty.tst-leer', null), true, 'gemerkt: Startseite ist leer');
+        eq(D.startTabNow('home'), 'live', 'App beim Start = Startseite → es öffnet sich Live TV');
+        eq(D.startTabNow('movie'), 'movie', 'eigene Wahl des Nutzers bleibt gültig');
+        eq(D.startTabNow('last'), 'live');
+        D.Store.set('homeEmpty.tst-leer', false);
+        eq(D.startTabNow('home'), 'home', 'mit Inhalt wieder die Startseite');
+        D.Store.del('stats.tst-leer'); D.Store.del('homeEmpty.tst-leer');
+        if (keep) D.Store.set('top10.de', keep); else D.Store.del('top10.de');
+      });
+    }, { id: 'tst-leer', type: 'demo', name: 'Nur Sender' });
+  });
 })();

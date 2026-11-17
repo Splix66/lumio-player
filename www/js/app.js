@@ -2487,7 +2487,7 @@
           startPending = 0;
           var sv = startView();
           startMini = sv === 'last';
-          if (startTab(sv) !== 'home') Shell.show(startTab(sv));
+          if (startTabNow(sv) !== 'home') Shell.show(startTabNow(sv));
         }
         return;
       }
@@ -3319,6 +3319,8 @@
       if (!kick) return;
       var r = Number(d.rating || item.rating), y = String(d.year || item.year || '').slice(0, 4);
       var g = String(d.genre || item.genre || '').split(/\s*[,\/|]\s*/).filter(Boolean).slice(0, 2).join(' • ');
+      // Startseite: „Netflix · Top 10 · Platz 2 · Serie · 2025 · Krimi“ (ohne Rangliste: Bewertung · Art · Jahr · Genre)
+      if (opts.lead !== undefined) { kick.textContent = [opts.lead || (r > 0 && r < 9.8 ? '★ ' + r.toFixed(1) : ''), isSeries ? T('Serie') : T('Film'), y, g].filter(Boolean).join(' · '); return; }
       kick.textContent = [r > 0 && r < 9.8 ? '★ ' + r.toFixed(1) : '', g, y].filter(Boolean).join('  •  ');
     }
     paintKick({});
@@ -3326,7 +3328,7 @@
       h('div', { class: 'fh-in' },
         opts.top || null,
         kick || (opts.kicker ? h('span', { class: 'fh-kicker' }, icon(isSeries ? 'series' : 'movie'), h('span', { text: opts.kicker })) : null),
-        h('h1', { class: 'fh-title', text: item.name }), opts.home ? null : meta, plot, actions, opts.bottom || null));
+        h('h1', { class: 'fh-title', text: item.name }), opts.home ? null : meta, plot, actions, opts.home ? null : (opts.bottom || null)));
     var shownBg = '', wantBg = '';
     function setBg(url, blur) {
       if (!url || url === shownBg) return;
@@ -3345,11 +3347,12 @@
       clear(actions);
       if (opts.home) {
         // Startseite wie im Entwurf: „Jetzt ansehen“ und „Details“
-        var rr = isSeries ? null : Resume.get(item);
+        // oben stehen nur Vorschläge – nie „Weiter bei …“ (dafür gibt es die Reihe „Weiterschauen“)
         actions.appendChild(h('button', { class: 'btn f primary', 'data-key': 'hero:play', onclick: function () { if (isSeries) showSeries(item); else playItem(item, { list: [item], index: 0 }); } },
-          icon('play'), h('span', { text: rr ? T('Weiter bei {0}', fmtTime(rr.t)) : T('Jetzt ansehen') })));
+          icon('play'), h('span', { text: T('Jetzt ansehen') })));
         actions.appendChild(h('button', { class: 'btn f ghost', 'data-key': 'hero:info', onclick: function () { if (isSeries) showSeries(item); else showMovie(item); } },
           icon('info'), h('span', { text: T('Details') })));
+        if (opts.bottom) actions.appendChild(opts.bottom);   // Punkte gleich neben den Knöpfen
         return;
       }
       if (isSeries) {
@@ -3539,32 +3542,10 @@
         return sortVod(kind, list, cat.id === '__all');
       });
     }
-    function paintResume() {
-      clear(resumeSlot);
-      if (activeId !== '__all' && activeId.indexOf('__grp:') !== 0) { head.appendChild(sortWrap); head.classList.remove('no-sort'); return; }
-      var mine = Resume.recent().filter(function (r) { return isSeries ? r.item.kind === 'episode' : r.item.kind === 'movie'; });
-      if (isSeries) mine = mine.concat(UpNext.entries()).sort(function (a, b) { return b.at - a.at; });
-      mine = mine.slice(0, 12);
-      if (mine.length) {
-        var rail = railEl(T('Weiterschauen'), mine.map(continueCard), kind);
-        $('h2', rail).appendChild(sortWrap);
-        resumeSlot.appendChild(rail);
-      } else head.appendChild(sortWrap);
-      head.classList.toggle('no-sort', !!mine.length);
-    }
-    // Top 10 immer aus allen Titeln – so bleibt der obere Bereich gleich, egal welche Kategorie gewählt ist
-    function paintTop() {
-      visibleItems(kind, App.provider.items(kind, '__all')).then(function (list) {
-        if (!document.body.contains(el)) return;
-        clear(topSlot);
-        var top = topTen(list, some(list, function (x) { return Number(x.added) > 0; }));
-        if (top.length < 5) return;
-        var sec = railEl(isSeries ? T('Top 10 Serien') : T('Top 10 Filme'), top.map(function (it, i) { return top10Card(it, i + 1); }), kind);
-        sec.classList.add('rail-top');
-        $('h2', sec).appendChild(h('span', { class: 'rail-note', text: T('nach Bewertung') }));
-        topSlot.appendChild(sec);
-      }).catch(function () {});
-    }
+    // Seit 1.15.10 stehen „Weiterschauen“ und „Top 10“ nur noch auf der Startseite (Erays Entscheidung 16.11.2026):
+    // Filme und Serien zeigen links die Kategorien und rechts die Cover – „Sortieren“ bleibt in der Kopfzeile.
+    function paintResume() { clear(resumeSlot); head.appendChild(sortWrap); head.classList.remove('no-sort'); }
+    function paintTop() { clear(topSlot); topSlot.hidden = true; }
     function selectCat(cat, byUser) {
       if (!cat.group && cat.id !== '__all' && Parental.blocked(kind, cat)) {
         if (byUser) { Parental.ask(function () { selectCat(cat, true); }); return; }
@@ -3573,7 +3554,6 @@
       lastCat[key] = cat.id; activeId = cat.id; lastCatObj = cat;
       markActive();
       // Top 10 nur bei „Alle“ – in einer Kategorie passen so mehr Cover auf den Bildschirm
-      topSlot.hidden = cat.id !== '__all';
       var my = ++req;
       if (chunker) { chunker.dispose(); chunker = null; }
       clear(grid).appendChild(Skeleton.grid(14));
@@ -4150,6 +4130,14 @@
     return sv === 'live' || sv === 'movie' || sv === 'series' ? sv : 'home';
   }
 
+  /* Leere Startseite (nichts vorzuschlagen, nichts zum Weiterschauen – z. B. Playlist nur mit Sendern): Das merkt sich die
+     Startseite nach dem Laden je Playlist. Steht „App beim Start“ auf Startseite, öffnet die App dann gleich Live TV
+     (Erays Entscheidung 16.11.2026). Eine andere eigene Wahl des Nutzers bleibt gültig. */
+  function startTabNow(sv) {
+    var t = startTab(sv);
+    return t === 'home' && sv === 'home' && App.profile && Store.get('homeEmpty.' + pid(), false) === true ? 'live' : t;
+  }
+
   var Shell = {
     el: null, view: null, current: null, buttons: {}, pendingFocus: null,
     open: function () {
@@ -4215,7 +4203,7 @@
       var justStarted = startPending > 0 && --startPending === 0;
       var sv = justStarted ? startView() : 'home';
       startMini = sv === 'last';
-      self.show(startTab(sv));
+      self.show(startTabNow(sv));
     },
     show: function (name, focusContent, keepFocus) {
       var self = this, prev = self.current;
@@ -4482,6 +4470,14 @@
       return out;
     }
   };
+  /* Startseite seit 1.15.10: je Dienst zwei Reihen – „Top 10 Filme“ und „Top 10 Serien“ – mit bis zu 10 Plätzen.
+     Gezeigt werden nur Titel, die in der aktiven Playlist gefunden wurden (hits), jeweils mit dem echten Platz. */
+  function top10Rows(s) {
+    return [['movie', s.movies], ['series', s.series]].map(function (k) {
+      var all = (k[1] || []).slice(0, 10).map(function (e) { return { kind: k[0], rank: e.rank, e: e }; });
+      return { kind: k[0], total: all.length, hits: all.filter(function (x) { return !!Top10Match.item(k[0], s.id, x.rank); }) };
+    });
+  }
   /* Titel vergleichbar machen: Sprachkürzel vorne („DE - “, „|DE|“), Jahr, Qualität und Satzzeichen weg */
   function t10Key(s) {
     var n = String(s || '').replace(/^\s*[\[(|]?\s*(de|ger|deu|en|eng|multi|nf|netflix)\s*[\])|:\-–]+\s*/i, '');
@@ -4583,29 +4579,27 @@
         if (!it || seen[e.kind + ':' + it.id]) return;
         seen[e.kind + ':' + it.id] = 1;
         var o = {}; for (var k in it) if (Object.prototype.hasOwnProperty.call(it, k)) o[k] = it[k];
-        o._t10 = x.s.name + ' · Top 10 · #' + e.rank;
+        o._t10 = x.s.name + ' · Top 10 · ' + T('Platz {0}', e.rank);
         out.push(o);
       });
     }
     return out.length >= 2 ? out : null;
   }
+  /* Vorschlag oben auf der Startseite (seit 1.15.10 ohne Rahmen und ohne Pfeile: das Bild liegt oben rechts hinter allem
+     und läuft nach links und unten aus). Wechselt weiter von selbst, nie während man darin steht. */
   function homeHero(items) {
     var stage = h('div', { class: 'hm-stage' }), dots = h('div', { class: 'hm-dots', 'aria-hidden': 'true' }), idx = 0, timer = null;
-    var box = h('div', { class: 'hm-hero' + (items.length > 1 ? ' has-arrows' : '') }, stage);
+    var box = h('div', { class: 'hm-hero' }, stage);
     function show(i) {
       idx = (i + items.length) % items.length;
       clear(dots);
       items.forEach(function (x, j) { dots.appendChild(h('i', { class: j === idx ? 'is-on' : '' })); });
       var x = items[idx];
-      var fh = featureHero(x, { home: true, bottom: items.length > 1 ? dots : null,
-        top: x._t10 ? h('span', { class: 'hm-badge k-' + x.kind, text: x._t10 }) : null });
+      var fh = featureHero(x, { home: true, bottom: items.length > 1 ? dots : null, lead: x._t10 || '' });
       clear(stage).appendChild(fh);
     }
     show(0);
     if (items.length > 1) {
-      // Pfeile nach dem Titelbild im Ablauf: „Runter“ aus der Menüleiste landet weiter auf „Jetzt ansehen“
-      box.appendChild(h('button', { class: 'hm-arrow is-prev f', 'data-key': 'hero:prev', title: T('Vorheriger Titel'), 'aria-label': T('Vorheriger Titel'), onclick: function () { show(idx - 1); } }, icon('back')));
-      box.appendChild(h('button', { class: 'hm-arrow is-next f', 'data-key': 'hero:next', title: T('Nächster Titel'), 'aria-label': T('Nächster Titel'), onclick: function () { show(idx + 1); } }, icon('next')));
       timer = setInterval(function () {
         if (!document.body.contains(box)) { clearInterval(timer); return; }
         // nicht wechseln, solange man dort steht, etwas darüber offen ist (Details, Player, Dialog) oder die App im Hintergrund ist –
@@ -4625,13 +4619,19 @@
     if (Parental.unlocked) { Parental.unlocked = false; searchCache = {}; }
     launcherRadio = false;
 
-    var heroSlot = h('div', { class: 'hm-heroslot' });
-    var rows = h('div', { class: 'hm-rows' });
-    // Oben ein Block: links „Weiterschauen“, rechts das kleine Titelbild (Erays Wunsch 15.11.2026); darunter die Top-10-Reihen.
-    // Auf schmalen Bildschirmen (Handy) steht das Titelbild per CSS weiter über „Weiterschauen“.
-    var t10Slot = h('div', { class: 'hm-rows hm-t10rows' });
-    var el = h('div', { class: 'launcher hm' }, h('div', { class: 'hm-first' }, rows, heroSlot), t10Slot);
-
+    /* Aufbau seit 1.15.10 (Plan „Reihen mit Vorschlag oben“, von Eray gewählt): oben der Vorschlag, darunter nur Reihen –
+       „Weiterschauen“, „Top 10 Filme“, „Top 10 Serien“. Solange die Playlist lädt, stehen Platzhalter in derselben Form;
+       die drei großen Kacheln Live TV / Filme / Serien gibt es nicht mehr. Ist nach dem Laden nichts da, zeigt die Seite drei Felder. */
+    function skRow(cls) {
+      return h('section', { class: 'hm-row hm-skrow' + (cls ? ' ' + cls : ''), 'aria-hidden': 'true' }, h('i', { class: 'sk hm-sktitle' }), Skeleton.many('hm-track', 7));
+    }
+    var heroSlot = h('div', { class: 'hm-heroslot' }, h('i', { class: 'sk hm-skhero' }));
+    var rows = h('div', { class: 'hm-rows' }, skRow());
+    var t10Slot = h('div', { class: 'hm-rows hm-t10rows' }, skRow('is-t10'));
+    var emptySlot = h('div', { class: 'hm-empty' });
+    var el = h('div', { class: 'launcher hm hm2 is-loading' }, heroSlot, rows, t10Slot, emptySlot);
+    var heroN = null, rowsN = null, t10N = null;      // null = noch nicht bekannt
+    function ready() { var st = Stats.get(); return !!(st.live || st.movie || st.series); }
     function row(title, ic, kids, more) {
       return h('section', { class: 'hm-row' },
         h('div', { class: 'hm-rhead' }, h('h2', { class: 'hm-rtitle' }, ic ? icon(ic) : null, h('span', { text: title })), more || null),
@@ -4641,16 +4641,46 @@
       return h('button', { class: 'hm-ch f', 'data-key': 'ch:' + ch.id, title: ch.name, onclick: function () { playChannel(ch); } },
         logoBox(ch), h('span', { class: 'hm-chname', text: ch.name }));
     }
-    // Schnellzugriff, solange es noch nichts zu zeigen gibt (neue Playlist, erster Start)
-    function quickRow() {
-      function q(kind, label, unit) {
-        function count() { var x = Stats.get()[kind]; return x ? T(unit, fmtCount(x.n)) : '…'; }
-        var b = h('button', { class: 'hm-quick f k-' + kind, 'data-key': 'q:' + kind, onclick: function () { Shell.show(kind, true); } },
-          h('span', { class: 'hm-qic' }, icon(kind)), h('b', { text: label }), h('small', { text: count() }));
-        b._count = count;
-        return b;
-      }
-      return h('div', { class: 'hm-quickrow' }, q('live', T('Live TV'), '{0} Sender'), q('movie', T('Filme'), '{0} Titel'), q('series', T('Serien'), '{0} Serien'));
+    /* Leere Startseite: Neuigkeiten, Deine Playlist, Zuletzt gesehene Sender (kein „Wusstest du schon?“ – Tipps sind gestrichen) */
+    function paintEmpty() {
+      if (emptySlot.firstChild) return;
+      var p = App.profile, st = Stats.get(), facts = h('div', { class: 'kv' });
+      function fact(k, v) { if (!v) return; facts.appendChild(h('span', { text: k })); facts.appendChild(h('b', { text: v })); }
+      fact(T('Live TV'), st.live ? T('{0} Sender', fmtCount(st.live.n)) : '');
+      fact(T('Filme'), st.movie && st.movie.n ? T('{0} Titel', fmtCount(st.movie.n)) : '');
+      fact(T('Serien'), st.series && st.series.n ? T('{0} Serien', fmtCount(st.series.n)) : '');
+      var at = Math.max(st.live ? st.live.at : 0, st.movie ? st.movie.at : 0, st.series ? st.series.at : 0);
+      fact(T('Zuletzt aktualisiert'), at ? ago(at) : '');
+      var valid = h('b');
+      if (App.provider.account) App.provider.account().then(function (a) {
+        if (!a || !a.expires || disposed) return;
+        facts.appendChild(h('span', { text: T('Gültig bis') })); valid.textContent = fmtDate(a.expires); facts.appendChild(valid);
+      }).catch(function () {});
+      var rec = Recent.list().slice(0, 6);
+      emptySlot.appendChild(h('section', { class: 'hm-w hm-w-news' }, h('h2', { text: T('Neuigkeiten') }),
+        h('p', { class: 'hm-w-sub', text: T('Version {0}', CONFIG.version) }),
+        h('ul', null, [T('Neues Aussehen mit neuer Leiste oben'), T('Aktualisieren ohne Wartezeit'), T('Profil und „Playlist löschen“ in den Einstellungen')].map(function (x) {
+          return h('li', null, icon('check'), h('span', { text: x }));
+        }))));
+      emptySlot.appendChild(h('section', { class: 'hm-w hm-w-pl' }, h('h2', { text: T('Deine Playlist') }), h('b', { class: 'hm-w-name', text: p ? p.name : '' }), facts,
+        h('button', { class: 'btn f primary', 'data-key': 'w:refresh', onclick: reloadWithSplash }, icon('refresh'), h('span', { text: T('Playlist aktualisieren') }))));
+      emptySlot.appendChild(h('section', { class: 'hm-w hm-w-rec' }, h('h2', { text: T('Zuletzt gesehene Sender') }),
+        rec.length ? h('div', { class: 'hm-w-chans' }, rec.map(function (ch) { return chanTile(ch, rec); }))
+          : h('div', null, h('p', { class: 'hm-w-sub', text: T('Hier erscheinen die Sender, die du zuletzt gesehen hast.') }),
+            h('button', { class: 'btn f', 'data-key': 'w:live', onclick: function () { Shell.show('live', true); } }, icon('live'), h('span', { text: T('Live TV') })))));
+    }
+    /* Erst wenn die Playlist geladen ist und alle drei Teile ihr Ergebnis kennen, steht fest, ob die Startseite leer ist */
+    function settle() {
+      if (disposed || !ready() || heroN === null || rowsN === null || t10N === null) return;
+      var empty = !heroN && !rowsN && !t10N;
+      el.classList.remove('is-loading');
+      el.classList.toggle('is-void', empty);
+      Store.set('homeEmpty.' + pid(), empty);
+      if (empty) {
+        paintEmpty();
+        var a = document.activeElement, top0 = Screens.top();
+        if (top0 && top0.el.contains(el) && (!a || a === document.body)) { var f0 = $('.f', emptySlot); if (f0) Nav.focus(f0); }
+      } else clear(emptySlot);
     }
 
     var firstHero = true, disposed = false;
@@ -4660,29 +4690,26 @@
         var t10 = top10Hero(8);
         if (t10) items = t10;
         var sig = items.map(function (x) { return x.kind + ':' + x.id; }).join(',');
-        if (heroSlot.firstChild && heroSlot.firstChild._sig === sig) return;   // gleiche Auswahl: nicht neu aufbauen
+        if (heroSlot.firstChild && heroSlot.firstChild._sig === sig) { heroN = items.length; settle(); return; }   // gleiche Auswahl: nicht neu aufbauen
         var had = heroSlot.firstChild, inside = had && had.contains(document.activeElement);
         // im Titelbild unterwegs: nicht austauschen
         if (inside && had.classList.contains('hm-hero')) return;
-        // weiterhin kein Titelbild und die Ersatzkacheln stehen schon: so lassen (sonst springt der Fokus auf „Live TV“ zurück)
-        // (nur die Zahlen darunter auffrischen – nach dem ersten Laden stand sonst dauerhaft „…“)
-        if (!items.length && had && had.classList.contains('hm-quickrow')) {
-          $all('.hm-quick', had).forEach(function (b) { var s = $('small', b); if (s && b._count) s.textContent = b._count(); });
-          return;
-        }
+        // noch nichts geladen und nichts vorzuschlagen: Platzhalter stehen lassen
+        if (!items.length && !ready()) return;
         var fkey = inside && document.activeElement.getAttribute('data-key');
         if (had && had._dispose) had._dispose();
         clear(heroSlot);
         if (items.length) { var hb = homeHero(items); hb._sig = sig; heroSlot.appendChild(hb); }
         el.classList.toggle('no-hero', !items.length);
-        if (!items.length) heroSlot.appendChild(quickRow());
+        heroN = items.length;
+        settle();
         if (inside) { var fq = (fkey && $('[data-key="' + fkey + '"]', heroSlot)) || $('.f', heroSlot); if (fq) Nav.focus(fq); }
         // Beim Öffnen steht der Fokus oben links: auf der ersten „Weiterschauen“-Kachel, ohne sie auf „Jetzt ansehen“
         // (das Titelbild kommt erst kurz nach dem Aufbau dazu; erst nach den 20/30 ms, nach denen Screens/Shell selbst
         // den ersten Knopf wählen – der wäre sonst „Alle anzeigen“ in der Überschrift von „Weiterschauen“)
         if (firstHero) setTimeout(function () {
           var a = document.activeElement, top0 = Screens.top();
-          var auto = !a || a === document.body || (a.closest && a.closest('.topnav') && a.classList.contains('tab-home')) || (a.getAttribute && a.getAttribute('data-key') === 'lr:all');
+          var auto = !a || a === document.body || (a.closest && a.closest('.topnav') && a.classList.contains('tab-home')) || (a.getAttribute && a.getAttribute('data-key') === 'hero:play');   // seit 1.15.10 steht der Vorschlag zuerst im Ablauf – Start trotzdem auf „Weiterschauen“
           if (top0 && top0.el.contains(el) && auto) {
             var f0 = $('.lr-card.f', rows) || $('.f', heroSlot); if (f0) Nav.focus(f0);
           }
@@ -4700,14 +4727,18 @@
           var c = recentCard(r);
           c.appendChild(h('span', { class: 'hm-play', 'aria-hidden': 'true' }, icon('play')));
           return c;
-        }), h('button', { class: 'lr-all f', 'data-key': 'lr:all', onclick: showAllRecent }, h('span', { text: T('Alle anzeigen') }), icon('next'))));
+        })));
       }
+      // noch nichts geladen und nichts zum Weiterschauen: Platzhalter stehen lassen
+      if (!out.length && !ready()) return;
       // „Top Sender“ und „Zuletzt gesehene Sender“ stehen nicht mehr auf der Startseite (Auftrag 15.11.2026: unter dem
       // Titelbild nur „Weiterschauen“ und die Top-10-Reihen) – die Zählung (ChanCount) und der Verlauf laufen weiter
       function done() {
         if (my !== rowsReq) return;
         clear(rows); out.forEach(function (x) { rows.appendChild(x); });
         el.classList.toggle('is-empty', !out.length);
+        rowsN = out.length;
+        settle();
         var k = fkey || wantKey, top0 = Screens.top();
         wantKey = null;
         if (k && top0 && top0.el.contains(el)) {
@@ -4737,19 +4768,27 @@
         });
         var mm = Top10Match.get('movie'), ms = Top10Match.get('series');
         var sig = Top10.stamp(d) + '#' + JSON.stringify([mm && mm.m, ms && ms.m]).length + ':' + Lang.cur;
-        if (!force && sig === t10Painted) return;
+        if (!force && sig === t10Painted) { settle(); return; }
         t10Painted = sig;
         var foc = document.activeElement, fkey = t10Slot.contains(foc) && foc.getAttribute('data-key');
-        var out = svcs.map(function (s) {
-          var tiles = Top10.row(s).map(function (x) { return top10Tile(s, x); });
-          if (!tiles.length) return null;
-          var info = s.separate ? T('Deutschland · Woche {0} · Filme und Serien aus getrennten Listen', t10Week(s)) : T('Deutschland · {0}', t10Week(s));
-          return h('section', { class: 'hm-row hm-t10row', 'data-svc': s.id },
-            h('div', { class: 'hm-rhead' }, h('h2', { class: 'hm-rtitle' }, h('span', { text: s.name + ' – Top 10' })), h('small', { class: 'hm-t10info', text: info })),
-            h('div', { class: 'hm-track' }, tiles));
-        }).filter(Boolean);
+        var out = [];
+        svcs.forEach(function (s) {
+          top10Rows(s).forEach(function (r) {
+            if (!r.hits.length) return;      // Reihe ohne Treffer entfällt
+            var info = [s.name, T('Deutschland · {0}', t10Week(s)), T('{0} von {1} in deiner Playlist', r.hits.length, r.total)].join(' · ');
+            out.push(h('section', { class: 'hm-row hm-t10row k-' + r.kind, 'data-svc': s.id },
+              h('div', { class: 'hm-rhead' }, h('h2', { class: 'hm-rtitle' }, h('span', { text: r.kind === 'movie' ? T('Top 10 Filme') : T('Top 10 Serien') })), h('small', { class: 'hm-t10info', text: info })),
+              h('div', { class: 'hm-track' }, r.hits.map(function (x) { return top10Tile(s, x); }))));
+          });
+        });
         clear(t10Slot); out.forEach(function (x) { t10Slot.appendChild(x); });
         if (fkey) { var t = $('[data-key="' + fkey + '"]', t10Slot) || $('.f', t10Slot); if (t) Nav.focus(t); }
+        t10N = out.length;
+        settle();
+      }, function () {
+        // Rangliste nicht erreichbar: keine Top-10-Reihen (Platzhalter weg), der Rest der Startseite steht trotzdem
+        if (my !== t10Req || disposed) return;
+        clear(t10Slot); t10N = 0; settle();
       });
     }
     var recheckT = {};
@@ -4774,7 +4813,7 @@
         if (!Stats.stale()) autoTried = 0;
         if (r.error) { if (!quiet) toast(T('Hinweis: {0}', r.error.message || T('Verbindung fehlgeschlagen.')), 4000); }
         else if (byUser) toast(T('Playlist aktualisiert'));
-        if (document.body.contains(el)) paintHero();
+        if (document.body.contains(el)) { paintHero(); paintRows(); settle(); }
       });
     }
     // Listen veraltet? Dann still im Hintergrund neu laden
@@ -10242,7 +10281,7 @@
     decodeBytes: decodeBytes, readText: readText, fetchText: fetchText, sameConnection: sameConnection, NativePlayer: NativePlayer, App: App, ensureTs: ensureTs, migrateM3uIds: migrateM3uIds,
     ErrLog: ErrLog, techInfo: techInfo, epgText: epgText, ChanCount: ChanCount, Top10: Top10, Top10Match: Top10Match, Lang: Lang, top10Tile: top10Tile, top10Hero: top10Hero, HERO_EVERY: HERO_EVERY, t10Key: t10Key, clearHistory: clearHistory, startView: startView, startTab: startTab,
     CatPrefs: CatPrefs, visibleCats: visibleCats, Parental: Parental, ChanHide: ChanHide, initials: initials, statusError: statusError, isVisible: isVisible,
-    Backup: Backup, profileFp: profileFp, Settings: Settings, Shell: Shell, StatusLine: StatusLine, Theme: Theme, Expiry: Expiry, openProfile: openProfile, extMode: extMode, clockStr: clockStr, Skeleton: Skeleton, refreshInline: refreshInline,
+    Backup: Backup, profileFp: profileFp, Settings: Settings, Shell: Shell, StatusLine: StatusLine, Theme: Theme, Expiry: Expiry, openProfile: openProfile, top10Rows: top10Rows, startTabNow: startTabNow, extMode: extMode, clockStr: clockStr, Skeleton: Skeleton, refreshInline: refreshInline,
     Seen: Seen, Resume: Resume, UpNext: UpNext, SeriesWatch: SeriesWatch, sortVod: sortVod,
     Reminders: Reminders, NumEntry: NumEntry, Sleep: Sleep, Later: Later, Saver: Saver, trailerQuery: trailerQuery, Persons: Persons, Favs: Favs, Recent: Recent, showGuide: showGuide, Player: Player, Dialog: Dialog,
     config: CONFIG
