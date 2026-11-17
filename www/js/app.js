@@ -381,7 +381,15 @@
 
   var Settings = {
     data: Store.get('settings', { liveFormat: 'm3u8' }),
-    get: function (k) { return this.data[k]; },
+    /* Seit 1.15.10 gestrichene Einstellungen (Erays Entscheidung 17.11.2026): Ein früher gespeicherter Wert bleibt liegen,
+       wirkt aber nicht mehr – sonst hinge jemand z. B. auf „12 h“ oder „Immer beste Qualität“ fest und könnte es nicht mehr ändern. */
+    RETIRED: { quality: 'auto', heroPreview: false, saverTips: false, weatherLoc: null, clock12: false, theme: 'dark' },
+    get: function (k) {
+      if (this.RETIRED.hasOwnProperty(k)) return this.RETIRED[k];
+      var v = this.data[k];
+      if (k === 'chanSort' && v === 'za') return 'az';   // „Name Z–A“ gibt es nicht mehr
+      return v;
+    },
     set: function (k, v) { this.data[k] = v; Store.set('settings', this.data); }
   };
   // Gerätetyp von Hand (Einstellungen → Gerätetyp): Fernseher oder Handy/Tablet/PC erzwingen
@@ -2303,7 +2311,7 @@
   };
 
   var Expiry = {
-    timer: null,
+    timer: null, shown: {},
     check: function () {
       var self = this, p = App.profile;
       // Geräte laufen oft tagelang durch: alle 6 Stunden erneut prüfen
@@ -2318,21 +2326,33 @@
         // bei Monatszugängen erschien „läuft bald ab“ gleich beim Einrichten
         var stage = left <= 0 ? 'over' : left <= day ? 'd1' : left <= 7 * day ? 'd7' : null;
         if (!stage) return;
-        var key = 'expiry.' + p.id, seen = Store.get(key, {});
-        if (seen.exp !== a.expires) seen = { exp: a.expires };
-        if (seen[stage]) return;
-        // diese und alle früheren Stufen als erledigt merken
-        var order = ['d30', 'd7', 'd1', 'over'];
-        order.slice(0, order.indexOf(stage) + 1).forEach(function (k) { if (!seen[k]) seen[k] = Date.now(); });
-        Store.set(key, seen);
         var when = fmtDate(a.expires), days = Math.max(1, Math.ceil(left / day));
-        var title = stage === 'over' ? T('Dein Zugang ist abgelaufen') : T('Dein Zugang läuft bald ab');
-        var text = stage === 'over' ? T('„{0}“ ist am {1} abgelaufen. Verlängere den Zugang, damit Sender, Filme und Serien wieder laufen.', p.name, when)
-          : stage === 'd1' ? T('„{0}“ läuft in weniger als 24 Stunden ab ({1}). Verlängere den Zugang rechtzeitig, damit alles weiterläuft.', p.name, when)
-          : T('„{0}“ läuft in {1} Tagen ab ({2}). Verlängere den Zugang rechtzeitig, damit alles weiterläuft.', p.name, days, when);
+        var title, text, buttons;
+        if (stage === 'over') {
+          /* Abgelaufen (seit 1.15.10, Erays Wunsch 17.11.2026): Der Hinweis kommt bei jedem Start der App wieder, solange die
+             Playlist abgelaufen ist – mit dem Weg ins Profil. Im selben Lauf nur einmal (Boxen laufen oft tagelang; nicht alle 6 Stunden stören). */
+          if (self.shown[p.id]) return;
+          self.shown[p.id] = true;
+          title = T('Playlist abgelaufen');
+          text = T('„{0}“ ist am {1} abgelaufen. Verlängere den Zugang, damit Sender, Filme und Serien wieder laufen.', p.name, when);
+          buttons = [{ label: T('Zum Profil'), primary: true, action: openProfile }, { label: T('Später') }];
+        } else {
+          var key = 'expiry.' + p.id, seen = Store.get(key, {});
+          if (seen.exp !== a.expires) seen = { exp: a.expires };
+          if (seen[stage]) return;
+          // diese und alle früheren Stufen als erledigt merken
+          var order = ['d30', 'd7', 'd1'];
+          order.slice(0, order.indexOf(stage) + 1).forEach(function (k) { if (!seen[k]) seen[k] = Date.now(); });
+          Store.set(key, seen);
+          title = T('Dein Zugang läuft bald ab');
+          text = stage === 'd1' ? T('„{0}“ läuft in weniger als 24 Stunden ab ({1}). Verlängere den Zugang rechtzeitig, damit alles weiterläuft.', p.name, when)
+            : T('„{0}“ läuft in {1} Tagen ab ({2}). Verlängere den Zugang rechtzeitig, damit alles weiterläuft.', p.name, days, when);
+          buttons = [{ label: T('Verstanden'), primary: true }];
+        }
         var show = function () {
+          if (App.profile !== p) return;
           if (Dialog.open || (Screens.top() && Screens.top().name === 'player')) { setTimeout(show, 5000); return; }
-          Dialog.show(title, text, [{ label: T('Verstanden'), primary: true }]);
+          Dialog.show(title, text, buttons);
         };
         setTimeout(show, 1200);
       }).catch(function () {});
@@ -2744,7 +2764,7 @@
       var row = h('div', { class: 'row' });
       var first = null;
       buttons.forEach(function (b) {
-        var btn = h('button', { class: 'btn f ' + (b.primary ? 'primary' : ''), onclick: function () { self.close(); if (b.action) b.action(); } }, b.label);
+        var btn = h('button', { class: 'btn f ' + (b.primary ? 'primary' : '') + (b.danger ? ' danger' : ''), onclick: function () { self.close(); if (b.action) b.action(); } }, b.label);
         if (b.primary || !first) first = btn;
         if (b.focus) btn._focus = true;
         row.appendChild(btn);
@@ -4203,6 +4223,8 @@
         Persons.guard(function () { self.show(name, focusContent, keepFocus); });
         return;
       }
+      // Das Profil ist seit 1.15.10 ein Bereich der Einstellungen (alte Aufrufe landen dort)
+      if (name === 'profile') { sideMemo.settings = 'profile'; name = 'settings'; }
       self.current = name;
       // Mini-Player beenden, wenn man zu Filmen, Serien oder zum Startbildschirm wechselt
       // (außer bei Bild-in-Bild: das läuft absichtlich überall weiter)
@@ -4215,7 +4237,6 @@
         if (k !== name) self.setCount(k, '');
       });
       // Einstellungen und Profil gehören zusammen: der Knopf „Einstellungen“ bleibt auch im Profil gewählt
-      if (name === 'profile' && self.buttons.settings) self.buttons.settings.classList.add('is-on');
       self.viewBack = null;
       // alte Ansicht aufräumen (lange Listen sofort freigeben – wichtig für Boxen mit wenig Speicher)
       var old = self.view.firstChild;
@@ -4225,7 +4246,6 @@
       if (name === 'movie' || name === 'series') NewMark.mark(name);
       if (name === 'home') view = LauncherView(prev);
       else if (name === 'settings') view = SettingsView();
-      else if (name === 'profile') { view = ProfileView(); self.viewBack = function () { self.show('settings', true); return true; }; }
       else if (name === 'favs') view = FavoritesView();
       else if (name === 'movie' || name === 'series') view = MediaView(name);
       else view = SectionView(name);
@@ -6327,7 +6347,11 @@
   }
 
   /* ---------- Profil: Zugangsdaten und Gerät (eigene Seite, oben rechts über das Profil-Symbol) ---------- */
-  function ProfileView() {
+  /* Profil: seit 1.15.10 der erste Bereich der Einstellungen (vorher eigene Seite hinter dem Profil-Knopf der Leiste).
+     Oben die aktive Playlist mit Laufzeit, „Playlist wechseln“ und – neu – „Playlist löschen“ (Erays Wunsch 17.11.2026:
+     „Man sollte seine Playlist auch aus dem Menü löschen können“); darunter Zugang und Dieses Gerät.
+     „Daten neu laden“ entfällt (der Knopf Aktualisieren sitzt in der Leiste), Benutzer stehen unter „Benutzer & Sicherheit“. */
+  function profileBody() {
     var p = App.profile;
     function kvBox() { return h('div', { class: 'kv' }); }
     function row(kv, k, v) { if (v === undefined || v === null || v === '') return; kv.appendChild(h('span', { text: k })); kv.appendChild(h('b', { text: String(v) })); }
@@ -6351,39 +6375,35 @@
     function copyRow(k, v, label) { dev.appendChild(h('span', { text: k })); dev.appendChild(h('b', { class: 'kv-copy' }, h('span', { text: v }), copyBtn(v, label))); }
     copyRow(T('MAC-Adresse'), Device.mac(), 'MAC');
     copyRow('KEY', Device.key(), 'KEY');
+    row(dev, T('Gerätetyp'), Platform.tv ? T('Fernseher / TV-Box') : T('Handy / Tablet / PC'));
+    row(dev, 'Version', CONFIG.version);
     var epgPanel = p.type === 'm3u' && App.provider.epgStatus ? epgSettingsPanel(p) : null;
-    // Personen: wer gerade schaut, mit einem Druck wechseln
-    function personsBody() {
-      var box = h('div', { class: 'pf-persons' }), curId = Persons.curId();
-      Persons.list().forEach(function (pe) {
-        box.appendChild(h('button', { class: 'pf-person f' + (pe.id === curId ? ' is-on' : ''), onclick: function () { if (pe.id !== curId) Persons.switchTo(pe.id); } },
-          avatar(pe, 'av-mid'), h('b', { text: pe.name }), h('small', { text: pe.id === curId ? T('Schaut gerade') : pe.kids ? T('Kinderprofil') : T('Wechseln') })));
-      });
-      return h('div', null, box, h('div', { class: 'row pf-act' },
-        h('button', { class: 'btn f', onclick: function () { Persons.guard(function () { showPersons(function () { el._show('persons'); }); }); } }, icon('users'), h('span', { text: T('Benutzer verwalten') }))));
+    function askDelete() {
+      // „Abbrechen“ ist vorgewählt – ein versehentliches OK löscht nichts
+      Dialog.show(T('„{0}“ löschen?', p.name), T('Favoriten und Verlauf dieses Profils werden ebenfalls entfernt.'),
+        [{ label: T('Abbrechen'), focus: true }, { label: T('Löschen'), danger: true, action: function () {
+          if (Player.el) Player.close();
+          Profiles.remove(p.id);
+          showProfiles();
+        } }]);
     }
-    var el = sidePage('profile-page', T('Profil'), 'profile', [
-      { id: 'access', ic: 'playlist', c: 'violet', name: T('Mein Zugang'), hint: T('Deine aktive Playlist und wie lange sie noch läuft.'), body: function () {
-        return h('div', null,
-          h('div', { class: 'pf-card pf-hero' },
-            h('span', { class: 'st-ic' }, icon('playlist')),
-            h('div', { class: 'pc-txt' }, h('h3', { text: p.name }), user && user !== p.name ? h('p', { text: user }) : null, status),
-            h('div', { class: 'row' },
-              h('button', { class: 'btn f primary', onclick: showProfiles }, icon('profile'), h('span', { text: T('Playlist wechseln') })),
-              h('button', { class: 'btn f', onclick: reloadApp }, icon('restart'), h('span', { text: T('Daten neu laden') })))),
-          h('div', { class: 'pf-card' }, acc));
-      } },
-      { id: 'persons', ic: 'users', c: 'pink', name: T('Benutzer'), hint: T('Wer auf diesem Gerät schaut – jeder Benutzer hat eigene Favoriten und Listen.'), body: personsBody },
-      { id: 'device', ic: 'phone', c: 'blue', name: T('Dieses Gerät'), hint: T('Mit MAC-Adresse und KEY kannst du Playlists per Handy oder über die Webseite auf dieses Gerät schicken.'), body: function () {
-        return h('div', { class: 'pf-dev' },
-          h('div', { class: 'pf-card' }, dev,
-            Cloud.mode === 'token' ? h('div', { class: 'row pf-act' }, h('button', { class: 'btn f', onclick: rotateKey }, icon('restart'), h('span', { text: T('Neuen KEY erzeugen') }))) : null),
-          h('div', { class: 'pf-card pf-qr' }, qrBox(Device.portalLink(), 'pf-qrcode'), h('small', { text: T('Mit dem Handy scannen') })));
-      } },
-      epgPanel ? { id: 'epg', ic: 'guide', c: 'amber', name: T('Programmführer'), hint: T('Woher die Programmdaten kommen und wann sie geladen wurden.'), body: function () { return h('div', { class: 'pf-card' }, epgPanel); } } : null
-    ].filter(Boolean), 'profile');
-    el._dispose = function () { el._stop(); };
-    return el;
+    return h('div', { class: 'pf2' },
+      h('div', { class: 'pf-card pf-hero' },
+        h('span', { class: 'st-ic' }, icon('playlist')),
+        h('div', { class: 'pc-txt' }, h('h3', { text: p.name }), status),
+        h('div', { class: 'row' },
+          h('button', { class: 'btn f primary', onclick: showProfiles }, icon('swap'), h('span', { text: T('Playlist wechseln') })),
+          h('button', { class: 'btn f danger', onclick: askDelete }, icon('trash'), h('span', { text: T('Playlist löschen') })))),
+      h('div', { class: 'pf-cols' },
+        h('div', { class: 'pf-card' }, h('h4', { class: 'pf-cap', text: T('Mein Zugang') }), acc),
+        h('div', { class: 'pf-card' }, h('h4', { class: 'pf-cap', text: T('Dieses Gerät') }), dev,
+          Cloud.mode === 'token' ? h('div', { class: 'row pf-act' }, h('button', { class: 'btn f', onclick: rotateKey }, icon('restart'), h('span', { text: T('Neuen KEY erzeugen') }))) : null)),
+      epgPanel ? h('div', { class: 'pf-card' }, h('h4', { class: 'pf-cap', text: T('Programmführer') }), epgPanel) : null);
+  }
+  /* Profil öffnen (z. B. aus dem Hinweis „Playlist abgelaufen“): Einstellungen, Bereich Profil */
+  function openProfile() {
+    sideMemo.settings = 'profile';
+    if (Shell.el) Shell.show('settings', true);
   }
 
   /* Neuen KEY erzeugen: Wer den alten kennt (z. B. von einem Foto des Bildschirms), kommt nicht mehr an die Playlists */
@@ -6840,9 +6860,12 @@
   var EXT_PLAYERS = { vlc: ['org.videolan.vlc'], mx: ['com.mxtech.videoplayer.ad', 'com.mxtech.videoplayer.pro'], just: ['com.brouken.player'],
     kodi: ['org.xbmc.kodi'], nova: ['org.courville.nova'], mpv: ['is.xyz.mpv'] };
   var EXT_NAMES = { vlc: 'VLC', mx: 'MX Player', just: 'Just Player' };
-  function extPlayerOn() { var e = Settings.get('extPlayer'); return !!(e && e !== 'off' && Platform.android && NativePlayer.plugin()); }
+  /* Externer Player: seit 1.15.10 nur noch An/Aus. „An“ heißt: Android zeigt selbst die Auswahl der Player-Apps.
+     Eine früher fest gewählte App (VLC, MX Player …) zählt als „An“. */
+  function extMode() { var e = Settings.get('extPlayer'); return e && e !== 'off' ? 'ask' : 'off'; }
+  function extPlayerOn() { return extMode() !== 'off' && !!(Platform.android && NativePlayer.plugin()); }
   function playExternal(item) {
-    var pl = NativePlayer.plugin(), e = Settings.get('extPlayer'), s = App.provider.streamUrl(item);
+    var pl = NativePlayer.plugin(), e = extMode(), s = App.provider.streamUrl(item);
     var title = item.kind === 'episode' ? (item.seriesName ? item.seriesName + ' – ' : '') + 'S' + item.season + ' E' + item.num : item.name;
     var pk = (EXT_PLAYERS[e] || []).slice();
     if (item.kind === 'live') Recent.push(item);
@@ -6863,9 +6886,20 @@
   }
 
   /* ---------- Uhrzeit: 24 Stunden oder 12 Stunden (AM/PM) ---------- */
+  /* 12 oder 24 Stunden: richtet sich nach der gewählten Sprache (die Einstellung „Zeitformat“ gibt es seit 1.15.10 nicht mehr) */
+  var clock12Memo = {};
+  function clock12() {
+    var loc = locale();
+    if (clock12Memo[loc] === undefined) {
+      var v = false;
+      try { v = !!new Intl.DateTimeFormat(loc, { hour: 'numeric' }).resolvedOptions().hour12; } catch (e) {}
+      clock12Memo[loc] = v;
+    }
+    return clock12Memo[loc];
+  }
   function clockStr(d) {
     var hh = d.getHours(), mm = d.getMinutes(), p = function (n) { return n < 10 ? '0' + n : '' + n; };
-    if (Settings.get('clock12')) return (hh % 12 || 12) + ':' + p(mm) + ' ' + (hh < 12 ? 'AM' : 'PM');
+    if (clock12()) return (hh % 12 || 12) + ':' + p(mm) + ' ' + (hh < 12 ? 'AM' : 'PM');
     return p(hh) + ':' + p(mm);
   }
 
@@ -7337,7 +7371,7 @@
     // Auswahl-Listen
     var THEMES = [['dark', T('Dunkel')], ['light', T('Hell')], ['auto', T('Automatisch'), T('Richtet sich nach dem Gerät. Fernseher bleiben dunkel.')]];
     var POSTERS = [['s', T('Klein'), T('Mehr Cover auf einmal')], ['m', T('Normal')], ['l', T('Groß'), T('Besser lesbar aus der Entfernung')]];
-    var SORTS = [['default', T('Wie in der Playlist')], ['num', T('Nach Sendernummer')], ['az', T('Name A–Z')], ['za', T('Name Z–A')]];
+    var SORTS = [['default', T('Wie in der Playlist')], ['num', T('Nach Sendernummer')], ['az', T('Name A–Z')]];
     var FORMATS = [['m3u8', 'HLS (.m3u8)', T('Funktioniert auf den meisten Geräten am besten.')], ['ts', 'MPEG-TS (.ts)', T('Probiere das, wenn Sender nicht starten oder ruckeln.')]];
     var EXTS = [['off', T('Aus – Telvo-Player verwenden')], ['ask', T('Jedes Mal fragen'), T('Android zeigt eine Auswahl deiner Player-Apps.')], ['vlc', 'VLC', T('Fire TV, Android TV, Handy – spielt fast alles ab.')], ['mx', 'MX Player', T('Beliebt auf Handys und Tablets.')],
       ['just', 'Just Player', T('Schlank, gut für Fire TV und Android-Boxen.')], ['kodi', 'Kodi', T('Für Android-Boxen und Nvidia Shield.')],
@@ -7454,8 +7488,9 @@
       function () { return Settings.get('liveFormat') === 'ts' ? 'ts' : 'm3u8'; }, function (v) { Settings.set('liveFormat', v); });
     var tEng = !Platform.android ? null : choiceTile('player', T('Player wählen'), engines, function () { return NativePlayer.engine(); }, function (v) { Settings.set('engine', v); },
       T('Hängen Sender oder Filme, probiere einen anderen Player.'), null, T('Für Live TV, Filme und Serien'));
-    var tExt = !(Platform.android && NativePlayer.plugin()) ? null : choiceTile('ext', T('Externer Player'), EXTS, function () { return Settings.get('extPlayer') || 'off'; }, function (v) { Settings.set('extPlayer', v); },
-      T('Sender, Filme und Serien in einer anderen App abspielen. Die App muss auf dem Gerät installiert sein.'));
+    // Externer Player: nur An/Aus – bei „An“ zeigt Android selbst die Auswahl der Player-Apps (die Liste einzelner Apps entfiel mit 1.15.10)
+    var tExt = !(Platform.android && NativePlayer.plugin()) ? null : switchTile('ext', T('Externer Player'), T('Sender, Filme und Serien in einer anderen App abspielen. Die App muss auf dem Gerät installiert sein.'),
+      function () { return extMode() !== 'off'; }, function (v) { Settings.set('extPlayer', v ? 'ask' : 'off'); });
     // Klang im TV-Player (Android-Klangbearbeitung, siehe PlayerActivity.applySound)
     var SOUNDS = [['off', T('Original')],
       ['balance', T('Lautstärke angleichen'), T('Leise Sender lauter, laute Werbung leiser – weniger Nachregeln.')],
@@ -7501,7 +7536,6 @@
     var tErrRep = switchTile('info', T('Fehlerberichte senden'), T('Hilft, Fehler schnell zu beheben – ohne Links, Namen oder Passwörter'),
       function () { return Settings.get('errReport') !== false; }, function (v) { Settings.set('errReport', v); if (v) ErrReport.soon(5000); });
     // Profil: der frühere Knopf oben rechts ist seit 1.15.10 hier (Mein Zugang, Benutzer, Dieses Gerät)
-    var tProfile = tile('profile', T('Mein Zugang'), function () { return App.profile ? App.profile.name : ''; }, function () { Shell.show('profile', true); });
     var tHelp = tile('help', T('Hilfe'), T('Antworten auf häufige Fragen'), showWelcomeHelp);
     var tPersons = tile('users', T('Benutzer'), function () { var l = Persons.list(); return l.length > 1 ? T('{0} Benutzer', l.length) + ' · ' + Persons.cur().name : T('Nur ein Benutzer'); }, function () { showPersons(paint); });
     var tPrev = switchTile('pip', T('Vorschau bei Live TV'), T('Beim Öffnen läuft der letzte Sender klein rechts'),
@@ -7530,14 +7564,20 @@
     var tSaverTips = switchTile('eye', T('Tipps im Bildschirmschoner'), T('„Wusstest du schon?“ unten links. Im Bildschirmschoner auch mit dem Auge oder der Play/Pause-Taste ein- und ausblenden.'),
       function () { return Settings.get('saverTips') !== false; }, function (v) { Settings.set('saverTips', v); });
     var tClock = segTile('clock', T('Zeitformat'), [[false, '24 h'], [true, '12 h']],
-      function () { return !!Settings.get('clock12'); }, function (v) { Settings.set('clock12', v); }, T('Für Uhr und Programmführer'));
+      function () { return clock12(); }, function (v) { Settings.set('clock12', v); }, T('Für Uhr und Programmführer'));
     var tDev = choiceTile('device', T('Gerätetyp'), DEVICES, function () { return Settings.get('deviceType') || 'auto'; }, function (v) {
       if (v === (Settings.get('deviceType') || 'auto')) return;
       Settings.set('deviceType', v);
       toast(T('App startet neu …'));
       restartApp(700);
     }, T('Normalerweise erkennt die App das Gerät selbst. Stimmt die Bedienung nicht, wähle hier den richtigen Typ. Die App startet dann neu.'));
-    var tReport = tile('help', T('Problem melden'), T('Nachricht an den Support'), showReport);
+    // Ein Eintrag statt „Problem melden“ und „Feedback geben“: Das Fenster bietet beide Wege an (ohne Online-Dienst nur die Meldung)
+    var tReport = tile('send', T('Nachricht an den Support'), null, function () {
+      if (!CONFIG.cloudUrl) { showReport(); return; }
+      openSheet(T('Nachricht an den Support'), 'send', [
+        h('div', { class: 'row' }, sheetBtn('help', T('Problem melden'), function () { Screens.pop(); setTimeout(showReport, 40); }, 'primary'),
+          sheetBtn('star', T('Feedback geben'), function () { Screens.pop(); setTimeout(showFeedback, 40); }))]);
+    });
     var tSpeed = tile('wifi', T('Verbindung testen'), function () { var nt = Store.get('nettest', null); return nt && nt.mbps != null ? T('Zuletzt: {0} Mbit/s', String(nt.mbps).replace('.', Lang.cur === 'en' ? '.' : ',')) : T('Geschwindigkeit messen'); }, function () { showSpeedTest(paint); });
     var tFeedback = !CONFIG.cloudUrl ? null : tile('star', T('Feedback geben'), T('Lob, Kritik oder Ideen'), showFeedback);
     var tBackup = !CONFIG.cloudUrl ? null : tile('upload', T('Sichern & Wiederherstellen'), function () {
@@ -7577,17 +7617,18 @@
     function paint() { tiles.forEach(function (t) { t._val(); }); }
     paint();
     function grid(list) { return function () { var g = h('div', { class: 'st-list' }); list.filter(Boolean).forEach(function (t) { g.appendChild(t); }); return g; }; }
-    // Acht Bereiche wie im Entwurf vom 10.11.2026 – nur Einstellungen, die es wirklich gibt
+    // Profil + sieben Bereiche (aufgeräumt mit 1.15.10, Erays Entscheidungen vom 17.11.2026 – brain: e9c0a9d0, 55424522).
+    // Gestrichen: Wetter, Farben, Jetzt aktualisieren, Zwischenspeicher leeren, Schlaf-Timer (bleibt im Player), Zeitformat, Bildqualität,
+    // Vorschau auf Film- und Serienseiten, Tipps im Bildschirmschoner. „Darstellung“ steckt in „Allgemein“.
     var el = sidePage('settings st-page', T('Einstellungen'), 'settings', [
-      { id: 'profile', ic: 'profile', c: 'violet', name: T('Profil'), hint: T('Deine aktive Playlist und wie lange sie noch läuft.'), body: grid([tProfile, tPl]) },
-      { id: 'general', ic: 'home', c: 'violet', name: T('Allgemein'), hint: T('Grundlegende Einstellungen für dein Telvo-Erlebnis.'), body: grid([tLang, tClock, tStart, tUpdChk]) },
-      { id: 'play', ic: 'play', c: 'blue', name: T('Wiedergabe'), hint: T('Player, Bildqualität, Untertitel und Vorschau.'), body: grid([tEng, tQual, tSound, tSub, tNext, tPrev, tHero]) },
-      { id: 'look', ic: 'sun', c: 'amber', name: T('Darstellung'), hint: T('Cover und Bildschirmschoner.'), body: grid([tPoster, tSaver, tSaverTips]) },
-      { id: 'content', ic: 'series', c: 'teal', name: T('Inhalte & Listen'), hint: T('Playlists, Kategorien und Sender.'), body: grid([tAdd, tPl, tUpd, tAuto, tSort, tHideL, tHideM, tHideS, tHideCh]) },
-      { id: 'users', ic: 'lock', c: 'pink', name: T('Benutzer & Sicherheit'), hint: T('Wer schaut, Kindersicherung und Verlauf.'), body: grid([tPersons, tPar, tHis]) },
-      { id: 'devices', ic: 'device', c: 'slate', name: T('Geräte & Verbindungen'), hint: T('Gerätetyp, Verbindung, Sicherung und externe Player.'), body: grid([tDev, tSpeed, tBackup, tExt]) },
-      { id: 'advanced', ic: 'settings', c: 'slate', name: T('Erweitert'), hint: T('Zeitschaltungen, Programmführer und Zwischenspeicher.'), body: grid([tFmt, tShift, tSleep, tIdle, tCache, tErrRep]) },
-      { id: 'help', ic: 'help', c: 'green', name: T('Hilfe & Support'), hint: T('Hilfe, Kontakt, Feedback und Updates.'), body: grid([tHelp, tReport, tFeedback, tAbout]) }
+      { id: 'profile', ic: 'profile', c: 'violet', name: T('Profil'), hint: T('Deine aktive Playlist und wie lange sie noch läuft.'), body: profileBody },
+      { id: 'general', ic: 'home', c: 'violet', name: T('Allgemein'), hint: T('Grundlegende Einstellungen für dein Telvo-Erlebnis.'), body: grid([tLang, tStart, tUpdChk, tPoster, tSaver]) },
+      { id: 'play', ic: 'play', c: 'violet', name: T('Wiedergabe'), hint: T('Player, Klang, Untertitel und Vorschau.'), body: grid([tEng, tSound, tSub, tNext, tPrev]) },
+      { id: 'content', ic: 'series', c: 'violet', name: T('Inhalte & Listen'), hint: T('Playlists, Kategorien und Sender.'), body: grid([tAdd, tPl, tAuto, tSort, tHideL, tHideM, tHideS, tHideCh]) },
+      { id: 'users', ic: 'lock', c: 'violet', name: T('Benutzer & Sicherheit'), hint: T('Wer schaut, Kindersicherung und Verlauf.'), body: grid([tPersons, tPar, tHis]) },
+      { id: 'devices', ic: 'device', c: 'violet', name: T('Geräte & Verbindungen'), hint: T('Gerätetyp, Verbindung, Sicherung und externe Player.'), body: grid([tDev, tSpeed, tBackup, tExt]) },
+      { id: 'advanced', ic: 'sliders', c: 'violet', name: T('Erweitert'), hint: T('Stream-Format, Programmführer und Fehlerberichte.'), body: grid([tFmt, tShift, tIdle, tErrRep]) },
+      { id: 'help', ic: 'help', c: 'violet', name: T('Hilfe & Support'), hint: T('Hilfe, Kontakt, Feedback und Updates.'), body: grid([tHelp, tReport, tAbout]) }
     ], 'settings');
     settingsPaint = paint;
     el._refresh = paint;
@@ -10201,7 +10242,7 @@
     decodeBytes: decodeBytes, readText: readText, fetchText: fetchText, sameConnection: sameConnection, NativePlayer: NativePlayer, App: App, ensureTs: ensureTs, migrateM3uIds: migrateM3uIds,
     ErrLog: ErrLog, techInfo: techInfo, epgText: epgText, ChanCount: ChanCount, Top10: Top10, Top10Match: Top10Match, Lang: Lang, top10Tile: top10Tile, top10Hero: top10Hero, HERO_EVERY: HERO_EVERY, t10Key: t10Key, clearHistory: clearHistory, startView: startView, startTab: startTab,
     CatPrefs: CatPrefs, visibleCats: visibleCats, Parental: Parental, ChanHide: ChanHide, initials: initials, statusError: statusError, isVisible: isVisible,
-    Backup: Backup, profileFp: profileFp, Settings: Settings, Shell: Shell, StatusLine: StatusLine, Theme: Theme, Skeleton: Skeleton, refreshInline: refreshInline,
+    Backup: Backup, profileFp: profileFp, Settings: Settings, Shell: Shell, StatusLine: StatusLine, Theme: Theme, Expiry: Expiry, openProfile: openProfile, extMode: extMode, clockStr: clockStr, Skeleton: Skeleton, refreshInline: refreshInline,
     Seen: Seen, Resume: Resume, UpNext: UpNext, SeriesWatch: SeriesWatch, sortVod: sortVod,
     Reminders: Reminders, NumEntry: NumEntry, Sleep: Sleep, Later: Later, Saver: Saver, trailerQuery: trailerQuery, Persons: Persons, Favs: Favs, Recent: Recent, showGuide: showGuide, Player: Player, Dialog: Dialog,
     config: CONFIG

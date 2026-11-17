@@ -3853,3 +3853,54 @@ body.lite .rf-card { -webkit-backdrop-filter: none; backdrop-filter: none; backg
   html:not(.tv) .sk-prev { display: none; }
   html:not(.tv) .sk-hero { height: 12rem; }
 }
+
+/* ==========================================================
+   NEUES AUSSEHEN – Teil 2 „Seiten“ (1.15.10)
+   ========================================================== */
+/* Roter Knopf für Gefährliches (Playlist löschen) – ruhig rot umrandet, gefüllt erst unter der Markierung */
+.btn.danger { color: #ff9aa8; background: rgba(255, 91, 115, .1); box-shadow: inset 0 0 0 1px rgba(255, 91, 115, .55); }
+.btn.danger .i { color: inherit; }
+body.kbd .btn.danger.f:focus, body.is-tv .btn.danger.f:focus { background: #ff5b73; color: #fff; box-shadow: 0 0 0 .18rem rgba(255, 91, 115, .45), 0 0 1.5rem rgba(255, 91, 115, .5); }
+@media (hover: hover) { .btn.danger:hover { background: rgba(255, 91, 115, .22); color: #fff; } }
+
+/* ---------- Einstellungen: ruhige Liste links, einfarbig ---------- */
+.st2 .st-title { font-family: var(--font-menu); font-weight: 700; }
+.st2 .st-title .i { display: none; }
+.st2 .st-sec .st-sic { width: 1.7rem; height: 1.7rem; margin-right: .9rem; background: none; color: #fff; border-radius: 0; }
+.st2 .st-sec .st-sic .i { width: 1.5rem; height: 1.5rem; }
+.st2 .st-sec { border-radius: 1rem; }
+.st2 .st-sec.is-on { background: rgba(255, 255, 255, .16); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22); color: #fff; }
+.st2 .st-sec.is-on .st-sic { background: none; color: #fff; }
+body.kbd .st2 .st-sec.f:focus, body.is-tv .st2 .st-sec.f:focus { background: rgba(255, 255, 255, .22); color: #fff; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .3), var(--ring); }
+body.kbd .st2 .st-sec.f:focus .st-sic, body.is-tv .st2 .st-sec.f:focus .st-sic { color: #fff; background: none; }
+.st2 .st-head .st-hic { display: none; }
+.st2 .st-row .st-ic { background: rgba(255, 255, 255, .08); color: #fff; }
+/* Profil: Playlist-Karte, darunter Zugang und Dieses Gerät nebeneinander */
+.pf2 .pf-card { border-radius: 1.2rem; background: rgba(255, 255, 255, .045); box-shadow: inset 0 0 0 1px rgba(196, 167, 255, .2); padding: 1.3rem 1.4rem; }
+.pf2 .pf-hero { display: flex; align-items: center; flex-wrap: wrap; }
+.pf2 .pf-hero > .st-ic { flex: none; width: 3.6rem; height: 3.6rem; margin-right: 1.2rem; border-radius: 1.1rem; display: flex; display: grid; place-items: center; color: #fff; background: linear-gradient(145deg, #a78bfa, #6d3df0); }
+.pf2 .pf-hero > .st-ic .i { width: 1.9rem; height: 1.9rem; }
+.pf2 .pf-hero .pc-txt { flex: 1; min-width: 10rem; }
+.pf2 .pf-hero h3 { font-size: 1.4rem; font-weight: 700; margin: 0 0 .45rem; }
+.pf2 .hero-status { display: inline-flex; align-items: center; padding: .28rem .75rem; border-radius: 999px; font-size: .86rem; font-weight: 700; color: #34d399; background: rgba(52, 211, 153, .13); }
+.pf2 .hero-status .dot { width: .5rem; height: .5rem; border-radius: 50%; background: currentColor; margin-right: .5rem; }
+.pf2 .hero-status.is-warn { color: #fb923c; background: rgba(251, 146, 60, .14); }
+.pf2 .hero-status.is-off { color: #ff5b73; background: rgba(255, 91, 115, .14); }
+.pf2 .pf-hero .row { flex: none; margin: 0; }
+.pf2 .pf-hero .row .btn + .btn { margin-left: .8rem; }
+.pf2 .pf-cols { display: flex; display: grid; grid-template-columns: 1fr 1fr; grid-gap: 1.2rem; gap: 1.2rem; margin-top: 1.2rem; }
+.pf2 > .pf-card + .pf-card, .pf2 > .pf-cols + .pf-card { margin-top: 1.2rem; }
+.pf-cap { margin: 0 0 .7rem; font-size: .78rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: rgba(255, 255, 255, .6); }
+.pf2 .kv { display: grid; grid-template-columns: minmax(7rem, 34%) 1fr; grid-gap: 0; gap: 0; align-items: stretch; margin: 0; }
+.pf2 .pf-hero, .pf2 .pf-cols .pf-card { margin: 0; }
+.pf2 .kv > span, .pf2 .kv > b { display: flex; align-items: center; }
+.pf2 .kv > span, .pf2 .kv > b { padding: .78rem 0; border-top: 1px solid rgba(255, 255, 255, .08); min-width: 0; overflow-wrap: anywhere; }
+.pf2 .kv > span:first-child, .pf2 .kv > span:first-child + b { border-top: 0; }
+.pf2 .kv > span { color: rgba(255, 255, 255, .62); }
+.pf2 .kv > b { font-weight: 600; }
+.pf2 .kv-copy { display: flex; align-items: center; justify-content: space-between; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .04em; }
+@media (max-width: 960px) and (orientation: portrait) {
+  html:not(.tv) .pf2 .pf-cols { grid-template-columns: 1fr; }
+  html:not(.tv) .pf2 .pf-hero .row { width: 100%; margin-top: 1rem; }
+  html:not(.tv) .pf2 .pf-hero .row .btn { flex: 1; }
+}
