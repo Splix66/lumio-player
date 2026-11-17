@@ -464,6 +464,8 @@ window.LUMIO_I18N["ro"] = {
   "Pause": "Pauză",
   "15 Sekunden zurück": "Înapoi 15 secunde",
   "30 Sekunden vor": "Înainte 30 de secunde",
+  "10 Sekunden zurück": "Înapoi 10 secunde",
+  "10 Sekunden vor": "Înainte 10 secunde",
   "Vorheriger Sender": "Canalul anterior",
   "Nächster Sender": "Canalul următor",
   "Ton an/aus": "Sunet pornit/oprit",

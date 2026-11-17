@@ -34,7 +34,7 @@
     var id = 'test-profil-' + Date.now();
     D.Profiles.DATA_KEYS.forEach(function (k) { D.Store.set(k + '.' + id, { x: 1 }); });
     D.Store.set('hero.' + id + '.movie', [{ id: 1 }]); D.Store.set('hero.' + id + '.series', [{ id: 2 }]);
-    eq(D.Profiles.DATA_KEYS.length, 16);
+    eq(D.Profiles.DATA_KEYS.length, 17);   // seit 1.15.11 auch „Startseite leer“ (homeEmpty)
     ok(D.Profiles.DATA_KEYS.indexOf('chcount') >= 0, '„Top Sender“ (chcount) gehört dazu');
     D.Profiles.dropData(id);
     var left = D.Profiles.DATA_KEYS.filter(function (k) { return D.Store.get(k + '.' + id, null) !== null; });

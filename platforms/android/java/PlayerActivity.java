@@ -1,9 +1,14 @@
 package de.lumio.player;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.RectF;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
@@ -25,6 +30,7 @@ import android.view.ViewGroup;
 import android.webkit.WebSettings;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import androidx.media3.common.C;
@@ -297,6 +303,18 @@ public class PlayerActivity extends Activity {
             root.addView(liveTag, lpl);
         }
         buildMenu(root);
+        // Bedienung im Stil A (1.15.12): eigene Ebene statt der Media3-Leiste (die bleibt unsichtbar und steuert nur das Ein-/Ausblenden)
+        try {
+            JSONArray ri = menuTexts != null ? menuTexts.optJSONArray("recentIdx") : null;
+            if (ri != null) for (int k = 0; k < ri.length(); k++) { int v = ri.optInt(k, -1); if (v >= 0 && v < urls.size() && !recentIdx.contains(v)) recentIdx.add(v); }
+            // Herz: welche Einträge in der App schon gemerkt sind (nicht bei Folgen)
+            favOk = menuTexts != null && menuTexts.optBoolean("favOk", false);
+            JSONArray fi = menuTexts != null ? menuTexts.optJSONArray("favIdx") : null;
+            if (fi != null) for (int k = 0; k < fi.length(); k++) { int v = fi.optInt(k, -1); if (v >= 0 && v < urls.size()) favs.add(v); }
+            favs0.addAll(favs);
+        } catch (Exception ignored) { }
+        buildOsdA(root);
+        buildList(root);
         // Bildformat wie zuletzt gewählt (Original, Zoom, Strecken)
         view.setResizeMode(getSharedPreferences("telvo_player", MODE_PRIVATE).getInt("resize", AspectRatioFrameLayout.RESIZE_MODE_FIT));
 
@@ -309,17 +327,18 @@ public class PlayerActivity extends Activity {
 
         view.setControllerVisibilityListener((PlayerView.ControllerVisibilityListener) visibility -> {
             osd = visibility == View.VISIBLE;
-            // Bedienleiste unten offen: Banner darüber schieben statt sie zu verdecken
-            info.setTranslationY(visibility == View.VISIBLE ? bannerLift() : 0);
-            // beim ersten Einblenden sind die Knöpfe evtl. noch nicht ausgemessen – nach dem Layout nachjustieren
-            if (visibility == View.VISIBLE) info.post(() -> { if (osd) info.setTranslationY(bannerLift()); });
-            if (liveTag != null) liveTag.setVisibility(visibility == View.VISIBLE ? View.VISIBLE : View.GONE);
+            // Stil A (1.15.12): Die Media3-Leiste ist unsichtbar; mit ihr erscheint und verschwindet die eigene Bedienung.
+            // Das kleine Sender-Banner (beim Umschalten) wird dann nicht gebraucht.
+            if (liveTag != null) liveTag.setVisibility(View.GONE);
             if (visibility == View.VISIBLE) {
                 handler.removeCallbacks(hideInfo);
-                showInfo();
-                handler.removeCallbacks(hideInfo);
+                info.setVisibility(View.GONE);
+                showOsdA();
             } else {
-                handler.postDelayed(hideInfo, 300);
+                // Gerade erst umgeschaltet (kurze Anzeige ohne Knöpfe): die läuft selbst ab
+                if (osdA != null && !peek) osdA.setVisibility(View.GONE);
+                if (peek && aRow != null) aRow.setVisibility(View.INVISIBLE);
+                handler.removeCallbacks(osdTick);
                 hideSystemUi();
             }
         });
@@ -389,6 +408,16 @@ public class PlayerActivity extends Activity {
             }
 
             @Override
+            public void onIsPlayingChanged(boolean isPlaying) {
+                // Pause: Bedienung bleibt stehen (Stil A); läuft es wieder, blendet sie sich nach 4 s aus
+                if (view == null) return;
+                boolean paused = !isPlaying && !player.getPlayWhenReady();
+                view.setControllerShowTimeoutMs(paused ? 0 : 4000);
+                if (paused && !menuOpen() && !listOpen()) view.showController();
+                paintPause();
+            }
+
+            @Override
             public void onMediaItemTransition(MediaItem mediaItem, int reason) {
                 if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_REPEAT) {
                     // Live-Stream ist zu Ende gegangen und wird neu verbunden – zählt wie ein Hänger
@@ -403,6 +432,12 @@ public class PlayerActivity extends Activity {
                 hangs = 0;
                 behindRetries = 0;
                 triedAlt = false;
+                // „Zuletzt gesehen“: der neue Sender steht vorn (für die Liste im Player)
+                if (live && player != null) {
+                    Integer ci = player.getCurrentMediaItemIndex();
+                    recentIdx.remove(ci); recentIdx.add(0, ci);
+                    visited.remove(ci); visited.add(ci);
+                }
                 showInfo();
             }
         });
@@ -545,6 +580,10 @@ public class PlayerActivity extends Activity {
             View cc = exo("exo_subtitle");
             if (cc != null) cc.setOnClickListener(v -> openMenu(1));
             styleButton(exo("exo_play_pause"), true);
+            // Stil A (1.15.12): Die Media3-Leiste bleibt unsichtbar und nicht anwählbar – sie liefert nur Ein-/Ausblenden
+            // und die Wartezeit. Bedient wird über die eigene Ebene (buildOsdA).
+            View ctl = exo("exo_controller");
+            if (ctl != null) { ctl.setAlpha(0f); noFocus(ctl); }
             for (String n : new String[] { "exo_prev", "exo_rew_with_amount", "exo_ffwd_with_amount", "exo_next",
                     "exo_subtitle", "exo_settings", "exo_overflow_show", "exo_overflow_hide", "exo_fullscreen" }) {
                 styleButton(exo(n), false);
@@ -552,6 +591,565 @@ public class PlayerActivity extends Activity {
         } catch (Exception e) {
             // Optik ist Nebensache – der Player muss in jedem Fall laufen
         }
+    }
+
+    /* ==========================================================
+       Bedienung im Stil A (1.15.12) – wie der Player in der App (Erays Entwürfe „Player A4“ / „Stil A für alle Player“):
+       oben links LIVE, oben rechts die Uhr; unten Sender bzw. FILM, großer Titel, Zeit, Zeitleiste und wenige Knöpfe
+       (Pause, Senderliste, Zuletzt gesehen, Herz, Rad). Rechts unten nur Text „ALS NÄCHSTES“. Das Herz meldet beim
+       Schließen an die App zurück, was gemerkt bzw. entfernt wurde (favAdd/favDel). Das alte kleine Sender-Banner wird
+       nicht mehr gezeigt: Beim Öffnen und Umschalten erscheint kurz dieselbe Ebene ohne Knöpfe („peek“).
+       ========================================================== */
+    private FrameLayout osdA, listLayer, aLogoBox;
+    private ImageView aLogo;
+    private android.widget.LinearLayout aFavBtn;
+    private Ico aFavIco;
+    private boolean favOk = false, peek = false;
+    private final java.util.HashSet<Integer> favs = new java.util.HashSet<>(), favs0 = new java.util.HashSet<>();
+    // „this.“ – osd ist weiter unten deklariert (sonst unzulässiger Vorwärtsbezug im Feld-Initialisierer)
+    private final Runnable hidePeek = () -> {
+        if (this.peek && !this.osd && this.osdA != null) this.osdA.setVisibility(View.GONE);
+        this.peek = false;
+    };
+    private TextView aLive, aClock, aKick, aTitle, aMeta, aStart, aEnd, aNextLbl, aNextVal;
+    private View aFill, aRest;
+    private android.widget.LinearLayout aRecentBtn;
+    private android.widget.LinearLayout aBarRow, aRow, aRight, aPause, listPanel;
+    private Ico aPauseIco;
+    private TextView aPauseTxt;
+    private ScrollView listScroll;
+    private final ArrayList<Integer> recentIdx = new ArrayList<>();
+    // In diesem Player geschaute Sender (älteste zuerst) – gehen beim Schließen an „Zuletzt gesehen“ der App
+    private final ArrayList<Integer> visited = new ArrayList<>();
+    private View listFocus, subSel;
+    private final Runnable focusPanelRun = this::focusPanel;
+    private final Runnable osdTick = new Runnable() {
+        @Override
+        public void run() {
+            if (!osd || osdA == null) return;
+            if (aClock != null) aClock.setText(hhmm(System.currentTimeMillis() / 1000L));
+            if (!live) paintBar();
+            handler.postDelayed(this, 1000);
+        }
+    };
+
+    /* Einfache Symbole, selbst gezeichnet (keine Bilddateien nötig) */
+    static class Ico extends View {
+        static final int PLAY = 0, PAUSE = 1, LIST = 2, RECENT = 3, GEAR = 4, HEART = 5, HEART_FILL = 6;
+        static final int RED = 0xFFFF3B30;   // gemerkt – dasselbe Rot wie in der App
+        int kind;
+        final Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
+        final Path path = new Path();
+        final RectF r = new RectF();
+        Ico(Context c, int kind) { super(c); this.kind = kind; p.setColor(Color.WHITE); }
+        void setKind(int k) { if (kind != k) { kind = k; invalidate(); } }
+        void setColor(int c) { p.setColor(c); invalidate(); }
+        @Override
+        protected void onDraw(Canvas cv) {
+            float w = getWidth(), h = getHeight(), s = Math.min(w, h), x = (w - s) / 2f, y = (h - s) / 2f, cx = w / 2f, cy = h / 2f;
+            p.setStrokeCap(Paint.Cap.ROUND);
+            p.setStrokeJoin(Paint.Join.ROUND);
+            path.reset();
+            if (kind == PLAY) {
+                p.setStyle(Paint.Style.FILL);
+                path.moveTo(x + s * .24f, y + s * .12f); path.lineTo(x + s * .88f, y + s * .5f); path.lineTo(x + s * .24f, y + s * .88f); path.close();
+                cv.drawPath(path, p);
+            } else if (kind == PAUSE) {
+                p.setStyle(Paint.Style.FILL);
+                r.set(x + s * .18f, y + s * .12f, x + s * .4f, y + s * .88f); cv.drawRoundRect(r, s * .06f, s * .06f, p);
+                r.set(x + s * .6f, y + s * .12f, x + s * .82f, y + s * .88f); cv.drawRoundRect(r, s * .06f, s * .06f, p);
+            } else if (kind == LIST) {
+                p.setStyle(Paint.Style.STROKE); p.setStrokeWidth(s * .11f);
+                for (int i = 0; i < 3; i++) { float ly = y + s * (.22f + i * .28f); cv.drawLine(x + s * .36f, ly, x + s * .9f, ly, p); cv.drawPoint(x + s * .12f, ly, p); }
+            } else if (kind == RECENT) {
+                p.setStyle(Paint.Style.STROKE); p.setStrokeWidth(s * .1f);
+                r.set(x + s * .12f, y + s * .12f, x + s * .88f, y + s * .88f);
+                cv.drawArc(r, 215, 290, false, p);
+                cv.drawLine(cx, y + s * .3f, cx, cy, p);
+                cv.drawLine(cx, cy, x + s * .66f, y + s * .62f, p);
+                p.setStyle(Paint.Style.FILL);
+                path.moveTo(x + s * .02f, y + s * .2f); path.lineTo(x + s * .32f, y + s * .26f); path.lineTo(x + s * .1f, y + s * .48f); path.close();
+                cv.drawPath(path, p);
+            } else if (kind == HEART || kind == HEART_FILL) {
+                // Herz: leer (nur Umriss) = nicht gemerkt, rot gefüllt = gemerkt
+                path.moveTo(x + s * .5f, y + s * .86f);
+                path.cubicTo(x + s * .14f, y + s * .62f, x + s * .04f, y + s * .44f, x + s * .1f, y + s * .28f);
+                path.cubicTo(x + s * .18f, y + s * .1f, x + s * .42f, y + s * .1f, x + s * .5f, y + s * .3f);
+                path.cubicTo(x + s * .58f, y + s * .1f, x + s * .82f, y + s * .1f, x + s * .9f, y + s * .28f);
+                path.cubicTo(x + s * .96f, y + s * .44f, x + s * .86f, y + s * .62f, x + s * .5f, y + s * .86f);
+                path.close();
+                if (kind == HEART_FILL) {
+                    int c = p.getColor();
+                    p.setStyle(Paint.Style.FILL);
+                    p.setColor(RED);
+                    cv.drawPath(path, p);
+                    p.setColor(c);
+                } else {
+                    p.setStyle(Paint.Style.STROKE); p.setStrokeWidth(s * .1f);
+                    cv.drawPath(path, p);
+                }
+            } else {
+                // Rad: Ring mit acht Zähnen
+                p.setStyle(Paint.Style.FILL);
+                for (int i = 0; i < 8; i++) {
+                    cv.save(); cv.rotate(i * 45f, cx, cy);
+                    r.set(cx - s * .09f, y + s * .04f, cx + s * .09f, y + s * .24f); cv.drawRoundRect(r, s * .03f, s * .03f, p);
+                    cv.restore();
+                }
+                p.setStyle(Paint.Style.STROKE); p.setStrokeWidth(s * .14f);
+                cv.drawCircle(cx, cy, s * .27f, p);
+            }
+        }
+    }
+
+    private static void noFocus(View v) {
+        v.setFocusable(false);
+        v.setFocusableInTouchMode(false);
+        if (v instanceof ViewGroup) {
+            ViewGroup g = (ViewGroup) v;
+            g.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
+            for (int i = 0; i < g.getChildCount(); i++) noFocus(g.getChildAt(i));
+        }
+    }
+
+    /* Knopf im Stil A: Glas, gewählt weiß mit lila Ring; mit Schrift (Pause, Senderliste …) oder rund nur mit Symbol */
+    private android.widget.LinearLayout pillA(int ico, String label, boolean round, final Runnable onClick) {
+        final android.widget.LinearLayout b = new android.widget.LinearLayout(this);
+        b.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+        b.setGravity(Gravity.CENTER);
+        b.setFocusable(true);
+        b.setClickable(true);
+        b.setContentDescription(label);
+        StateListDrawable st = new StateListDrawable();
+        GradientDrawable on = new GradientDrawable();
+        on.setColor(Color.WHITE);
+        on.setCornerRadius(dp(100));
+        on.setStroke(dp(3), 0xFFC084FC);
+        GradientDrawable off = new GradientDrawable();
+        off.setColor(0x24FFFFFF);
+        off.setCornerRadius(dp(100));
+        off.setStroke(dp(1), 0x38FFFFFF);
+        st.addState(new int[] { android.R.attr.state_focused }, on);
+        st.addState(new int[] { android.R.attr.state_pressed }, on);
+        st.addState(new int[] {}, off);
+        b.setBackground(st);
+        final Ico ic = new Ico(this, ico);
+        b.addView(ic, new android.widget.LinearLayout.LayoutParams(dp(15), dp(15)));
+        final TextView t = round ? null : text(13, Color.WHITE, true);
+        if (t != null) {
+            t.setText(label);
+            android.widget.LinearLayout.LayoutParams lt = new android.widget.LinearLayout.LayoutParams(-2, -2);
+            lt.setMarginStart(dp(8));
+            b.addView(t, lt);
+            b.setPadding(dp(14), 0, dp(18), 0);
+        }
+        b.setOnFocusChangeListener((v, f) -> {
+            int c = f ? 0xFF120F1A : Color.WHITE;
+            ic.setColor(c);
+            if (t != null) t.setTextColor(c);
+        });
+        b.setOnClickListener(v -> { onClick.run(); });
+        if (ico == Ico.PAUSE || ico == Ico.PLAY) { aPauseIco = ic; aPauseTxt = t; }
+        if (ico == Ico.HEART || ico == Ico.HEART_FILL) aFavIco = ic;
+        return b;
+    }
+
+    private void buildOsdA(FrameLayout root) {
+        int sh = getResources().getDisplayMetrics().heightPixels;
+        osdA = new FrameLayout(this);
+        osdA.setVisibility(View.GONE);
+        View top = new View(this);
+        top.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[] { 0xB3080710, 0x00080710 }));
+        osdA.addView(top, new FrameLayout.LayoutParams(-1, dp(110), Gravity.TOP));
+        View bot = new View(this);
+        bot.setBackground(new GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP, new int[] { 0xF2080710, 0xC7080710, 0x00080710 }));
+        osdA.addView(bot, new FrameLayout.LayoutParams(-1, sh * 62 / 100, Gravity.BOTTOM));
+
+        if (live) {
+            aLive = text(12, Color.WHITE, true);
+            aLive.setText("LIVE");
+            aLive.setLetterSpacing(0.08f);
+            aLive.setPadding(dp(10), dp(4), dp(11), dp(4));
+            GradientDrawable lt = new GradientDrawable();
+            lt.setColor(0x990B0B0F);
+            lt.setCornerRadius(dp(100));
+            lt.setStroke(dp(1), 0x40FFFFFF);
+            aLive.setBackground(lt);
+            GradientDrawable ld = new GradientDrawable();
+            ld.setShape(GradientDrawable.OVAL);
+            ld.setColor(0xFFFF5B73);
+            ld.setSize(dp(7), dp(7));
+            aLive.setCompoundDrawablesRelativeWithIntrinsicBounds(ld, null, null, null);
+            aLive.setCompoundDrawablePadding(dp(7));
+            FrameLayout.LayoutParams ll = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.START);
+            ll.setMargins(dp(48), dp(26), 0, 0);
+            osdA.addView(aLive, ll);
+        }
+        aClock = text(19, Color.WHITE, true);
+        FrameLayout.LayoutParams lc = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.END);
+        lc.setMargins(0, dp(22), dp(48), 0);
+        osdA.addView(aClock, lc);
+
+        android.widget.LinearLayout col = new android.widget.LinearLayout(this);
+        col.setOrientation(android.widget.LinearLayout.VERTICAL);
+        FrameLayout.LayoutParams lcol = new FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM);
+        lcol.setMargins(dp(48), 0, dp(48), dp(30));
+        osdA.addView(col, lcol);
+
+        // Senderlogo vor „Nr · Sender“ (wie im eingebauten Player der App)
+        android.widget.LinearLayout kickRow = new android.widget.LinearLayout(this);
+        kickRow.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+        kickRow.setGravity(Gravity.CENTER_VERTICAL);
+        aLogoBox = new FrameLayout(this);
+        GradientDrawable lgb = new GradientDrawable();
+        lgb.setColor(0x24FFFFFF);
+        lgb.setCornerRadius(dp(6));
+        lgb.setStroke(dp(1), 0x26FFFFFF);
+        aLogoBox.setBackground(lgb);
+        aLogoBox.setPadding(dp(4), dp(3), dp(4), dp(3));
+        aLogo = new ImageView(this);
+        aLogo.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        aLogoBox.addView(aLogo, new FrameLayout.LayoutParams(-1, -1));
+        aLogoBox.setVisibility(View.GONE);
+        android.widget.LinearLayout.LayoutParams llg = new android.widget.LinearLayout.LayoutParams(dp(44), dp(28));
+        llg.setMarginEnd(dp(10));
+        kickRow.addView(aLogoBox, llg);
+        aKick = text(13, Color.WHITE, true);
+        kickRow.addView(aKick, new android.widget.LinearLayout.LayoutParams(-2, -2));
+        col.addView(kickRow, new android.widget.LinearLayout.LayoutParams(-1, -2));
+        aTitle = text(34, Color.WHITE, true);
+        aTitle.setSingleLine(false);
+        aTitle.setMaxLines(2);
+        aTitle.setLetterSpacing(-0.02f);
+        android.widget.LinearLayout.LayoutParams lt2 = new android.widget.LinearLayout.LayoutParams(-1, -2);
+        lt2.topMargin = dp(6);
+        col.addView(aTitle, lt2);
+        aMeta = text(13, 0xFFD6D6DE, false);
+        android.widget.LinearLayout.LayoutParams lm = new android.widget.LinearLayout.LayoutParams(-1, -2);
+        lm.topMargin = dp(6);
+        col.addView(aMeta, lm);
+
+        aBarRow = new android.widget.LinearLayout(this);
+        aBarRow.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+        aBarRow.setGravity(Gravity.CENTER_VERTICAL);
+        aStart = text(11, 0xFFC9C9D3, false);
+        aEnd = text(11, 0xFFC9C9D3, false);
+        android.widget.LinearLayout track = new android.widget.LinearLayout(this);
+        track.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+        GradientDrawable tr = new GradientDrawable();
+        tr.setColor(0x2EFFFFFF);
+        tr.setCornerRadius(dp(3));
+        track.setBackground(tr);
+        aFill = new View(this);
+        GradientDrawable fl = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, new int[] { 0xFFA855F7, 0xFFE9D5FF });
+        fl.setCornerRadius(dp(3));
+        aFill.setBackground(fl);
+        aRest = new View(this);
+        track.addView(aFill, new android.widget.LinearLayout.LayoutParams(0, -1, 0f));
+        track.addView(aRest, new android.widget.LinearLayout.LayoutParams(0, -1, 1f));
+        android.widget.LinearLayout.LayoutParams ls = new android.widget.LinearLayout.LayoutParams(dp(52), -2);
+        aBarRow.addView(aStart, ls);
+        aBarRow.addView(track, new android.widget.LinearLayout.LayoutParams(0, dp(4), 1f));
+        aEnd.setGravity(Gravity.END);
+        aBarRow.addView(aEnd, new android.widget.LinearLayout.LayoutParams(dp(60), -2));
+        android.widget.LinearLayout.LayoutParams lb = new android.widget.LinearLayout.LayoutParams(-1, -2);
+        lb.topMargin = dp(14);
+        col.addView(aBarRow, lb);
+
+        android.widget.LinearLayout bottom = new android.widget.LinearLayout(this);
+        bottom.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+        bottom.setGravity(Gravity.BOTTOM);
+        android.widget.LinearLayout.LayoutParams lbo = new android.widget.LinearLayout.LayoutParams(-1, -2);
+        lbo.topMargin = dp(16);
+        col.addView(bottom, lbo);
+        aRow = new android.widget.LinearLayout(this);
+        aRow.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+        aRow.setGravity(Gravity.CENTER_VERTICAL);
+        bottom.addView(aRow, new android.widget.LinearLayout.LayoutParams(-2, -2));
+        bottom.addView(new View(this), new android.widget.LinearLayout.LayoutParams(0, 1, 1f));
+        aRight = new android.widget.LinearLayout(this);
+        aRight.setOrientation(android.widget.LinearLayout.VERTICAL);
+        aRight.setGravity(Gravity.END);
+        aNextLbl = text(9, 0xFFB9B9C4, true);
+        aNextLbl.setLetterSpacing(0.1f);
+        aNextVal = text(13, 0xFFE8E8EE, true);
+        aNextVal.setMaxWidth(getResources().getDisplayMetrics().widthPixels * 28 / 100);
+        aRight.addView(aNextLbl);
+        aRight.addView(aNextVal);
+        bottom.addView(aRight, new android.widget.LinearLayout.LayoutParams(-2, -2));
+
+        aPause = pillA(Ico.PAUSE, mt("pause", "Pause"), false, () -> {
+            if (player == null) return;
+            if (player.getPlayWhenReady()) player.pause(); else player.play();
+            paintPause();
+            view.showController();
+        });
+        addToRow(aPause);
+        if (live && urls.size() > 1) addToRow(pillA(Ico.LIST, mt("channels", "Senderliste"), false, () -> openList(0)));
+        if (live) { aRecentBtn = pillA(Ico.RECENT, mt("recent", "Zuletzt gesehen"), false, () -> openList(1)); addToRow(aRecentBtn); }
+        if (favOk) { aFavBtn = roundA(Ico.HEART, mt("fav", "Merken"), this::toggleFav); addToRow(aFavBtn); }
+        addToRow(roundA(Ico.GEAR, mt("settingsA", "Einstellungen"), () -> openMenu(-1)));
+        root.addView(osdA, new FrameLayout.LayoutParams(-1, -1));
+    }
+
+    private android.widget.LinearLayout roundA(int ico, String label, Runnable onClick) {
+        return pillA(ico, label, true, onClick);
+    }
+
+    private void addToRow(android.widget.LinearLayout b) {
+        boolean round = b.getChildCount() == 1;
+        android.widget.LinearLayout.LayoutParams lp = new android.widget.LinearLayout.LayoutParams(round ? dp(34) : -2, dp(34));
+        if (aRow.getChildCount() > 0) lp.setMarginStart(dp(9));
+        aRow.addView(b, lp);
+    }
+
+    private void showOsdA() {
+        if (osdA == null) return;
+        handler.removeCallbacks(hidePeek);
+        peek = false;
+        aRow.setVisibility(View.VISIBLE);
+        paintOsdA();
+        osdA.setVisibility(View.VISIBLE);
+        osdA.bringToFront();
+        if (menuLayer != null && menuOpen()) menuLayer.bringToFront();
+        View f = getCurrentFocus();
+        // Rad oder Liste offen: die Markierung bleibt dort
+        if (!menuOpen() && !listOpen() && (f == null || !isInside(f, osdA))) aPause.requestFocus();
+        handler.removeCallbacks(osdTick);
+        handler.postDelayed(osdTick, 1000);
+    }
+
+    /* Beim Öffnen und Umschalten (statt des alten Sender-Banners, Erays Wunsch 17.11.2026): dieselbe Ebene kurz ohne
+       Knöpfe. Die Bedienleiste bleibt zu – Hoch/Runter schaltet also weiter um, OK oder ein Pfeil holt die Knöpfe. */
+    private void showPeek() {
+        if (osdA == null || isFinishing()) return;
+        if (osd) { paintOsdA(); return; }
+        if (menuOpen() || listOpen()) return;
+        aRow.setVisibility(View.INVISIBLE);
+        paintOsdA();
+        osdA.setVisibility(View.VISIBLE);
+        osdA.bringToFront();
+        peek = true;
+        handler.removeCallbacks(hidePeek);
+        handler.postDelayed(hidePeek, 4000);
+    }
+
+    /* Herz: merken bzw. entfernen; die App erfährt es beim Schließen (favAdd/favDel) */
+    private void toggleFav() {
+        if (player == null) return;
+        Integer i = player.getCurrentMediaItemIndex();
+        if (!favs.remove(i)) favs.add(i);
+        paintFav();
+        if (view != null) view.showController();   // Ausblende-Zeit neu starten
+    }
+
+    private void paintFav() {
+        if (aFavIco == null || aFavBtn == null || player == null) return;
+        boolean on = favs.contains(player.getCurrentMediaItemIndex());
+        aFavIco.setKind(on ? Ico.HEART_FILL : Ico.HEART);
+        aFavBtn.setContentDescription(on ? mt("faved", "Gemerkt") : mt("fav", "Merken"));
+    }
+
+    private static boolean isInside(View v, View parent) {
+        for (Object p = v; p instanceof View; p = ((View) p).getParent()) if (p == parent) return true;
+        return false;
+    }
+
+    /* Laufende und nächste Sendung eines Senders aus den mitgegebenen Programmdaten */
+    private JSONArray[] curNext(int i, long now) {
+        JSONArray ep = live && i >= 0 && i < epgs.size() ? epgs.get(i) : null;
+        JSONArray cur = null, next = null;
+        if (ep != null) {
+            for (int k = 0; k < ep.length(); k++) {
+                JSONArray e = ep.optJSONArray(k);
+                if (e == null) continue;
+                long s = e.optLong(1), en = e.optLong(2);
+                if (cur == null && s <= now && en > now) cur = e;
+                else if (cur != null && s >= cur.optLong(2) - 1) { next = e; break; }
+            }
+        }
+        return new JSONArray[] { cur, next };
+    }
+
+    private void setBarA(float pct) {
+        pct = Math.max(0f, Math.min(1f, pct));
+        ((android.widget.LinearLayout.LayoutParams) aFill.getLayoutParams()).weight = pct;
+        ((android.widget.LinearLayout.LayoutParams) aRest.getLayoutParams()).weight = 1f - pct;
+        aFill.requestLayout();
+    }
+
+    private static String clockTime(long ms) {
+        long t = Math.max(0, ms / 1000L), h = t / 3600, m = (t % 3600) / 60, s = t % 60;
+        return h > 0 ? String.format(java.util.Locale.ROOT, "%d:%02d:%02d", h, m, s) : String.format(java.util.Locale.ROOT, "%d:%02d", m, s);
+    }
+
+    private void paintOsdA() {
+        if (osdA == null || player == null) return;
+        int i = player.getCurrentMediaItemIndex();
+        if (i < 0 || i >= titles.size()) return;
+        long now = System.currentTimeMillis() / 1000L;
+        aClock.setText(hhmm(now));
+        String name = i < names.size() && names.get(i).length() > 0 ? names.get(i) : titles.get(i);
+        if (live) {
+            String num = i < nums.size() ? nums.get(i) : "";
+            aKick.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+            aKick.setLetterSpacing(0f);
+            aKick.setTextColor(Color.WHITE);
+            aKick.setText(num.length() > 0 ? num + " · " + name : name);
+            // Senderlogo: aus dem Zwischenspeicher oder im Hintergrund laden (ohne Logo: kein leerer Kasten)
+            String logo = i < logos.size() ? logos.get(i) : "";
+            Bitmap lb = logo.length() > 0 ? logoCache.get(logo) : null;
+            aLogo.setTag(logo);
+            aLogo.setImageBitmap(lb);
+            aLogoBox.setVisibility(lb != null ? View.VISIBLE : View.GONE);
+            if (lb == null && logo.startsWith("http")) loadLogo(logo);
+            JSONArray[] cn = curNext(i, now);
+            JSONArray cur = cn[0], next = cn[1];
+            if (cur != null) {
+                long s = cur.optLong(1), en = cur.optLong(2);
+                aKick.setVisibility(View.VISIBLE);
+                aTitle.setText(cur.optString(0));
+                String left = en > now ? "  ·  " + mt("left", "noch {0} Min.").replace("{0}", String.valueOf(Math.max(1, Math.round((en - now) / 60f)))) : "";
+                aMeta.setText(hhmm(s) + " – " + hhmm(en) + left);
+                aMeta.setVisibility(View.VISIBLE);
+                aStart.setText(hhmm(s));
+                aEnd.setText(hhmm(en));
+                setBarA(en > s ? (now - s) / (float) (en - s) : 0f);
+                aBarRow.setVisibility(View.VISIBLE);
+            } else {
+                // ohne Programmdaten: nur der Sendername groß
+                aKick.setVisibility(View.GONE);
+                aTitle.setText(num.length() > 0 ? num + " · " + name : name);
+                aMeta.setVisibility(View.GONE);
+                aBarRow.setVisibility(View.GONE);
+            }
+            if (next != null) {
+                String lbl = mt("nextUp", "Als Nächstes").toUpperCase(appLocale);
+                android.text.SpannableString sp = new android.text.SpannableString(lbl + "  ·  " + hhmm(next.optLong(1)));
+                sp.setSpan(new android.text.style.ForegroundColorSpan(0xFFC4B5FD), 0, lbl.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                aNextLbl.setText(sp);
+                aNextVal.setText(next.optString(0));
+                aRight.setVisibility(View.VISIBLE);
+            } else aRight.setVisibility(View.GONE);
+            if (aRecentBtn != null) {
+                boolean any = false;
+                for (Integer r : recentIdx) if (r != i) { any = true; break; }
+                aRecentBtn.setVisibility(any ? View.VISIBLE : View.GONE);
+            }
+        } else {
+            aKick.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10);
+            aKick.setLetterSpacing(0.1f);
+            aKick.setTextColor(0xFFC9C9D3);
+            aKick.setText((urls.size() > 1 ? mt("series", "Serie") : mt("film", "Film")).toUpperCase(appLocale));
+            aKick.setVisibility(View.VISIBLE);
+            aTitle.setText(name);
+            aMeta.setVisibility(View.GONE);
+            aRight.setVisibility(View.GONE);
+            aLogoBox.setVisibility(View.GONE);
+            paintBar();
+        }
+        paintPause();
+        paintFav();
+    }
+
+    private void paintBar() {
+        if (player == null || live || aBarRow == null) return;
+        long d = player.getDuration(), pos = player.getCurrentPosition();
+        if (d == C.TIME_UNSET || d <= 0) { aBarRow.setVisibility(View.INVISIBLE); return; }
+        aBarRow.setVisibility(View.VISIBLE);
+        aStart.setText(clockTime(pos));
+        aEnd.setText("−" + clockTime(d - pos));
+        setBarA(pos / (float) d);
+    }
+
+    private void paintPause() {
+        if (aPauseIco == null || player == null) return;
+        boolean playing = player.getPlayWhenReady();
+        aPauseIco.setKind(playing ? Ico.PAUSE : Ico.PLAY);
+        if (aPauseTxt != null) aPauseTxt.setText(playing ? mt("pause", "Pause") : mt("play", "Abspielen"));
+        if (aPause != null) aPause.setContentDescription(playing ? mt("pause", "Pause") : mt("play", "Abspielen"));
+    }
+
+    /* Senderliste (alle mitgegebenen Sender, links) und „Zuletzt gesehen“ (höchstens 5, rechts in der Mitte) */
+    private boolean listOpen() { return listLayer != null && listLayer.getVisibility() == View.VISIBLE; }
+
+    private void buildList(FrameLayout root) {
+        listLayer = new FrameLayout(this);
+        listLayer.setVisibility(View.GONE);
+        listScroll = new ScrollView(this);
+        listScroll.setVerticalScrollBarEnabled(false);
+        listScroll.setClipToPadding(false);
+        listPanel = menuPanel();
+        listScroll.addView(listPanel, new FrameLayout.LayoutParams(-1, -2));
+        listLayer.addView(listScroll, new FrameLayout.LayoutParams(-2, -2));
+        root.addView(listLayer, new FrameLayout.LayoutParams(-1, -1));
+    }
+
+    private void openList(int kind) {
+        if (player == null || listLayer == null) return;
+        view.hideController();
+        listPanel.removeAllViews();
+        int cur = player.getCurrentMediaItemIndex();
+        listPanel.addView(menuHead(kind == 0 ? mt("channels", "Senderliste") : mt("recent", "Zuletzt gesehen")));
+        List<Integer> idx = new ArrayList<>();
+        if (kind == 0) { for (int i = 0; i < urls.size(); i++) idx.add(i); }
+        else { idx.add(cur); for (Integer r : recentIdx) if (r != cur && !idx.contains(r) && idx.size() < 5) idx.add(r); }
+        long now = System.currentTimeMillis() / 1000L;
+        View focus = null;
+        for (final Integer i : idx) {
+            String nm = i < names.size() && names.get(i).length() > 0 ? names.get(i) : titles.get(i);
+            String num = i < nums.size() ? nums.get(i) : "";
+            JSONArray c = curNext(i, now)[0];
+            String sub = c != null ? c.optString(0) : "";
+            if (i == cur) sub = mt("now", "Jetzt") + (sub.length() > 0 ? " · " + sub : "");
+            View row = menuRow((num.length() > 0 ? num + " · " : "") + nm, sub, true, null, () -> { closeList(); jumpTo(i); });
+            listPanel.addView(row);
+            if (i == cur) focus = row;
+        }
+        int w = getResources().getDisplayMetrics().widthPixels;
+        FrameLayout.LayoutParams lp;
+        if (kind == 0) { lp = new FrameLayout.LayoutParams(w * 30 / 100, -1, Gravity.START); lp.setMargins(dp(40), dp(28), 0, dp(28)); }
+        else { lp = new FrameLayout.LayoutParams(w * 30 / 100, -2, Gravity.END | Gravity.CENTER_VERTICAL); lp.setMargins(0, 0, dp(40), 0); }
+        listScroll.setLayoutParams(lp);
+        listLayer.setVisibility(View.VISIBLE);
+        listLayer.bringToFront();
+        final View f = focus != null ? focus : (listPanel.getChildCount() > 1 ? listPanel.getChildAt(1) : null);
+        listFocus = f;
+        if (f != null) {
+            f.requestFocus();
+            f.post(() -> listScroll.smoothScrollTo(0, Math.max(0, f.getTop() - dp(120))));
+        }
+        focusPanelSoon();
+    }
+
+    /* Rad bzw. Liste offen: die Markierung sicher hineinsetzen. Beim ersten Öffnen ging sie verloren (Gerätetest
+       17.11.2026, Fire TV Stick): Die Bedienleiste blendet sich gerade aus und gab den Fokus an die Bildfläche ab –
+       das Fenster war dann offen, aber nicht bedienbar, und Hoch/Runter holte die Bedienleiste zurück. */
+    private void focusPanel() {
+        View f = getCurrentFocus();
+        if (menuOpen()) {
+            if (f != null && isInside(f, menuLayer)) return;
+            if (menuSub.getVisibility() == View.VISIBLE) {
+                View s = subSel != null && subSel.getParent() == menuSub ? subSel : null;
+                for (int k = 1; s == null && k < menuSub.getChildCount(); k++) if (menuSub.getChildAt(k).isFocusable()) s = menuSub.getChildAt(k);
+                if (s != null) s.requestFocus();
+            } else focusMain(-1);
+        } else if (listOpen()) {
+            if (f != null && isInside(f, listLayer)) return;
+            View s = listFocus != null && listFocus.getParent() == listPanel ? listFocus : (listPanel.getChildCount() > 1 ? listPanel.getChildAt(1) : null);
+            if (s != null) s.requestFocus();
+        }
+    }
+
+    /* gleich und noch einmal, wenn die Bedienleiste fertig ausgeblendet ist */
+    private void focusPanelSoon() {
+        handler.removeCallbacks(focusPanelRun);
+        handler.post(focusPanelRun);
+        handler.postDelayed(focusPanelRun, 400);
+    }
+
+    private void closeList() {
+        if (listLayer != null) listLayer.setVisibility(View.GONE);
     }
 
     private int dp(int v) {
@@ -745,9 +1343,9 @@ public class PlayerActivity extends Activity {
             if (b == null && logo.startsWith("http")) loadLogo(logo);
         }
 
-        info.setVisibility(View.VISIBLE);
-        handler.removeCallbacks(hideInfo);
-        handler.postDelayed(hideInfo, 4000);
+        // Das alte kleine Sender-Banner wird nicht mehr gezeigt (Erays Wunsch 17.11.2026) – statt dessen die Stil-A-Ebene
+        info.setVisibility(View.GONE);
+        showPeek();
     }
 
     /* Programmdaten eines Senders beim Anbieter holen (Xtream: get_short_epg) – einmal je Sender und Sitzung,
@@ -791,7 +1389,7 @@ public class PlayerActivity extends Activity {
                     if (res.length() > 0) {
                         if (idx < epgs.size()) epgs.set(idx, res);
                         epgLoading.remove(idx);
-                        if (player != null && player.getCurrentMediaItemIndex() == idx && info != null && info.getVisibility() == View.VISIBLE) refreshInfo();
+                        if (player != null && player.getCurrentMediaItemIndex() == idx && osdA != null && osdA.getVisibility() == View.VISIBLE) paintOsdA();
                     }
                 });
             });
@@ -999,6 +1597,7 @@ public class PlayerActivity extends Activity {
         menuLayer.bringToFront();
         if (kind >= 0 && menuMain.getChildAt(kind + 1) != null && menuMain.getChildAt(kind + 1).isFocusable()) openSub(kind);
         else focusMain(-1);
+        focusPanelSoon();
     }
 
     private void closeMenu() {
@@ -1072,6 +1671,7 @@ public class PlayerActivity extends Activity {
         }
         menuSub.setVisibility(View.VISIBLE);
         if (sel == null && menuSub.getChildCount() > 1) sel = menuSub.getChildAt(1);
+        subSel = sel;
         if (sel != null) sel.requestFocus();
     }
 
@@ -1101,6 +1701,10 @@ public class PlayerActivity extends Activity {
                     if (bLogo != null && url.equals(bLogo.getTag())) {
                         bLogo.setImageBitmap(bm);
                         bLogoNum.setVisibility(View.GONE);
+                    }
+                    if (aLogo != null && url.equals(aLogo.getTag())) {
+                        aLogo.setImageBitmap(bm);
+                        aLogoBox.setVisibility(View.VISIBLE);
                     }
                 });
             });
@@ -1239,12 +1843,27 @@ public class PlayerActivity extends Activity {
     public boolean dispatchKeyEvent(KeyEvent ev) {
         int k = ev.getKeyCode();
         // Einstellungsmenü offen: Tasten gehen nur ans Menü (kein Umschalten, keine Bedienleiste)
-        if (menuOpen() && k != KeyEvent.KEYCODE_BACK) return super.dispatchKeyEvent(ev);
+        if ((menuOpen() || listOpen()) && k != KeyEvent.KEYCODE_BACK) {
+            // Markierung nicht im Fenster (z. B. auf der Bildfläche): die Taste setzt sie hinein, statt die Bedienleiste zu holen
+            View f = getCurrentFocus();
+            if (isNavKey(k) && (f == null || !isInside(f, menuOpen() ? menuLayer : listLayer))) {
+                if (ev.getAction() == KeyEvent.ACTION_DOWN) focusPanel();
+                return true;
+            }
+            return super.dispatchKeyEvent(ev);
+        }
         if (ev.getAction() == KeyEvent.ACTION_UP && k == consumedKey) {
             consumedKey = -1;
             return true;
         }
         if (ev.getAction() == KeyEvent.ACTION_DOWN && view != null && handleKey(k)) {
+            consumedKey = k;
+            return true;
+        }
+        // Stil A: Bedienung zu – OK oder ein Pfeil blendet sie ein (die Media3-Leiste hat keine anwählbaren Knöpfe mehr,
+        // darum kommt die Taste sonst nirgends an)
+        if (ev.getAction() == KeyEvent.ACTION_DOWN && view != null && !osd && isNavKey(k)) {
+            view.showController();
             consumedKey = k;
             return true;
         }
@@ -1268,7 +1887,7 @@ public class PlayerActivity extends Activity {
             if (k == KeyEvent.KEYCODE_CHANNEL_UP || (!controls && k == KeyEvent.KEYCODE_DPAD_UP)) { zap(-1); return true; }
             if (k == KeyEvent.KEYCODE_CHANNEL_DOWN || (!controls && k == KeyEvent.KEYCODE_DPAD_DOWN)) { zap(1); return true; }
         } else if (!controls) {
-            if (k == KeyEvent.KEYCODE_DPAD_RIGHT || k == KeyEvent.KEYCODE_MEDIA_FAST_FORWARD) { seekBy(30000); return true; }
+            if (k == KeyEvent.KEYCODE_DPAD_RIGHT || k == KeyEvent.KEYCODE_MEDIA_FAST_FORWARD) { seekBy(10000); return true; }   // 10 s wie in der App (Stil A)
             if (k == KeyEvent.KEYCODE_DPAD_LEFT || k == KeyEvent.KEYCODE_MEDIA_REWIND) { seekBy(-10000); return true; }
         }
         if (k == KeyEvent.KEYCODE_INFO || k == KeyEvent.KEYCODE_GUIDE) { showInfo(); return true; }
@@ -1277,6 +1896,7 @@ public class PlayerActivity extends Activity {
 
     @Override
     public void onBackPressed() {
+        if (listOpen()) { closeList(); if (view != null) view.showController(); return; }
         if (menuOpen()) {
             // erst die Auswahl schließen, dann das Menü
             if (menuSub.getVisibility() == View.VISIBLE) { int k = menuSubKind; menuSub.setVisibility(View.GONE); menuSubKind = -1; focusMain(k); }
@@ -1327,6 +1947,17 @@ public class PlayerActivity extends Activity {
             // sonst lehnen Zugänge mit nur einer Verbindung die Vorschau in der App ab
             player.stop();
         }
+        if (live && !visited.isEmpty()) {
+            int[] v = new int[visited.size()];
+            for (int k = 0; k < v.length; k++) v[k] = visited.get(k);
+            data.putExtra("visited", v);
+        }
+        // Herz: was in diesem Player gemerkt bzw. entfernt wurde
+        ArrayList<Integer> add = new ArrayList<>(), del = new ArrayList<>();
+        for (Integer f : favs) if (!favs0.contains(f)) add.add(f);
+        for (Integer f : favs0) if (!favs.contains(f)) del.add(f);
+        if (!add.isEmpty()) { int[] a = new int[add.size()]; for (int k = 0; k < a.length; k++) a[k] = add.get(k); data.putExtra("favAdd", a); }
+        if (!del.isEmpty()) { int[] a = new int[del.size()]; for (int k = 0; k < a.length; k++) a[k] = del.get(k); data.putExtra("favDel", a); }
         data.putExtra("ended", ended);
         data.putExtra("sleep", bySleep);
         if (lastError != null) data.putExtra("error", lastError);

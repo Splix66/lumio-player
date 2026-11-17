@@ -464,6 +464,8 @@ window.LUMIO_I18N["el"] = {
   "Pause": "Παύση",
   "15 Sekunden zurück": "15 δευτερόλεπτα πίσω",
   "30 Sekunden vor": "30 δευτερόλεπτα μπροστά",
+  "10 Sekunden zurück": "10 δευτερόλεπτα πίσω",
+  "10 Sekunden vor": "10 δευτερόλεπτα μπροστά",
   "Vorheriger Sender": "Προηγούμενο κανάλι",
   "Nächster Sender": "Επόμενο κανάλι",
   "Ton an/aus": "Ήχος ενεργός/σίγαση",

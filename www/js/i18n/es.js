@@ -464,6 +464,8 @@ window.LUMIO_I18N["es"] = {
   "Pause": "Pausa",
   "15 Sekunden zurück": "Retroceder 15 segundos",
   "30 Sekunden vor": "Avanzar 30 segundos",
+  "10 Sekunden zurück": "Retroceder 10 segundos",
+  "10 Sekunden vor": "Avanzar 10 segundos",
   "Vorheriger Sender": "Canal anterior",
   "Nächster Sender": "Canal siguiente",
   "Ton an/aus": "Sonido sí/no",

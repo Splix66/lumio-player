@@ -464,6 +464,8 @@ window.LUMIO_I18N["hr"] = {
   "Pause": "Pauza",
   "15 Sekunden zurück": "15 sekundi natrag",
   "30 Sekunden vor": "30 sekundi naprijed",
+  "10 Sekunden zurück": "10 sekundi natrag",
+  "10 Sekunden vor": "10 sekundi naprijed",
   "Vorheriger Sender": "Prethodni kanal",
   "Nächster Sender": "Sljedeći kanal",
   "Ton an/aus": "Zvuk uklj./isklj.",

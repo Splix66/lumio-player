@@ -464,6 +464,8 @@ window.LUMIO_I18N["uk"] = {
   "Pause": "Пауза",
   "15 Sekunden zurück": "Назад на 15 секунд",
   "30 Sekunden vor": "Уперед на 30 секунд",
+  "10 Sekunden zurück": "Назад на 10 секунд",
+  "10 Sekunden vor": "Уперед на 10 секунд",
   "Vorheriger Sender": "Попередній канал",
   "Nächster Sender": "Наступний канал",
   "Ton an/aus": "Звук увімк./вимк.",

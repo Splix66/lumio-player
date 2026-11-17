@@ -51,14 +51,27 @@
     } finally { S.data = JSON.parse(keep); D.Store.set('settings', S.data); }
   });
 
-  t(G, 'Externer Player: nur noch An/Aus – eine früher gewählte App zählt als „An“ (Android fragt selbst)', function () {
+  t(G, 'Externer Player: die gewählte App bleibt fest (VLC bleibt VLC, kein Auswahlfenster jedes Mal) – Aus bleibt Aus', function () {
     var S = D.Settings, keep = S.data.extPlayer;
     try {
-      S.data.extPlayer = 'vlc'; eq(D.extMode(), 'ask', 'VLC gespeichert → An');
-      S.data.extPlayer = 'ask'; eq(D.extMode(), 'ask');
+      S.data.extPlayer = 'vlc'; eq(D.extMode(), 'vlc', 'VLC gespeichert → VLC');
+      S.data.extPlayer = 'mx'; eq(D.extMode(), 'mx');
+      S.data.extPlayer = 'kodi'; eq(D.extMode(), 'kodi');
+      S.data.extPlayer = 'ask'; eq(D.extMode(), 'ask', 'nur wer „Jedes Mal fragen“ gewählt hat, bekommt die Auswahl');
       S.data.extPlayer = 'off'; eq(D.extMode(), 'off');
+      S.data.extPlayer = 'gibtsnicht'; eq(D.extMode(), 'ask', 'unbekannte App → Android fragt');
       S.data.extPlayer = undefined; eq(D.extMode(), 'off', 'nichts gespeichert → Aus');
     } finally { S.data.extPlayer = keep; }
+  });
+
+  t(G, 'Live TV auf dem Handy/Tablet: kein automatischer Start der Vorschau (kein Ton, keine mobilen Daten) – auf Fernseher und PC wie bisher', function () {
+    var P = D.Platform, keepTv = P.tv, keepMM = window.matchMedia;
+    function mm(coarse) { window.matchMedia = function (q) { return { matches: /pointer: coarse/.test(q) ? coarse : false, addListener: function () {}, removeListener: function () {} }; }; }
+    try {
+      P.tv = false; mm(true); eq(D.autoPreviewOk(), false, 'Handy/Tablet (Touch) → keine automatische Vorschau');
+      P.tv = false; mm(false); eq(D.autoPreviewOk(), true, 'PC mit Maus → Vorschau wie bisher');
+      P.tv = true; mm(true); eq(D.autoPreviewOk(), true, 'Fernseher → Vorschau wie bisher');
+    } finally { P.tv = keepTv; window.matchMedia = keepMM; }
   });
 
   t(G, 'Profil in den Einstellungen: Playlist mit Laufzeit, „Playlist wechseln“, rotes „Playlist löschen“ mit Rückfrage (Abbrechen vorgewählt), Zugang, Dieses Gerät', function () {
@@ -134,6 +147,86 @@
         D.Store.del('expiry.tst-seiten-ab');
       });
     }, prof);
+  });
+
+  t(G, 'Reiter wechseln, während TV-Programm, Film-Seite oder ein anderes Fenster darüberliegt: das Fenster geht zu, man sieht die neue Seite', function () {
+    return withShell(function () {
+      D.Shell.show('live');
+      return wait(60).then(function () {
+        D.Screens.push('guide', document.createElement('div'), { overlay: true });
+        D.Screens.push('movie', document.createElement('div'), { overlay: true });
+        D.Shell.show('movie');
+        eq(D.Screens.top().name, 'shell', 'Fenster darüber sind zu');
+        eq(D.Shell.current, 'movie');
+        // ein ganzes Bild (z. B. „Wer schaut?“) bleibt – dort ist die Leiste gar nicht zu sehen
+        D.Screens.push('persons', document.createElement('div'), {});
+        D.Shell.show('series');
+        eq(D.Screens.top().name, 'persons', '„Wer schaut?“ wird nicht übersprungen');
+        D.Screens.pop();
+      });
+    });
+  });
+
+  t(G, 'Hinweis „Playlist abgelaufen“ wartet, bis „Wer schaut?“ (oder ein anderes Bild) weg ist – und geht nicht verloren', function () {
+    var prof = { id: 'tst-seiten-ab2', type: 'demo', name: 'Meine Playlist' }, now = Math.floor(Date.now() / 1000);
+    return withShell(function () {
+      D.App.provider.account = function () { return Promise.resolve({ expires: now - 2 * 86400, status: 'Expired' }); };
+      D.Expiry.shown = {};
+      D.Screens.push('persons', document.createElement('div'), {});
+      D.Expiry.check();
+      return wait(1500).then(function () {
+        ok(!D.Dialog.open, 'nicht über „Wer schaut?“');
+        D.Screens.pop();
+        return wait(5500);
+      }).then(function () {
+        ok(D.Dialog.open, 'danach erscheint er');
+        document.getElementById('dialog-layer').querySelectorAll('.dialog .btn')[0].click();
+        return wait(80);
+      }).then(function () {
+        eq(D.Shell.current, 'settings', '„Zum Profil“ zeigt das Profil wirklich');
+        eq(D.Screens.top().name, 'shell');
+      });
+    }, prof);
+  });
+
+  t(G, 'Playlist löschen: keine Reste – auch „Startseite leer“, Titelbild-Auswahl (alle Sprachen) und was eine noch laufende Aktualisierung danach speichern will', function () {
+    var P = D.Profiles, id = 'tst-weg-' + Date.now(), keepList = P.list();
+    try {
+      P.save(keepList.concat([{ id: id, type: 'm3u', name: 'Weg', url: 'http://beispiel.invalid/a.m3u' }]));
+      D.Store.set('homeEmpty.' + id, true);
+      D.Store.set('hero2.de.' + id + '.movie', [{ id: 1 }]); D.Store.set('hero2.en.' + id + '.series', [{ id: 2 }]);
+      P.remove(id);
+      eq(D.Store.get('homeEmpty.' + id, null), null, '„Startseite leer“ ist weg');
+      eq(D.Store.get('hero2.de.' + id + '.movie', null), null, 'Titelbild-Auswahl (Deutsch) ist weg');
+      eq(D.Store.get('hero2.en.' + id + '.series', null), null, 'Titelbild-Auswahl (Englisch) ist weg');
+      // eine Aktualisierung, die vor dem Löschen begonnen hat, kommt erst jetzt an
+      D.Stats.set('movie', 10, 0, id);
+      eq(D.Store.get('stats.' + id, null), null, 'späte Zahlen einer gelöschten Playlist werden nicht mehr gespeichert');
+    } finally { P.save(keepList); D.Store.del('stats.' + id); }
+  });
+
+  t(G, 'Nach dem Löschen der aktiven Playlist: die Auswahl steht auf der nächsten Playlist (nicht auf dem Sprach-Knopf)', function () {
+    var P = D.Profiles, keepList = P.list(), keepActive = D.Store.get('active', null);
+    try {
+      P.save([{ id: 'tst-a', type: 'demo', name: 'Erste' }, { id: 'tst-b', type: 'demo', name: 'Zweite' }]);
+      D.Store.del('active');   // so steht es nach dem Löschen der aktiven Playlist da
+      D.showProfiles();
+      var cards = document.querySelectorAll('.profile-grid .card:not(.add)');
+      eq(cards.length, 2);
+      ok(cards[0].hasAttribute('data-autofocus'), 'erste Playlist ist vorgewählt');
+      ok(!cards[1].hasAttribute('data-autofocus'), 'nur eine vorgewählt');
+    } finally { P.save(keepList); if (keepActive) D.Store.set('active', keepActive); D.Screens.reset('leer', document.createElement('div'), {}); }
+  });
+
+  t(G, 'Profil: QR-Code zum Scannen mit dem Handy steht wieder bei „Dieses Gerät“', function () {
+    return withShell(function () {
+      D.openProfile();
+      return wait(80).then(function () {
+        var qr = D.Shell.view.querySelector('.pf-qr .qr');
+        ok(qr, 'QR-Code ist da');
+        ok(qr && qr.closest('.pf-card').textContent.indexOf('Dieses Gerät') >= 0, '… in der Karte „Dieses Gerät“');
+      });
+    });
   });
 
   function demoMovie() { return D.App.provider.items('movie', '__all').then(function (l) { return l[0]; }); }
@@ -259,6 +352,33 @@
         if (keep) D.Store.set('top10.de', keep); else D.Store.del('top10.de');
       });
     }, { id: 'tst-leer', type: 'demo', name: 'Nur Sender' });
+  });
+
+  t(G, 'Startseite, während die Auswahl fürs Titelbild noch gerechnet wird (z. B. nach Sprachwechsel): Platzhalter, nicht „leer“, nichts Falsches gemerkt', function () {
+    var keep = D.Store.get('top10.de', null);
+    return withShell(function () {
+      D.Store.set('top10.de', { at: Date.now(), d: { v: 1, country: 'DE', services: [] } });
+      D.Store.set('stats.tst-rechnet', { movie: { n: 50, at: Date.now() }, series: { n: 20, at: Date.now() } });
+      D.Store.del('homeEmpty.tst-rechnet');
+      var hold = D.App.provider.items, waiting = [];
+      D.App.provider.items = function () { return new Promise(function (r) { waiting.push(r); }); };   // Rechnen dauert
+      D.Shell.show('home');
+      return wait(3500).then(function () {
+        var el = D.Shell.view.querySelector('.launcher');
+        ok(el.classList.contains('is-loading'), 'zeigt noch Platzhalter');
+        ok(!el.querySelector('.hm-w'), 'keine Felder „leere Startseite“');
+        eq(D.Store.get('homeEmpty.tst-rechnet', null), null, 'nichts gemerkt, solange gerechnet wird');
+        D.App.provider.items = hold;
+        waiting.forEach(function (r) { r([]); });   // fertig gerechnet: wirklich nichts da
+        return wait(1500);
+      }).then(function () {
+        var el = D.Shell.view.querySelector('.launcher');
+        ok(!el.classList.contains('is-loading'), 'danach fertig');
+        eq(D.Store.get('homeEmpty.tst-rechnet', null), true, 'erst jetzt als leer gemerkt');
+        D.Store.del('stats.tst-rechnet'); D.Store.del('homeEmpty.tst-rechnet');
+        if (keep) D.Store.set('top10.de', keep); else D.Store.del('top10.de');
+      });
+    }, { id: 'tst-rechnet', type: 'demo', name: 'Demo' });
   });
 
   t(G, 'Startseite ohne Internet: Platzhalter bleiben nicht für immer – nach kurzer Zeit stehen die Felder da, „leer“ wird aber nicht gemerkt', function () {

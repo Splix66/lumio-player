@@ -331,6 +331,15 @@ public class NativePlayerPlugin extends Plugin {
             r.put("sleep", data.getBooleanExtra("sleep", false));
             String err = data.getStringExtra("error");
             if (err != null) r.put("error", err);
+            // Live: im TV-Player geschaute Sender (älteste zuerst) für „Zuletzt gesehen“ der App
+            // und per Herz gemerkte bzw. entfernte Einträge
+            for (String key : new String[] { "visited", "favAdd", "favDel" }) {
+                int[] v = data.getIntArrayExtra(key);
+                if (v == null) continue;
+                JSArray a = new JSArray();
+                for (int x : v) a.put(x);
+                r.put(key, a);
+            }
         }
         call.resolve(r);
     }

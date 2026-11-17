@@ -82,9 +82,11 @@
       var app = document.getElementById('app'); app.hidden = false;
       first.focus();
       // Die Testseite lädt kein Stylesheet (keine Maße) – deshalb die Ziele fest vorgeben und nur die Auswahl-Regel prüfen
+      var bar = D.Shell.el.querySelector('.topnav');
+      bar.getBoundingClientRect = function () { return { left: 0, top: 0, right: 1920, bottom: 90, width: 1920, height: 90 }; };   // waagrecht oben
       D.Nav.candidates = function () { return [first, tabs[1], extra]; };
       D.Nav.pick = function (cur, list, dir) { seen = list; return null; };
-      try { D.Nav.move('left'); } finally { D.Nav.pick = keep; D.Nav.candidates = keepC; app.hidden = true; }
+      try { D.Nav.move('left'); } finally { D.Nav.pick = keep; D.Nav.candidates = keepC; app.hidden = true; delete bar.getBoundingClientRect; }
       ok(seen && seen.length > 0, 'es gibt Ziele in der Leiste');
       ok(seen.every(function (el) { return !!el.closest('.topnav'); }), 'nur Ziele aus der Leiste – nichts aus dem Inhalt');
       if (extra.parentNode) extra.parentNode.removeChild(extra);
@@ -94,6 +96,24 @@
         ok(D.Shell.view.textContent.indexOf('Mein Zugang') >= 0, 'Einstellungen zeigen „Mein Zugang“ (Profil): ' + names.join(','));
         ok(D.Shell.buttons.settings.classList.contains('is-on'), 'Knopf „Einstellungen“ ist gewählt');
       });
+    });
+  });
+
+  t(G, 'Handy quer (Leiste senkrecht am Rand): Rechts geht von der Leiste in den Inhalt, Links aus dem Inhalt zurück in die Leiste', function () {
+    return withShell(function () {
+      var view = D.Shell.view, extra = document.createElement('button'), bar = D.Shell.el.querySelector('.topnav');
+      extra.className = 'f'; extra.textContent = 'Inhalt'; view.appendChild(extra);
+      var tabs = D.Shell.el.querySelectorAll('.nb-tabs .ntab'), first = tabs[0], keep = D.Nav.pick, keepC = D.Nav.candidates, seen = null;
+      var app = document.getElementById('app'); app.hidden = false;
+      bar.getBoundingClientRect = function () { return { left: 0, top: 0, right: 60, bottom: 400, width: 60, height: 400 }; };   // senkrecht
+      D.Nav.candidates = function () { return [first, tabs[1], extra]; };
+      D.Nav.pick = function (cur, list, dir) { seen = list; return null; };
+      try {
+        first.focus(); D.Nav.move('right');
+        ok(seen && seen.indexOf(extra) >= 0, 'Rechts aus der Leiste erreicht den Inhalt');
+        extra.focus(); seen = null; D.Nav.move('left');
+        ok(seen && seen.indexOf(first) >= 0, 'Links aus dem Inhalt erreicht die Leiste');
+      } finally { D.Nav.pick = keep; D.Nav.candidates = keepC; app.hidden = true; delete bar.getBoundingClientRect; if (extra.parentNode) extra.parentNode.removeChild(extra); }
     });
   });
 

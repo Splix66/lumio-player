@@ -14,7 +14,7 @@
   --bg: #15141f; --surface: #211f2e; --surface-2: #2b293a; --surface-3: #37344a;
   --line: rgba(255, 255, 255, .12); --line-2: rgba(255, 255, 255, .22);
   --text: #f4f4f6; --muted: #a4a4b4; --dim: #8a8a9b;
-  --accent: #8b5cf6; --accent-2: #a78bfa; --accent-btn: #8b5cf6; --accent-btn-hover: #7c4df0; --accent-soft: rgba(139, 92, 246, .16);
+  --accent: #8b5cf6; --accent-2: #a78bfa; --accent-btn: #7c3aed; --accent-btn-hover: #6d28d9; --accent-soft: rgba(139, 92, 246, .16);
   --ok: #34d399; --bad: #ff7a90; --gold: #ffc53d;
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace;
   --r: .9rem;

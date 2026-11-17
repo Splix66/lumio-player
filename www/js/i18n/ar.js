@@ -464,6 +464,8 @@ window.LUMIO_I18N["ar"] = {
   "Pause": "إيقاف مؤقت",
   "15 Sekunden zurück": "رجوع 15 ثانية",
   "30 Sekunden vor": "تقديم 30 ثانية",
+  "10 Sekunden zurück": "رجوع 10 ثوانٍ",
+  "10 Sekunden vor": "تقديم 10 ثوانٍ",
   "Vorheriger Sender": "القناة السابقة",
   "Nächster Sender": "القناة التالية",
   "Ton an/aus": "الصوت تشغيل/إيقاف",

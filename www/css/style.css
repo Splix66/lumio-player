@@ -608,7 +608,7 @@ body.kbd .cat-back.f:focus, body.is-tv .cat-back.f:focus { position: sticky; z-i
 .chan .now-bar { flex: none; width: 3.2rem; height: .2rem; margin-left: .7rem; border-radius: 999px; background: rgba(255, 255, 255, .14); overflow: hidden; }
 .chan .now-bar i { display: block; height: 100%; border-radius: inherit; background: var(--k, var(--accent)); }
 :root[data-theme="light"] .chan .now-bar { background: rgba(0, 0, 0, .1); }
-.chan .fav { color: var(--accent-2); flex: none; }
+.chan .fav { color: #ff3b30; flex: none; }
 .chan .arch { flex: none; margin-left: .5rem; color: var(--dim); }
 .chan .arch .i { width: 1.05rem; height: 1.05rem; }
 .lp-arch:empty { display: none; }
@@ -3337,7 +3337,7 @@ html.no-flexgap .st2 .st-row .st-txt > * + * { margin-left: 0; }
 .fhero.is-home .fh-title { font-size: 2.8rem; margin-top: .35rem; }
 .fhero.is-home .fh-plot { font-size: 1.08rem; -webkit-line-clamp: 2; color: var(--text-2); }
 .fhero.is-home .fh-actions { margin-top: 1.1rem; }
-.fhero.is-home .btn.primary { background: linear-gradient(90deg, #8b5cf6, #a855f7); color: #fff; box-shadow: 0 .5rem 1.6rem -.4rem rgba(139, 92, 246, .7); }
+.fhero.is-home .btn.primary { background: linear-gradient(90deg, #7c3aed, #9333ea); color: #fff; box-shadow: 0 .5rem 1.6rem -.4rem rgba(139, 92, 246, .7); }
 /* gewählt mit der Fernbedienung: weiß mit violettem Leuchten (vorher war der Fokus auf dem violetten Knopf nicht zu sehen) */
 body.kbd .fhero.is-home .btn.f:focus, body.is-tv .fhero.is-home .btn.f:focus { background: #fff; color: #120f1a; transform: scale(1.05); box-shadow: 0 0 0 .2rem rgba(168, 85, 247, .65), 0 .6rem 1.8rem -.3rem rgba(139, 92, 246, .8); }
 .hm-kick { color: var(--text-2); font-size: 1.02rem; font-weight: 600; letter-spacing: 0; white-space: pre; }
@@ -3717,7 +3717,8 @@ body.kbd .ntab.f:focus, body.is-tv .ntab.f:focus { background: #fff; color: #120
 }
 .nbtn + .nbtn { margin-left: .55rem; }
 .nbtn .i { width: 1.28rem; height: 1.28rem; }
-.nbtn.is-on { background: #fff; color: #120f1a; box-shadow: none; }
+/* Gewählter Knopf (z. B. Einstellungen): ruhig grau wie der gewählte Reiter – weiß ist nur die Markierung der Fernbedienung (1.15.11) */
+.nbtn.is-on { background: rgba(255, 255, 255, .26); color: #fff; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .3); }
 body.kbd .nbtn.f:focus, body.is-tv .nbtn.f:focus { background: #fff; color: #120f1a; box-shadow: var(--ring); }
 .nbtn.is-busy .i { animation: nbSpin 1s linear infinite; }
 @keyframes nbSpin { to { transform: rotate(360deg); } }
@@ -3727,7 +3728,8 @@ body.kbd .nbtn.f:focus, body.is-tv .nbtn.f:focus { background: #fff; color: #120
 }
 /* Sparmodus (schwache Geräte): keine Unschärfe, dafür etwas deckender */
 body.lite .nb-tabs, body.lite .nbtn { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(60, 56, 84, .92); }
-body.lite .nbtn.is-on, body.lite.is-tv .nbtn.f:focus, body.lite.kbd .nbtn.f:focus { background: #fff; }
+body.lite .nbtn.is-on { background: rgba(118, 112, 148, .95); }
+body.lite.is-tv .nbtn.f:focus, body.lite.kbd .nbtn.f:focus { background: #fff; }
 @media (prefers-reduced-motion: reduce) { .ntab, .nbtn { transition: none; } .nb-st.is-wait .i, .nbtn.is-busy .i { animation: none; } }
 
 /* ---------- Suche: klappt weich unter der Lupe auf ---------- */
@@ -3820,6 +3822,8 @@ body.lite .rf-card { -webkit-backdrop-filter: none; backdrop-filter: none; backg
   html:not(.tv) .ntab.is-on { background: transparent; box-shadow: none; color: #fff; }
   html:not(.tv) .ntab.is-on .i { background: rgba(255, 255, 255, .22); }
   html:not(.tv) .content { padding-bottom: calc(4.4rem + env(safe-area-inset-bottom)); }
+  /* Sparmodus: auch die Reiterleiste unten ohne Unschärfe (1.15.11) */
+  html:not(.tv) body.lite .nb-tabs { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(40, 36, 60, .97); }
   html:not(.tv) .rf-card { left: 12px; right: 12px; width: auto; top: calc(var(--head-h) + env(safe-area-inset-top)); }
   html:not(.tv) .sk-view { display: block; }
   html:not(.tv) .sk-cats { display: flex; width: auto; margin: 0 0 1rem; overflow: hidden; }
@@ -3893,6 +3897,10 @@ body.kbd .st2 .st-sec.f:focus .st-sic, body.is-tv .st2 .st-sec.f:focus .st-sic {
 .pf-cap { margin: 0 0 .7rem; font-size: .78rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: rgba(255, 255, 255, .6); }
 .pf2 .kv { display: grid; grid-template-columns: minmax(7rem, 34%) 1fr; grid-gap: 0; gap: 0; align-items: stretch; margin: 0; }
 .pf2 .pf-hero, .pf2 .pf-cols .pf-card { margin: 0; }
+/* „Dieses Gerät“: unter den Angaben der QR-Code, daneben der Hinweis (1.15.11) */
+.pf2 .pf-qrrow { flex-direction: row; align-items: center; margin-top: 1.1rem; }
+.pf2 .pf-qrrow .qr { width: 7.5rem; height: 7.5rem; padding: .4rem; }
+.pf2 .pf-qrrow small { margin: 0 0 0 1rem; font-size: .9rem; }
 .pf2 .kv > span, .pf2 .kv > b { display: flex; align-items: center; }
 .pf2 .kv > span, .pf2 .kv > b { padding: .78rem 0; border-top: 1px solid rgba(255, 255, 255, .08); min-width: 0; overflow-wrap: anywhere; }
 .pf2 .kv > span:first-child, .pf2 .kv > span:first-child + b { border-top: 0; }
@@ -3926,7 +3934,7 @@ body.kbd .st2 .st-sec.f:focus .st-sic, body.is-tv .st2 .st-sec.f:focus .st-sic {
 .hm2 .fhero.is-home .fh-title { font-size: 2.55rem; line-height: 1.1; margin: 0 0 .55rem; text-shadow: 0 .1rem 1.2rem rgba(0, 0, 0, .45); }
 .hm2 .fhero.is-home .fh-plot { font-size: 1rem; line-height: 1.5; color: rgba(255, 255, 255, .86); margin: 0 0 .9rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .hm2 .fhero.is-home .fh-actions { display: flex; align-items: center; flex-wrap: wrap; margin: 0; }
-.hm2 .fhero.is-home .fh-actions .btn.primary { background: #8b5cf6; color: #fff; box-shadow: none; }
+.hm2 .fhero.is-home .fh-actions .btn.primary { background: #7c3aed; color: #fff; box-shadow: none; }
 .hm2 .fhero.is-home .fh-actions .btn.ghost { background: rgba(10, 8, 18, .45); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .28); }
 .hm2 .hm-dots { margin: 0 0 0 1.4rem; align-items: center; }
 .hm2 .hm-dots i.is-on { background: #a78bfa; }
@@ -4024,11 +4032,12 @@ body.lite .player.is-docked .mini-title { -webkit-backdrop-filter: none; backdro
 .section-live .lp-name { display: none; }
 .section-live .lp-arch .btn { background: rgba(255, 255, 255, .1); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22); color: #fff; border-radius: 999px; }
 .section-live .lp-now { border-radius: 1.2rem; background: rgba(255, 255, 255, .06); box-shadow: inset 0 0 0 1px rgba(196, 167, 255, .2); }
-.section-live .lp-tag { background: #8b5cf6; color: #fff; }
+.section-live .lp-tag { background: #7c3aed; color: #fff; }
 body.kbd .section-live .lp-arch .btn.f:focus, body.is-tv .section-live .lp-arch .btn.f:focus { background: #fff; color: #120f1a; box-shadow: var(--ring); }
 
 /* ---------- Gemeinsame Bausteine im neuen Aussehen: Hauptknopf, Umschalter, Fenster ---------- */
-.btn.primary { background: #8b5cf6; color: #fff; }
+/* Hauptknöpfe eine Spur dunkler – weiße Schrift besser lesbar (Erays Wahl 17.11.2026, 1.15.11) */
+.btn.primary { background: #7c3aed; color: #fff; }
 body.kbd .btn.primary.f:focus, body.is-tv .btn.primary.f:focus { background: #fff; color: #120f1a; box-shadow: var(--ring); }
 /* Umschalter (z. B. Sender / Filme / Serien bei den Favoriten): Glas-Leiste, nur Text */
 .seg { background: var(--glass); box-shadow: var(--glass-shadow); -webkit-backdrop-filter: blur(1rem) saturate(1.5); backdrop-filter: blur(1rem) saturate(1.5); }
@@ -4069,7 +4078,7 @@ body.kbd .guide .gd-prog.f:focus, body.is-tv .guide .gd-prog.f:focus, body.kbd .
 .wl-chip.is-warn { color: #fbbf24; }
 .wl-chip.is-off { color: #ff5b73; }
 .wl-title { font-family: var(--font-menu); }
-.wl .wl-btn.wl-primary, .wl .wl-primary { background: #8b5cf6; color: #fff; }
+.wl .wl-btn.wl-primary, .wl .wl-primary { background: #7c3aed; color: #fff; }
 .wl .lang-btn, .wl .wl-help { background: var(--glass); box-shadow: var(--glass-shadow); }
 
 /* ---------- Handy hoch: bei Live TV läuft der Sender klein oben, darunter Kategorien und Senderliste (neu mit 1.15.10) ---------- */
@@ -4095,3 +4104,145 @@ body.kbd .player .cbtn.f:focus, body.is-tv .player .cbtn.f:focus { background: #
 .player .osd-top { background: linear-gradient(180deg, rgba(14, 12, 24, .82), rgba(14, 12, 24, .3) 55%, rgba(14, 12, 24, 0)); }
 .player .osd-bottom { background: linear-gradient(0deg, rgba(14, 12, 24, .9), rgba(14, 12, 24, .4) 55%, rgba(14, 12, 24, 0)); }
 body.lite .player .cbtn { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(60, 56, 84, .9); }
+
+/* ==========================================================
+   PLAYER STIL A (1.15.12) – Erays Entwürfe „Player A4“ und „Stil A für alle Player“ (17.11.2026)
+   Oben links LIVE, oben rechts die Uhr. Unten: Sender bzw. „FILM“, großer Titel, Zeit, eine Zeile
+   Beschreibung, Zeitleiste, wenige Knöpfe; rechts unten nur Text (bei Serien „Nächste Folge“).
+   Handy/Tablet/PC: in der Mitte drei durchsichtige Knöpfe, nur kurz sichtbar.
+   ========================================================== */
+.player .osd.pa { justify-content: space-between; }
+.player .osd.pa .osd-top { display: flex; align-items: center; padding: 2.2rem 4.4rem 5rem; background: linear-gradient(180deg, rgba(8, 7, 12, .7), rgba(8, 7, 12, 0)); }
+.player .osd.pa .osd-top > * + * { margin-left: 1rem; }
+.player .osd.pa .pa-gap { flex: 1; }
+.player .osd.pa .p-clock { font-family: var(--font-menu); font-size: 1.55rem; font-weight: 700; color: #fff; }
+.player .osd.pa .live-tag { padding: .28rem .7rem; font-size: .75rem; letter-spacing: .08em; }
+.player .osd.pa .osd-bottom { padding: 8rem 4.4rem 3.3rem; background: linear-gradient(0deg, rgba(8, 7, 12, .95), rgba(8, 7, 12, .78) 45%, rgba(8, 7, 12, 0)); }
+.pa-kick { display: flex; align-items: center; font-size: 1.1rem; font-weight: 700; color: #fff; }
+.player .osd.pa .pa-kick .pt-logo { margin-right: .7rem; }
+.player .osd.pa .pa-kick .ch-num { margin-right: .4rem; }
+.pa-kick .pt-logo { display: flex; align-items: center; justify-content: center; width: 3.45rem; height: 2.2rem; border-radius: .45rem; overflow: hidden; background: rgba(255, 255, 255, .12); }
+.pa-kick .pt-logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.player .osd.pa .pa-kick .ch-num { color: #fff; background: none; box-shadow: none; padding: 0; min-width: 0; border-radius: 0; font-size: inherit; font-weight: 700; }
+.pa-kick .ch-num::after { content: " ·"; }
+.pa-kick.is-vod { font-size: .78rem; font-weight: 800; letter-spacing: .1em; color: #c9c9d3; }
+.pa-kick.no-epg { display: none; }
+.player .osd.pa .osd-bottom > h2 { margin: 1rem 0 0; font-family: var(--font-menu); font-size: 3.45rem; font-weight: 700; letter-spacing: -.02em; line-height: 1.02; color: #fff; white-space: normal; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.player .osd.pa .pa-kick.is-vod + h2 { margin-top: .65rem; }
+.player .osd.pa .osd-bottom > .pt-sub { margin-top: .65rem; font-size: 1.1rem; color: #d6d6de; }
+.player .osd.pa .pt-sub:empty { display: none; }
+.player .osd.pa .osd-bottom > .pa-desc { margin: .55rem 0 0; max-width: 50rem; font-size: 1rem; line-height: 1.45; color: #c9c9d3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.pa-desc:empty { display: none; }
+/* Zeitleiste: Beginn links, Ende (bzw. Restzeit) rechts – mit Finger, Maus oder Links/Rechts spulen */
+.player .osd.pa .osd-bottom > .pa-barrow { position: relative; margin-top: 1.4rem; padding: 0 5rem; }
+.pa-barrow .times { position: absolute; left: 0; right: 0; top: 50%; margin: 0; transform: translateY(-50%); display: flex; justify-content: space-between; pointer-events: none; font-size: .9rem; color: #c9c9d3; }
+.player .osd.pa .bar { height: .36rem; border-radius: 999px; background: rgba(255, 255, 255, .18); overflow: visible; }
+.player .osd.pa .bar > i { border-radius: 999px; background: linear-gradient(90deg, #a855f7, #e9d5ff); }
+.player .osd.pa .bar .buf { border-radius: 999px; background: rgba(255, 255, 255, .3); }
+.player .osd.pa .bar.seek > i::after { content: ""; position: absolute; right: -.4rem; top: 50%; width: .8rem; height: .8rem; margin-top: -.4rem; border-radius: 50%; background: #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, .4); }
+body.kbd .player .osd.pa .bar.f:focus > i::after, body.is-tv .player .osd.pa .bar.f:focus > i::after { width: 1.1rem; height: 1.1rem; right: -.55rem; margin-top: -.55rem; box-shadow: 0 0 0 .18rem rgba(192, 132, 252, .85), 0 0 .8rem rgba(168, 85, 247, .6); }
+body.kbd .player .osd.pa .bar.f:focus, body.is-tv .player .osd.pa .bar.f:focus { outline: none; box-shadow: none; }
+/* Knöpfe unten */
+.player .osd.pa .osd-bottom > .ctrl-row { display: flex; align-items: flex-end; margin-top: 1.65rem; }
+.player .osd.pa .ctrl-side.left { display: flex; align-items: center; flex-wrap: wrap; width: auto; padding: 0; border-radius: 0; background: none; box-shadow: none; }
+/* Stil A: keine kleinen Namensschilder an Knöpfen mit Schrift; die Glas-Knöpfe wie in der Leiste oben */
+.player .osd.pa .cbtn.pa-pill::after, .player .osd.pa .cbtn.pa-nextep::after, .player .osd.pa .p-center .cbtn::after { display: none; }
+.player .osd.pa .ctrl-side .cbtn { color: #fff; background: rgba(255, 255, 255, .13); -webkit-backdrop-filter: blur(1rem) saturate(1.5); backdrop-filter: blur(1rem) saturate(1.5); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22); transition: background .15s ease, color .15s ease; }
+body.lite .player .osd.pa .ctrl-side .cbtn { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(60, 56, 84, .9); }
+body.kbd .player .osd.pa .cbtn.f:focus, body.is-tv .player .osd.pa .cbtn.f:focus { background: #fff; color: #120f1a; transform: none; box-shadow: var(--ring); }
+.player .osd.pa .ctrl-side .cbtn.is-fav { background: rgba(255, 255, 255, .13); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22); }
+.player .osd.pa .ctrl-side.left > * + * { margin-left: .8rem; }
+.player .osd.pa .cbtn.pa-pill { width: auto; height: 2.9rem; padding: 0 1.3rem 0 1rem; border-radius: 999px; font-size: 1rem; font-weight: 700; display: inline-flex; align-items: center; }
+.player .osd.pa .cbtn.pa-pill .i { width: 1.2rem; height: 1.2rem; margin-right: .55rem; }
+.player .osd.pa .cbtn.pa-ic { width: 2.9rem; height: 2.9rem; border-radius: 50%; }
+.player .osd.pa .cbtn.pa-ic .i { width: 1.35rem; height: 1.35rem; }
+.player .osd.pa .cbtn.is-fav .i { color: #ff3b30; }
+body.kbd .player .osd.pa .cbtn.is-fav.f:focus .i, body.is-tv .player .osd.pa .cbtn.is-fav.f:focus .i { color: #ff3b30; }
+/* Herz nie als Wort (Erays Wunsch 17.11.2026): auch kein Namens-Hinweis über dem Knopf */
+.osd .cbtn[data-c="fav"]::after { display: none; }
+.player .osd.pa .cbtn.is-open { background: rgba(255, 255, 255, .3); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .4); }
+.pa-right { margin-left: auto; display: flex; align-items: flex-end; }
+.pa-right > * + * { margin-left: 1.6rem; }
+.pa-next { display: flex; flex-direction: column; align-items: flex-end; text-align: right; }
+.pa-lbl { font-size: .68rem; font-weight: 800; letter-spacing: .1em; color: #b9b9c4; white-space: nowrap; }
+.pa-lbl b { color: #c4b5fd; font-weight: 800; }
+.pa-val { margin-top: .2rem; font-size: 1.05rem; font-weight: 600; color: #e8e8ee; max-width: 22rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.player .osd.pa .cbtn.pa-nextep { width: auto; height: 3.45rem; padding: 0 1.4rem 0 1.1rem; border-radius: 999px; display: inline-flex; align-items: center; text-align: left; }
+.player .osd.pa .cbtn.pa-nextep .i { width: 1.3rem; height: 1.3rem; margin-right: .75rem; }
+.pa-ne { display: flex; flex-direction: column; }
+.pa-ne b { font-size: 1rem; font-weight: 800; }
+.pa-ne small { font-size: .78rem; font-weight: 600; opacity: .8; max-width: 16rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.player .osd.pa .pa-extra { margin-left: 1.2rem; display: flex; align-items: center; width: auto; padding: 0; background: none; box-shadow: none; }
+.player .osd.pa .pa-extra > * + * { margin-left: .6rem; }
+/* Ton im Player auch auf Handy, Tablet, PC und Mac (Erays Wunsch 17.11.2026): Ton an/aus und Regler unten rechts.
+   Handy/Tablet: kein Vollbild-Knopf (ist schon Vollbild). */
+@media (pointer: coarse) { html:not(.tv) .player .osd.pa .pa-extra .cbtn[data-c="fs"] { display: none; } }
+.player .osd.pa .pa-extra .vol { display: flex; align-items: center; padding: 0 .9rem 0 0; border-radius: 999px; background: rgba(255, 255, 255, .13); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22); }
+.player .osd.pa .pa-extra .vol .cbtn { background: transparent; box-shadow: none; }
+.player .osd.pa .pa-extra .vol.is-tv-vol { padding: 0; }
+/* Mitte (nur Handy, Tablet, PC): durchsichtig, nur kurz sichtbar – bei Pause bleibt sie stehen */
+.player .osd.pa .p-center { position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%); opacity: 0; visibility: hidden; transition: opacity .25s ease, visibility 0s linear .25s; }
+.player.pc-on .osd.pa .p-center, .player.is-paused .osd.pa .p-center { opacity: 1; visibility: visible; transition: opacity .2s ease; }
+html.tv .player .osd.pa .p-center { display: none; }
+.player .osd.pa .p-center .ctrls { display: flex; align-items: center; }
+.player .osd.pa .p-center .ctrls > * + * { margin-left: 2.9rem; }
+.player .osd.pa .p-center .cbtn, .player .osd.pa .p-center .cbtn.big { width: 4.55rem; height: 4.55rem; border-radius: 50%; color: #fff; background: rgba(16, 14, 24, .16); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .5), 0 .4rem 1.4rem rgba(0, 0, 0, .18); }
+.player .osd.pa .p-center .cbtn .i { width: 1.75rem; height: 1.75rem; filter: drop-shadow(0 2px 6px rgba(0, 0, 0, .45)); }
+.player .osd.pa .p-center .cbtn.pc-big { width: 6.4rem; height: 6.4rem; }
+.player .osd.pa .p-center .cbtn.pc-big .i { width: 2.45rem; height: 2.45rem; }
+.player .osd.pa .p-center .cbtn[data-c="rew"] .i, .player .osd.pa .p-center .cbtn[data-c="fwd"] .i { width: 3rem; height: 3rem; }
+body.lite .player .osd.pa .p-center .cbtn { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(16, 14, 24, .28); }
+/* Fenster: Rad (Einstellungen) über den Knöpfen, „Zuletzt gesehen“ rechts in der Mitte */
+.player .track-panel.pa-list { width: 27rem; max-height: 80vh; overflow-y: auto; padding: .65rem; border-radius: 1.3rem; background: rgba(26, 23, 40, .9); -webkit-backdrop-filter: blur(1.4rem) saturate(1.4); backdrop-filter: blur(1.4rem) saturate(1.4); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .2), 0 1.4rem 3.6rem -1rem rgba(0, 0, 0, .85); }
+.player .track-panel.pa-list.is-menu { left: 4.4rem; right: auto; bottom: 8.4rem; top: auto; }
+.player .track-panel.pa-list.is-recent { right: 2.9rem; left: auto; top: 50%; bottom: auto; transform: translateY(-50%); width: 25rem; }
+.pa-lh { margin: 0; padding: .3rem 1rem .5rem; font-size: .72rem; font-weight: 800; letter-spacing: .08em; color: #a9a9b4; }
+.player .tp-item { display: flex; align-items: center; width: 100%; min-height: 2.9rem; padding: .4rem 1rem; border-radius: .75rem; text-align: left; font-size: 1rem; font-weight: 600; color: #fff; background: transparent; }
+.player .tp-item > .i { width: 1.2rem; height: 1.2rem; margin-right: .85rem; }
+.player .tp-item + .tp-item { margin-top: .1rem; }
+.player .tp-item.is-on { background: rgba(124, 58, 237, .3); box-shadow: inset 0 0 0 1px rgba(196, 167, 255, .4); }
+body.kbd .player .tp-item.f:focus, body.is-tv .player .tp-item.f:focus { background: #fff; color: #120f1a; box-shadow: var(--ring); }
+@media (hover: hover) { .player .tp-item:hover { background: rgba(255, 255, 255, .1); } }
+.player .tp-ch { padding: .55rem .75rem; }
+.player .tp-ch .logo-box { flex: none; width: 3.6rem; height: 2.35rem; margin-right: .8rem; border-radius: .5rem; }
+.tp-chtxt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.tp-chtxt b { font-size: .95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tp-chtxt small { margin-top: .15rem; font-size: .8rem; font-weight: 500; opacity: .75; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Handy und Tablet: kleiner, Knöpfe nur als Symbol, Beschreibung weg */
+@media (max-width: 960px) {
+  html:not(.tv) .player .osd.pa .osd-top { padding: calc(.9rem + env(safe-area-inset-top)) 1.2rem 2.4rem; }
+  html:not(.tv) .player .osd.pa .osd-bottom { padding: 3rem 1.2rem calc(1rem + env(safe-area-inset-bottom)); }
+  html:not(.tv) .player .osd.pa .osd-bottom > h2 { font-size: 1.7rem; margin-top: .4rem; }
+  html:not(.tv) .player .osd.pa .osd-bottom > .pa-desc { display: none; }
+  html:not(.tv) .player .osd.pa .osd-bottom > .pt-sub { font-size: .85rem; margin-top: .3rem; }
+  html:not(.tv) .player .osd.pa .osd-bottom > .pa-barrow { margin-top: .8rem; padding: 0 3.6rem; }
+  html:not(.tv) .pa-barrow .times { font-size: .72rem; }
+  html:not(.tv) .player .osd.pa .osd-bottom > .ctrl-row { margin-top: .8rem; }
+  html:not(.tv) .player .osd.pa .cbtn.pa-pill { width: 2.6rem; height: 2.6rem; padding: 0; justify-content: center; }
+  html:not(.tv) .player .osd.pa .cbtn.pa-pill span { display: none; }
+  html:not(.tv) .player .osd.pa .cbtn.pa-pill .i { margin: 0; }
+  html:not(.tv) .player .osd.pa .cbtn.pa-ic { width: 2.6rem; height: 2.6rem; }
+  html:not(.tv) .player .osd.pa .ctrl-side.left > * + * { margin-left: .55rem; }
+  html:not(.tv) .pa-val { font-size: .85rem; max-width: 10rem; }
+  html:not(.tv) .player .osd.pa .p-center .ctrls > * + * { margin-left: 1.8rem; }
+  html:not(.tv) .player .osd.pa .p-center .cbtn { width: 3.4rem; height: 3.4rem; }
+  html:not(.tv) .player .osd.pa .p-center .cbtn.pc-big { width: 4.6rem; height: 4.6rem; }
+  html:not(.tv) .player .track-panel.pa-list.is-menu { left: 1rem; right: 1rem; width: auto; bottom: 6rem; }
+  html:not(.tv) .player .track-panel.pa-list.is-recent { right: 1rem; left: 1rem; width: auto; }
+}
+@media (orientation: landscape) and (max-height: 540px) {
+  html:not(.tv) .player .osd.pa .pa-kick { font-size: .8rem; }
+  html:not(.tv) .player .osd.pa .osd-bottom > h2 { font-size: 1.4rem; -webkit-line-clamp: 1; }
+  html:not(.tv) .player .track-panel.pa-list { max-height: 70vh; }
+  html:not(.tv) .player .track-panel.pa-list.is-menu { left: auto; right: 1rem; width: 20rem; bottom: 1rem; }
+  html:not(.tv) .player .track-panel.pa-list.is-recent { left: auto; width: 20rem; }
+}
+body.kbd .player .osd.pa .p-center .cbtn.f:focus { background: rgba(255, 255, 255, .22); color: #fff; box-shadow: inset 0 0 0 2px #fff, 0 0 0 .18rem rgba(192, 132, 252, .8); }
+
+/* Merken = nur das Herz (Erays Wunsch 17.11.2026): runder Knopf ohne Wort, leer = nicht gemerkt, rot gefüllt = gemerkt.
+   Gilt für Live TV neben der Vorschau und die Film-/Serienseite; im Player siehe .osd.pa .cbtn.is-fav. */
+.btn.fav-heart { padding: 0; width: 2.9rem; height: 2.9rem; flex: none; }
+.btn.fav-heart > * + * { margin-left: 0; }
+.btn.fav-heart .i { width: 1.35rem; height: 1.35rem; }
+.btn.fav-heart.is-fav .i, .btn.fav-heart.is-fav.f:focus .i, .btn.fav-heart.is-fav:hover .i { color: #ff3b30; }
+span.fav { color: #ff3b30; }

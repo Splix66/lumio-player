@@ -464,6 +464,8 @@ window.LUMIO_I18N["ku"] = {
   "Pause": "Rawestîne",
   "15 Sekunden zurück": "15 çirke paşve",
   "30 Sekunden vor": "30 çirke pêşve",
+  "10 Sekunden zurück": "10 çirke paşve",
+  "10 Sekunden vor": "10 çirke pêşve",
   "Vorheriger Sender": "Kanala berê",
   "Nächster Sender": "Kanala din",
   "Ton an/aus": "Deng vekirî/girtî",

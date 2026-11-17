@@ -1,5 +1,37 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## 1.15.12 – 2026-11-17 · Neuer Player (mit den Nachbesserungen aus 1.15.11)
+
+**Player im Stil A** (Erays Entwürfe „Player A4“ und „Stil A für alle Player“ vom 17.11.2026, abgenommen mit „alles bauen“).
+
+- **Eingebauter Player (App, Handy, Tablet, PC):** oben links LIVE, oben rechts die Uhr. Unten die Zeile mit Sender (bzw. „FILM“ oder „SERIE · STAFFEL 1 · FOLGE 3“), großer Titel, Zeit und Restzeit, eine Zeile Beschreibung, darunter die Zeitleiste mit Beginn und Ende.
+- **Wenige Knöpfe:** am Fernseher Pause, Senderliste, Zuletzt gesehen, Herz, Rad. Das Rad sammelt alles Weitere (Ton & Untertitel, Bild & Wiedergabe, Verpasste Sendungen, Bild-in-Bild, Schlaf-Timer, Ton an/aus, Sender ausblenden). „Letzter Sender“ gibt es nicht mehr – dafür Hoch/Runter.
+- **„Zuletzt gesehen“:** zeigt die letzten 5 Sender rechts in der Mitte; OK schaltet um.
+- **Unten rechts nur Text:** „ALS NÄCHSTES · 21:00“ mit dem Titel – nur, wenn die Playlist Programmdaten hat. Bei Serien steht dort der Knopf „Nächste Folge“, beim Film Tonspur und Untertitel.
+- **Handy, Tablet, PC:** in der Mitte drei durchsichtige Knöpfe (Sender zurück · Pause · Sender vor, beim Film 10 Sek. zurück · Pause · 10 Sek. vor), nur kurz sichtbar.
+- **Ton im Player auch auf Handy, Tablet, PC und Mac:** unten rechts Ton an/aus und Lautstärke (iPhone/iPad: nur an/aus, Lautstärke über die Tasten).
+- **TV-Player auf Fire TV und Android-Boxen im selben Stil:** LIVE oben links, Uhr oben rechts, Sender, großer Sendungstitel, Zeit, Zeitleiste, Knöpfe Pause, Senderliste, Zuletzt gesehen und Rad (Tonspur, Untertitel, Bildformat, Geschwindigkeit), rechts unten „ALS NÄCHSTES“ als Text. Filme: Links/Rechts spult 10 Sekunden.
+- **Zurückspulen im Live-TV:** nicht gebaut (Erays Entscheidung 17.11.2026).
+- **Korrekturen nach dem Gerätetest auf dem Fire TV Stick (17.11.2026):** Rad und „Zuletzt gesehen“ im TV-Player lassen sich auch beim ersten Öffnen sofort bedienen (vorher fehlte dort manchmal die Markierung). Sender, zwischen denen man im TV-Player umschaltet, stehen danach auch in „Zuletzt gesehen“ der App – vorher kamen nur der erste und der letzte an, darum fehlte im großen Vorschaubild der Knopf „Zuletzt gesehen“.
+- **Merken ist überall nur noch ein Herz** (Erays Wunsch 17.11.2026): kein Wort mehr auf dem Knopf – leeres Herz = nicht gemerkt, rot gefülltes Herz = gemerkt. Gilt neben der Live-Vorschau, auf der Film- und Serienseite und in beiden Playern; auch das kleine Herz in der Senderliste ist rot.
+- **TV-Player auf Fire TV und Android-Boxen:** jetzt mit Herz (Pause · Senderliste · Zuletzt gesehen · Herz · Rad; beim Film Pause · Herz · Rad) und mit Senderlogo vor „Nr · Sender“. Das alte kleine Sender-Banner ist weg: Beim Öffnen und Umschalten erscheint kurz die neue Anzeige ohne Knöpfe, Hoch/Runter schaltet dabei weiter um.
+
+## 1.15.11 – 2026-11-17 · Nachbesserungen (nicht einzeln veröffentlicht, enthalten in 1.15.12)
+
+**Nachbesserungen nach der unabhängigen Prüfung von 1.15.10** (Erays Auftrag vom 17.11.2026; Prüfbericht in brain: „Unabhängige Code-Prüfung Telvo 1.15.10“).
+
+- **Nur noch eine weiße Markierung in der Leiste:** Auf der Einstellungsseite war der Knopf „Einstellungen“ weiß – genau wie die Markierung der Fernbedienung. Vom Sofa sah man zwei weiße Kreise. Der gewählte Knopf ist jetzt ruhig grau wie der gewählte Reiter.
+- **Reiter wechseln, während das TV-Programm oder eine Film-Seite offen ist:** Ein Klick (Maus, Air-Mouse, PC) auf „Filme“ wechselte die Seite unsichtbar darunter – es schien nichts zu passieren. Jetzt geht das Fenster darüber zu und man sieht die neue Seite.
+- **Hinweis „Playlist abgelaufen“ wartet, bis „Wer schaut?“ weg ist:** Vorher konnte er darüber erscheinen; „Zum Profil“ baute das Profil dann unsichtbar auf, und man landete trotzdem in Live TV. Er geht auch nicht mehr verloren, wenn man in dem Moment die Playlist wechselt.
+- **Startseite nicht mehr kurz „leer“:** Direkt nach einem Sprachwechsel zeigte sie knapp 3 Sekunden die Felder der leeren Startseite und merkte sich fälschlich „leer“ – beim nächsten Start ging es dann auf Live TV. Jetzt stehen so lange die Platzhalter da, bis die Auswahl fürs Titelbild fertig ist.
+- **Handy und Tablet: Live TV startet nicht mehr von selbst** (Erays Entscheidung) – kein Ton und keine mobilen Daten, bevor man einen Sender antippt. Fernseher und PC wie bisher.
+- **Externer Player: die gewählte App bleibt fest** (Erays Entscheidung) – wer VLC, MX Player, Kodi … gewählt hat, muss nicht mehr jedes Mal auswählen. Die Auswahl in den Einstellungen ist wieder da wie in 1.15.9.
+- **Profil: QR-Code zum Scannen mit dem Handy ist zurück** (bei „Dieses Gerät“). „Version“ ist jetzt übersetzt.
+- **Playlist löschen:** Auch „Startseite leer“ und die Titelbild-Auswahl werden gelöscht; eine Aktualisierung, die noch lief, speichert danach nichts mehr. Die Auswahl steht danach auf der nächsten Playlist statt auf dem Sprach-Knopf.
+- **Handy quer:** Von der Leiste am Rand kommt man mit Rechts wieder in den Inhalt (Tastatur, Gamepad).
+- **Sparmodus:** Auch die Reiterleiste unten am Handy ohne Unschärfe.
+- **Lila Hauptknöpfe eine Spur dunkler** (App und Webseite, Erays Wahl): Die weiße Schrift ist so besser lesbar.
+
 ## 1.15.10 – 2026-11-17 · Neues Aussehen
 
 **Neues Aussehen, Teil 1 „Gerüst“** (Erays Auftrag vom 17.11.2026, Entwürfe im Chat abgenommen; Plan in brain: „Telvo – Plan Neues Aussehen v1“).
