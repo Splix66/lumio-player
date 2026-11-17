@@ -3,7 +3,7 @@
   "appName": "Telvo Player",
   "webDir": "www",
   "loggingBehavior": "none",
-  "backgroundColor": "#0b0a1a",
+  "backgroundColor": "#15141f",
   "server": {
     "androidScheme": "http",
     "cleartext": true
@@ -13,7 +13,7 @@
   },
   "ios": {
     "contentInset": "never",
-    "backgroundColor": "#0b0a1a"
+    "backgroundColor": "#15141f"
   },
   "plugins": {
     "CapacitorHttp": {

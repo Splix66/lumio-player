@@ -63,7 +63,7 @@ if (fs.existsSync(stylesPath)) {
   let st = fs.readFileSync(stylesPath, 'utf8');
   if (!st.includes('windowSplashScreenBackground')) {
     st = st.replace(/(<style name="AppTheme\.NoActionBarLaunch"[^>]*>)/,
-      '$1\n        <item name="windowSplashScreenBackground">#0b0a1a</item>\n        <item name="android:windowBackground">#0b0a1a</item>');
+      '$1\n        <item name="windowSplashScreenBackground">#15141f</item>\n        <item name="android:windowBackground">#15141f</item>');
     fs.writeFileSync(stylesPath, st);
   }
 }

@@ -1,18 +1,19 @@
 # Erzeugt alle App-Symbole, das TV-Banner und den Startbildschirm im Telvo-Design
-# (Logo „T mit Bogen und Play-Zeichen“, Stand 11/2026: der Balken biegt rechts nach unten, darunter das lila Play-Zeichen).
-# Dasselbe Logo als SVG: www/js/app.js (LOGO_SVG), docs/favicon.svg, docs/index.html, docs/admin.html, docs/app/index.html.
+# (Logo „T mit Bogen und Play-Zeichen“. Stand 11/2026, neues Aussehen 1.15.10: lila Kachel mit Verlauf,
+#  „T“ und Play-Zeichen weiß – Erays Wahl „Logo 1 Verlauf“ für App-Symbol, Startbild, TV-Banner und Leiste).
+# Dasselbe Logo als SVG: www/js/app.js (LOGO_SVG), www/index.html (#boot), docs/favicon.svg, docs/index.html, docs/admin.html, docs/app/index.html.
 # Aufruf: python3 scripts/make-icons.py   (benötigt: pip install pillow)
 # Farben unten anpassen, um das Logo zu ändern.
 import os
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
-BG_TOP = (45, 39, 69)       # Hintergrund oben    (#2d2745)
-BG_MID = (21, 19, 31)       # Hintergrund Mitte   (#15131f)
-BG_BOTTOM = (11, 10, 16)    # Hintergrund unten   (#0b0a10)
+TILE_A = (167, 139, 250)    # Kachel Verlauf Start, oben links   (#a78bfa)
+TILE_B = (109, 61, 240)     # Kachel Verlauf Ende, unten rechts  (#6d3df0)
+APP_BG = (21, 20, 31)       # Hintergrund der App (#15141f) – für das Startbild
 T_TOP = (255, 255, 255)     # „T“ oben
-T_BOTTOM = (228, 226, 236)  # „T“ unten (#e4e2ec)
-PLAY_A = (176, 108, 255)    # Play-Zeichen Verlauf Start (#b06cff)
-PLAY_B = (124, 58, 237)     # Play-Zeichen Verlauf Ende  (#7c3aed)
+T_BOTTOM = (255, 255, 255)  # „T“ unten
+PLAY_A = (255, 255, 255)    # Play-Zeichen (weiß)
+PLAY_B = (255, 255, 255)
 NAME = 'Telvo'
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
@@ -40,7 +41,8 @@ def gradient(w, h, a, b, mid=None, vertical=False):
 
 
 def background(w, h):
-    return gradient(w, h, BG_TOP, BG_BOTTOM, mid=BG_MID, vertical=True)
+    """Lila Kachel: Verlauf von oben links nach unten rechts."""
+    return gradient(w, h, TILE_A, TILE_B)
 
 
 def mark(size):
@@ -84,7 +86,7 @@ def mark(size):
 
 
 def icon(size, rounded=False, scale=0.8):
-    """App-Symbol: dunkler Verlauf mit Logo in der Mitte; abgerundet mit feinem hellem Rand (wie docs/favicon.svg)."""
+    """App-Symbol: lila Kachel mit weißem Logo in der Mitte; abgerundet mit feinem hellem Rand."""
     bg = background(size, size).convert('RGBA')
     m = mark(int(size * scale))
     off = (size - m.width) // 2
@@ -153,18 +155,22 @@ fg.alpha_composite(m, (202, 202))
 fg.save(p('assets', 'icon-foreground.png'))
 background(1024, 1024).save(p('assets', 'icon-background.png'))
 
-# Startbildschirm: Logo und darunter „Telvo Player“ (Outfit). Dieselben Maße nutzt www/index.html (#boot) als SVG –
-# bei Änderungen dort mitändern, sonst springt das Bild beim Übergang zur App.
-sp = Image.new('RGBA', (2732, 2732), (11, 10, 26, 255))
-sm = mark(440)
-sp.alpha_composite(sm, ((2732 - 440) // 2, (2732 - 440) // 2 - 110))
+# Startbildschirm: lila Kachel mit Logo und darunter „Telvo Player“ (Outfit) auf dem Hintergrund der App.
+# Dieselben Maße nutzt www/index.html (#boot) als SVG – bei Änderungen dort mitändern, sonst springt das Bild beim Übergang zur App.
+sp = Image.new('RGBA', (2732, 2732), APP_BG + (255,))
+halo = Image.new('L', (2732, 2732), 0)
+ImageDraw.Draw(halo).ellipse([1366 - 620, 1216 - 620, 1366 + 620, 1216 + 620], fill=70)
+halo = halo.filter(ImageFilter.GaussianBlur(220))
+sp.paste(Image.new('RGBA', (2732, 2732), (139, 92, 246, 255)), (0, 0), halo)
+sm = icon(440, rounded=True)
+sp.alpha_composite(sm, ((2732 - 440) // 2, (2732 - 440) // 2 - 150))
 sd = ImageDraw.Draw(sp)
 f_b, f_r = brand_font(150), brand_font(150, bold=False)
 w_b = sd.textlength(NAME + ' ', font=f_b)
 w_r = sd.textlength('Player', font=f_r)
 sx = (2732 - (w_b + w_r)) / 2
 sd.text((sx, 1366 + 260), NAME + ' ', font=f_b, fill=(244, 244, 246), anchor='ls')
-sd.text((sx + w_b, 1366 + 260), 'Player', font=f_r, fill=(201, 184, 251), anchor='ls')
+sd.text((sx + w_b, 1366 + 260), 'Player', font=f_r, fill=(214, 200, 255), anchor='ls')
 sp.convert('RGB').save(p('assets', 'splash.png'))
 sp.convert('RGB').save(p('assets', 'splash-dark.png'))
 
@@ -175,11 +181,8 @@ sp.convert('RGB').save(p('assets', 'splash-dark.png'))
 # Logo und Schriftzug als Gruppe waagerecht mittig, damit beim Zuschneiden (abgerundete Ecken, Zoom) nichts fehlt.
 S = 4
 W, H = 640, 360
-ban = gradient(W * S, H * S, (64, 34, 140), (34, 18, 78), vertical=False).convert('RGBA')
-glow = Image.new('L', (W * S, H * S), 0)
-ImageDraw.Draw(glow).ellipse([int(-W * .1) * S, int(-H * .6) * S, int(W * 1.1) * S, int(H * .9) * S], fill=120)
-glow = glow.filter(ImageFilter.GaussianBlur(60 * S))
-ban.paste(Image.new('RGBA', (W * S, H * S), (150, 96, 255, 255)), (0, 0), glow)
+# Seit 1.15.10: derselbe lila Verlauf wie die Kachel, eine Spur kräftiger, damit die weiße Schrift gut lesbar bleibt.
+ban = gradient(W * S, H * S, (150, 116, 248), (96, 50, 224), vertical=False).convert('RGBA')
 bm = mark(int(H * 0.46) * S)
 f_name, f_sub = brand_font(92 * S), brand_font(56 * S, bold=False)
 dr = ImageDraw.Draw(ban)
@@ -189,7 +192,7 @@ x0 = int((W * S - (bm.width + gap + text_w)) / 2)
 ban.alpha_composite(bm, (x0, (H * S - bm.height) // 2))
 tx = x0 + bm.width + gap
 dr.text((tx, int(H * 0.54) * S), NAME, font=f_name, fill=(255, 255, 255), anchor='ls')
-dr.text((tx + 4 * S, int(H * 0.59) * S), 'Player', font=f_sub, fill=(226, 214, 255), anchor='lt')
+dr.text((tx + 4 * S, int(H * 0.59) * S), 'Player', font=f_sub, fill=(240, 233, 255), anchor='lt')
 ban.resize((W, H), Image.LANCZOS).convert('RGB').save(p('assets', 'banner.png'))
 
 # Samsung (512x423), LG (80x80, 130x130), Webseite/App (192x192)

@@ -710,7 +710,7 @@
       D.Store.set(M.key('series'), { stamp: stamp, m: { 'netflix:1': { kind: 'series', id: 's', name: 'S' } } });
       var it = D.top10Hero(8);
       eq(it.map(function (x) { return x.kind[0] + ':' + x.id; }), ['m:a', 's:s', 'm:c'], 'nach Platz, Film und Serie im Wechsel, ohne Doppelte');
-      eq(it[2]._t10, 'Netflix · Top 10 · #3', 'Schild mit Dienst und Platz');
+      eq(it[2]._t10, 'Netflix · Top 10 · Platz 3', 'Schild mit Dienst und Platz');
       eq(D.top10Hero(2).length, 2, 'Obergrenze');
       ok(!M.item('movie', 'netflix', 1)._t10, 'gespeicherter Treffer bleibt unverändert');
     } finally {
