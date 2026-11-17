@@ -96,4 +96,28 @@
       });
     });
   });
+
+  t(G, 'Nur noch dunkel: eine früher gespeicherte helle Einstellung macht die App nicht mehr hell; „Farben“ steht nicht mehr in den Einstellungen', function () {
+    var keep = D.Settings.get('theme'), root = document.documentElement;
+    try {
+      D.Settings.set('theme', 'light'); D.Theme.apply();
+      eq(root.getAttribute('data-theme'), 'dark', 'hell gespeichert → trotzdem dunkel');
+      D.Settings.set('theme', 'auto'); D.Theme.apply();
+      eq(root.getAttribute('data-theme'), 'dark', 'automatisch gespeichert → dunkel');
+    } finally { D.Settings.set('theme', keep || null); D.Theme.apply(); }
+    return withShell(function () {
+      D.Shell.show('settings');
+      return new Promise(function (r) { setTimeout(r, 60); }).then(function () {
+        // Jeden Bereich der Einstellungen einmal öffnen und alle Beschriftungen einsammeln
+        var labels = [], secs = D.Shell.view.querySelectorAll('.st-sec');
+        function collect() { Array.prototype.forEach.call(D.Shell.view.querySelectorAll('.st-row .st-txt b'), function (e) { labels.push(e.textContent); }); }
+        collect();
+        Array.prototype.forEach.call(secs, function (b) { b.click(); collect(); });
+        ok(secs.length >= 7, 'Bereiche der Einstellungen sind da: ' + secs.length);
+        ok(labels.indexOf('Sprache') >= 0, 'bekannte Kachel gefunden (Sprache)');
+        ok(labels.indexOf('Farben') < 0, 'keine Kachel „Farben“');
+        ok(labels.indexOf('Wetter neben der Uhr') < 0, 'keine Kachel „Wetter neben der Uhr“');
+      });
+    });
+  });
 })();

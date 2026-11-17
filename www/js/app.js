@@ -546,8 +546,9 @@
   var Theme = {
     media: window.matchMedia ? window.matchMedia('(prefers-color-scheme: light)') : null,
     apply: function () {
-      var mode = Settings.get('theme') || 'dark';
-      var light = mode === 'light' || (mode === 'auto' && !Platform.tv && !!(this.media && this.media.matches));
+      // Seit 1.15.10 gibt es nur noch das dunkle, lila Aussehen (Erays Entscheidung 16.11.2026).
+      // Eine früher gespeicherte Wahl „Hell“ oder „Automatisch“ bleibt gespeichert, wirkt aber nicht mehr.
+      var light = false;
       var root = document.documentElement;
       root.setAttribute('data-theme', light ? 'light' : 'dark');
       root.setAttribute('data-poster', Settings.get('posterSize') || 'm');
@@ -565,7 +566,7 @@
         vars.forEach(function (k) { root.style.removeProperty(k); });
       }
       var meta = document.querySelector('meta[name="theme-color"]');
-      if (meta) meta.setAttribute('content', light ? '#f5f5f7' : '#0b0b0f');
+      if (meta) meta.setAttribute('content', '#15141f');
       Fx.set(se ? se.fx : null);
     },
     watch: function () {
@@ -7526,7 +7527,7 @@
       { id: 'profile', ic: 'profile', c: 'violet', name: T('Profil'), hint: T('Deine aktive Playlist und wie lange sie noch läuft.'), body: grid([tProfile, tPl]) },
       { id: 'general', ic: 'home', c: 'violet', name: T('Allgemein'), hint: T('Grundlegende Einstellungen für dein Telvo-Erlebnis.'), body: grid([tLang, tClock, tStart, tUpdChk]) },
       { id: 'play', ic: 'play', c: 'blue', name: T('Wiedergabe'), hint: T('Player, Bildqualität, Untertitel und Vorschau.'), body: grid([tEng, tQual, tSound, tSub, tNext, tPrev, tHero]) },
-      { id: 'look', ic: 'sun', c: 'amber', name: T('Darstellung'), hint: T('Farben, Cover, Wetter und Bildschirmschoner.'), body: grid([tTheme, tPoster, tSaver, tSaverTips]) },
+      { id: 'look', ic: 'sun', c: 'amber', name: T('Darstellung'), hint: T('Cover und Bildschirmschoner.'), body: grid([tPoster, tSaver, tSaverTips]) },
       { id: 'content', ic: 'series', c: 'teal', name: T('Inhalte & Listen'), hint: T('Playlists, Kategorien und Sender.'), body: grid([tAdd, tPl, tUpd, tAuto, tSort, tHideL, tHideM, tHideS, tHideCh]) },
       { id: 'users', ic: 'lock', c: 'pink', name: T('Benutzer & Sicherheit'), hint: T('Wer schaut, Kindersicherung und Verlauf.'), body: grid([tPersons, tPar, tHis]) },
       { id: 'devices', ic: 'device', c: 'slate', name: T('Geräte & Verbindungen'), hint: T('Gerätetyp, Verbindung, Sicherung und externe Player.'), body: grid([tDev, tSpeed, tBackup, tExt]) },

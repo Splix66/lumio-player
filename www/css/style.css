@@ -3655,6 +3655,13 @@ body.kbd .hm-arrow.f:focus, body.is-tv .hm-arrow.f:focus { position: absolute; }
 /* Hintergrund: auf jeder Seite derselbe wie auf der Startseite */
 .screen { background: var(--app-bg); }
 .screen.modal { background: transparent; }
+/* Seiten, die früher einen eigenen Farbverlauf hatten (Start, Live TV, TV-Programm, Einstellungen), zeigen jetzt den gemeinsamen */
+:root[data-theme="dark"] .shell.is-launcher, :root[data-theme="dark"] .section-live, :root[data-theme="dark"] .guide, :root[data-theme="dark"] .st2 { background: none; }
+/* Seitenleisten liegen direkt auf dem Hintergrund (vorher eigene dunkle Fläche) */
+.mv-side { background: transparent; }
+/* Leisten, unter denen Inhalt durchläuft, decken mit demselben Verlauf ab – so bleibt keine Kante sichtbar */
+.chipbar-wrap { background: var(--app-bg); background-attachment: fixed; }
+body.lite .chipbar-wrap { background: var(--bg); }
 
 /* ---------- Leiste oben ---------- */
 .topnav.nb {
