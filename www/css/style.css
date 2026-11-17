@@ -3652,6 +3652,9 @@ body.kbd .hm-arrow.f:focus, body.is-tv .hm-arrow.f:focus { position: absolute; }
   --ring: 0 0 0 .18rem rgba(192, 132, 252, .8), 0 0 1.5rem rgba(168, 85, 247, .55);
   --font-menu: "Bricolage Grotesque", var(--font);
 }
+/* Logo-Zeichen: T und Play-Zeichen weiß (Erays Wahl „Logo 1“; die lila Kachel dazu gibt es als App-Symbol und im Startbild) */
+.brand-mark { color: #fff; }
+.brand-mark .play { fill: #fff; }
 /* Hintergrund: auf jeder Seite derselbe wie auf der Startseite */
 .screen { background: var(--app-bg); }
 .screen.modal { background: transparent; }
@@ -3670,8 +3673,7 @@ body.lite .chipbar-wrap { background: var(--bg); }
 }
 .nb-left { display: flex; align-items: center; min-width: 0; }
 .nb-left > * + * { margin-left: 1.1rem; }
-.nb-left .brand-mark { width: 2.1rem; height: 2.1rem; color: #fff; }
-.nb-left .brand-mark .play { fill: #fff; }
+.nb-left .brand-mark { width: 2.1rem; height: 2.1rem; }
 .nb-clock { position: relative; flex: none; font-family: var(--font-menu); line-height: 1; white-space: nowrap; }
 .nb-time { font-size: 1.45rem; font-weight: 700; letter-spacing: -.01em; color: #fff; font-variant-numeric: tabular-nums; }
 /* Datum nur auf der Startseite – klein unter der Uhr, damit die Statuszeichen nie zur Seite rücken */
