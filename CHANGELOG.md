@@ -1,8 +1,8 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
-## 1.15.10 – noch nicht veröffentlicht
+## 1.15.10 – 2026-11-17 · Neues Aussehen
 
-**Neues Aussehen, Teil 1 „Gerüst“** (Erays Auftrag vom 17.11.2026, Entwürfe im Chat abgenommen; Plan in brain: „Telvo – Plan Neues Aussehen v1“). Teil 2 (einzelne Seiten) und Teil 3 (Android: Vorschau wird ohne Neustart groß) folgen.
+**Neues Aussehen, Teil 1 „Gerüst“** (Erays Auftrag vom 17.11.2026, Entwürfe im Chat abgenommen; Plan in brain: „Telvo – Plan Neues Aussehen v1“).
 
 - **Leiste oben neu, auf jeder Seite gleich:** links das Logo-Zeichen, die Uhr (Datum nur auf der Startseite, klein darunter) und drei Statuszeichen ohne Text – Internet, Playlist, Player. Grün = in Ordnung, Gelb = Internet langsam, Orange = Playlist läuft in höchstens einer Woche ab, Rot = aus oder abgelaufen (dann anwählbar, OK zeigt den Grund). In der Mitte Start, Live TV, Filme, Serien, Favoriten nur als Text. Rechts Suche, Aktualisieren, Einstellungen.
 - **Kein Balken unten mehr** – mehr Platz für den Inhalt. Die Uhr steht jetzt oben.
@@ -20,7 +20,7 @@
 - **Schwache Geräte (Sparmodus):** dieselbe Leiste ohne Unschärfe-Effekt.
 - Technik: neue Tests in `tests/aussehen.test.js` (11 Tests: Symbole, Leiste, Statuszeichen, Steuerung, nur dunkel, Lade-Kacheln, Aktualisieren mit Fehlerfällen und Seitenwechsel).
 
-**Neues Aussehen, Teil 2 „Seiten“** (Erays Auftrag vom 17.11.2026: „Mach 1“, nach den abgenommenen Entwürfen). Teil 3 (Android: Vorschau wird ohne Neustart groß, kleines laufendes Bild bei Live TV auf dem Handy, Bedienleiste des TV-Players) folgt.
+**Neues Aussehen, Teil 2 „Seiten“** (Erays Auftrag vom 17.11.2026: „Mach 1“, nach den abgenommenen Entwürfen).
 
 - **Startseite neu: oben ein Vorschlag, darunter nur Reihen.** Der Vorschlag (Top-10-Titel aus deiner Playlist) steht ohne Rahmen oben, das Bild liegt rechts dahinter; Knöpfe „Jetzt ansehen“ und „Details“, keine Pfeile mehr. Darunter „Weiterschauen“ (eine Reihe, höchstens 10 Kacheln, kein „Alle anzeigen“), „Top 10 Filme“ und „Top 10 Serien“ – je bis zu 10 Plätze, nur Titel aus der Playlist mit echtem Platz, rechts der Hinweis „Netflix · Deutschland · … · 8 von 10 in deiner Playlist“. Eine Reihe ohne Treffer entfällt.
 - **Beim Laden stehen Platzhalter** in derselben Form. Die drei großen Kacheln Live TV / Filme / Serien gibt es nicht mehr.
@@ -42,8 +42,8 @@
 - **Handy (hoch): Bei Live TV läuft der Sender klein oben**, darunter Kategorien und Senderliste. Richtet sich nach „Vorschau bei Live TV“ (Einstellungen → Wiedergabe).
 - **Eingebauter Player:** Bedienleiste mit Glas-Knöpfen passend zum neuen Aussehen.
 - **TV-Player (Fire TV, Android-Boxen):** Bedienleiste, Info-Leiste und Menü im neuen Aussehen – lila getöntes Glas statt Schwarz, gewählter Knopf weiß mit lila Ring (dieselbe Markierung wie in der App), Schild LIVE als Glas-Schild mit rotem Punkt. Nur Farben und Formen, an der Wiedergabe selbst ist nichts geändert.
-- **Webseite: neues Logo** (lila Kachel mit weißem Zeichen) in der Kopfzeile von Startseite, Download-Seite und Verwaltung, als Symbol im Browser-Reiter, als Apple-Symbol und im Vorschaubild für geteilte Links. Wird erst mit der Veröffentlichung sichtbar (`docs/` ist die Live-Webseite auf `main`).
-- **Webseite im Aussehen der App** (Erays Auftrag 17.11.2026: „die Webseite ist noch zu dunkel im Gegensatz zur App“): derselbe lila Hintergrund auf allen Seiten (Startseite, Playlist hochladen, Download, Hilfe, Verwaltung, Rechtsseiten, 404, Download-Seite für den Fernseher), Glas-Flächen mit feinem lila Rand, lila Hauptknopf, Menü-Schrift der App, einfarbig lila statt bunter Kacheln, gewählter Menüpunkt als ruhige Glas-Fläche. Der Fernseher im Kopf der Startseite zeigt ein echtes Bild der neuen App (mit Beispieldaten) statt der gezeichneten drei Kacheln. Zwei Hinweise berichtigt, in allen 13 Sprachen: MAC-Adresse und KEY stehen auf der Willkommensseite und unter Einstellungen → Profil (den Balken unten gibt es nicht mehr). Wird erst mit der Veröffentlichung sichtbar.
+- **Webseite: neues Logo** (lila Kachel mit weißem Zeichen) in der Kopfzeile von Startseite, Download-Seite und Verwaltung, als Symbol im Browser-Reiter, als Apple-Symbol und im Vorschaubild für geteilte Links.
+- **Webseite im Aussehen der App** (Erays Auftrag 17.11.2026: „die Webseite ist noch zu dunkel im Gegensatz zur App“): derselbe lila Hintergrund auf allen Seiten (Startseite, Playlist hochladen, Download, Hilfe, Verwaltung, Rechtsseiten, 404, Download-Seite für den Fernseher), Glas-Flächen mit feinem lila Rand, lila Hauptknopf, Menü-Schrift der App, einfarbig lila statt bunter Kacheln, gewählter Menüpunkt als ruhige Glas-Fläche. Der Fernseher im Kopf der Startseite zeigt ein echtes Bild der neuen App (mit Beispieldaten) statt der gezeichneten drei Kacheln. Zwei Hinweise berichtigt, in allen 13 Sprachen: MAC-Adresse und KEY stehen auf der Willkommensseite und unter Einstellungen → Profil (den Balken unten gibt es nicht mehr).
 
 ## 1.15.9 – 2026-11-16 · Kleineres Titelbild, Top 10 auf Deutsch, Online-Zeichen
 
