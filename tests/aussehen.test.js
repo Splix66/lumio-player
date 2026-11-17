@@ -120,4 +120,88 @@
       });
     });
   });
+
+  function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+  t(G, 'Lade-Kacheln: jede Seite hat ihre eigene Form (Start, Live TV, Filme, Serien, Favoriten, Einstellungen)', function () {
+    var kinds = {};
+    ['home', 'live', 'movie', 'series', 'favs', 'settings'].forEach(function (n) {
+      var el = D.Skeleton.forView(n);
+      ok(el.classList.contains('sk-view'), n + ': Lade-Ansicht');
+      eq(el.getAttribute('aria-hidden'), 'true', n + ': für Vorleser unsichtbar');
+      ok(el.querySelectorAll('.sk').length >= 6, n + ': genug Platzhalter (' + el.querySelectorAll('.sk').length + ')');
+      ok(!el.querySelector('.f'), n + ': nichts Anwählbares');
+      kinds[n] = el.className;
+    });
+    ok(kinds.home !== kinds.live && kinds.live !== kinds.movie, 'Start, Live TV und Filme sehen verschieden aus');
+    eq(kinds.movie, kinds.series, 'Filme und Serien gleich');
+  });
+
+  t(G, 'Aktualisieren: bleibt auf derselben Seite, zeigt kurz Lade-Kacheln und ein kleines Feld mit Live TV · Filme · Serien, danach „Alles aktuell“', function () {
+    return withShell(function () {
+      D.Shell.show('movie');
+      var p = D.refreshInline();
+      ok(p && typeof p.then === 'function', 'liefert ein Versprechen');
+      ok(D.Shell.view.querySelector('.sk-view'), 'sofort Lade-Kacheln auf der Seite');
+      var card = D.Shell.el.querySelector('.rf-card');
+      ok(card, 'Feld unter dem Knopf ist da');
+      eq(card.querySelectorAll('.rf-row').length, 3, 'drei Zeilen: Live TV, Filme, Serien');
+      ok(D.Shell.reloadBtn.classList.contains('is-busy'), 'Knopf dreht sich');
+      ok(!document.querySelector('.rl-screen'), 'keine eigene Ladeseite mehr');
+      eq(D.refreshInline(), p, 'zweiter Druck startet nichts Zweites');
+      eq(D.Shell.el.querySelectorAll('.rf-card').length, 1, 'nur ein Feld');
+      var t0 = Date.now();
+      return p.then(function (res) {
+        ok(res.ok, 'hat geklappt');
+        ok(Date.now() - t0 >= 450, 'Lade-Kacheln mindestens eine halbe Sekunde sichtbar (' + (Date.now() - t0) + ' ms)');
+        ok(Date.now() - t0 < 2500, 'keine erzwungene lange Wartezeit (' + (Date.now() - t0) + ' ms)');
+        eq(D.Shell.current, 'movie', 'bleibt auf Filme (nicht zurück zur Startseite)');
+        ok(!D.Shell.view.querySelector('.sk-view'), 'Lade-Kacheln sind wieder weg');
+        ok(D.Shell.view.firstChild, 'Seite ist neu aufgebaut');
+        ok(card.classList.contains('is-done'), 'Feld meldet fertig');
+        ok(card.textContent.indexOf('Alles aktuell') >= 0, 'Text „Alles aktuell“');
+        ok(/\d/.test(card.querySelector('.rf-row.k-movie').textContent), 'Anzahl Filme steht da: ' + card.querySelector('.rf-row.k-movie').textContent);
+        ok(!D.Shell.reloadBtn.classList.contains('is-busy'), 'Knopf steht wieder');
+        return wait(1800);
+      }).then(function () {
+        ok(!D.Shell.el.querySelector('.rf-card'), 'Feld verschwindet von selbst');
+      });
+    });
+  });
+
+  t(G, 'Aktualisieren ohne Internet: Feld zeigt den Fehler, man bleibt auf der Seite, nichts hängt', function () {
+    return withShell(function () {
+      D.Shell.show('live');
+      var prov = D.App.provider, keepI = prov.items, keepC = prov.categories, keepR = prov.reset;
+      prov.items = function () { return Promise.reject(new Error('Kein Netz')); };
+      prov.categories = function () { return Promise.reject(new Error('Kein Netz')); };
+      prov.reset = function () {};
+      function back() { prov.items = keepI; prov.categories = keepC; prov.reset = keepR; }
+      return D.refreshInline().then(function (res) {
+        back();
+        ok(!res.ok, 'meldet Fehlschlag');
+        var card = D.Shell.el.querySelector('.rf-card');
+        ok(card && card.classList.contains('is-failed'), 'Feld zeigt Fehler');
+        ok(card.textContent.indexOf('nicht geklappt') >= 0, 'verständlicher Text: ' + card.textContent);
+        eq(D.Shell.current, 'live', 'bleibt auf Live TV');
+        ok(!D.Shell.view.querySelector('.sk-view'), 'Lade-Kacheln sind weg');
+        ok(!D.Shell.reloadBtn.classList.contains('is-busy'), 'Knopf steht wieder');
+        return D.refreshInline();
+      }, function (e) { back(); throw e; }).then(function (res2) {
+        ok(res2.ok, 'danach klappt ein neuer Versuch');
+      });
+    });
+  });
+
+  t(G, 'Aktualisieren und Seitenwechsel: wer währenddessen woanders hingeht, wird nicht zurückgeholt', function () {
+    return withShell(function () {
+      D.Shell.show('movie');
+      var p = D.refreshInline();
+      D.Shell.show('settings');
+      return p.then(function () {
+        eq(D.Shell.current, 'settings', 'bleibt in den Einstellungen');
+        ok(!D.Shell.view.querySelector('.sk-view'), 'keine Lade-Kacheln über den Einstellungen');
+      });
+    });
+  });
 })();

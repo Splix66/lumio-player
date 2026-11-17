@@ -3556,7 +3556,7 @@
       topSlot.hidden = cat.id !== '__all';
       var my = ++req;
       if (chunker) { chunker.dispose(); chunker = null; }
-      clear(grid).appendChild(loader());
+      clear(grid).appendChild(Skeleton.grid(14));
       title.textContent = cat.group ? T('Alle in {0}', cat.group.name) : cat.name;
       count.textContent = '';
       paintResume();
@@ -5064,59 +5064,107 @@
   /* Playlist mit einem Klick neu laden: alles frisch vom Anbieter holen und neu zählen */
   var refreshing = null, refreshingFor = null;
 
-  /* Aktualisieren mit Ladebildschirm: Der goldene Punkt fällt herunter und hüpft, das Play-Zeichen verliert
-     die Anziehung, schwebt kurz und klatscht auf den Boden – dann setzt sich das Logo wieder zusammen.
-     Darunter sieht man, was gerade geladen wird. Danach landet man immer auf dem Startbildschirm. */
-  var RL_LOGO = '<svg viewBox="0 0 100 100" aria-hidden="true">' +
-    '<g class="rl-l"><path d="M17 25H70a12 12 0 0 1 12 12M42 25v50" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/></g>' +
-    '<g class="rl-dust"><circle cx="41" cy="77.5" r="1.7"/><circle cx="58" cy="76.5" r="1.3"/><circle cx="77" cy="77.5" r="1.7"/></g>' +
-    '<g class="rl-play"><path d="M50 38.5c0-3.3 3.6-5.3 6.4-3.6l25.4 15.6c2.7 1.7 2.7 5.6 0 7.2L56.4 73.4C53.6 75.1 50 73.1 50 69.8z"/></g>' +
-    '<g class="rl-dot"><circle cx="84" cy="22" r="6"/></g></svg>';
-  var reloadingNow = false;
-  function reloadWithSplash() {
-    if (reloadingNow || !App.provider) return;
-    reloadingNow = true;
+  /* Lade-Kacheln: graue Platzhalter in der Form der Seite, die gerade lädt – man sieht sofort, was gleich kommt.
+     Jede Seite hat ihre eigene Form (Start: Titelbild + Reihen, Live TV: Kategorien · Sender · Vorschau, Filme/Serien: Kategorien + Cover). */
+  var Skeleton = {
+    many: function (cls, n) {
+      var w = h('div', { class: cls });
+      for (var i = 0; i < n; i++) w.appendChild(h('i', { class: 'sk' }));
+      return w;
+    },
+    /* Cover-Platzhalter als lose Kacheln: Sie kommen direkt ins echte Cover-Raster und stehen so genau dort, wo gleich die Cover stehen */
+    grid: function (n) {
+      var f = document.createDocumentFragment();
+      for (var i = 0; i < (n || 14); i++) f.appendChild(h('i', { class: 'sk sk-poster' }));
+      return f;
+    },
+    posters: function (n) { return h('div', { class: 'poster-grid sk-posters' }, this.grid(n)); },
+    rows: function (n) { return this.many('sk-chans', n || 8); },
+    forView: function (name) {
+      var kind = name === 'home' ? 'home' : (name === 'movie' || name === 'series') ? 'grid' : name === 'favs' ? 'favs' : (name === 'settings' || name === 'profile') ? 'list' : 'live';
+      var el = h('div', { class: 'sk-view skv-' + kind, 'aria-hidden': 'true' });
+      if (kind === 'home') {
+        el.appendChild(h('i', { class: 'sk sk-hero' }));
+        el.appendChild(this.many('sk-row', 8));
+        el.appendChild(this.many('sk-row', 8));
+      } else if (kind === 'grid') {
+        el.appendChild(this.many('sk-cats', 7));
+        el.appendChild(this.posters(14));
+      } else if (kind === 'favs') {
+        el.appendChild(this.many('sk-head', 1));
+        el.appendChild(this.posters(14));
+      } else if (kind === 'list') {
+        el.appendChild(this.many('sk-cats', 8));
+        el.appendChild(this.rows(5));
+      } else {
+        el.appendChild(this.many('sk-cats', 7));
+        el.appendChild(this.rows(8));
+        el.appendChild(h('div', { class: 'sk-prev' }, h('i', { class: 'sk sk-pic' }), h('i', { class: 'sk sk-line' }), h('i', { class: 'sk sk-line is-short' })));
+      }
+      return el;
+    }
+  };
+
+  /* Aktualisieren ohne eigene Seite (seit 1.15.10, Erays Auftrag 16.11.2026: „dauert viel zu lange“):
+     Die Seite, auf der man gerade ist, wechselt kurz auf Lade-Kacheln; unter dem Knopf zeigt ein kleines Feld,
+     was geladen wird (Live TV · Filme · Serien mit Anzahl), dann „Alles aktuell“. Danach bleibt man auf derselben Seite.
+     Vorher: eigene Ladeseite mit erzwungenen ~4,8 Sekunden und Sprung zur Startseite.
+     Keine erzwungene Wartezeit – nur mindestens eine halbe Sekunde Lade-Kacheln, damit nichts flackert. */
+  var RF_MIN_MS = 500, RF_DONE_MS = 1200, RF_FAIL_MS = 4500;
+  var reloadingNow = null;
+  function refreshInline() {
+    if (reloadingNow) return reloadingNow;
+    if (!App.provider || !Shell.el || !Shell.view) return Promise.resolve({ ok: false });
     if (Player.el) Player.close();
     if (QuickSearch.isOpen) QuickSearch.close(true);
-    var logo = h('div', { class: 'rl-logo' });
-    logo.innerHTML = RL_LOGO;
-    var title = h('h2', { class: 'rl-title' }, h('span', { class: 'rl-ok' }, icon('check')), h('span', { text: T('Playlist wird aktualisiert …') }));
-    var sub = h('p', { class: 'rl-sub', text: T('Neue Sender, Filme und Serien werden geladen.') });
-    var rows = {}, steps = h('div', { class: 'rl-steps' });
+    var name = Shell.current || 'home', start = Date.now(), btn = Shell.reloadBtn, owner = pid();
+    var rows = {}, list = h('div', { class: 'rf-rows' });
     [['live', T('Live TV')], ['movie', T('Filme')], ['series', T('Serien')]].forEach(function (k) {
-      var st = h('span', { class: 'rl-st' }, h('i', { class: 'rl-spin' }));
-      var r = h('div', { class: 'rl-step k-' + k[0] }, h('span', { class: 'rl-ic' }, icon(k[0])), h('b', { text: k[1] }), st);
+      var st = h('span', { class: 'rf-n' }, h('i', { class: 'rf-spin' }));
+      var r = h('div', { class: 'rf-row k-' + k[0] }, icon(k[0]), h('b', { text: k[1] }), st);
       rows[k[0]] = { el: r, st: st };
-      steps.appendChild(r);
+      list.appendChild(r);
     });
-    var el = h('div', { class: 'rl-screen' }, h('div', { class: 'rl-in' }, logo, title, sub, steps));
-    Screens.push('reloading', el, { onBack: function () { return true; } });
-    var start = Date.now();
-    refreshPlaylist(function (kind, ok, n) {
+    var title = h('b', { class: 'rf-title', text: T('Playlist wird aktualisiert …') });
+    var card = h('div', { class: 'rf-card', role: 'status', 'aria-live': 'polite' }, title, list);
+    $all('.rf-card', Shell.el).forEach(function (c) { if (c.parentNode) c.parentNode.removeChild(c); });
+    Shell.el.appendChild(card);
+    if (btn) btn.classList.add('is-busy');
+    // Seite auf Lade-Kacheln stellen (alte Ansicht sauber freigeben, wie beim Seitenwechsel)
+    var old = Shell.view.firstChild;
+    if (old && old._dispose) { try { old._dispose(); } catch (e) {} }
+    clear(Shell.view).appendChild(Skeleton.forView(name));
+    function away() {
+      card.classList.add('is-out');
+      setTimeout(function () { if (card.parentNode) card.parentNode.removeChild(card); }, 260);
+    }
+    var job = reloadingNow = refreshPlaylist(function (kind, ok, n) {
       var r = rows[kind];
       if (!r) return;
       clear(r.st);
       r.el.classList.add(ok ? 'is-done' : 'is-fail');
-      r.st.appendChild(icon(ok ? 'check' : 'close'));
-      r.st.appendChild(h('span', { text: ok ? fmtCount(n) : T('Fehler') }));
+      r.st.textContent = ok ? fmtCount(n) : T('Fehler');
     }).then(function (res) {
-      // Die Animation soll man mindestens einmal ganz sehen
-      setTimeout(function () {
-        el.classList.add(res.ok ? 'is-finished' : 'is-failed');
-        title.lastChild.textContent = res.ok ? T('Alles aktuell!') : T('Aktualisieren hat nicht geklappt');
-        sub.textContent = res.ok ? T('Deine Playlist ist auf dem neuesten Stand.') : ((res.error && res.error.message) || T('Bitte prüfe die Internetverbindung und versuche es noch einmal.'));
-        setTimeout(function () {
-          el.classList.add('is-out');
-          setTimeout(function () {
-            reloadingNow = false;
-            var top = Screens.top();
-            if (top && top.el === el) Screens.pop();
-            Shell.show('home', true);
-          }, 380);
-        }, res.ok ? 1400 : 3200);
-      }, Math.max(0, 3000 - (Date.now() - start)));
+      return new Promise(function (resolve) { setTimeout(function () { resolve(res); }, Math.max(0, RF_MIN_MS - (Date.now() - start))); });
+    }).then(function (res) {
+      if (reloadingNow === job) reloadingNow = null;
+      if (btn) btn.classList.remove('is-busy');
+      card.classList.add(res.ok ? 'is-done' : 'is-failed');
+      title.textContent = res.ok ? T('Alles aktuell!') : T('Aktualisieren hat nicht geklappt');
+      if (!res.ok) card.appendChild(h('p', { class: 'rf-err', text: (res.error && res.error.message) || T('Bitte prüfe die Internetverbindung und versuche es noch einmal.') }));
+      setTimeout(away, res.ok ? RF_DONE_MS : RF_FAIL_MS);
+      // Dieselbe Seite neu aufbauen – aber nur, wenn man noch dort ist (wer inzwischen woanders hinging, bleibt dort)
+      // und die Playlist noch dieselbe ist. Der Fokus bleibt auf dem Knopf, wenn er dort war.
+      if (Shell.el && Shell.view && $('.sk-view', Shell.view) && pid() === owner) {
+        var a = document.activeElement, onBar = !!(a && a.closest && a.closest('.topnav'));
+        Shell.show(Shell.current || name, false, onBar);
+      }
+      return res;
     });
+    return job;
   }
+  /* alter Name – die Aufrufer (Knopf in der Leiste, Einstellungen) bleiben unverändert */
+  function reloadWithSplash() { return refreshInline(); }
   function refreshPlaylist(onStep) {
     // Läuft gerade eine Aktualisierung für eine ANDERE Playlist, nicht auf deren Ergebnis warten
     if (refreshing && refreshingFor !== pid()) refreshing = null;
@@ -5216,7 +5264,7 @@
   function SectionView(kind) {
     var allNames = { live: T('Alle Sender'), movie: T('Alle Filme'), series: T('Alle Serien') };
     var cats = h('div', { class: 'cats' });
-    var items = h('div', { class: 'items' }, loader());
+    var items = h('div', { class: 'items' }, Skeleton.rows(8));
     var panel = kind === 'live' ? LivePanel() : null;
     var el = h('div', { class: 'section section-' + kind + ' k-' + kind + ' no-head' },
       h('div', { class: 'section-body' }, cats, items, panel ? panel.el : null));
@@ -5355,7 +5403,7 @@
       markActive();
       var my = ++req;
       if (chunker) { chunker.dispose(); chunker = null; }
-      clear(items).appendChild(loader());
+      clear(items).appendChild(Skeleton.rows(8));
       Shell.setCount(kind, '');
       (cat.local ? Promise.resolve(cat.local()) : cat.load ? cat.load() : cat.id === '__all' ? visibleItems(kind, App.provider.items(kind, cat.id)) : App.provider.items(kind, cat.id)).then(function (list) {
         if (my !== req) return;
@@ -10146,7 +10194,7 @@
     decodeBytes: decodeBytes, readText: readText, fetchText: fetchText, sameConnection: sameConnection, NativePlayer: NativePlayer, App: App, ensureTs: ensureTs, migrateM3uIds: migrateM3uIds,
     ErrLog: ErrLog, techInfo: techInfo, epgText: epgText, ChanCount: ChanCount, Top10: Top10, Top10Match: Top10Match, Lang: Lang, top10Tile: top10Tile, top10Hero: top10Hero, HERO_EVERY: HERO_EVERY, t10Key: t10Key, clearHistory: clearHistory, startView: startView, startTab: startTab,
     CatPrefs: CatPrefs, visibleCats: visibleCats, Parental: Parental, ChanHide: ChanHide, initials: initials, statusError: statusError, isVisible: isVisible,
-    Backup: Backup, profileFp: profileFp, Settings: Settings, Shell: Shell, StatusLine: StatusLine, Theme: Theme,
+    Backup: Backup, profileFp: profileFp, Settings: Settings, Shell: Shell, StatusLine: StatusLine, Theme: Theme, Skeleton: Skeleton, refreshInline: refreshInline,
     Seen: Seen, Resume: Resume, UpNext: UpNext, SeriesWatch: SeriesWatch, sortVod: sortVod,
     Reminders: Reminders, NumEntry: NumEntry, Sleep: Sleep, Later: Later, Saver: Saver, trailerQuery: trailerQuery, Persons: Persons, Favs: Favs, Recent: Recent, showGuide: showGuide, Player: Player, Dialog: Dialog,
     config: CONFIG
