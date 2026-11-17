@@ -2832,6 +2832,11 @@
       if ((dir === 'left' || dir === 'right') && cur.closest && !cur.closest('.topnav')) {
         list = list.filter(function (el) { return !(el.closest && el.closest('.topnav')); });
       }
+      // … und umgekehrt: Links/Rechts in der Leiste bleibt in der Leiste (in den Inhalt nur mit Runter).
+      // Seit 1.15.10 steht links vom ersten Reiter nichts Anwählbares mehr – ohne diese Regel sprang „Links“ schräg nach unten in die Seite.
+      if ((dir === 'left' || dir === 'right') && cur.closest && cur.closest('.topnav')) {
+        list = list.filter(function (el) { return !!(el.closest && el.closest('.topnav')); });
+      }
       // Filme/Serien: von den Kategorien links geht es mit Rechts direkt zu den Covern (nicht hoch zur Top 10)
       if (dir === 'right' && cur.closest && cur.closest('.mv-side')) {
         var inMain = list.filter(function (el) { return el.closest && el.closest('.mv-main'); });
@@ -3702,6 +3707,7 @@
     el: function (cls) {
       var self = this, box = h('div', { class: cls || 'sb-status', role: 'status', 'aria-live': 'polite' });
       box._chips = cls === 'ln-status';
+      box._icons = cls === 'nb-status';   // Leiste oben: nur Symbole, feste Reihenfolge Internet · Playlist · Player
       self.boxes.push(box); self.paintBox(box);
       if (!self.timer) self.timer = setInterval(function () { self.paint(); }, 5000);
       if (!self.wired) {
@@ -3722,9 +3728,15 @@
       if (sig === box._sig) return;
       var hadFocus = box.contains(document.activeElement);
       box._sig = sig; clear(box);
+      if (box._icons) items = [items[0], items[2], items[1]];
       items.forEach(function (it) {
         var bad = it[0] === 'warn' || it[0] === 'off', c;
-        if (box._chips) {
+        if (box._icons) {
+          // Symbol zeigt den Zustand über Farbe und Form; bei einem Problem ist es ein Knopf (OK zeigt den Grund)
+          var ic = it[3] === 'net' ? (it[0] === 'off' ? 'wifiOff' : it[0] === 'warn' ? 'wifiLow' : 'wifi') : it[3] === 'playlist' ? 'playlist' : 'tvplay';
+          c = h(bad ? 'button' : 'span', { class: 'nb-st is-' + it[0] + ' k-' + it[3] + (bad ? ' f' : ''), 'data-key': it[3], title: it[2], 'aria-label': it[2], role: bad ? null : 'img',
+            onclick: bad ? function () { showStatusInfo(it); } : null }, icon(ic));
+        } else if (box._chips) {
           // Problem: als Knopf – OK/Tippen zeigt Grund und Zahlen (auch auf dem Fernseher ohne Maus)
           c = h(bad ? 'button' : 'span', { class: 'ln-chip is-' + it[0] + (bad ? ' f' : ''), onclick: bad ? function () { showStatusInfo(it); } : null },
             h('i', { 'aria-hidden': 'true' }), icon(it[1]), h('span', { text: it[2] }));
@@ -4123,53 +4135,37 @@
       var self = this;
       self.buttons = {}; self.current = null;
       self.view = h('div', { class: 'view' });
-      var tabs = h('nav', { class: 'main-tabs', 'aria-label': T('Hauptmenü') });
-      // Mitte: Start (Haus) · Live TV · Filme · Serien · Favoriten (Herz) – der gewählte Reiter leuchtet in seiner Farbe
+      /* Leiste oben (neues Aussehen, 1.15.10) – auf jeder Seite gleich:
+         links Logo-Zeichen, Uhr (Datum nur auf der Startseite) und drei Statuszeichen ohne Text,
+         Mitte die fünf Reiter nur als Text, rechts Suche · Aktualisieren · Einstellungen.
+         Kein Schriftzug, kein Profil-Knopf (Profil steht in den Einstellungen), kein Balken unten.
+         Die frühere gleitende Leuchtfläche der Reiter gibt es nicht mehr: Sie sprang auf den gewählten Reiter zurück,
+         sobald man nach rechts zu den Knöpfen ging – das sah aus wie eine zweite Markierung (Erays Meldung 16.11.2026). */
+      var tabs = h('nav', { class: 'nb-tabs', 'aria-label': T('Hauptmenü') });
       [['home', T('Start'), 'home'], ['live', T('Live TV'), 'live'], ['movie', T('Filme'), 'movie'], ['series', T('Serien'), 'series'], ['favs', T('Favoriten'), 'heart']].forEach(function (it) {
-        var round = it[0] === 'home' || it[0] === 'favs';
-        var b = h('button', { class: 'tab f k-' + it[0] + (round ? ' tab-round' : '') + (it[0] === 'home' ? ' tab-home' : ''), 'data-tab': it[0], title: it[1], 'aria-label': it[1], onclick: function () { self.show(it[0], true); } },
-          icon(it[2]), h('span', { class: 'tab-label', text: it[1] }));
+        var b = h('button', { class: 'ntab f k-' + it[0] + (it[0] === 'home' ? ' tab-home' : ''), 'data-tab': it[0], title: it[1], 'aria-label': it[1], onclick: function () { self.show(it[0], true); } },
+          icon(it[2]), h('span', { class: 'ntab-label', 'data-t': it[1], text: it[1] }));
         self.buttons[it[0]] = b;
         tabs.appendChild(b);
       });
-      // Gleitende Leuchtfläche: wandert beim Wechseln mit der Fernbedienung weich von Reiter zu Reiter (links/rechts)
-      // und nimmt die Farbe des Reiters an. Ohne Fokus im Menü sitzt sie auf dem gewählten Reiter.
-      self.glider = h('span', { class: 'tab-glider is-gone', 'aria-hidden': 'true' });
-      tabs.insertBefore(self.glider, tabs.firstChild);
       self.tabsEl = tabs;
-      // Die drei Reiter reagieren sichtbar aufeinander: der Nachbar des gerade gewählten hebt sich leicht mit
-      tabs.addEventListener('focusin', function (e) { self.hint(e.target && e.target._tabKey); self.glide(e.target, true); });
-      tabs.addEventListener('focusout', function (e) {
-        if (!e.relatedTarget || !tabs.contains(e.relatedTarget)) { self.hint(null); self.glide(null, false); }
-      });
-      tabs.addEventListener('mouseleave', function () { if (!tabs.contains(document.activeElement)) self.hint(null); });
-      window.addEventListener('resize', function () { self.glide(); });
-      try { document.fonts.ready.then(function () { self.glide(); }); } catch (e) {}
-      ['live', 'movie', 'series'].forEach(function (k) {
-        self.buttons[k]._tabKey = k;
-        self.buttons[k].addEventListener('mouseenter', function () { self.hint(k); });
-      });
-      var reloadTop = h('button', { class: 'icon-btn f', title: T('Playlist aktualisieren'), 'aria-label': T('Playlist aktualisieren'), onclick: reloadWithSplash }, icon('refresh'));
+      var reloadTop = h('button', { class: 'nbtn f', title: T('Playlist aktualisieren'), 'aria-label': T('Playlist aktualisieren'), onclick: reloadWithSplash }, icon('refresh'));
+      self.reloadBtn = reloadTop;
       function tool(name, label, ic) {
-        var b = h('button', { class: 'icon-btn f', title: label, 'aria-label': label, onclick: function () { self.show(name, true); } }, icon(ic || name));
+        var b = h('button', { class: 'nbtn f', title: label, 'aria-label': label, onclick: function () { self.show(name, true); } }, icon(ic || name));
         self.buttons[name] = b;
         return b;
       }
-      var searchBtn = h('button', { class: 'icon-btn f', title: T('Suche'), 'aria-label': T('Suche'), onclick: function () { QuickSearch.toggle(); } }, icon('search'));
-      var head = h('header', { class: 'topnav' },
-        h('div', { class: 'nav-left' }, h('div', { class: 'brand brand-sm' }, brandMark(), wordmark())),
+      var searchBtn = h('button', { class: 'nbtn f', title: T('Suche'), 'aria-label': T('Suche'), onclick: function () { QuickSearch.toggle(); } }, icon('search'));
+      self.clockEl = h('div', { class: 'nb-clock' }, h('b', { class: 'nb-time' }), h('span', { class: 'nb-date' }));
+      var head = h('header', { class: 'topnav nb' },
+        h('div', { class: 'nb-left' }, brandMark(), self.clockEl, StatusLine.el('nb-status')),
         tabs,
-        h('div', { class: 'top-tools' }, searchBtn, reloadTop, tool('settings', T('Einstellungen')), tool('profile', T('Profil'))));
-      var runTime = h('div', { class: 'mac-tag sb-days' });
-      App.provider.account().then(function (a) {
-        if (!a || a.expires === undefined) return;
-        var d = a.expires ? Math.ceil((Number(a.expires) * 1000 - Date.now()) / 86400000) : null;
-        var txt = d === null ? T('unbegrenzt') : d <= 0 ? T('abgelaufen') : d === 1 ? T('1 Tag') : T('{0} Tage', d);
-        runTime.appendChild(h('span', { text: T('Laufzeit') }));
-        runTime.appendChild(h('b', { text: txt }));
-        if (d !== null && d <= 30) runTime.classList.add(d <= 0 ? 'is-expired' : 'is-warn');
-      }).catch(function () {});
-      self.el = h('div', { class: 'shell' }, head, h('main', { class: 'content' }, self.view), h('footer', { class: 'statusbar' }, macTag(profileUser(App.profile), true, profileUserLabel(App.profile)), StatusLine.el(), runTime, h('span', { class: 'sb-clock' })));
+        h('div', { class: 'nb-tools' }, searchBtn, reloadTop, tool('settings', T('Einstellungen'))));
+      self.el = h('div', { class: 'shell' }, head, h('main', { class: 'content' }, self.view));
+      self.tick();
+      clearInterval(self.clockTimer);
+      self.clockTimer = setInterval(function () { self.tick(); }, 20000);
       QuickSearch.build(self.el, searchBtn);
       Screens.reset('shell', self.el, {
         // Beim Verlassen (Playlist-Wechsel, Zurücksetzen) die offene Ansicht aufräumen –
@@ -4186,8 +4182,7 @@
           return false;
         },
         onShow: function () {
-          // Leuchtfläche neu setzen: beim Aufbau lag z. B. „Wer schaut?“ darüber (Menü unsichtbar → keine Maße)
-          setTimeout(function () { if (!(self.tabsEl && self.tabsEl.contains(document.activeElement))) self.glide(); }, 50);
+          self.tick();
           var v = self.view.firstChild;
           if (v && v._refresh) v._refresh();
           else if (self.current === 'home') self.show('home', false, true);
@@ -4212,16 +4207,14 @@
       // (außer bei Bild-in-Bild: das läuft absichtlich überall weiter)
       if ((name === 'movie' || name === 'series' || name === 'home') && Player.mini && !Player.pip) Player.close();
       if (QuickSearch.isOpen) QuickSearch.close(true);
-      // Startbildschirm ohne Menüleiste – er ist selbst das Menü
+      // Startseite: das Datum steht nur hier neben der Uhr (per Klasse)
       self.el.classList.toggle('is-launcher', name === 'home');
       Object.keys(self.buttons).forEach(function (k) {
         self.buttons[k].classList.toggle('is-on', k === name);
         if (k !== name) self.setCount(k, '');
       });
-      self.hint(null);
-      // Leuchtfläche zum neuen Reiter (gleich und noch einmal nach dem Aufbau – dann stimmen die Maße sicher)
-      setTimeout(function () { var a = document.activeElement; self.glide(self.tabsEl && self.tabsEl.contains(a) ? a : null, !!(self.tabsEl && self.tabsEl.contains(a))); }, 0);
-      setTimeout(function () { if (!(self.tabsEl && self.tabsEl.contains(document.activeElement))) self.glide(); }, 400);
+      // Einstellungen und Profil gehören zusammen: der Knopf „Einstellungen“ bleibt auch im Profil gewählt
+      if (name === 'profile' && self.buttons.settings) self.buttons.settings.classList.add('is-on');
       self.viewBack = null;
       // alte Ansicht aufräumen (lange Listen sofort freigeben – wichtig für Boxen mit wenig Speicher)
       var old = self.view.firstChild;
@@ -4231,7 +4224,7 @@
       if (name === 'movie' || name === 'series') NewMark.mark(name);
       if (name === 'home') view = LauncherView(prev);
       else if (name === 'settings') view = SettingsView();
-      else if (name === 'profile') view = ProfileView();
+      else if (name === 'profile') { view = ProfileView(); self.viewBack = function () { self.show('settings', true); return true; }; }
       else if (name === 'favs') view = FavoritesView();
       else if (name === 'movie' || name === 'series') view = MediaView(name);
       else view = SectionView(name);
@@ -4249,31 +4242,14 @@
       var n = $('.tab-n', b);
       if (n) n.textContent = txt || '';
     },
-    /* Nachbar-Reiter hebt sich leicht mit, damit man beim Wandern nach links/rechts sieht, wo man ist */
-    hint: function (key) {
-      var self = this, order = ['live', 'movie', 'series'], i = key ? order.indexOf(key) : -1;
-      order.forEach(function (k, j) {
-        var b = self.buttons[k];
-        if (!b) return;
-        b.classList.toggle('is-near', i >= 0 && Math.abs(i - j) === 1);
-        b.classList.toggle('is-hint', i === j);
-      });
-    },
-    // Leuchtfläche auf Reiter „b“ setzen (ohne: der gewählte Reiter). focused = Fokus der Fernbedienung (hell)
-    glide: function (b, focused) {
-      var g = this.glider, tabs = this.tabsEl;
-      if (!g || !tabs) return;
-      if (!b || !b.classList || !b.classList.contains('tab')) { b = $('.tab.is-on', tabs); focused = false; }
-      if (!b || !b.offsetWidth) { g.classList.add('is-gone'); return; }
-      g.style.width = b.offsetWidth + 'px';
-      g.style.height = b.offsetHeight + 'px';
-      g.style.transform = 'translate(' + b.offsetLeft + 'px, ' + b.offsetTop + 'px)';
-      g.style.setProperty('--gcr', (getComputedStyle(b).getPropertyValue('--cr') || '').trim() || '167, 139, 250');
-      g.classList.toggle('is-focus', !!focused);
-      g.classList.remove('is-gone');
+    /* Uhr in der Leiste – auf jeder Seite; das Datum daneben zeigt nur die Startseite (CSS, Klasse is-launcher) */
+    tick: function () {
+      var c = this.clockEl, d = new Date();
+      if (!c) return;
+      c.firstChild.textContent = clockStr(d);
+      c.lastChild.textContent = d.toLocaleDateString(locale(), { weekday: 'short', day: '2-digit', month: 'short' });
     }
   };
-
   var INPUT = { mode: 'key' };
 
   /* Aufklappmenüs direkt an einem Knopf (z. B. Sortieren): nur eines ist offen; Zurück, Klick oder Fokus daneben schließt es */
@@ -4798,17 +4774,8 @@
       disposers.push(function () { clearTimeout(pickT); });
     }
 
-    // Uhr und Datum unten rechts (in der Fußleiste)
-    function tick() {
-      var c = $('.sb-clock'), d = new Date();
-      if (!c) return;
-      clear(c);
-      c.appendChild(h('span', { class: 'sky-slot' }, Sky.el()));
-      c.appendChild(h('b', { text: clockStr(d) }));
-      c.appendChild(h('span', { class: 'sb-date' },
-        h('i', { text: d.toLocaleDateString(locale(), { weekday: 'long' }) }),
-        h('small', { text: d.toLocaleDateString(locale(), { day: '2-digit', month: 'short' }) })));
-    }
+    // Die Uhr läuft seit 1.15.10 in der Leiste oben (Shell.tick) – hier nur noch die Hintergrund-Prüfungen
+    function tick() { Shell.tick(); }
     setTimeout(tick, 0);
     // alle 20 Sekunden: Uhr aktualisieren, veraltete Listen nachladen (Box bleibt oft tagelang an)
     var timer = setInterval(function () { tick(); autoCheck(); }, 20000);
@@ -7477,6 +7444,8 @@
     });
     var tErrRep = switchTile('info', T('Fehlerberichte senden'), T('Hilft, Fehler schnell zu beheben – ohne Links, Namen oder Passwörter'),
       function () { return Settings.get('errReport') !== false; }, function (v) { Settings.set('errReport', v); if (v) ErrReport.soon(5000); });
+    // Profil: der frühere Knopf oben rechts ist seit 1.15.10 hier (Mein Zugang, Benutzer, Dieses Gerät)
+    var tProfile = tile('profile', T('Mein Zugang'), function () { return App.profile ? App.profile.name : ''; }, function () { Shell.show('profile', true); });
     var tHelp = tile('help', T('Hilfe'), T('Antworten auf häufige Fragen'), showWelcomeHelp);
     var tPersons = tile('users', T('Benutzer'), function () { var l = Persons.list(); return l.length > 1 ? T('{0} Benutzer', l.length) + ' · ' + Persons.cur().name : T('Nur ein Benutzer'); }, function () { showPersons(paint); });
     var tPrev = switchTile('pip', T('Vorschau bei Live TV'), T('Beim Öffnen läuft der letzte Sender klein rechts'),
@@ -7554,9 +7523,10 @@
     function grid(list) { return function () { var g = h('div', { class: 'st-list' }); list.filter(Boolean).forEach(function (t) { g.appendChild(t); }); return g; }; }
     // Acht Bereiche wie im Entwurf vom 10.11.2026 – nur Einstellungen, die es wirklich gibt
     var el = sidePage('settings st-page', T('Einstellungen'), 'settings', [
+      { id: 'profile', ic: 'profile', c: 'violet', name: T('Profil'), hint: T('Deine aktive Playlist und wie lange sie noch läuft.'), body: grid([tProfile, tPl]) },
       { id: 'general', ic: 'home', c: 'violet', name: T('Allgemein'), hint: T('Grundlegende Einstellungen für dein Telvo-Erlebnis.'), body: grid([tLang, tClock, tStart, tUpdChk]) },
       { id: 'play', ic: 'play', c: 'blue', name: T('Wiedergabe'), hint: T('Player, Bildqualität, Untertitel und Vorschau.'), body: grid([tEng, tQual, tSound, tSub, tNext, tPrev, tHero]) },
-      { id: 'look', ic: 'sun', c: 'amber', name: T('Darstellung'), hint: T('Farben, Cover, Wetter und Bildschirmschoner.'), body: grid([tTheme, tPoster, tSky, tSaver, tSaverTips]) },
+      { id: 'look', ic: 'sun', c: 'amber', name: T('Darstellung'), hint: T('Farben, Cover, Wetter und Bildschirmschoner.'), body: grid([tTheme, tPoster, tSaver, tSaverTips]) },
       { id: 'content', ic: 'series', c: 'teal', name: T('Inhalte & Listen'), hint: T('Playlists, Kategorien und Sender.'), body: grid([tAdd, tPl, tUpd, tAuto, tSort, tHideL, tHideM, tHideS, tHideCh]) },
       { id: 'users', ic: 'lock', c: 'pink', name: T('Benutzer & Sicherheit'), hint: T('Wer schaut, Kindersicherung und Verlauf.'), body: grid([tPersons, tPar, tHis]) },
       { id: 'devices', ic: 'device', c: 'slate', name: T('Geräte & Verbindungen'), hint: T('Gerätetyp, Verbindung, Sicherung und externe Player.'), body: grid([tDev, tSpeed, tBackup, tExt]) },
@@ -8225,7 +8195,7 @@
      Einstellungs-Bereiche, Senderliste, Suchtreffer und Auswahllisten. Die Fläche liegt im selben Behälter wie die
      Einträge (scrollt also mit) und wird beim ersten Fokus angelegt; nur bei Bedienung mit Tasten/Fernbedienung. */
   var Glide = {
-    SEL: '.top-tools > .icon-btn, .mv-side .cat, .section .cats .cat, .st-side .st-sec, .chan, .qs-item, .ch-opt',
+    SEL: '.mv-side .cat, .section .cats .cat, .st-side .st-sec, .chan, .qs-item, .ch-opt',
     init: function () {
       var self = this;
       document.addEventListener('focusin', function (e) { self.to(e.target); });
@@ -10175,7 +10145,7 @@
     decodeBytes: decodeBytes, readText: readText, fetchText: fetchText, sameConnection: sameConnection, NativePlayer: NativePlayer, App: App, ensureTs: ensureTs, migrateM3uIds: migrateM3uIds,
     ErrLog: ErrLog, techInfo: techInfo, epgText: epgText, ChanCount: ChanCount, Top10: Top10, Top10Match: Top10Match, Lang: Lang, top10Tile: top10Tile, top10Hero: top10Hero, HERO_EVERY: HERO_EVERY, t10Key: t10Key, clearHistory: clearHistory, startView: startView, startTab: startTab,
     CatPrefs: CatPrefs, visibleCats: visibleCats, Parental: Parental, ChanHide: ChanHide, initials: initials, statusError: statusError, isVisible: isVisible,
-    Backup: Backup, profileFp: profileFp, Settings: Settings,
+    Backup: Backup, profileFp: profileFp, Settings: Settings, Shell: Shell, StatusLine: StatusLine, Theme: Theme,
     Seen: Seen, Resume: Resume, UpNext: UpNext, SeriesWatch: SeriesWatch, sortVod: sortVod,
     Reminders: Reminders, NumEntry: NumEntry, Sleep: Sleep, Later: Later, Saver: Saver, trailerQuery: trailerQuery, Persons: Persons, Favs: Favs, Recent: Recent, showGuide: showGuide, Player: Player, Dialog: Dialog,
     config: CONFIG

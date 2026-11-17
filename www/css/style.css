@@ -3626,3 +3626,141 @@ html.tv .hm-t10rows { padding-top: 0; }
 /* Fehler bis 1.15.8: „body.kbd/is-tv .f:focus“ setzt position: relative – der gewählte Pfeil im Titelbild sprang dadurch
    aus dem Bild (nach rechts neben den anderen Pfeil), und von dort kam man mit Rechts nicht mehr zu „Jetzt ansehen“ */
 body.kbd .hm-arrow.f:focus, body.is-tv .hm-arrow.f:focus { position: absolute; }
+
+/* ==========================================================
+   NEUES AUSSEHEN (1.15.10) – Teil 1 „Gerüst“
+   Erays Auftrag vom 17.11.2026, Entwürfe im Chat abgenommen.
+   Dieser Abschnitt steht absichtlich am Ende und gilt vor allem Älteren:
+   lila Hintergrund auf allen Seiten, schwebende Glas-Leiste oben,
+   kein Balken unten, Symbole aus dem Icon-Set Phosphor.
+   ========================================================== */
+@font-face { font-family: "Bricolage Grotesque"; font-style: normal; font-weight: 400; font-display: swap; src: url("../schrift/BricolageGrotesque-Regular.ttf") format("truetype"); }
+@font-face { font-family: "Bricolage Grotesque"; font-style: normal; font-weight: 700; font-display: swap; src: url("../schrift/BricolageGrotesque-Bold.ttf") format("truetype"); }
+:root, :root[data-theme="dark"] {
+  /* Grundfarben passend zum lila Hintergrund (vorher neutrales Schwarz) */
+  --bg: #15141f;
+  --bg-2: #1a1926;
+  --surface: #211f2e;
+  --surface-2: #2b293a;
+  --surface-3: #37344a;
+  --header-bg: rgba(21, 20, 31, .92);
+  --head-h: 4.7rem;
+  --app-bg: radial-gradient(70% 90% at 0% 0%, rgba(139, 92, 246, .24), transparent 62%), radial-gradient(60% 80% at 100% 100%, rgba(79, 157, 255, .13), transparent 60%), #15141f;
+  --glass: rgba(255, 255, 255, .13);
+  --glass-line: rgba(255, 255, 255, .24);
+  --glass-shadow: inset 0 0 0 1px rgba(255, 255, 255, .24), inset 0 1px 0 rgba(255, 255, 255, .28), 0 .45rem 1.4rem -.65rem rgba(0, 0, 0, .6);
+  --ring: 0 0 0 .18rem rgba(192, 132, 252, .8), 0 0 1.5rem rgba(168, 85, 247, .55);
+  --font-menu: "Bricolage Grotesque", var(--font);
+}
+/* Hintergrund: auf jeder Seite derselbe wie auf der Startseite */
+.screen { background: var(--app-bg); }
+.screen.modal { background: transparent; }
+
+/* ---------- Leiste oben ---------- */
+.topnav.nb {
+  flex: none; height: var(--head-h); display: flex; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center;
+  padding: 0 var(--pad); background: transparent; box-shadow: none; position: relative; z-index: 5;
+}
+.nb-left { display: flex; align-items: center; min-width: 0; }
+.nb-left > * + * { margin-left: 1.1rem; }
+.nb-left .brand-mark { width: 2.1rem; height: 2.1rem; color: #fff; }
+.nb-left .brand-mark .play { fill: #fff; }
+.nb-clock { position: relative; flex: none; font-family: var(--font-menu); line-height: 1; white-space: nowrap; }
+.nb-time { font-size: 1.45rem; font-weight: 700; letter-spacing: -.01em; color: #fff; font-variant-numeric: tabular-nums; }
+/* Datum nur auf der Startseite – klein unter der Uhr, damit die Statuszeichen nie zur Seite rücken */
+.nb-date { display: none; position: absolute; left: .05rem; top: 100%; margin-top: .28rem; font-size: .68rem; font-weight: 400; color: rgba(255, 255, 255, .85); }
+.shell.is-launcher .nb-date { display: block; }
+/* Statuszeichen: Internet · Playlist · Player – nur Symbole, die Farbe zeigt den Zustand */
+.nb-status { display: flex; align-items: center; flex: none; }
+.nb-st { display: inline-flex; align-items: center; justify-content: center; width: 1.9rem; height: 1.9rem; padding: 0; border-radius: 50%; background: none; color: #a9a9b4; }
+.nb-st + .nb-st { margin-left: .06rem; }
+.nb-st .i { width: 1.23rem; height: 1.23rem; }
+.nb-st.is-ok { color: #34d399; }
+.nb-st.is-warn { color: #fbbf24; }
+.nb-st.k-playlist.is-warn { color: #fb923c; }
+.nb-st.is-off { color: #ff5b73; }
+.nb-st.is-wait .i { animation: nbPulse 1.4s ease-in-out infinite; }
+@keyframes nbPulse { 50% { opacity: .35; } }
+body.kbd .nb-st.f:focus, body.is-tv .nb-st.f:focus { background: #fff; box-shadow: var(--ring); }
+/* Reiter in der Mitte: nur Text, auf einer Glas-Fläche */
+.nb-tabs {
+  display: flex; align-items: center; min-width: 0; padding: .32rem; border-radius: 999px; background: var(--glass);
+  -webkit-backdrop-filter: blur(1rem) saturate(1.5); backdrop-filter: blur(1rem) saturate(1.5); box-shadow: var(--glass-shadow);
+}
+.ntab {
+  display: inline-flex; align-items: center; justify-content: center; height: 2.55rem; padding: 0 1.4rem; border-radius: 999px;
+  color: rgba(255, 255, 255, .9); font-family: var(--font-menu); font-size: 1.05rem; font-weight: 400; white-space: nowrap;
+  transition: background-color .15s ease, color .15s ease, box-shadow .15s ease;
+}
+.ntab + .ntab { margin-left: .18rem; }
+.ntab .i { display: none; }
+/* Die Beschriftung reserviert schon die Breite der fetten Schrift – so springt das Menü beim Wechseln nicht */
+.ntab-label { display: inline-flex; flex-direction: column; align-items: center; }
+.ntab-label::after { content: attr(data-t); height: 0; overflow: hidden; visibility: hidden; font-weight: 700; }
+.ntab.is-on { background: rgba(255, 255, 255, .26); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .3); color: #fff; font-weight: 700; }
+/* Markierung der Fernbedienung: genau eine, klar weiß – der gewählte Reiter bleibt dabei ruhig grau */
+body.kbd .ntab.f:focus, body.is-tv .ntab.f:focus { background: #fff; color: #120f1a; box-shadow: var(--ring); }
+/* Knöpfe rechts: Suche · Aktualisieren · Einstellungen */
+.nb-tools { display: flex; align-items: center; justify-content: flex-end; min-width: 0; }
+.nbtn {
+  flex: none; width: 2.73rem; height: 2.73rem; border-radius: 50%; display: flex; display: grid; place-items: center; color: #fff; background: var(--glass);
+  -webkit-backdrop-filter: blur(1rem) saturate(1.5); backdrop-filter: blur(1rem) saturate(1.5); box-shadow: var(--glass-shadow);
+}
+.nbtn + .nbtn { margin-left: .55rem; }
+.nbtn .i { width: 1.28rem; height: 1.28rem; }
+.nbtn.is-on { background: #fff; color: #120f1a; box-shadow: none; }
+body.kbd .nbtn.f:focus, body.is-tv .nbtn.f:focus { background: #fff; color: #120f1a; box-shadow: var(--ring); }
+.nbtn.is-busy .i { animation: nbSpin 1s linear infinite; }
+@keyframes nbSpin { to { transform: rotate(360deg); } }
+@media (hover: hover) {
+  .ntab:not(.is-on):hover { background: rgba(255, 255, 255, .12); color: #fff; }
+  .nbtn:not(.is-on):hover { background: rgba(255, 255, 255, .22); }
+}
+/* Sparmodus (schwache Geräte): keine Unschärfe, dafür etwas deckender */
+body.lite .nb-tabs, body.lite .nbtn { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(60, 56, 84, .92); }
+body.lite .nbtn.is-on, body.lite.is-tv .nbtn.f:focus, body.lite.kbd .nbtn.f:focus { background: #fff; }
+@media (prefers-reduced-motion: reduce) { .ntab, .nbtn { transition: none; } .nb-st.is-wait .i, .nbtn.is-busy .i { animation: none; } }
+
+/* ---------- Handy hoch: Reiter unten, oben Logo, Statuszeichen und Knöpfe ---------- */
+@media (max-width: 960px) and (orientation: portrait) {
+  html:not(.tv) .topnav.nb { display: flex; justify-content: space-between; padding-top: env(safe-area-inset-top); height: calc(var(--head-h) + env(safe-area-inset-top)); }
+  html:not(.tv) { --head-h: 3.9rem; }
+  html:not(.tv) .nb-left .brand-mark { width: 2rem; height: 2rem; }
+  html:not(.tv) .nb-left > * + * { margin-left: .7rem; }
+  html:not(.tv) .nb-clock { display: none; }
+  html:not(.tv) .nb-st { width: 1.75rem; height: 1.75rem; }
+  html:not(.tv) .nb-st .i { width: 1.3rem; height: 1.3rem; }
+  html:not(.tv) .nbtn { width: 2.9rem; height: 2.9rem; }
+  html:not(.tv) .nbtn .i { width: 1.4rem; height: 1.4rem; }
+  html:not(.tv) .nb-tabs {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; justify-content: space-around; align-items: flex-start; border-radius: 0;
+    padding: .3rem .2rem calc(.3rem + env(safe-area-inset-bottom)); height: calc(4.3rem + env(safe-area-inset-bottom));
+    background: rgba(40, 36, 60, .78); -webkit-backdrop-filter: blur(1.4rem) saturate(1.5); backdrop-filter: blur(1.4rem) saturate(1.5); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16);
+  }
+  html:not(.tv) .ntab { flex: 1; flex-direction: column; height: auto; padding: .3rem .1rem; margin: 0; font-size: .8rem; color: rgba(255, 255, 255, .8); background: transparent; box-shadow: none; }
+  html:not(.tv) .ntab + .ntab { margin-left: 0; }
+  html:not(.tv) .ntab .i { display: block; width: 1.5rem; height: 1.5rem; padding: .25rem 1.05rem; box-sizing: content-box; border-radius: 999px; margin-bottom: .22rem; }
+  html:not(.tv) .ntab.is-on { background: transparent; box-shadow: none; color: #fff; }
+  html:not(.tv) .ntab.is-on .i { background: rgba(255, 255, 255, .22); }
+  html:not(.tv) .content { padding-bottom: calc(4.4rem + env(safe-area-inset-bottom)); }
+}
+/* ---------- Handy quer: Leiste an der Seite ---------- */
+@media (orientation: landscape) and (max-height: 540px) {
+  /* wenig Höhe: alles etwas enger, und zur Sicherheit lässt sich die Leiste schieben (z. B. bei großer Schrift) */
+  html:not(.tv) .topnav.nb { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; background: rgba(40, 36, 60, .5); overflow-y: auto; scrollbar-width: none; padding-top: .45rem; padding-bottom: .45rem; }
+  html:not(.tv) .topnav.nb::-webkit-scrollbar { display: none; }
+  html:not(.tv) .nb-left { flex-direction: column; flex: none; }
+  html:not(.tv) .nb-left .brand-mark { width: 1.7rem; height: 1.7rem; }
+  html:not(.tv) .nb-left > * + * { margin-left: 0; margin-top: .3rem; }
+  html:not(.tv) .nb-clock { display: none; }
+  html:not(.tv) .nb-st { width: 1.35rem; height: 1.35rem; }
+  html:not(.tv) .nb-st .i { width: 1.05rem; height: 1.05rem; }
+  html:not(.tv) .nb-tabs { flex-direction: column; align-items: stretch; flex: none; width: 100%; margin-top: .35rem; padding: 0; border-radius: 0; background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  html:not(.tv) .ntab { flex-direction: column; height: auto; padding: .28rem .2rem; margin: 0 0 .1rem; font-size: .68rem; border-radius: .7rem; }
+  html:not(.tv) .ntab + .ntab { margin-left: 0; }
+  html:not(.tv) .ntab .i { display: block; width: 1.3rem; height: 1.3rem; margin-bottom: .12rem; }
+  html:not(.tv) .nb-tools { flex-direction: column; flex: none; margin-top: auto; padding-top: .3rem; }
+  html:not(.tv) .nbtn + .nbtn { margin-left: 0; margin-top: .28rem; }
+  html:not(.tv) .nbtn { width: 2.15rem; height: 2.15rem; }
+  html:not(.tv) .nbtn .i { width: 1.1rem; height: 1.1rem; }
+}
