@@ -5138,12 +5138,19 @@
       card.classList.add('is-out');
       setTimeout(function () { if (card.parentNode) card.parentNode.removeChild(card); }, 260);
     }
-    var job = reloadingNow = refreshPlaylist(function (kind, ok, n) {
+    function step(kind, ok, n) {
       var r = rows[kind];
       if (!r) return;
       clear(r.st);
       r.el.classList.add(ok ? 'is-done' : 'is-fail');
       r.st.textContent = ok ? fmtCount(n) : T('Fehler');
+    }
+    // Wirft der Anbieter schon beim Start einen Fehler, darf nichts hängen bleiben: als Fehlschlag melden
+    var loading;
+    try { loading = refreshPlaylist(step); } catch (e) { loading = Promise.reject(e); }
+    var job = reloadingNow = loading.then(null, function (e) {
+      ['live', 'movie', 'series'].forEach(function (k) { if (!rows[k].el.classList.contains('is-done')) step(k, false, 0); });
+      return { ok: false, error: null, failed: e };
     }).then(function (res) {
       return new Promise(function (resolve) { setTimeout(function () { resolve(res); }, Math.max(0, RF_MIN_MS - (Date.now() - start))); });
     }).then(function (res) {

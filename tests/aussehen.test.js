@@ -204,4 +204,22 @@
       });
     });
   });
+
+  t(G, 'Aktualisieren, wenn der Anbieter sofort einen Fehler wirft: nichts bleibt hängen (keine Lade-Kacheln für immer, Knopf steht wieder)', function () {
+    return withShell(function () {
+      D.Shell.show('movie');
+      var prov = D.App.provider, keepR = prov.reset;
+      prov.reset = function () { throw new Error('kaputt'); };
+      var p;
+      try { p = D.refreshInline(); } catch (e) { prov.reset = keepR; throw new Error('wirft statt zu melden: ' + e.message); }
+      return p.then(function (res) {
+        prov.reset = keepR;
+        ok(!res.ok, 'meldet Fehlschlag');
+        ok(!D.Shell.view.querySelector('.sk-view'), 'Lade-Kacheln sind weg');
+        ok(!D.Shell.reloadBtn.classList.contains('is-busy'), 'Knopf steht wieder');
+        ok(D.Shell.el.querySelector('.rf-card.is-failed'), 'Feld zeigt den Fehler');
+        return D.refreshInline();
+      }, function (e) { prov.reset = keepR; throw e; }).then(function (res2) { ok(res2.ok, 'neuer Versuch klappt'); });
+    });
+  });
 })();
