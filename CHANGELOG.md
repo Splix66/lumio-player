@@ -18,7 +18,22 @@
 - **Schrift im Menü:** „Bricolage Grotesque“ (SIL OFL 1.1), liegt der App bei (`www/schrift/`). Beide neuen Lizenzen stehen unter Einstellungen → Hilfe → Über → Open-Source-Lizenzen.
 - **Handy:** hoch stehen die Reiter unten, oben Logo, Statuszeichen und die drei Knöpfe; quer steht die Leiste an der Seite.
 - **Schwache Geräte (Sparmodus):** dieselbe Leiste ohne Unschärfe-Effekt.
-- Technik: neue Tests in `tests/aussehen.test.js` (10 Tests: Symbole, Leiste, Statuszeichen, Steuerung, nur dunkel, Lade-Kacheln, Aktualisieren mit Fehlerfall und Seitenwechsel).
+- Technik: neue Tests in `tests/aussehen.test.js` (11 Tests: Symbole, Leiste, Statuszeichen, Steuerung, nur dunkel, Lade-Kacheln, Aktualisieren mit Fehlerfällen und Seitenwechsel).
+
+**Neues Aussehen, Teil 2 „Seiten“** (Erays Auftrag vom 17.11.2026: „Mach 1“, nach den abgenommenen Entwürfen). Teil 3 (Android: Vorschau wird ohne Neustart groß, kleines laufendes Bild bei Live TV auf dem Handy, Bedienleiste des TV-Players) folgt.
+
+- **Startseite neu: oben ein Vorschlag, darunter nur Reihen.** Der Vorschlag (Top-10-Titel aus deiner Playlist) steht ohne Rahmen oben, das Bild liegt rechts dahinter; Knöpfe „Jetzt ansehen“ und „Details“, keine Pfeile mehr. Darunter „Weiterschauen“ (eine Reihe, höchstens 10 Kacheln, kein „Alle anzeigen“), „Top 10 Filme“ und „Top 10 Serien“ – je bis zu 10 Plätze, nur Titel aus der Playlist mit echtem Platz, rechts der Hinweis „Netflix · Deutschland · … · 8 von 10 in deiner Playlist“. Eine Reihe ohne Treffer entfällt.
+- **Beim Laden stehen Platzhalter** in derselben Form. Die drei großen Kacheln Live TV / Filme / Serien gibt es nicht mehr.
+- **Leere Startseite** (nichts vorzuschlagen, nichts zum Weiterschauen – z. B. Playlist nur mit Sendern): drei Felder „Neuigkeiten“, „Deine Playlist“ (Zahlen, zuletzt aktualisiert, Knopf Aktualisieren) und „Zuletzt gesehene Sender“. Die App merkt sich das je Playlist und öffnet beim nächsten Start gleich Live TV – nur wenn „App beim Start“ auf Startseite steht. „Leer“ wird erst nach dem Laden festgestellt; lässt sich die Playlist gar nicht laden, verschwinden die Platzhalter nach 12 Sekunden, gemerkt wird dann nichts.
+- **Filme und Serien:** nur noch Kategorien links und Cover rechts. Die Reihen „Top 10“ und „Weiterschauen“ stehen nur noch auf der Startseite.
+- **Live TV im neuen Aussehen:** Überschrift mit Kategorie und Anzahl über der Senderliste; Vorschau mit Lichtschein und Glas-Zeile im Bild (Logo, Sender, laufende Sendung mit Restzeit, Hinweis „OK Vollbild“, Fortschritt), Schild LIVE oben links; Knöpfe „Merken“ und „Ausblenden“ als Glas-Knöpfe. Der laufende Sender hat einen grünen Punkt.
+- **Einstellungen aufgeräumt: Profil + 7 Bereiche, höchstens 32 Einträge.** Gestrichen: Wetter neben der Uhr, Farben, Jetzt aktualisieren, Zwischenspeicher leeren, Schlaf-Timer (bleibt im Player), Zeitformat, Bildqualität, Vorschau auf Film- und Serienseiten, Tipps im Bildschirmschoner. „Darstellung“ steckt in „Allgemein“. Früher gespeicherte Werte der gestrichenen Einstellungen wirken nicht mehr (z. B. „Immer beste Qualität“ → automatisch); 12 oder 24 Stunden richtet sich nach der Sprache.
+- **Vereinfacht:** „Externer Player“ nur noch An/Aus (Android zeigt die Auswahl der Player-Apps selbst; eine früher gewählte App zählt als „An“). „Nachricht an den Support“ statt „Problem melden“ und „Feedback geben“ (das Fenster bietet beide Wege). „Sender sortieren“ ohne „Name Z–A“.
+- **Profil in den Einstellungen:** Playlist mit Laufzeit, „Playlist wechseln“ und – neu – der rote Knopf **„Playlist löschen“** mit Rückfrage („Abbrechen“ ist vorgewählt). Darunter „Mein Zugang“ und „Dieses Gerät“ (MAC, KEY, Gerätetyp, Version); bei M3U-Playlists auch der Programmführer. „Daten neu laden“ entfällt.
+- **Hinweis „Playlist abgelaufen“:** Fenster mit Name und Datum, Knöpfe „Zum Profil“ und „Später“. Kommt bei jedem Start der App wieder, solange die Playlist abgelaufen ist (im selben Lauf nur einmal). Vorher: einmaliges Fenster „Dein Zugang ist abgelaufen“ ohne Weg ins Profil.
+- **Favoriten, Film- und Serien-Details, Auswahl-Fenster, „Wer schaut?“:** Glas-Look passend zum Rest (Umschalter nur mit Text, Fenster mit feinem lila Rand).
+- Noch nicht umgebaut: Das TV-Programm öffnet weiter als eigene Seite ohne die Leiste; die Bedienleiste des Players ist unverändert.
+- Technik: neue Tests in `tests/seiten.test.js` (11 Tests).
 
 ## 1.15.9 – 2026-11-16 · Kleineres Titelbild, Top 10 auf Deutsch, Online-Zeichen
 

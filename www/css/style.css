@@ -3982,3 +3982,65 @@ body.kbd .hm2 .hm-t10.f:focus .art, body.is-tv .hm2 .hm-t10.f:focus .art { box-s
   html:not(.tv) .hm2 .lr-card { width: 13rem; height: 7.4rem; }
   html:not(.tv) .hm2.is-void .hm-empty { grid-template-columns: 1fr 1fr; }
 }
+
+/* ---------- Live TV: Kategorien, Senderliste, Vorschau im neuen Aussehen ---------- */
+.sec-cap { display: flex; align-items: baseline; padding: .2rem .4rem .9rem; }
+.sec-cap h2 { font-size: 1.5rem; font-weight: 700; margin: 0 .8rem 0 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sec-cap small { flex: none; font-size: .95rem; color: rgba(255, 255, 255, .65); font-weight: 600; }
+.section-live .cat.is-on { background: rgba(255, 255, 255, .14); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .2); color: #fff; }
+.section-live .cat.cat-action, .section-live .cat[data-id="__guide"] { background: none; box-shadow: none; }
+.section-live .chan { border-radius: 1.1rem; }
+.section-live .chan.is-playing { background: rgba(255, 255, 255, .1); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .16); }
+.section-live .chan.is-playing .name { color: #fff; }
+/* laufender Sender: grüner Punkt (ohne Wort – gilt so in allen Sprachen) */
+.section-live .chan.is-playing::after { background: #34d399; box-shadow: 0 0 0 .3rem rgba(52, 211, 153, .18); width: .6rem; height: .6rem; margin-right: .5rem; }
+body.kbd .section-live .chan.f:focus, body.is-tv .section-live .chan.f:focus { background: rgba(255, 255, 255, .14); box-shadow: var(--ring); }
+/* Vorschau: Glas-Rahmen mit Lichtschein */
+.section-live .mini-slot-box { border-radius: 1.5rem; background: rgba(255, 255, 255, .05); box-shadow: inset 0 0 0 1px rgba(196, 167, 255, .35), 0 1.6rem 4.5rem -1.4rem rgba(139, 92, 246, .55); }
+.player.is-docked { border-radius: 1.5rem; overflow: hidden; box-shadow: 0 0 0 1px rgba(196, 167, 255, .4), 0 1.6rem 4.5rem -1.4rem rgba(139, 92, 246, .6); }
+.mini-logo, .mini-ok, .mini-bar, .mini-live, .mini-txt small { display: none; }
+.player.is-docked .mini-title {
+  position: absolute; left: .9rem; right: .9rem; bottom: .9rem; display: flex; align-items: center; padding: .7rem 1rem .95rem; border-radius: 1.1rem; white-space: normal; text-align: left;
+  background: rgba(26, 22, 44, .62); -webkit-backdrop-filter: blur(1rem) saturate(1.4); backdrop-filter: blur(1rem) saturate(1.4); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .2);
+}
+.player.is-docked .mini-logo { display: block; flex: none; }
+.player.is-docked .mini-logo .logo-box { width: 3.7rem; height: 2.3rem; margin-right: .9rem; border-radius: .55rem; }
+.player.is-docked .mini-txt { flex: 1; min-width: 0; }
+.player.is-docked .mini-txt b { display: block; font-size: 1.12rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.player.is-docked .has-now .mini-txt small { display: block; font-size: .9rem; color: rgba(255, 255, 255, .84); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.player.is-docked .has-now .mini-bar { display: block; position: absolute; left: 1rem; right: 1rem; bottom: .42rem; height: .2rem; border-radius: 1rem; background: rgba(255, 255, 255, .2); overflow: hidden; }
+.mini-bar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #a855f7, #c084fc); }
+body.is-tv .player.is-docked .mini-ok { display: inline-flex; align-items: center; flex: none; margin-left: .8rem; font-size: .85rem; font-weight: 600; }
+.mini-ok b { margin-right: .5rem; padding: .12rem .45rem; border-radius: .45rem; background: #fff; color: #120f1a; font-size: .78rem; font-weight: 800; }
+.player.is-docked .mini-live { display: inline-flex; align-items: center; position: absolute; left: 1rem; top: 1rem; padding: .3rem .7rem; border-radius: 999px; background: rgba(12, 10, 22, .55); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .25); font-size: .76rem; letter-spacing: .09em; }
+.player.is-docked .mini-live[hidden] { display: none; }
+.mini-live i { width: .5rem; height: .5rem; border-radius: 50%; background: #ff5b73; margin-right: .45rem; }
+.player.is-docked .mini-mute { top: .85rem; right: .85rem; width: 2.6rem; height: 2.6rem; border-radius: 50%; background: rgba(12, 10, 22, .55); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .25); }
+body.lite .player.is-docked .mini-title { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(26, 22, 44, .9); }
+/* unter der Vorschau: Glas-Knöpfe, Jetzt-Karte, nächste Sendungen */
+.section-live .lp-name { display: none; }
+.section-live .lp-arch .btn { background: rgba(255, 255, 255, .1); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22); color: #fff; border-radius: 999px; }
+.section-live .lp-now { border-radius: 1.2rem; background: rgba(255, 255, 255, .06); box-shadow: inset 0 0 0 1px rgba(196, 167, 255, .2); }
+.section-live .lp-tag { background: #8b5cf6; color: #fff; }
+body.kbd .section-live .lp-arch .btn.f:focus, body.is-tv .section-live .lp-arch .btn.f:focus { background: #fff; color: #120f1a; box-shadow: var(--ring); }
+
+/* ---------- Gemeinsame Bausteine im neuen Aussehen: Hauptknopf, Umschalter, Fenster ---------- */
+.btn.primary { background: #8b5cf6; color: #fff; }
+body.kbd .btn.primary.f:focus, body.is-tv .btn.primary.f:focus { background: #fff; color: #120f1a; box-shadow: var(--ring); }
+/* Umschalter (z. B. Sender / Filme / Serien bei den Favoriten): Glas-Leiste, nur Text */
+.seg { background: var(--glass); box-shadow: var(--glass-shadow); -webkit-backdrop-filter: blur(1rem) saturate(1.5); backdrop-filter: blur(1rem) saturate(1.5); }
+.seg .btn { color: rgba(255, 255, 255, .9); border-radius: 999px; box-shadow: none; }
+.seg .btn > .i { display: none; }
+.seg .btn.is-on { background: rgba(255, 255, 255, .26); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .3); color: #fff; }
+body.kbd .seg .btn.f:focus, body.is-tv .seg .btn.f:focus { background: #fff; color: #120f1a; box-shadow: var(--ring); }
+body.lite .seg { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(60, 56, 84, .92); }
+/* Fenster (Film- und Serien-Details, Auswahl-Fenster): Glas mit feinem lila Rand */
+.modal-panel { background: rgba(34, 30, 52, .86); -webkit-backdrop-filter: blur(1.6rem) saturate(1.4); backdrop-filter: blur(1.6rem) saturate(1.4); box-shadow: inset 0 0 0 1px rgba(196, 167, 255, .28), 0 2.4rem 5rem -1.5rem rgba(0, 0, 0, .8); border-radius: 1.6rem; }
+body.lite .modal-panel { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgb(34, 30, 52); }
+.dialog { background: rgba(40, 36, 60, .96); box-shadow: inset 0 0 0 1px rgba(196, 167, 255, .3), 0 2rem 4.5rem -1rem rgba(0, 0, 0, .8); border-radius: 1.5rem; }
+/* Willkommensseite und Playlist-Auswahl: Logo als lila Kachel */
+.profiles-top .brand-mark, .wl-head .brand-mark, .who .brand-mark { box-sizing: border-box; padding: .42rem; border-radius: 28%; background: linear-gradient(145deg, #a78bfa, #6d3df0); }
+/* „Wer schaut?“: derselbe Hintergrund wie die App, Profilbilder mit weißem Zeichen auf Farbe */
+.who { background: var(--app-bg); }
+body.kbd .who-p.f:focus .avatar, body.is-tv .who-p.f:focus .avatar { box-shadow: var(--ring); }
+.avatar .i { color: #fff; }

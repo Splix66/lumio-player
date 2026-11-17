@@ -260,4 +260,24 @@
       });
     }, { id: 'tst-leer', type: 'demo', name: 'Nur Sender' });
   });
+
+  t(G, 'Startseite ohne Internet: Platzhalter bleiben nicht für immer – nach kurzer Zeit stehen die Felder da, „leer“ wird aber nicht gemerkt', function () {
+    var keep = D.Store.get('top10.de', null);
+    return withShell(function () {
+      D.Store.set('top10.de', { at: Date.now(), d: { v: 1, country: 'DE', services: [] } });
+      D.Store.del('stats.tst-offline'); D.Store.del('homeEmpty.tst-offline');
+      var hold = D.App.provider.items;
+      D.App.provider.items = function () { return new Promise(function () {}); };
+      D.Shell.show('home');
+      return wait(13500).then(function () {
+        var el = D.Shell.view.querySelector('.launcher');
+        ok(!el.classList.contains('is-loading'), 'lädt nicht mehr „ewig“');
+        ok(!el.querySelector('.hm-skrow, .hm-skhero'), 'Platzhalter sind weg');
+        ok(el.querySelectorAll('.hm-w').length === 3, 'die drei Felder stehen da');
+        eq(D.Store.get('homeEmpty.tst-offline', null), null, 'nicht als „leer“ gemerkt (die Playlist wurde ja nie geladen) – kein falscher Sprung zu Live TV');
+        D.App.provider.items = hold;
+        if (keep) D.Store.set('top10.de', keep); else D.Store.del('top10.de');
+      });
+    }, { id: 'tst-offline', type: 'demo', name: 'Demo' });
+  });
 })();

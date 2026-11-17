@@ -4631,7 +4631,10 @@
     var emptySlot = h('div', { class: 'hm-empty' });
     var el = h('div', { class: 'launcher hm hm2 is-loading' }, heroSlot, rows, t10Slot, emptySlot);
     var heroN = null, rowsN = null, t10N = null;      // null = noch nicht bekannt
-    function ready() { var st = Stats.get(); return !!(st.live || st.movie || st.series); }
+    // gaveUp: Die Playlist ließ sich nicht laden (kein Internet, Anbieter antwortet nicht) – dann nicht ewig Platzhalter zeigen
+    var gaveUp = false, lastEmpty = null, HOME_WAIT_MS = 12000;
+    function loaded() { var st = Stats.get(); return !!(st.live || st.movie || st.series); }
+    function ready() { return gaveUp || loaded(); }
     function row(title, ic, kids, more) {
       return h('section', { class: 'hm-row' },
         h('div', { class: 'hm-rhead' }, h('h2', { class: 'hm-rtitle' }, ic ? icon(ic) : null, h('span', { text: title })), more || null),
@@ -4675,7 +4678,8 @@
       var empty = !heroN && !rowsN && !t10N;
       el.classList.remove('is-loading');
       el.classList.toggle('is-void', empty);
-      Store.set('homeEmpty.' + pid(), empty);
+      // nur merken, wenn die Playlist wirklich geladen wurde – sonst öffnete die App beim nächsten Start fälschlich Live TV
+      if (loaded() && empty !== lastEmpty) { lastEmpty = empty; Store.set('homeEmpty.' + pid(), empty); }
       if (empty) {
         paintEmpty();
         var a = document.activeElement, top0 = Screens.top();
@@ -4813,6 +4817,7 @@
         if (!Stats.stale()) autoTried = 0;
         if (r.error) { if (!quiet) toast(T('Hinweis: {0}', r.error.message || T('Verbindung fehlgeschlagen.')), 4000); }
         else if (byUser) toast(T('Playlist aktualisiert'));
+        if (!loaded()) gaveUp = true;
         if (document.body.contains(el)) { paintHero(); paintRows(); settle(); }
       });
     }
@@ -4825,6 +4830,12 @@
     }
 
     paintHero(); paintRows(); paintTop10();
+    var waitT = setTimeout(function () {
+      if (disposed || ready()) return;
+      gaveUp = true;
+      paintHero(); paintRows(); settle();
+    }, HOME_WAIT_MS);
+    disposers.push(function () { clearTimeout(waitT); });
     // Nach einem Update ist noch keine Auswahl fürs Titelbild gespeichert: einmal im Hintergrund berechnen
     if (!HeroPicks.computed('movie') && !HeroPicks.computed('series') && (Stats.get().movie || Stats.get().series)) {
       var pickT = setTimeout(function () {
@@ -5481,6 +5492,8 @@
         clear(items);
         items.scrollTop = 0;
         Shell.setCount(kind, fmtCount(list.length));
+        // Live TV: Überschrift über der Senderliste – Name der Kategorie (wie in der Playlist) und Anzahl (seit 1.15.10)
+        if (kind === 'live') items.appendChild(h('div', { class: 'sec-cap' }, h('h2', { text: cat.name }), h('small', { text: T('{0} Sender', fmtCount(list.length)) })));
         if (!list.length) {
           items.appendChild(cat.id === '__fav' ? stateBox(T('Noch keine Lieblingssender'), T('Wähle im Player bei einem Sender „Merken“ – dann erscheint er hier.'))
             : cat.id === '__recent' ? stateBox(T('Noch nichts geschaut'), T('Die zuletzt gesehenen Sender erscheinen hier.'))
@@ -8511,9 +8524,18 @@
           self.clock),
         h('div', { class: 'osd-bottom' }, self.info, self.barWrap, self.times,
           h('div', { class: 'ctrl-row' }, self.ctrlLeft, self.ctrls, h('div', { class: 'ctrl-side right' }, self.hideBtn, self.pipBtn, self.sleepBtn, self.fmtBtn, self.tracksBtn, self.fsBtn, self.volumeUi()))));
-      self.miniTitle = h('span', { class: 'mini-title' });
+      /* Vorschau bei Live TV im neuen Aussehen (1.15.10): Glas-Zeile unten im Bild mit Logo, Sendername, laufender Sendung,
+         Hinweis „OK Vollbild“ und Fortschritt; oben links das Schild LIVE. In der Ecke (nicht angedockt) bleibt nur der Name. */
+      self.miniLogo = h('span', { class: 'mini-logo' });
+      self.miniName = h('b');
+      self.miniSub = h('small');
+      self.miniBar = h('i');
+      self.miniTitle = h('span', { class: 'mini-title' }, self.miniLogo, h('span', { class: 'mini-txt' }, self.miniName, self.miniSub),
+        h('span', { class: 'mini-ok', 'aria-hidden': 'true' }, h('b', { text: 'OK' }), h('span', { text: T('Vollbild') })),
+        h('span', { class: 'mini-bar' }, self.miniBar));
+      self.miniLive = h('span', { class: 'mini-live', 'aria-hidden': 'true' }, h('i'), h('b', { text: 'LIVE' }));
       self.miniUi = h('div', { class: 'mini-ui' },
-        h('button', { class: 'mini-open f', title: T('Vollbild'), onclick: function () { self.maximize(); } }, self.miniTitle),
+        h('button', { class: 'mini-open f', title: T('Vollbild'), onclick: function () { self.maximize(); } }, self.miniTitle), self.miniLive,
         self.miniMute = h('button', { class: 'mini-mute f', title: T('Ton an/aus'), 'aria-label': T('Ton an/aus'), onclick: function () { self.setMuted(!self.video.muted); } }),
         h('button', { class: 'mini-close f', title: T('Schließen'), onclick: function () { self.close(); } }, icon('close')));
       self.el = h('div', { class: 'player' }, video, self.spinner, self.osd, self.zap, self.zbn, self.err, self.miniUi);
@@ -8801,7 +8823,13 @@
       self.epgNow = ''; self.epgNext = ''; self.epgCur = null;
       self.hidePause();
       clearInterval(self.epgTimer);
-      if (self.miniTitle) self.miniTitle.textContent = item.name;
+      if (self.miniTitle) {
+        self.miniName.textContent = item.name;
+        self.miniSub.textContent = ''; self.miniBar.style.width = '0'; self.miniTitle.classList.remove('has-now');
+        clear(self.miniLogo);
+        if (item.kind === 'live') self.miniLogo.appendChild(logoBox(item));
+        self.miniLive.hidden = item.kind !== 'live';
+      }
       self.lastPlace = '';
       var isEp = item.kind === 'episode';
       self.title.textContent = isEp ? (item.seriesName || item.name) : item.name;
@@ -9474,7 +9502,12 @@
           var now = Date.now() / 1000;
           var cur = list.filter(function (e) { return e.start <= now && e.end > now; })[0] || list[0];
           self.epgCur = cur || null;
-          if (!cur) { self.epgNow = ''; self.epgNext = ''; self.bar.style.display = 'none'; return; }
+          if (!cur) { self.epgNow = ''; self.epgNext = ''; self.bar.style.display = 'none'; if (self.miniSub) { self.miniSub.textContent = ''; self.miniTitle.classList.remove('has-now'); } return; }
+          if (self.miniSub && cur.end > now) {
+            self.miniSub.textContent = cur.title + ' · ' + T('noch {0} Min.', Math.max(1, Math.round((cur.end - now) / 60)));
+            self.miniBar.style.width = Math.max(0, Math.min(100, (now - cur.start) / (cur.end - cur.start) * 100)) + '%';
+            self.miniTitle.classList.add('has-now');
+          }
           var next = list.filter(function (e) { return e.start >= cur.end - 1; })[0];
           self.info.appendChild(h('div', { class: 'now' }, h('span', { class: 'ep-t', text: fmtClock(cur.start) + ' – ' + fmtClock(cur.end) }), h('b', { text: cur.title })));
           if (next) self.info.appendChild(h('div', { class: 'next' }, icon('arrowR'), h('span', { text: fmtClock(next.start) + '  ' + next.title })));
