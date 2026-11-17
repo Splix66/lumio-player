@@ -4071,3 +4071,27 @@ body.kbd .guide .gd-prog.f:focus, body.is-tv .guide .gd-prog.f:focus, body.kbd .
 .wl-title { font-family: var(--font-menu); }
 .wl .wl-btn.wl-primary, .wl .wl-primary { background: #8b5cf6; color: #fff; }
 .wl .lang-btn, .wl .wl-help { background: var(--glass); box-shadow: var(--glass-shadow); }
+
+/* ---------- Handy hoch: bei Live TV läuft der Sender klein oben, darunter Kategorien und Senderliste (neu mit 1.15.10) ---------- */
+@media (max-width: 960px) and (orientation: portrait) {
+  html:not(.tv) .section-live .live-panel { display: block; order: -1; flex: none; width: auto; min-width: 0; max-width: none; padding: 0 var(--pad) .9rem; overflow: visible; }
+  html:not(.tv) .section-live .live-panel .lp-hint, html:not(.tv) .section-live .live-panel .lp-name,
+  html:not(.tv) .section-live .live-panel .lp-arch, html:not(.tv) .section-live .live-panel .lp-epg { display: none; }
+  html:not(.tv) .section-live .mini-slot-box { border-radius: 1.2rem; }
+  html:not(.tv) .player.is-docked { border-radius: 1.2rem; }
+  html:not(.tv) .player.is-docked .mini-title { left: .6rem; right: .6rem; bottom: .6rem; padding: .5rem .75rem .7rem; }
+  html:not(.tv) .player.is-docked .mini-logo .logo-box { width: 2.9rem; height: 1.8rem; margin-right: .65rem; }
+  html:not(.tv) .player.is-docked .mini-txt b { font-size: .98rem; }
+  html:not(.tv) .player.is-docked .has-now .mini-bar { left: .75rem; right: .75rem; bottom: .32rem; }
+  html:not(.tv) .sec-cap { padding: 0 0 .7rem; }
+  html:not(.tv) .sec-cap h2 { font-size: 1.2rem; }
+}
+
+/* ---------- Player (eingebauter Player): Bedienleiste mit Glas-Knöpfen ---------- */
+.player .cbtn { background: rgba(255, 255, 255, .14); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .24), inset 0 1px 0 rgba(255, 255, 255, .22); -webkit-backdrop-filter: blur(.8rem) saturate(1.4); backdrop-filter: blur(.8rem) saturate(1.4); }
+body.kbd .player .cbtn.f:focus, body.is-tv .player .cbtn.f:focus { background: #fff; color: #120f1a; box-shadow: var(--ring); }
+.player .live-tag { color: #fff; background: rgba(12, 10, 22, .55); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .25); }
+.player .live-tag i { background: #ff5b73; }
+.player .osd-top { background: linear-gradient(180deg, rgba(14, 12, 24, .82), rgba(14, 12, 24, .3) 55%, rgba(14, 12, 24, 0)); }
+.player .osd-bottom { background: linear-gradient(0deg, rgba(14, 12, 24, .9), rgba(14, 12, 24, .4) 55%, rgba(14, 12, 24, 0)); }
+body.lite .player .cbtn { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(60, 56, 84, .9); }
