@@ -3901,6 +3901,9 @@ body.kbd .st2 .st-sec.f:focus .st-sic, body.is-tv .st2 .st-sec.f:focus .st-sic {
 .pf2 .kv-copy { display: flex; align-items: center; justify-content: space-between; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .04em; }
 @media (max-width: 960px) and (orientation: portrait) {
   html:not(.tv) .pf2 .pf-cols { grid-template-columns: 1fr; }
+  html:not(.tv) .pf2 .kv { display: grid; grid-template-columns: minmax(6rem, 40%) 1fr; }
+  html:not(.tv) .pf2 .kv > span:first-child + b { border-top: 0; }
+  html:not(.tv) .st2 .st-sec.is-on .st-sic, html:not(.tv) .st2 .st-sec.is-on .st-sic .i { color: #120f1a; }
   html:not(.tv) .pf2 .pf-hero .row { width: 100%; margin-top: 1rem; }
   html:not(.tv) .pf2 .pf-hero .row .btn { flex: 1; }
 }
