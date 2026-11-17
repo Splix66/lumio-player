@@ -43,6 +43,7 @@
 - **Eingebauter Player:** Bedienleiste mit Glas-Knöpfen passend zum neuen Aussehen.
 - **TV-Player (Fire TV, Android-Boxen):** Bedienleiste, Info-Leiste und Menü im neuen Aussehen – lila getöntes Glas statt Schwarz, gewählter Knopf weiß mit lila Ring (dieselbe Markierung wie in der App), Schild LIVE als Glas-Schild mit rotem Punkt. Nur Farben und Formen, an der Wiedergabe selbst ist nichts geändert.
 - **Webseite: neues Logo** (lila Kachel mit weißem Zeichen) in der Kopfzeile von Startseite, Download-Seite und Verwaltung, als Symbol im Browser-Reiter, als Apple-Symbol und im Vorschaubild für geteilte Links. Wird erst mit der Veröffentlichung sichtbar (`docs/` ist die Live-Webseite auf `main`).
+- **Webseite im Aussehen der App** (Erays Auftrag 17.11.2026: „die Webseite ist noch zu dunkel im Gegensatz zur App“): derselbe lila Hintergrund auf allen Seiten (Startseite, Playlist hochladen, Download, Hilfe, Verwaltung, Rechtsseiten, 404, Download-Seite für den Fernseher), Glas-Flächen mit feinem lila Rand, lila Hauptknopf, Menü-Schrift der App, einfarbig lila statt bunter Kacheln, gewählter Menüpunkt als ruhige Glas-Fläche. Der Fernseher im Kopf der Startseite zeigt ein echtes Bild der neuen App (mit Beispieldaten) statt der gezeichneten drei Kacheln. Zwei Hinweise berichtigt, in allen 13 Sprachen: MAC-Adresse und KEY stehen auf der Willkommensseite und unter Einstellungen → Profil (den Balken unten gibt es nicht mehr). Wird erst mit der Veröffentlichung sichtbar.
 
 ## 1.15.9 – 2026-11-16 · Kleineres Titelbild, Top 10 auf Deutsch, Online-Zeichen
 

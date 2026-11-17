@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0b0b0f">
+  <meta name="theme-color" content="#15141f">
   <meta name="robots" content="noindex">
   <!-- Download startet von selbst (wichtig für die Downloader-App auf Fire TV / Android-Boxen) -->
   <meta http-equiv="refresh" content="2;url=https://github.com/Splix66/lumio-player/releases/download/neueste/lumio-player.apk">
@@ -14,7 +14,7 @@
   <style>
     @font-face { font-family: "Inter"; font-style: normal; font-weight: 100 900; font-display: swap; src: url("../assets/fonts/inter-latin-wght-normal.woff2") format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+2000-206F, U+20AC, U+2122, U+FEFF, U+FFFD; }
     @font-face { font-family: "Inter"; font-style: normal; font-weight: 100 900; font-display: swap; src: url("../assets/fonts/inter-latin-ext-wght-normal.woff2") format("woff2"); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+20A0-20C0, U+A720-A7FF; }
-    :root { --bg: #0b0b0f; --surface: #14141a; --line: rgba(255, 255, 255, .1); --text: #f4f4f6; --muted: #a4a4b4; --accent-btn: #7442e6; --accent-2: #a78bfa; --gold: #ffc53d; color-scheme: dark; }
+    :root { --bg: #15141f; --surface: #211f2e; --line: rgba(255, 255, 255, .1); --text: #f4f4f6; --muted: #a4a4b4; --accent-btn: #8b5cf6; --accent-2: #a78bfa; --gold: #ffc53d; color-scheme: dark; }
     * { box-sizing: border-box; }
     html, body { margin: 0; background: var(--bg); color: var(--text); }
     /* Größe richtet sich nach der Bildschirmhöhe: Im Downloader-Browser auf dem Fernseher (ca. 960×540) passt so alles
@@ -23,7 +23,7 @@
     body {
       font: 1rem/1.5 "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 3vh 16px;
-      background: radial-gradient(40rem 26rem at 80% -4rem, rgba(139, 92, 246, .22), transparent 70%), var(--bg);
+      background: radial-gradient(70% 90% at 0% 0%, rgba(139, 92, 246, .24), transparent 62%), radial-gradient(60% 80% at 100% 100%, rgba(79, 157, 255, .13), transparent 60%), var(--bg); background-attachment: fixed;   /* derselbe Hintergrund wie die App */
     }
     main { width: 100%; max-width: 34rem; display: flex; flex-direction: column; gap: 1rem; }
     .brand { display: flex; align-items: center; gap: .6rem; font-weight: 800; font-size: 1.6rem; letter-spacing: -.035em; margin: 0; }
