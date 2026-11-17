@@ -1,5 +1,9 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## 1.15.10 – noch nicht veröffentlicht
+
+- **Neues Aussehen, Teil 1 „Gerüst“** (Erays Auftrag vom 17.11.2026, Entwürfe im Chat abgenommen): einheitliche Symbole aus dem Icon-Set „Phosphor“ (MIT) statt selbst gezeichneter Zeichen.
+
 ## 1.15.9 – 2026-11-16 · Kleineres Titelbild, Top 10 auf Deutsch, Online-Zeichen
 
 - **Startseite: kleines Titelbild oben rechts, „Weiterschauen“ links daneben** (Erays Wunsch vom 15.11.2026 nach Ansicht auf dem Fire TV: „viel zu groß“). Auf Fernseher und breiten Fenstern bilden „Weiterschauen“ (Raster 3×2, mehr unter „Alle anzeigen“) und das Titelbild (44 % der Breite, gleich hoch) zusammen den ersten Block; die Top-10-Reihen beginnen direkt darunter statt erst nach einem ganzen Bildschirm. Ohne „Weiterschauen“ nimmt das Titelbild die ganze Breite ein, aber in der neuen, flachen Höhe. Auf dem Handy bleibt das Titelbild über „Weiterschauen“. Beim Öffnen steht die Markierung auf der ersten „Weiterschauen“-Kachel.
