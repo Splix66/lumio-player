@@ -17,7 +17,7 @@
       'Gib dort den Code 5619512 ein (oder die Adresse splix66.github.io/lumio-player/app). Der Download startet von selbst, danach auf „Installieren“ drücken.',
       'Fire TV fragt beim ersten Mal nach einer Erlaubnis: unter Einstellungen → Mein Fire TV → Entwickleroptionen → „Apps unbekannter Herkunft installieren“ für Downloader einschalten. Fehlen die Entwickleroptionen, unter Mein Fire TV → Info 7-mal auf den Gerätenamen drücken.']],
     ['Wo finde ich MAC-Adresse und KEY?', [
-      'Öffne Telvo Player auf deinem Fernseher oder Handy. MAC und KEY stehen ganz unten am Bildschirmrand – und oben rechts unter „Profil“.',
+      'Öffne Telvo Player auf deinem Fernseher oder Handy. MAC und KEY stehen auf der Willkommensseite und unter Einstellungen → Profil.',
       'Ist noch keine Playlist eingerichtet, zeigt die App beides groß auf dem Startbildschirm, zusammen mit einem QR-Code. Scannst du ihn mit dem Handy, öffnet sich diese Seite mit allem schon ausgefüllt.']],
     ['Meine Playlist erscheint nicht in der App', [
       'Die App fragt alle 30 Sekunden nach neuen Playlists, solange sie geöffnet und mit dem Internet verbunden ist. Warte kurz oder starte die App neu.',

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#0b0a1a">
+  <meta name="theme-color" content="#15141f">
   <meta name="format-detection" content="telephone=no">
   <!-- Bilder und Streams ohne Herkunftsangabe laden – so wie richtige TV-Apps. Viele Logo-Server sperren sonst fremde Apps. -->
   <meta name="referrer" content="no-referrer">
@@ -17,7 +17,7 @@
        bildschirmfüllend skaliert. So bleibt das Logo einfach stehen, statt dass ein zweiter Ladebildschirm aufblitzt.
        app.js blendet es aus, sobald die erste Seite steht; spätestens nach 8 s verschwindet es von selbst. -->
   <style>
-    #boot { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 9999; background: #0b0a1a;
+    #boot { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 9999; background: #15141f;
       transition: opacity .45s ease; animation: bootAuto .45s 8s forwards; }
     #boot.is-out { opacity: 0; pointer-events: none; }
     #boot svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
@@ -27,7 +27,7 @@
 </head>
 <body>
   <div id="boot" aria-hidden="true">
-    <svg viewBox="0 0 2732 2732" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="bootPlay" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b06cff"/><stop offset="1" stop-color="#7c3aed"/></linearGradient><linearGradient id="bootT" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#e4e2ec"/></linearGradient></defs><g transform="translate(1146 1036) scale(4.4)"><path d="M17 25H70a12 12 0 0 1 12 12M42 25v50" fill="none" stroke="url(#bootT)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/><path fill="url(#bootPlay)" transform="translate(16.5 11.5) scale(.78)" d="M50 38.5c0-3.3 3.6-5.3 6.4-3.6l25.4 15.6c2.7 1.7 2.7 5.6 0 7.2L56.4 73.4C53.6 75.1 50 73.1 50 69.8z"/></g><text x="1366" y="1626" text-anchor="middle" xml:space="preserve"><tspan font-weight="700" fill="#f4f4f6">Telvo </tspan><tspan font-weight="400" fill="#c9b8fb">Player</tspan></text></svg>
+    <svg viewBox="0 0 2732 2732" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="bootTile" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a78bfa"/><stop offset="1" stop-color="#6d3df0"/></linearGradient><radialGradient id="bootHalo" cx="1366" cy="1216" r="840" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#8b5cf6" stop-opacity=".28"/><stop offset="1" stop-color="#8b5cf6" stop-opacity="0"/></radialGradient></defs><rect width="2732" height="2732" fill="url(#bootHalo)"/><rect x="1146" y="996" width="440" height="440" rx="97" fill="url(#bootTile)"/><g transform="translate(1190 1040) scale(3.52)"><path d="M17 25H70a12 12 0 0 1 12 12M42 25v50" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/><path fill="#fff" transform="translate(16.5 11.5) scale(.78)" d="M50 38.5c0-3.3 3.6-5.3 6.4-3.6l25.4 15.6c2.7 1.7 2.7 5.6 0 7.2L56.4 73.4C53.6 75.1 50 73.1 50 69.8z"/></g><text x="1366" y="1626" text-anchor="middle" xml:space="preserve"><tspan font-weight="700" fill="#f4f4f6">Telvo </tspan><tspan font-weight="400" fill="#d6c8ff">Player</tspan></text></svg>
   </div>
   <div id="app">
     <div id="screens"></div>

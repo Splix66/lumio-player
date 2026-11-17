@@ -35,6 +35,22 @@ window.LUMIO_LICENSES = {
     "url": "github.com/rsms/inter"
    },
    {
+    "id": "font2",
+    "name": "Bricolage Grotesque",
+    "ver": "",
+    "lic": "OFL-1.1",
+    "by": "Copyright 2022 The Bricolage Grotesque Project Authors",
+    "url": "github.com/ateliertriay/bricolage"
+   },
+   {
+    "id": "icons",
+    "name": "Phosphor Icons",
+    "ver": "2.1.1",
+    "lic": "MIT",
+    "by": "Copyright (c) 2023 Phosphor Icons",
+    "url": "github.com/phosphor-icons/core"
+   },
+   {
     "id": "cap",
     "name": "Capacitor",
     "ver": "7",

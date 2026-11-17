@@ -99,7 +99,8 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 input { font: inherit; color: inherit; user-select: text; -webkit-user-select: text; }
 img { display: block; }
 h1, h2, h3, p { margin: 0; }
-svg.i { width: 1.25em; height: 1.25em; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+/* Symbole: Icon-Set Phosphor (gefüllte Pfade auf 256er-Fläche) – Farbe über die Schriftfarbe */
+svg.i { width: 1.25em; height: 1.25em; flex: none; fill: currentColor; stroke: none; }
 
 #app, #screens { position: fixed; top: 0; right: 0; bottom: 0; left: 0; }
 .screen { position: absolute; top: 0; right: 0; bottom: 0; left: 0; display: flex; flex-direction: column; background: var(--bg); }
@@ -3625,3 +3626,472 @@ html.tv .hm-t10rows { padding-top: 0; }
 /* Fehler bis 1.15.8: „body.kbd/is-tv .f:focus“ setzt position: relative – der gewählte Pfeil im Titelbild sprang dadurch
    aus dem Bild (nach rechts neben den anderen Pfeil), und von dort kam man mit Rechts nicht mehr zu „Jetzt ansehen“ */
 body.kbd .hm-arrow.f:focus, body.is-tv .hm-arrow.f:focus { position: absolute; }
+
+/* ==========================================================
+   NEUES AUSSEHEN (1.15.10) – Teil 1 „Gerüst“
+   Erays Auftrag vom 17.11.2026, Entwürfe im Chat abgenommen.
+   Dieser Abschnitt steht absichtlich am Ende und gilt vor allem Älteren:
+   lila Hintergrund auf allen Seiten, schwebende Glas-Leiste oben,
+   kein Balken unten, Symbole aus dem Icon-Set Phosphor.
+   ========================================================== */
+@font-face { font-family: "Bricolage Grotesque"; font-style: normal; font-weight: 400; font-display: swap; src: url("../schrift/BricolageGrotesque-Regular.ttf") format("truetype"); }
+@font-face { font-family: "Bricolage Grotesque"; font-style: normal; font-weight: 700; font-display: swap; src: url("../schrift/BricolageGrotesque-Bold.ttf") format("truetype"); }
+:root, :root[data-theme="dark"] {
+  /* Grundfarben passend zum lila Hintergrund (vorher neutrales Schwarz) */
+  --bg: #15141f;
+  --bg-2: #1a1926;
+  --surface: #211f2e;
+  --surface-2: #2b293a;
+  --surface-3: #37344a;
+  --header-bg: rgba(21, 20, 31, .92);
+  --head-h: 4.7rem;
+  --app-bg: radial-gradient(70% 90% at 0% 0%, rgba(139, 92, 246, .24), transparent 62%), radial-gradient(60% 80% at 100% 100%, rgba(79, 157, 255, .13), transparent 60%), #15141f;
+  --glass: rgba(255, 255, 255, .13);
+  --glass-line: rgba(255, 255, 255, .24);
+  --glass-shadow: inset 0 0 0 1px rgba(255, 255, 255, .24), inset 0 1px 0 rgba(255, 255, 255, .28), 0 .45rem 1.4rem -.65rem rgba(0, 0, 0, .6);
+  --ring: 0 0 0 .18rem rgba(192, 132, 252, .8), 0 0 1.5rem rgba(168, 85, 247, .55);
+  --font-menu: "Bricolage Grotesque", var(--font);
+}
+/* Logo-Zeichen: T und Play-Zeichen weiß (Erays Wahl „Logo 1“; die lila Kachel dazu gibt es als App-Symbol und im Startbild) */
+.brand-mark { color: #fff; }
+.brand-mark .play { fill: #fff; }
+/* Hintergrund: auf jeder Seite derselbe wie auf der Startseite */
+.screen { background: var(--app-bg); }
+.screen.modal { background: transparent; }
+/* Seiten, die früher einen eigenen Farbverlauf hatten (Start, Live TV, TV-Programm, Einstellungen), zeigen jetzt den gemeinsamen */
+:root[data-theme="dark"] .shell.is-launcher, :root[data-theme="dark"] .section-live, :root[data-theme="dark"] .guide, :root[data-theme="dark"] .st2 { background: none; }
+/* Seitenleisten liegen direkt auf dem Hintergrund (vorher eigene dunkle Fläche) */
+.mv-side { background: transparent; }
+/* Leisten, unter denen Inhalt durchläuft, decken mit demselben Verlauf ab – so bleibt keine Kante sichtbar */
+.chipbar-wrap { background: var(--app-bg); background-attachment: fixed; }
+body.lite .chipbar-wrap { background: var(--bg); }
+
+/* ---------- Leiste oben ---------- */
+.topnav.nb {
+  flex: none; height: var(--head-h); display: flex; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center;
+  padding: 0 var(--pad); background: transparent; box-shadow: none; position: relative; z-index: 5;
+}
+.nb-left { display: flex; align-items: center; min-width: 0; }
+.nb-left > * + * { margin-left: 1.1rem; }
+.nb-left .brand-mark { width: 2.1rem; height: 2.1rem; }
+.nb-clock { position: relative; flex: none; font-family: var(--font-menu); line-height: 1; white-space: nowrap; }
+.nb-time { font-size: 1.45rem; font-weight: 700; letter-spacing: -.01em; color: #fff; font-variant-numeric: tabular-nums; }
+/* Datum nur auf der Startseite – klein unter der Uhr, damit die Statuszeichen nie zur Seite rücken */
+.nb-date { display: none; position: absolute; left: .05rem; top: 100%; margin-top: .28rem; font-size: .68rem; font-weight: 400; color: rgba(255, 255, 255, .85); }
+.shell.is-launcher .nb-date { display: block; }
+/* Statuszeichen: Internet · Playlist · Player – nur Symbole, die Farbe zeigt den Zustand */
+.nb-status { display: flex; align-items: center; flex: none; }
+.nb-st { display: inline-flex; align-items: center; justify-content: center; width: 1.9rem; height: 1.9rem; padding: 0; border-radius: 50%; background: none; color: #a9a9b4; }
+.nb-st + .nb-st { margin-left: .06rem; }
+.nb-st .i { width: 1.23rem; height: 1.23rem; }
+.nb-st.is-ok { color: #34d399; }
+.nb-st.is-warn { color: #fbbf24; }
+.nb-st.k-playlist.is-warn { color: #fb923c; }
+.nb-st.is-off { color: #ff5b73; }
+.nb-st.is-wait .i { animation: nbPulse 1.4s ease-in-out infinite; }
+@keyframes nbPulse { 50% { opacity: .35; } }
+body.kbd .nb-st.f:focus, body.is-tv .nb-st.f:focus { background: #fff; box-shadow: var(--ring); }
+/* Reiter in der Mitte: nur Text, auf einer Glas-Fläche */
+.nb-tabs {
+  display: flex; align-items: center; min-width: 0; padding: .32rem; border-radius: 999px; background: var(--glass);
+  -webkit-backdrop-filter: blur(1rem) saturate(1.5); backdrop-filter: blur(1rem) saturate(1.5); box-shadow: var(--glass-shadow);
+}
+.ntab {
+  display: inline-flex; align-items: center; justify-content: center; height: 2.55rem; padding: 0 1.4rem; border-radius: 999px;
+  color: rgba(255, 255, 255, .9); font-family: var(--font-menu); font-size: 1.05rem; font-weight: 400; white-space: nowrap;
+  transition: background-color .15s ease, color .15s ease, box-shadow .15s ease;
+}
+.ntab + .ntab { margin-left: .18rem; }
+.ntab .i { display: none; }
+/* Die Beschriftung reserviert schon die Breite der fetten Schrift – so springt das Menü beim Wechseln nicht */
+.ntab-label { display: inline-flex; flex-direction: column; align-items: center; }
+.ntab-label::after { content: attr(data-t); height: 0; overflow: hidden; visibility: hidden; font-weight: 700; }
+.ntab.is-on { background: rgba(255, 255, 255, .26); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .3); color: #fff; font-weight: 700; }
+/* Markierung der Fernbedienung: genau eine, klar weiß – der gewählte Reiter bleibt dabei ruhig grau */
+body.kbd .ntab.f:focus, body.is-tv .ntab.f:focus { background: #fff; color: #120f1a; box-shadow: var(--ring); }
+/* Knöpfe rechts: Suche · Aktualisieren · Einstellungen */
+.nb-tools { display: flex; align-items: center; justify-content: flex-end; min-width: 0; }
+.nbtn {
+  flex: none; width: 2.73rem; height: 2.73rem; border-radius: 50%; display: flex; display: grid; place-items: center; color: #fff; background: var(--glass);
+  -webkit-backdrop-filter: blur(1rem) saturate(1.5); backdrop-filter: blur(1rem) saturate(1.5); box-shadow: var(--glass-shadow);
+}
+.nbtn + .nbtn { margin-left: .55rem; }
+.nbtn .i { width: 1.28rem; height: 1.28rem; }
+.nbtn.is-on { background: #fff; color: #120f1a; box-shadow: none; }
+body.kbd .nbtn.f:focus, body.is-tv .nbtn.f:focus { background: #fff; color: #120f1a; box-shadow: var(--ring); }
+.nbtn.is-busy .i { animation: nbSpin 1s linear infinite; }
+@keyframes nbSpin { to { transform: rotate(360deg); } }
+@media (hover: hover) {
+  .ntab:not(.is-on):hover { background: rgba(255, 255, 255, .12); color: #fff; }
+  .nbtn:not(.is-on):hover { background: rgba(255, 255, 255, .22); }
+}
+/* Sparmodus (schwache Geräte): keine Unschärfe, dafür etwas deckender */
+body.lite .nb-tabs, body.lite .nbtn { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(60, 56, 84, .92); }
+body.lite .nbtn.is-on, body.lite.is-tv .nbtn.f:focus, body.lite.kbd .nbtn.f:focus { background: #fff; }
+@media (prefers-reduced-motion: reduce) { .ntab, .nbtn { transition: none; } .nb-st.is-wait .i, .nbtn.is-busy .i { animation: none; } }
+
+/* ---------- Suche: klappt weich unter der Lupe auf ---------- */
+.qs-dim { background: rgba(14, 12, 24, .9); -webkit-backdrop-filter: blur(.6rem); backdrop-filter: blur(.6rem); animation: qsDim .22s ease-out; -webkit-mask-image: linear-gradient(180deg, transparent, #000 2.6rem); mask-image: linear-gradient(180deg, transparent, #000 2.6rem); }
+.qs {
+  border-radius: 999px; background: rgba(58, 52, 86, .82); -webkit-backdrop-filter: blur(1.4rem) saturate(1.5); backdrop-filter: blur(1.4rem) saturate(1.5);
+  box-shadow: var(--glass-shadow), 0 1.2rem 2.6rem -1rem rgba(0, 0, 0, .7); transform-origin: 100% 0; animation: qsIn .25s cubic-bezier(.2, .8, .2, 1);
+}
+.qs:focus-within { box-shadow: inset 0 0 0 1.5px rgba(192, 132, 252, .9), 0 0 0 4px rgba(168, 85, 247, .2), 0 1.2rem 2.6rem -1rem rgba(0, 0, 0, .7); }
+.qs > .i { color: #fff; }
+.qs input::placeholder { color: rgba(255, 255, 255, .6); }
+.qs-pop {
+  border-radius: 1.3rem; background: rgba(40, 36, 60, .9); -webkit-backdrop-filter: blur(1.4rem) saturate(1.5); backdrop-filter: blur(1.4rem) saturate(1.5);
+  box-shadow: var(--glass-shadow), 0 1.6rem 3.4rem -1rem rgba(0, 0, 0, .8); transform-origin: 100% 0; animation: qsIn .3s cubic-bezier(.2, .8, .2, 1);
+}
+.qs-sc.is-on { background: rgba(255, 255, 255, .26); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .3); color: #fff; }
+@keyframes qsIn { from { opacity: 0; transform: translateY(-.9rem) scale(.97); } }
+@keyframes qsDim { from { opacity: 0; } }
+body.lite .qs, body.lite .qs-pop { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgb(44, 40, 66); animation: none; }
+body.lite .qs-dim { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(14, 12, 24, .96); animation: none; -webkit-mask-image: none; mask-image: none; }
+@media (prefers-reduced-motion: reduce) { .qs, .qs-pop, .qs-dim { animation: none; } }
+
+/* ---------- Lade-Kacheln: Platzhalter in der Form der Seite ---------- */
+.sk { display: block; border-radius: .9rem; background: rgba(255, 255, 255, .075); position: relative; overflow: hidden; }
+.sk::after { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 60%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .09), transparent); transform: translateX(-120%); animation: skShine 1.25s ease-in-out infinite; }
+@keyframes skShine { to { transform: translateX(260%); } }
+body.lite .sk::after { display: none; }
+@media (prefers-reduced-motion: reduce) { .sk::after { display: none; } }
+.sk-view { flex: 1; min-height: 0; display: flex; align-items: flex-start; padding: .3rem var(--pad) 0; overflow: hidden; animation: skIn .18s ease-out; }
+@keyframes skIn { from { opacity: 0; } }
+.sk-cats { flex: none; width: 15.9rem; margin-right: 1.38rem; }
+.sk-cats .sk { height: 2.9rem; margin-bottom: .65rem; }
+.sk-cats .sk:nth-child(3n) { width: 78%; }
+.sk-posters { flex: 1; min-width: 0; }
+.sk-poster { padding-top: 150%; border-radius: 1rem; margin-bottom: 3.2rem; }
+.sk-chans { flex: 1; min-width: 0; }
+.sk-chans .sk { height: 4.9rem; margin-bottom: .55rem; border-radius: 1.1rem; }
+.sk-prev { flex: none; width: 40%; margin-left: 2.4rem; }
+.sk-prev .sk-pic { padding-top: 56.25%; border-radius: 1.4rem; margin-bottom: 1.4rem; }
+.sk-prev .sk-line { height: 1.6rem; width: 62%; margin-bottom: .8rem; }
+.sk-prev .sk-line.is-short { width: 38%; }
+.sk-view.skv-home, .sk-view.skv-favs { display: block; }
+.sk-hero { height: 24rem; border-radius: 1.6rem; margin-bottom: 1.8rem; }
+.sk-row { display: flex; overflow: hidden; margin-bottom: 1.6rem; }
+.sk-row .sk { flex: none; width: 11rem; height: 15.6rem; margin-right: 1.2rem; border-radius: 1rem; }
+.sk-head { margin: .8rem 0 1.8rem; }
+.sk-head .sk { width: 30rem; max-width: 100%; height: 3.4rem; border-radius: 999px; }
+
+/* ---------- Aktualisieren: kleines Feld unter dem Knopf ---------- */
+.rf-card {
+  position: absolute; z-index: 46; top: calc(var(--head-h) - .15rem); right: var(--pad); width: 17.5rem; padding: 1rem 1.1rem .8rem; border-radius: 1.3rem;
+  background: rgba(52, 46, 78, .86); -webkit-backdrop-filter: blur(1.4rem) saturate(1.5); backdrop-filter: blur(1.4rem) saturate(1.5);
+  box-shadow: var(--glass-shadow), 0 1.6rem 3.2rem -1rem rgba(0, 0, 0, .75); transform-origin: 80% 0; animation: qsIn .25s cubic-bezier(.2, .8, .2, 1);
+  transition: opacity .22s ease, transform .22s ease; pointer-events: none;
+}
+.rf-card.is-out { opacity: 0; transform: translateY(-.5rem); }
+.rf-title { display: block; font-size: .98rem; font-weight: 700; color: #fff; margin-bottom: .55rem; }
+.rf-card.is-done .rf-title { color: #34d399; }
+.rf-card.is-failed .rf-title { color: #ff5b73; }
+.rf-row { display: flex; align-items: center; padding: .34rem 0; font-size: .95rem; color: rgba(255, 255, 255, .92); }
+.rf-row .i { width: 1.15rem; height: 1.15rem; margin-right: .65rem; flex: none; color: rgba(255, 255, 255, .75); }
+.rf-row b { flex: 1; min-width: 0; font-weight: 500; }
+.rf-n { flex: none; display: inline-flex; align-items: center; font-weight: 700; font-variant-numeric: tabular-nums; }
+.rf-row.is-done .rf-n { color: #34d399; }
+.rf-row.is-fail .rf-n { color: #ff5b73; }
+.rf-spin { display: block; width: 1rem; height: 1rem; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .25); border-top-color: #fff; animation: nbSpin .8s linear infinite; }
+.rf-err { margin: .5rem 0 .2rem; font-size: .85rem; line-height: 1.4; color: rgba(255, 255, 255, .8); }
+body.lite .rf-card { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgb(44, 40, 66); animation: none; }
+@media (prefers-reduced-motion: reduce) { .rf-card { animation: none; transition: none; } }
+
+/* ---------- Handy hoch: Reiter unten, oben Logo, Statuszeichen und Knöpfe ---------- */
+@media (max-width: 960px) and (orientation: portrait) {
+  html:not(.tv) .topnav.nb { display: flex; justify-content: space-between; padding-top: env(safe-area-inset-top); height: calc(var(--head-h) + env(safe-area-inset-top)); }
+  html:not(.tv) { --head-h: 3.9rem; }
+  html:not(.tv) .nb-left .brand-mark { width: 2rem; height: 2rem; }
+  html:not(.tv) .nb-left > * + * { margin-left: .7rem; }
+  html:not(.tv) .nb-clock { display: none; }
+  html:not(.tv) .nb-st { width: 1.75rem; height: 1.75rem; }
+  html:not(.tv) .nb-st .i { width: 1.3rem; height: 1.3rem; }
+  html:not(.tv) .nbtn { width: 2.9rem; height: 2.9rem; }
+  html:not(.tv) .nbtn .i { width: 1.4rem; height: 1.4rem; }
+  html:not(.tv) .nb-tabs {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; justify-content: space-around; align-items: flex-start; border-radius: 0;
+    padding: .3rem .2rem calc(.3rem + env(safe-area-inset-bottom)); height: calc(4.3rem + env(safe-area-inset-bottom));
+    background: rgba(40, 36, 60, .78); -webkit-backdrop-filter: blur(1.4rem) saturate(1.5); backdrop-filter: blur(1.4rem) saturate(1.5); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16);
+  }
+  html:not(.tv) .ntab { flex: 1; flex-direction: column; height: auto; padding: .3rem .1rem; margin: 0; font-size: .8rem; color: rgba(255, 255, 255, .8); background: transparent; box-shadow: none; }
+  html:not(.tv) .ntab + .ntab { margin-left: 0; }
+  html:not(.tv) .ntab .i { display: block; width: 1.5rem; height: 1.5rem; padding: .25rem 1.05rem; box-sizing: content-box; border-radius: 999px; margin-bottom: .22rem; }
+  html:not(.tv) .ntab.is-on { background: transparent; box-shadow: none; color: #fff; }
+  html:not(.tv) .ntab.is-on .i { background: rgba(255, 255, 255, .22); }
+  html:not(.tv) .content { padding-bottom: calc(4.4rem + env(safe-area-inset-bottom)); }
+  html:not(.tv) .rf-card { left: 12px; right: 12px; width: auto; top: calc(var(--head-h) + env(safe-area-inset-top)); }
+  html:not(.tv) .sk-view { display: block; }
+  html:not(.tv) .sk-cats { display: flex; width: auto; margin: 0 0 1rem; overflow: hidden; }
+  html:not(.tv) .sk-cats .sk, html:not(.tv) .sk-cats .sk:nth-child(3n) { flex: none; width: 6.2rem; height: 2.5rem; margin: 0 .5rem 0 0; border-radius: 999px; }
+  html:not(.tv) .sk-poster { margin-bottom: 2.4rem; }
+  html:not(.tv) .sk-prev { display: none; }
+  html:not(.tv) .sk-hero { height: 60vh; }
+  html:not(.tv) .sk-row .sk { width: 7.6rem; height: 10.8rem; margin-right: .7rem; }
+}
+/* ---------- Handy quer: Leiste an der Seite ---------- */
+@media (orientation: landscape) and (max-height: 540px) {
+  /* wenig Höhe: alles etwas enger, und zur Sicherheit lässt sich die Leiste schieben (z. B. bei großer Schrift) */
+  html:not(.tv) .topnav.nb { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; background: rgba(40, 36, 60, .5); overflow-y: auto; scrollbar-width: none; padding-top: .45rem; padding-bottom: .45rem; }
+  html:not(.tv) .topnav.nb::-webkit-scrollbar { display: none; }
+  html:not(.tv) .nb-left { flex-direction: column; flex: none; }
+  html:not(.tv) .nb-left .brand-mark { width: 1.7rem; height: 1.7rem; }
+  html:not(.tv) .nb-left > * + * { margin-left: 0; margin-top: .3rem; }
+  html:not(.tv) .nb-clock { display: none; }
+  html:not(.tv) .nb-st { width: 1.35rem; height: 1.35rem; }
+  html:not(.tv) .nb-st .i { width: 1.05rem; height: 1.05rem; }
+  html:not(.tv) .nb-tabs { flex-direction: column; align-items: stretch; flex: none; width: 100%; margin-top: .35rem; padding: 0; border-radius: 0; background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  html:not(.tv) .ntab { flex-direction: column; height: auto; padding: .28rem .2rem; margin: 0 0 .1rem; font-size: .68rem; border-radius: .7rem; }
+  html:not(.tv) .ntab + .ntab { margin-left: 0; }
+  html:not(.tv) .ntab .i { display: block; width: 1.3rem; height: 1.3rem; margin-bottom: .12rem; }
+  html:not(.tv) .nb-tools { flex-direction: column; flex: none; margin-top: auto; padding-top: .3rem; }
+  html:not(.tv) .nbtn + .nbtn { margin-left: 0; margin-top: .28rem; }
+  html:not(.tv) .nbtn { width: 2.15rem; height: 2.15rem; }
+  html:not(.tv) .nbtn .i { width: 1.1rem; height: 1.1rem; }
+  html:not(.tv) .rf-card { top: .6rem; right: .8rem; }
+  html:not(.tv) .sk-cats { width: 11rem; margin-right: 1.2rem; }
+  html:not(.tv) .sk-prev { display: none; }
+  html:not(.tv) .sk-hero { height: 12rem; }
+}
+
+/* ==========================================================
+   NEUES AUSSEHEN – Teil 2 „Seiten“ (1.15.10)
+   ========================================================== */
+/* Roter Knopf für Gefährliches (Playlist löschen) – ruhig rot umrandet, gefüllt erst unter der Markierung */
+.btn.danger { color: #ff9aa8; background: rgba(255, 91, 115, .1); box-shadow: inset 0 0 0 1px rgba(255, 91, 115, .55); }
+.btn.danger .i { color: inherit; }
+body.kbd .btn.danger.f:focus, body.is-tv .btn.danger.f:focus { background: #ff5b73; color: #fff; box-shadow: 0 0 0 .18rem rgba(255, 91, 115, .45), 0 0 1.5rem rgba(255, 91, 115, .5); }
+@media (hover: hover) { .btn.danger:hover { background: rgba(255, 91, 115, .22); color: #fff; } }
+
+/* ---------- Einstellungen: ruhige Liste links, einfarbig ---------- */
+.st2 .st-title { font-family: var(--font-menu); font-weight: 700; }
+.st2 .st-title .i { display: none; }
+.st2 .st-sec .st-sic { width: 1.7rem; height: 1.7rem; margin-right: .9rem; background: none; color: #fff; border-radius: 0; }
+.st2 .st-sec .st-sic .i { width: 1.5rem; height: 1.5rem; }
+.st2 .st-sec { border-radius: 1rem; }
+.st2 .st-sec.is-on { background: rgba(255, 255, 255, .16); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22); color: #fff; }
+.st2 .st-sec.is-on .st-sic { background: none; color: #fff; }
+body.kbd .st2 .st-sec.f:focus, body.is-tv .st2 .st-sec.f:focus { background: rgba(255, 255, 255, .22); color: #fff; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .3), var(--ring); }
+body.kbd .st2 .st-sec.f:focus .st-sic, body.is-tv .st2 .st-sec.f:focus .st-sic { color: #fff; background: none; }
+.st2 .st-head .st-hic { display: none; }
+.st2 .st-row .st-ic { background: rgba(255, 255, 255, .08); color: #fff; }
+/* Profil: Playlist-Karte, darunter Zugang und Dieses Gerät nebeneinander */
+.pf2 .pf-card { border-radius: 1.2rem; background: rgba(255, 255, 255, .045); box-shadow: inset 0 0 0 1px rgba(196, 167, 255, .2); padding: 1.3rem 1.4rem; }
+.pf2 .pf-hero { display: flex; align-items: center; flex-wrap: wrap; }
+.pf2 .pf-hero > .st-ic { flex: none; width: 3.6rem; height: 3.6rem; margin-right: 1.2rem; border-radius: 1.1rem; display: flex; display: grid; place-items: center; color: #fff; background: linear-gradient(145deg, #a78bfa, #6d3df0); }
+.pf2 .pf-hero > .st-ic .i { width: 1.9rem; height: 1.9rem; }
+.pf2 .pf-hero .pc-txt { flex: 1; min-width: 10rem; }
+.pf2 .pf-hero h3 { font-size: 1.4rem; font-weight: 700; margin: 0 0 .45rem; }
+.pf2 .hero-status { display: inline-flex; align-items: center; padding: .28rem .75rem; border-radius: 999px; font-size: .86rem; font-weight: 700; color: #34d399; background: rgba(52, 211, 153, .13); }
+.pf2 .hero-status .dot { width: .5rem; height: .5rem; border-radius: 50%; background: currentColor; margin-right: .5rem; }
+.pf2 .hero-status.is-warn { color: #fb923c; background: rgba(251, 146, 60, .14); }
+.pf2 .hero-status.is-off { color: #ff5b73; background: rgba(255, 91, 115, .14); }
+.pf2 .pf-hero .row { flex: none; margin: 0; }
+.pf2 .pf-hero .row .btn + .btn { margin-left: .8rem; }
+.pf2 .pf-cols { display: flex; display: grid; grid-template-columns: 1fr 1fr; grid-gap: 1.2rem; gap: 1.2rem; margin-top: 1.2rem; }
+.pf2 > .pf-card + .pf-card, .pf2 > .pf-cols + .pf-card { margin-top: 1.2rem; }
+.pf-cap { margin: 0 0 .7rem; font-size: .78rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: rgba(255, 255, 255, .6); }
+.pf2 .kv { display: grid; grid-template-columns: minmax(7rem, 34%) 1fr; grid-gap: 0; gap: 0; align-items: stretch; margin: 0; }
+.pf2 .pf-hero, .pf2 .pf-cols .pf-card { margin: 0; }
+.pf2 .kv > span, .pf2 .kv > b { display: flex; align-items: center; }
+.pf2 .kv > span, .pf2 .kv > b { padding: .78rem 0; border-top: 1px solid rgba(255, 255, 255, .08); min-width: 0; overflow-wrap: anywhere; }
+.pf2 .kv > span:first-child, .pf2 .kv > span:first-child + b { border-top: 0; }
+.pf2 .kv > span { color: rgba(255, 255, 255, .62); }
+.pf2 .kv > b { font-weight: 600; }
+.pf2 .kv-copy { display: flex; align-items: center; justify-content: space-between; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .04em; }
+@media (max-width: 960px) and (orientation: portrait) {
+  html:not(.tv) .pf2 .pf-cols { grid-template-columns: 1fr; }
+  html:not(.tv) .pf2 .kv { display: grid; grid-template-columns: minmax(6rem, 40%) 1fr; }
+  html:not(.tv) .pf2 .kv > span:first-child + b { border-top: 0; }
+  html:not(.tv) .st2 .st-sec.is-on .st-sic, html:not(.tv) .st2 .st-sec.is-on .st-sic .i { color: #120f1a; }
+  html:not(.tv) .pf2 .pf-hero .row { width: 100%; margin-top: 1rem; }
+  html:not(.tv) .pf2 .pf-hero .row .btn { flex: 1; }
+}
+
+/* ---------- Startseite: Vorschlag oben ohne Rahmen, darunter nur Reihen ---------- */
+.hm2 .hm-heroslot { position: static; }
+.hm2 .hm-hero { position: static; display: block; min-height: 0; margin: 0; border-radius: 0; overflow: visible; background: none; box-shadow: none; }
+.hm2 .hm-stage { position: static; }
+.hm2 .fhero.is-home { position: static; display: block; height: auto; min-height: 0; overflow: visible; background: none; }
+/* Das Bild liegt oben rechts hinter allem (auch hinter der Leiste) und läuft nach links und unten aus */
+.hm2 .fhero.is-home .fh-bg {
+  position: absolute; z-index: 0; top: calc(-1 * var(--head-h)); right: 0; left: auto; bottom: auto; width: 68%; height: 31rem; background-position: center 22%; transform: none;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 46%), linear-gradient(180deg, #000 52%, transparent 100%); -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(90deg, transparent 0, #000 46%), linear-gradient(180deg, #000 52%, transparent 100%); mask-composite: intersect;
+}
+.hm2 .fhero.is-home .fh-bg.is-in { opacity: .82; }
+.hm2 .fhero.is-home .fh-shade { display: none; }
+.hm2 .fhero.is-home .fh-in { position: relative; z-index: 1; max-width: 44rem; padding: .9rem var(--pad) 0; animation: none; }
+.hm2 .hm-kick { display: block; font-size: .98rem; font-weight: 600; color: rgba(255, 255, 255, .88); margin-bottom: .45rem; letter-spacing: 0; }
+.hm2 .fhero.is-home .fh-title { font-size: 2.55rem; line-height: 1.1; margin: 0 0 .55rem; text-shadow: 0 .1rem 1.2rem rgba(0, 0, 0, .45); }
+.hm2 .fhero.is-home .fh-plot { font-size: 1rem; line-height: 1.5; color: rgba(255, 255, 255, .86); margin: 0 0 .9rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.hm2 .fhero.is-home .fh-actions { display: flex; align-items: center; flex-wrap: wrap; margin: 0; }
+.hm2 .fhero.is-home .fh-actions .btn.primary { background: #8b5cf6; color: #fff; box-shadow: none; }
+.hm2 .fhero.is-home .fh-actions .btn.ghost { background: rgba(10, 8, 18, .45); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .28); }
+.hm2 .hm-dots { margin: 0 0 0 1.4rem; align-items: center; }
+.hm2 .hm-dots i.is-on { background: #a78bfa; }
+body.lite .hm2 .fhero.is-home .fh-bg { -webkit-mask-image: none; mask-image: none; width: 46%; height: 17rem; top: 0; right: var(--pad); border-radius: 1.2rem; }
+/* Reihen */
+.hm2 .hm-rows { position: relative; z-index: 1; padding: 0 var(--pad) .2rem; }
+.hm2 .hm-row { margin-top: 1.35rem; }
+.hm2 .hm-rtitle { font-size: 1.38rem; font-weight: 700; }
+.hm2 .hm-rhead { margin-bottom: .75rem; }
+.hm2 .hm-t10info { color: rgba(255, 255, 255, .7); font-size: .92rem; }
+/* Weiterschauen: breite Kacheln zum Durchblättern, das Play-Zeichen zeigt nur die markierte */
+.hm2 .lr-card { width: 16.6rem; height: 8.9rem; margin-right: 0; border-radius: 1.2rem; }
+.hm2 .lr-card .hm-play { top: 1.15rem; right: 1.15rem; margin-top: 0; width: 2.7rem; height: 2.7rem; background: #fff; color: #120f1a; box-shadow: none; opacity: 0; transition: opacity .15s ease; }
+body.kbd .hm2 .lr-card.f:focus .hm-play, body.is-tv .hm2 .lr-card.f:focus .hm-play { opacity: 1; }
+body.kbd .hm2 .lr-card.f:focus, body.is-tv .hm2 .lr-card.f:focus { box-shadow: var(--ring); transform: none; }
+/* Top 10: die Reihe ist schon „Filme“ oder „Serien“ – das Schild auf der Kachel entfällt */
+.hm2 .hm-t10 .t10-tag { display: none; }
+body.kbd .hm2 .hm-t10.f:focus .art, body.is-tv .hm2 .hm-t10.f:focus .art { box-shadow: var(--ring); }
+/* Platzhalter beim Laden – dieselbe Form wie die fertige Seite */
+.hm-skhero { display: block; height: 14.5rem; margin: 1rem var(--pad) 0; width: 44rem; max-width: calc(100% - 2 * var(--pad)); border-radius: 1.4rem; }
+.hm-skrow .hm-sktitle { display: block; width: 13rem; height: 1.6rem; margin-bottom: .9rem; border-radius: .6rem; }
+.hm-skrow .hm-track { display: flex; overflow: hidden; }
+.hm-skrow .hm-track .sk { flex: none; width: 16.6rem; height: 9.3rem; margin-right: 1.15rem; border-radius: 1.2rem; }
+.hm-skrow.is-t10 .hm-track .sk { width: 9rem; height: 13.4rem; margin: 0 1.6rem 0 2.2rem; border-radius: 1rem; }
+/* Leere Startseite: drei Felder */
+.hm-empty { position: relative; z-index: 1; }
+.hm2.is-void .hm-empty { display: flex; display: grid; grid-template-columns: 1fr 1fr 1.25fr; grid-gap: 1.3rem; gap: 1.3rem; padding: 1.2rem var(--pad) 2rem; align-items: stretch; }
+.hm-w { border-radius: 1.4rem; padding: 1.5rem 1.6rem; background: rgba(255, 255, 255, .06); box-shadow: inset 0 0 0 1px rgba(196, 167, 255, .22); min-width: 0; display: flex; flex-direction: column; }
+.hm-w h2 { font-size: 1.3rem; font-weight: 700; margin: 0 0 .5rem; }
+.hm-w-sub { color: rgba(255, 255, 255, .7); margin: 0 0 1rem; font-size: .95rem; }
+.hm-w ul { list-style: none; margin: 0; padding: 0; }
+.hm-w li { display: flex; align-items: flex-start; padding: .45rem 0; font-size: 1rem; line-height: 1.4; }
+.hm-w li .i { flex: none; width: 1.15rem; height: 1.15rem; margin: .12rem .7rem 0 0; color: #34d399; }
+.hm-w-name { display: block; font-size: 1.1rem; margin-bottom: .7rem; }
+.hm-w .kv { display: grid; grid-template-columns: auto 1fr; grid-gap: .5rem 1.2rem; gap: .5rem 1.2rem; margin: 0 0 1.2rem; }
+.hm-w .kv > span { color: rgba(255, 255, 255, .65); }
+.hm-w .btn { align-self: flex-start; margin-top: auto; }
+.hm-w-chans { display: flex; display: grid; grid-template-columns: 1fr 1fr; grid-gap: .7rem; gap: .7rem; }
+.hm-w-chans .hm-ch { width: auto; margin: 0; }
+@media (max-width: 960px) and (orientation: portrait) {
+  html:not(.tv) .hm2 .fhero.is-home .fh-bg { width: 100%; height: 22rem; top: 0; -webkit-mask-image: linear-gradient(180deg, #000 35%, transparent 100%); mask-image: linear-gradient(180deg, #000 35%, transparent 100%); }
+  html:not(.tv) .hm2 .fhero.is-home .fh-bg.is-in { opacity: .6; }
+  html:not(.tv) .hm2 .fhero.is-home .fh-in { padding: 7.5rem var(--pad) 0; }
+  html:not(.tv) .hm2 .fhero.is-home .fh-title { background: none; }
+  html:not(.tv) .hm2 .fhero.is-home .fh-title { font-size: 2rem; }
+  html:not(.tv) .hm2 .lr-card, html:not(.tv) .hm-skrow .hm-track .sk { width: 13.4rem; height: 7.6rem; margin-right: .8rem; }
+  html:not(.tv) .hm2 .lr-card .hm-play { display: none; }
+  html:not(.tv) .hm2 .hm-t10info { display: block; margin-top: .2rem; font-size: .8rem; }
+  html:not(.tv) .hm2 .hm-rhead { display: block; }
+  html:not(.tv) .hm2.is-void .hm-empty { grid-template-columns: 1fr; }
+  html:not(.tv) .hm-skhero { height: 16rem; }
+}
+@media (orientation: landscape) and (max-height: 540px) {
+  html:not(.tv) .hm2 .fhero.is-home .fh-bg { top: 0; height: 15rem; }
+  html:not(.tv) .hm2 .fhero.is-home .fh-title { font-size: 1.8rem; }
+  html:not(.tv) .hm2 .lr-card { width: 13rem; height: 7.4rem; }
+  html:not(.tv) .hm2.is-void .hm-empty { grid-template-columns: 1fr 1fr; }
+}
+
+/* ---------- Live TV: Kategorien, Senderliste, Vorschau im neuen Aussehen ---------- */
+.sec-cap { display: flex; align-items: baseline; padding: .2rem .4rem .9rem; }
+.sec-cap h2 { font-size: 1.5rem; font-weight: 700; margin: 0 .8rem 0 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sec-cap small { flex: none; font-size: .95rem; color: rgba(255, 255, 255, .65); font-weight: 600; }
+.section-live .cat.is-on { background: rgba(255, 255, 255, .14); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .2); color: #fff; }
+.section-live .cat.cat-action, .section-live .cat[data-id="__guide"] { background: none; box-shadow: none; }
+.section-live .chan { border-radius: 1.1rem; }
+.section-live .chan.is-playing { background: rgba(255, 255, 255, .1); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .16); }
+.section-live .chan.is-playing .name { color: #fff; }
+/* laufender Sender: grüner Punkt (ohne Wort – gilt so in allen Sprachen) */
+.section-live .chan.is-playing::after { background: #34d399; box-shadow: 0 0 0 .3rem rgba(52, 211, 153, .18); width: .6rem; height: .6rem; margin-right: .5rem; }
+body.kbd .section-live .chan.f:focus, body.is-tv .section-live .chan.f:focus { background: rgba(255, 255, 255, .14); box-shadow: var(--ring); }
+/* Vorschau: Glas-Rahmen mit Lichtschein */
+.section-live .mini-slot-box { border-radius: 1.5rem; background: rgba(255, 255, 255, .05); box-shadow: inset 0 0 0 1px rgba(196, 167, 255, .35), 0 1.6rem 4.5rem -1.4rem rgba(139, 92, 246, .55); }
+.player.is-docked { border-radius: 1.5rem; overflow: hidden; box-shadow: 0 0 0 1px rgba(196, 167, 255, .4), 0 1.6rem 4.5rem -1.4rem rgba(139, 92, 246, .6); }
+.mini-logo, .mini-ok, .mini-bar, .mini-live, .mini-txt small { display: none; }
+.player.is-docked .mini-title {
+  position: absolute; left: .9rem; right: .9rem; bottom: .9rem; display: flex; align-items: center; padding: .7rem 1rem .95rem; border-radius: 1.1rem; white-space: normal; text-align: left;
+  background: rgba(26, 22, 44, .62); -webkit-backdrop-filter: blur(1rem) saturate(1.4); backdrop-filter: blur(1rem) saturate(1.4); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .2);
+}
+.player.is-docked .mini-logo { display: block; flex: none; }
+.player.is-docked .mini-logo .logo-box { width: 3.7rem; height: 2.3rem; margin-right: .9rem; border-radius: .55rem; }
+.player.is-docked .mini-txt { flex: 1; min-width: 0; }
+.player.is-docked .mini-txt b { display: block; font-size: 1.12rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.player.is-docked .has-now .mini-txt small { display: block; font-size: .9rem; color: rgba(255, 255, 255, .84); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.player.is-docked .has-now .mini-bar { display: block; position: absolute; left: 1rem; right: 1rem; bottom: .42rem; height: .2rem; border-radius: 1rem; background: rgba(255, 255, 255, .2); overflow: hidden; }
+.mini-bar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #a855f7, #c084fc); }
+body.is-tv .player.is-docked .mini-ok { display: inline-flex; align-items: center; flex: none; margin-left: .8rem; font-size: .85rem; font-weight: 600; }
+.mini-ok b { margin-right: .5rem; padding: .12rem .45rem; border-radius: .45rem; background: #fff; color: #120f1a; font-size: .78rem; font-weight: 800; }
+.player.is-docked .mini-live { display: inline-flex; align-items: center; position: absolute; left: 1rem; top: 1rem; padding: .3rem .7rem; border-radius: 999px; background: rgba(12, 10, 22, .55); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .25); font-size: .76rem; letter-spacing: .09em; }
+.player.is-docked .mini-live[hidden] { display: none; }
+.mini-live i { width: .5rem; height: .5rem; border-radius: 50%; background: #ff5b73; margin-right: .45rem; }
+.player.is-docked .mini-mute { top: .85rem; right: .85rem; width: 2.6rem; height: 2.6rem; border-radius: 50%; background: rgba(12, 10, 22, .55); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .25); }
+body.lite .player.is-docked .mini-title { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(26, 22, 44, .9); }
+/* unter der Vorschau: Glas-Knöpfe, Jetzt-Karte, nächste Sendungen */
+.section-live .lp-name { display: none; }
+.section-live .lp-arch .btn { background: rgba(255, 255, 255, .1); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22); color: #fff; border-radius: 999px; }
+.section-live .lp-now { border-radius: 1.2rem; background: rgba(255, 255, 255, .06); box-shadow: inset 0 0 0 1px rgba(196, 167, 255, .2); }
+.section-live .lp-tag { background: #8b5cf6; color: #fff; }
+body.kbd .section-live .lp-arch .btn.f:focus, body.is-tv .section-live .lp-arch .btn.f:focus { background: #fff; color: #120f1a; box-shadow: var(--ring); }
+
+/* ---------- Gemeinsame Bausteine im neuen Aussehen: Hauptknopf, Umschalter, Fenster ---------- */
+.btn.primary { background: #8b5cf6; color: #fff; }
+body.kbd .btn.primary.f:focus, body.is-tv .btn.primary.f:focus { background: #fff; color: #120f1a; box-shadow: var(--ring); }
+/* Umschalter (z. B. Sender / Filme / Serien bei den Favoriten): Glas-Leiste, nur Text */
+.seg { background: var(--glass); box-shadow: var(--glass-shadow); -webkit-backdrop-filter: blur(1rem) saturate(1.5); backdrop-filter: blur(1rem) saturate(1.5); }
+.seg .btn { color: rgba(255, 255, 255, .9); border-radius: 999px; box-shadow: none; }
+.seg .btn > .i { display: none; }
+.seg .btn.is-on { background: rgba(255, 255, 255, .26); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .3); color: #fff; }
+body.kbd .seg .btn.f:focus, body.is-tv .seg .btn.f:focus { background: #fff; color: #120f1a; box-shadow: var(--ring); }
+body.lite .seg { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(60, 56, 84, .92); }
+/* Fenster (Film- und Serien-Details, Auswahl-Fenster): Glas mit feinem lila Rand */
+.modal-panel { background: rgba(34, 30, 52, .86); -webkit-backdrop-filter: blur(1.6rem) saturate(1.4); backdrop-filter: blur(1.6rem) saturate(1.4); box-shadow: inset 0 0 0 1px rgba(196, 167, 255, .28), 0 2.4rem 5rem -1.5rem rgba(0, 0, 0, .8); border-radius: 1.6rem; }
+body.lite .modal-panel { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgb(34, 30, 52); }
+.dialog { background: rgba(40, 36, 60, .96); box-shadow: inset 0 0 0 1px rgba(196, 167, 255, .3), 0 2rem 4.5rem -1rem rgba(0, 0, 0, .8); border-radius: 1.5rem; }
+/* Willkommensseite und Playlist-Auswahl: Logo als lila Kachel */
+.profiles-top .brand-mark, .wl-head .brand-mark, .who .brand-mark { box-sizing: border-box; padding: .42rem; border-radius: 28%; background: linear-gradient(145deg, #a78bfa, #6d3df0); }
+/* „Wer schaut?“: derselbe Hintergrund wie die App, Profilbilder mit weißem Zeichen auf Farbe */
+.who { background: var(--app-bg); }
+body.kbd .who-p.f:focus .avatar, body.is-tv .who-p.f:focus .avatar { box-shadow: var(--ring); }
+.avatar .i { color: #fff; }
+
+/* ---------- TV-Programm: liegt unter der Leiste (die Leiste bleibt sichtbar) ---------- */
+.screen.gd-under { top: var(--head-h); }
+:root[data-theme="dark"] .screen.gd-under.guide { background: var(--app-bg); background-attachment: fixed; }
+:root[data-theme="dark"] body.lite .screen.gd-under.guide { background: var(--bg); }
+.gd-under .gd-head { padding-top: .2rem; }
+@media (max-width: 960px) and (orientation: portrait) { html:not(.tv) .screen.gd-under { top: 0; z-index: 40; } }
+@media (orientation: landscape) and (max-height: 540px) { html:not(.tv) .screen.gd-under { top: 0; z-index: 40; } }
+.guide .gd-prog.is-now { background: rgba(139, 92, 246, .28); box-shadow: inset 0 0 0 1px rgba(196, 167, 255, .4); }
+body.kbd .guide .gd-prog.f:focus, body.is-tv .guide .gd-prog.f:focus, body.kbd .guide .gd-ch.f:focus, body.is-tv .guide .gd-ch.f:focus { box-shadow: var(--ring); background: rgba(255, 255, 255, .18); }
+
+/* ---------- Willkommensseite: nur das Zeichen und drei Statuszeichen, Glas-Knöpfe ---------- */
+.wl .wordmark { display: none; }
+.wl-top > .brand { flex: 0 0 auto; }
+.wl-top .wl-status { flex: 1 1 auto; display: flex; justify-content: flex-start; margin-left: 1.1rem; }
+.wl-chip { height: auto; margin: 0 .06rem; padding: 0; width: 1.9rem; justify-content: center; background: none; box-shadow: none; font-size: 0; color: #a9a9b4; }
+.wl-chip i { display: none; }
+.wl-chip .i { width: 1.25rem; height: 1.25rem; margin: 0; opacity: 1; }
+.wl-chip.is-ok { color: #34d399; }
+.wl-chip.is-warn { color: #fbbf24; }
+.wl-chip.is-off { color: #ff5b73; }
+.wl-title { font-family: var(--font-menu); }
+.wl .wl-btn.wl-primary, .wl .wl-primary { background: #8b5cf6; color: #fff; }
+.wl .lang-btn, .wl .wl-help { background: var(--glass); box-shadow: var(--glass-shadow); }
+
+/* ---------- Handy hoch: bei Live TV läuft der Sender klein oben, darunter Kategorien und Senderliste (neu mit 1.15.10) ---------- */
+@media (max-width: 960px) and (orientation: portrait) {
+  html:not(.tv) .section-live .live-panel { display: block; order: -1; flex: none; width: auto; min-width: 0; max-width: none; padding: 0 var(--pad) .9rem; overflow: visible; }
+  html:not(.tv) .section-live .live-panel .lp-hint, html:not(.tv) .section-live .live-panel .lp-name,
+  html:not(.tv) .section-live .live-panel .lp-arch, html:not(.tv) .section-live .live-panel .lp-epg { display: none; }
+  html:not(.tv) .section-live .mini-slot-box { border-radius: 1.2rem; }
+  html:not(.tv) .player.is-docked { border-radius: 1.2rem; }
+  html:not(.tv) .player.is-docked .mini-title { left: .6rem; right: .6rem; bottom: .6rem; padding: .5rem .75rem .7rem; }
+  html:not(.tv) .player.is-docked .mini-logo .logo-box { width: 2.9rem; height: 1.8rem; margin-right: .65rem; }
+  html:not(.tv) .player.is-docked .mini-txt b { font-size: .98rem; }
+  html:not(.tv) .player.is-docked .has-now .mini-bar { left: .75rem; right: .75rem; bottom: .32rem; }
+  html:not(.tv) .sec-cap { padding: 0 0 .7rem; }
+  html:not(.tv) .sec-cap h2 { font-size: 1.2rem; }
+}
+
+/* ---------- Player (eingebauter Player): Bedienleiste mit Glas-Knöpfen ---------- */
+.player .cbtn { background: rgba(255, 255, 255, .14); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .24), inset 0 1px 0 rgba(255, 255, 255, .22); -webkit-backdrop-filter: blur(.8rem) saturate(1.4); backdrop-filter: blur(.8rem) saturate(1.4); }
+body.kbd .player .cbtn.f:focus, body.is-tv .player .cbtn.f:focus { background: #fff; color: #120f1a; box-shadow: var(--ring); }
+.player .live-tag { color: #fff; background: rgba(12, 10, 22, .55); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .25); }
+.player .live-tag i { background: #ff5b73; }
+.player .osd-top { background: linear-gradient(180deg, rgba(14, 12, 24, .82), rgba(14, 12, 24, .3) 55%, rgba(14, 12, 24, 0)); }
+.player .osd-bottom { background: linear-gradient(0deg, rgba(14, 12, 24, .9), rgba(14, 12, 24, .4) 55%, rgba(14, 12, 24, 0)); }
+body.lite .player .cbtn { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(60, 56, 84, .9); }

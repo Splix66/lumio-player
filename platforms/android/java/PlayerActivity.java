@@ -279,10 +279,18 @@ public class PlayerActivity extends Activity {
             liveTag.setText("LIVE");
             liveTag.setLetterSpacing(0.08f);
             liveTag.setPadding(dp(10), dp(4), dp(10), dp(4));
+            // Neues Aussehen (1.15.10): dunkles Glas-Schild mit rotem Punkt – wie das Schild LIVE in der Vorschau der App
             GradientDrawable lt = new GradientDrawable();
-            lt.setColor(0xFFFF4D6D);
-            lt.setCornerRadius(dp(6));
+            lt.setColor(0x8C0C0A16);
+            lt.setCornerRadius(dp(100));
+            lt.setStroke(dp(1), 0x40FFFFFF);
             liveTag.setBackground(lt);
+            GradientDrawable ld = new GradientDrawable();
+            ld.setShape(GradientDrawable.OVAL);
+            ld.setColor(0xFFFF5B73);
+            ld.setSize(dp(8), dp(8));
+            liveTag.setCompoundDrawablesRelativeWithIntrinsicBounds(ld, null, null, null);
+            liveTag.setCompoundDrawablePadding(dp(7));
             liveTag.setVisibility(View.GONE);
             FrameLayout.LayoutParams lpl = new FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM | Gravity.START);
             lpl.setMargins(dp(40), 0, 0, dp(30));
@@ -453,8 +461,9 @@ public class PlayerActivity extends Activity {
         t.setTypeface(Typeface.DEFAULT_BOLD);
         t.setPadding(dp(18), dp(10), dp(18), dp(10));
         GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xCC0B0B0F);
+        bg.setColor(0xD9221E34);          // lila getöntes Glas (neues Aussehen 1.15.10), vorher neutrales Schwarz
         bg.setCornerRadius(dp(14));
+        bg.setStroke(dp(1), 0x47C4A7FF);
         t.setBackground(bg);
         return t;
     }
@@ -472,10 +481,11 @@ public class PlayerActivity extends Activity {
         GradientDrawable on = new GradientDrawable();
         on.setShape(GradientDrawable.OVAL);
         on.setColor(Color.WHITE);
+        on.setStroke(dp(3), 0xFFC084FC);  // gewählt: weiß mit lila Ring – dieselbe Markierung wie in der App (1.15.10)
         GradientDrawable off = new GradientDrawable();
         off.setShape(GradientDrawable.OVAL);
         off.setColor(big ? 0x40FFFFFF : 0x24FFFFFF);
-        off.setStroke(dp(1), 0x33FFFFFF);
+        off.setStroke(dp(1), 0x3DFFFFFF);
         s.addState(new int[] { android.R.attr.state_focused }, on);
         s.addState(new int[] { android.R.attr.state_pressed }, on);
         s.addState(new int[] {}, off);
@@ -505,7 +515,7 @@ public class PlayerActivity extends Activity {
         try {
             View bg = exo("exo_controls_background");
             if (bg != null) bg.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
-                    new int[] { 0xB3000000, 0x1A000000, 0x00000000, 0x59000000, 0xF2000000 }));
+                    new int[] { 0xB30E0C18, 0x1A0E0C18, 0x000E0C18, 0x590E0C18, 0xF20E0C18 }));   // dunkles Lila der App statt Schwarz
             View bottom = exo("exo_bottom_bar");
             if (bottom != null) bottom.setBackgroundColor(Color.TRANSPARENT);
             // Abstand zum Bildschirmrand – sonst wird der runde Knopf ganz rechts (Einstellungen) angeschnitten.
@@ -577,9 +587,9 @@ public class PlayerActivity extends Activity {
         box.setGravity(Gravity.CENTER_VERTICAL);
         box.setPadding(dp(16), dp(14), dp(20), dp(14));
         GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xD914141A);
-        bg.setCornerRadius(dp(16));
-        bg.setStroke(dp(1), 0x26FFFFFF);
+        bg.setColor(0xD9221E34);
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(1), 0x47C4A7FF);
         box.setBackground(bg);
 
         FrameLayout logoBox = new FrameLayout(this);
@@ -838,9 +848,9 @@ public class PlayerActivity extends Activity {
         p.setOrientation(android.widget.LinearLayout.VERTICAL);
         p.setPadding(dp(12), dp(12), dp(12), dp(12));
         GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xE014141A);
-        bg.setCornerRadius(dp(16));
-        bg.setStroke(dp(1), 0x24FFFFFF);
+        bg.setColor(0xEB221E34);
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(1), 0x47C4A7FF);
         p.setBackground(bg);
         return p;
     }
@@ -878,6 +888,7 @@ public class PlayerActivity extends Activity {
         GradientDrawable on = new GradientDrawable();
         on.setColor(Color.WHITE);
         on.setCornerRadius(dp(10));
+        on.setStroke(dp(2), 0xFFC084FC);
         s.addState(new int[] { android.R.attr.state_focused }, on);
         s.addState(new int[] {}, new GradientDrawable());
         r.setBackground(s);
