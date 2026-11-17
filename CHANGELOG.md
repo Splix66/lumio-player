@@ -42,6 +42,7 @@
 - **Handy (hoch): Bei Live TV läuft der Sender klein oben**, darunter Kategorien und Senderliste. Richtet sich nach „Vorschau bei Live TV“ (Einstellungen → Wiedergabe).
 - **Eingebauter Player:** Bedienleiste mit Glas-Knöpfen passend zum neuen Aussehen.
 - **TV-Player (Fire TV, Android-Boxen):** Bedienleiste, Info-Leiste und Menü im neuen Aussehen – lila getöntes Glas statt Schwarz, gewählter Knopf weiß mit lila Ring (dieselbe Markierung wie in der App), Schild LIVE als Glas-Schild mit rotem Punkt. Nur Farben und Formen, an der Wiedergabe selbst ist nichts geändert.
+- **Webseite: neues Logo** (lila Kachel mit weißem Zeichen) in der Kopfzeile von Startseite, Download-Seite und Verwaltung, als Symbol im Browser-Reiter, als Apple-Symbol und im Vorschaubild für geteilte Links. Wird erst mit der Veröffentlichung sichtbar (`docs/` ist die Live-Webseite auf `main`).
 
 ## 1.15.9 – 2026-11-16 · Kleineres Titelbild, Top 10 auf Deutsch, Online-Zeichen
 
