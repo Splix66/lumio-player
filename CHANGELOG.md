@@ -2,7 +2,23 @@
 
 ## 1.15.10 – noch nicht veröffentlicht
 
-- **Neues Aussehen, Teil 1 „Gerüst“** (Erays Auftrag vom 17.11.2026, Entwürfe im Chat abgenommen): einheitliche Symbole aus dem Icon-Set „Phosphor“ (MIT) statt selbst gezeichneter Zeichen.
+**Neues Aussehen, Teil 1 „Gerüst“** (Erays Auftrag vom 17.11.2026, Entwürfe im Chat abgenommen; Plan in brain: „Telvo – Plan Neues Aussehen v1“). Teil 2 (einzelne Seiten) und Teil 3 (Android: Vorschau wird ohne Neustart groß) folgen.
+
+- **Leiste oben neu, auf jeder Seite gleich:** links das Logo-Zeichen, die Uhr (Datum nur auf der Startseite, klein darunter) und drei Statuszeichen ohne Text – Internet, Playlist, Player. Grün = in Ordnung, Gelb = Internet langsam, Orange = Playlist läuft in höchstens einer Woche ab, Rot = aus oder abgelaufen (dann anwählbar, OK zeigt den Grund). In der Mitte Start, Live TV, Filme, Serien, Favoriten nur als Text. Rechts Suche, Aktualisieren, Einstellungen.
+- **Kein Balken unten mehr** – mehr Platz für den Inhalt. Die Uhr steht jetzt oben.
+- **Kein Profil-Knopf mehr in der Leiste:** „Mein Zugang“ steht als erster Bereich „Profil“ in den Einstellungen. Zurück aus dem Profil führt wieder in die Einstellungen.
+- **Fehler behoben: doppelte Markierung im Menü, Menü wirkte träge.** Ursache: Die gleitende Leuchtfläche der Reiter sprang auf den gewählten Reiter zurück, sobald man mit der Fernbedienung nach rechts zu den Knöpfen ging – dort leuchtete gleichzeitig der Knopf. Das sah aus wie zwei Markierungen. Die Leuchtfläche und das „Mitwippen“ der Nachbar-Reiter gibt es nicht mehr: Es gibt genau eine weiße Markierung, der gewählte Reiter bleibt ruhig grau.
+- **Links/Rechts in der Leiste bleibt in der Leiste** (in den Inhalt nur mit Runter). Vorher sprang „Links“ vom ersten Reiter schräg nach unten in die Seite.
+- **Lila Hintergrund auf allen Seiten, nur noch dunkel.** Die Einstellung „Farben“ (Hell / Automatisch) entfällt; wer früher „Hell“ gewählt hatte, sieht jetzt das dunkle Aussehen. „Wetter neben der Uhr“ entfällt (stand nur im Balken unten).
+- **Suche klappt weich unter der Lupe auf** (Glas-Look, kurze Einblendung). Die Lupe bleibt markiert, solange die Suche offen ist.
+- **Aktualisieren ohne eigene Seite:** Die Seite, auf der man ist, zeigt kurz Lade-Kacheln; unter dem Knopf erscheint ein kleines Feld mit Live TV, Filme, Serien und der Anzahl, dann „Alles aktuell!“. Man bleibt auf derselben Seite. Vorher: eigene Ladeseite mit erzwungenen rund 4,8 Sekunden und Sprung zur Startseite; jetzt mindestens eine halbe Sekunde, sonst so lange wie das Laden wirklich dauert. Klappt es nicht, steht der Grund im Feld.
+- **Lade-Kacheln statt Lade-Kreis** in den Listen von Live TV, Filme und Serien – graue Platzhalter in der Form dessen, was gleich kommt.
+- **Symbole:** einheitliches Icon-Set „Phosphor“ (MIT) statt selbst gezeichneter Zeichen; Profilbilder mit gefüllten Symbolen.
+- **Logo:** lila Kachel mit Verlauf, „T“ und Play-Zeichen weiß – als App-Symbol, im Startbild und im TV-Banner; in der Leiste nur das weiße Zeichen.
+- **Schrift im Menü:** „Bricolage Grotesque“ (SIL OFL 1.1), liegt der App bei (`www/schrift/`). Beide neuen Lizenzen stehen unter Einstellungen → Hilfe → Über → Open-Source-Lizenzen.
+- **Handy:** hoch stehen die Reiter unten, oben Logo, Statuszeichen und die drei Knöpfe; quer steht die Leiste an der Seite.
+- **Schwache Geräte (Sparmodus):** dieselbe Leiste ohne Unschärfe-Effekt.
+- Technik: neue Tests in `tests/aussehen.test.js` (10 Tests: Symbole, Leiste, Statuszeichen, Steuerung, nur dunkel, Lade-Kacheln, Aktualisieren mit Fehlerfall und Seitenwechsel).
 
 ## 1.15.9 – 2026-11-16 · Kleineres Titelbild, Top 10 auf Deutsch, Online-Zeichen
 
