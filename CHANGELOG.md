@@ -40,7 +40,8 @@
 
 - **Fernseher: Die Vorschau wird ohne Neustart groß.** Läuft ein Sender schon sichtbar in der Vorschau bei Live TV, macht OK auf diesem Sender das Bild nur groß – derselbe Stream, kein zweites Laden. Vorher schloss die App die Vorschau und startete den TV-Player neu. Zeigt die Vorschau (noch) kein Bild oder einen Fehler, oder wählt man einen anderen Sender, startet wie bisher der TV-Player. Hinweis: Das große Bild läuft in diesem Fall im eingebauten Player (wie die Vorschau), nicht im TV-Player – der große Umbau „ein TV-Player für Vorschau und Vollbild“ steht noch aus und braucht Tests auf dem Gerät.
 - **Handy (hoch): Bei Live TV läuft der Sender klein oben**, darunter Kategorien und Senderliste. Richtet sich nach „Vorschau bei Live TV“ (Einstellungen → Wiedergabe).
-- **Eingebauter Player:** Bedienleiste mit Glas-Knöpfen passend zum neuen Aussehen. Die Bedienleiste des TV-Players (Android) ist unverändert.
+- **Eingebauter Player:** Bedienleiste mit Glas-Knöpfen passend zum neuen Aussehen.
+- **TV-Player (Fire TV, Android-Boxen):** Bedienleiste, Info-Leiste und Menü im neuen Aussehen – lila getöntes Glas statt Schwarz, gewählter Knopf weiß mit lila Ring (dieselbe Markierung wie in der App), Schild LIVE als Glas-Schild mit rotem Punkt. Nur Farben und Formen, an der Wiedergabe selbst ist nichts geändert.
 
 ## 1.15.9 – 2026-11-16 · Kleineres Titelbild, Top 10 auf Deutsch, Online-Zeichen
 
