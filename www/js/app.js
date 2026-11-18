@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Telvo Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.15.13',
+    version: '1.15.14',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     /* Bibliotheken: werden beim Bauen nach www/lib kopiert (scripts/copy-libs.js) und von dort geladen.
        Nur wenn sie fehlen, aus dem Internet – mit fester Version und Prüfsumme (SRI): eine veränderte Datei
@@ -3969,6 +3969,8 @@
           else if (!r.added || !r.added.length) toast(T('Noch keine Playlist gefunden.'), 3000);
         });
       } }, icon('refresh'), h('span', { text: T('Aktualisieren') })) : null;
+      // Fernseher: Adresse zum Abtippen am PC. Handy/Tablet/PC: Knopf „Webseite öffnen“ – dort öffnet ein Tipp die Seite,
+      // und die alte Adresse (…/lumio-player) muss niemand lesen.
       var host = CONFIG.portalUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
       var welcome = h('div', { class: 'profiles is-empty wl' },
         h('div', { class: 'wl-top' },
@@ -3990,7 +3992,7 @@
             h('div', { class: 'wl-qr' },
               h('div', { class: 'wl-qr-frame' }, qrBox(Device.portalLink(), 'wl-qrcode')),
               h('p', { class: 'wl-qr-title', text: T('Mit dem Handy einrichten') }),
-              h('button', { class: 'wl-link f', title: T('Webseite öffnen'), onclick: function () { openExternal(Device.portalLink()); } }, icon('globe'), h('span', { text: host }))),
+              h('button', { class: 'wl-link f', title: T('Webseite öffnen'), onclick: function () { openExternal(Device.portalLink()); } }, icon('globe'), h('span', { text: Platform.tv ? host : T('Webseite öffnen') }))),
             // rechts: MAC, KEY und die Knöpfe untereinander
             h('div', { class: 'wl-side' },
               idTile(T('MAC-Adresse'), Device.mac(), 'MAC'),

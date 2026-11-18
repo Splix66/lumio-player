@@ -4259,3 +4259,23 @@ body.lite .fhero.is-home .fh-bg { transition: opacity .6s ease; }
 .fhero.is-home.hm-leave .fh-in { opacity: 0; transition: opacity .3s ease; }
 .fhero.is-home.hm-in .fh-in, .hm2 .fhero.is-home.hm-in .fh-in { animation: hmTextIn .55s ease both; }
 @keyframes hmTextIn { from { opacity: 0; transform: translateY(.35rem); } to { opacity: 1; transform: none; } }
+/* ---------- Willkommensseite, Handy quer (1.15.14): Statuszeichen nur als Symbole wie überall ----------
+   Die ältere Regel für „Handy quer“ weiter oben blendete die Symbole aus und zeigte Text – in den schmalen Feldern
+   (1,9rem) lagen „Internet verbunden“, „Player bereit“ und „Keine Playlist“ dann übereinander (Erays Foto 17.11.2026). */
+@media (max-height: 540px) and (min-width: 600px) {
+  html:not(.tv) .wl-chip { font-size: 0; margin: 0 .06rem; padding: 0; width: 1.9rem; }
+  html:not(.tv) .wl-chip .i { display: block; width: 1.2rem; height: 1.2rem; margin: 0; }
+  html:not(.tv) .wl-chip i { display: none; }
+  html:not(.tv) .wl-top .wl-status { margin-left: .8rem; }
+  /* QR-Code etwas kleiner: auf dem Handy selbst tippt man „Webseite öffnen“; der Code ist für ein zweites Gerät */
+  html:not(.tv) .wl .qr.wl-qrcode { width: 8rem; }
+}
+/* Sehr niedrige Bildschirme (Handy quer mit großer Schrift oder Leisten): Begrüßung kürzer, damit alles ohne Scrollen passt */
+@media (max-height: 400px) and (min-width: 600px) {
+  html:not(.tv) .wl-sub { display: none; }
+  html:not(.tv) .wl-head { margin-bottom: .5rem; }
+  html:not(.tv) .wl-title { font-size: 1.3rem; }
+  html:not(.tv) .wl .qr.wl-qrcode { width: 6.8rem; }
+  html:not(.tv) .wl-qr-title { margin: .45rem 0 .3rem; }
+  html:not(.tv) .wl-legal { margin-top: .5rem; }
+}

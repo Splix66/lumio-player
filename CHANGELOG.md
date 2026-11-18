@@ -1,5 +1,9 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## 1.15.14 – noch nicht veröffentlicht
+
+- **Willkommensseite auf dem Handy quer repariert** (Erays Foto vom 17.11.2026): Die App hält jetzt Abstand zu Statusleiste, Kamera-Loch und Android-Knöpfen – vorher lagen Logo, Sprache und Kopieren-Knöpfe darunter (Android 15 zeichnet Apps bis an den Rand). Die drei Statuszeichen oben links zeigen auch quer nur Symbole; vorher lagen die Texte übereinander. QR-Code etwas kleiner, bei sehr niedrigen Bildschirmen kürzere Begrüßung. Auf Handy, Tablet und PC steht unter dem QR-Code „Webseite öffnen“ statt der alten Adresse …/lumio-player (am Fernseher bleibt die Adresse zum Abtippen).
+
 ## 1.15.13 – 2026-11-19 · Startseite, Ausblenden, Filme am PC
 
 - **Direkt auf die Startseite statt auf die Playlist-Auswahl** (Erays Wunsch 18.11.2026): Ist eine Playlist da, öffnet die App sie sofort – auch wenn man die laufende Playlist auf der Webseite durch eine neue ersetzt, beim Start keine Playlist gemerkt ist oder man in den Einstellungen „Playlist löschen“ wählt und noch eine weitere da ist. Die Seite „Welche Playlist möchtest du öffnen?“ erscheint nur noch über Einstellungen → „Playlist wechseln“. Ohne Playlist bleibt es bei der Willkommensseite.
