@@ -1,44 +1,51 @@
 {
  "v": 1,
  "country": "DE",
- "generated": "2026-11-16T09:10:34.793Z",
+ "generated": "2026-11-18T07:42:41.009Z",
  "services": [
   {
    "id": "netflix",
    "name": "Netflix",
    "period": "week",
-   "week": "2026-11-08",
+   "week": "2026-11-15",
    "source": "Netflix Top 10 (offiziell)",
    "separate": true,
    "movies": [
     {
      "rank": 1,
-     "title": "Collision Course",
+     "title": "How to Make a Killing",
      "season": ""
     },
     {
      "rank": 2,
-     "title": "The Birthday Gift",
+     "title": "The Christmas Switch",
      "season": "",
-     "wd": "Q141561460",
-     "de": "Das Geschenk",
+     "wd": "Q137722520",
+     "de": "Nur bis Weihnachten",
      "year": 2026
     },
     {
      "rank": 3,
-     "title": "Sinners",
+     "title": "Never Surrender",
      "season": "",
-     "wd": "Q125473145",
-     "de": "Blood & Sinners",
-     "year": 2025
+     "wd": "Q141689566",
+     "year": 2026
     },
     {
      "rank": 4,
-     "title": "My Best Friend",
-     "season": ""
+     "title": "The Good Lawyer",
+     "season": "",
+     "wd": "Q140696036",
+     "de": "Ein guter Anwalt",
+     "year": 2026
     },
     {
      "rank": 5,
+     "title": "Heartland",
+     "season": ""
+    },
+    {
+     "rank": 6,
      "title": "A Dog's Perfect Christmas",
      "season": "",
      "wd": "Q141567333",
@@ -50,86 +57,82 @@
      "year": 2026
     },
     {
-     "rank": 6,
-     "title": "Christmas at the Palace",
+     "rank": 7,
+     "title": "Oskars Kleid",
      "season": ""
     },
     {
-     "rank": 7,
-     "title": "A Minecraft Movie",
-     "season": "",
-     "wd": "Q40083273",
-     "de": "Minecraft",
-     "aka": [
-      "Minecraft: Der Film"
-     ],
-     "year": 2025
-    },
-    {
      "rank": 8,
-     "title": "Sing 2",
+     "title": "The Unthinkable Daughter",
      "season": ""
     },
     {
      "rank": 9,
-     "title": "Extrawurst",
-     "season": ""
+     "title": "Sinners",
+     "season": "",
+     "wd": "Q125473145",
+     "de": "Blood & Sinners",
+     "year": 2025
     },
     {
      "rank": 10,
-     "title": "The Perfect Storm",
-     "season": "",
-     "wd": "Q508349",
-     "de": "Der Sturm",
-     "year": 2000
+     "title": "Christmas at the Palace",
+     "season": ""
     }
    ],
    "series": [
     {
      "rank": 1,
-     "title": "A Couple of Lies",
-     "season": "A Couple of Lies: Limited Series",
-     "wd": "Q137425416"
+     "title": "The Empress",
+     "season": "The Empress: Season 3",
+     "wd": "Q105686533",
+     "de": "Die Kaiserin"
     },
     {
      "rank": 2,
-     "title": "Lupin",
-     "season": "Lupin: Part 4",
-     "wd": "Q104082429"
-    },
-    {
-     "rank": 3,
-     "title": "Taken: Natalee Holloway",
-     "season": "Taken: Natalee Holloway: Season 1"
-    },
-    {
-     "rank": 4,
-     "title": "Anaesthesia",
-     "season": "Anaesthesia: Season 1"
-    },
-    {
-     "rank": 5,
-     "title": "Dead-End Job",
-     "season": "Dead-End Job: Limited Series",
-     "wd": "Q140867557"
-    },
-    {
-     "rank": 6,
      "title": "Black Doves",
      "season": "Black Doves: Season 2",
      "wd": "Q123153922"
     },
     {
+     "rank": 3,
+     "title": "Anaesthesia",
+     "season": "Anaesthesia: Season 1"
+    },
+    {
+     "rank": 4,
+     "title": "Lupin",
+     "season": "Lupin: Part 4",
+     "wd": "Q104082429"
+    },
+    {
+     "rank": 5,
+     "title": "Taken: Natalee Holloway",
+     "season": "Taken: Natalee Holloway: Season 1"
+    },
+    {
+     "rank": 6,
+     "title": "Power",
+     "season": "Power: Season 1",
+     "wd": "Q15072855"
+    },
+    {
      "rank": 7,
-     "title": "Ghosts",
-     "season": "Ghosts: Season 5",
-     "wd": "Q107122133"
+     "title": "The Body",
+     "season": "The Body: Season 1",
+     "wd": "Q137794773"
+    },
+    {
+     "rank": 9,
+     "title": "Doozie's Doghouse",
+     "season": "Doozie's Doghouse: Season 1",
+     "wd": "Q141672931"
     },
     {
      "rank": 10,
-     "title": "Will Trent",
-     "season": "Will Trent: Season 1",
-     "wd": "Q116136764"
+     "title": "A Couple of Lies",
+     "season": "A Couple of Lies: Limited Series",
+     "wd": "Q137425416"
     }
    ]
   }
