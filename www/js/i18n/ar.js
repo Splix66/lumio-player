@@ -1080,5 +1080,9 @@ window.LUMIO_I18N["ar"] = {
   "{0} Folgen": "{0} حلقة",
   "Als Nächstes": "التالية",
   "Der Sender stockt – mehr Puffer wird genutzt.": "القناة تتقطع – يتم استخدام تخزين مؤقت أكبر.",
-  "Solche Sender heißen in der Liste oft „RAW“. Sie werden unverändert durchgeleitet. Auf einer Android-TV-Box oder einem Fire TV Stick laufen sie meist – notfalls über einen externen Player wie VLC (Einstellungen → Wiedergabe).": "غالبًا ما تُسمّى هذه القنوات في القائمة «RAW». تُمرَّر دون أي تغيير. تعمل عادةً على جهاز Android TV أو Fire TV Stick – وعند الحاجة عبر مشغّل خارجي مثل VLC (الإعدادات ← التشغيل)."
+  "Solche Sender heißen in der Liste oft „RAW“. Sie werden unverändert durchgeleitet. Auf einer Android-TV-Box oder einem Fire TV Stick laufen sie meist – notfalls über einen externen Player wie VLC (Einstellungen → Wiedergabe).": "غالبًا ما تُسمّى هذه القنوات في القائمة «RAW». تُمرَّر دون أي تغيير. تعمل عادةً على جهاز Android TV أو Fire TV Stick – وعند الحاجة عبر مشغّل خارجي مثل VLC (الإعدادات ← التشغيل).",
+  "Sender suchen …": "ابحث عن قناة …",
+  "Kein Sender gefunden.": "لم يتم العثور على قناة.",
+  "Keine Sender ausgeblendet. Suche oben einen Sender, um ihn auszublenden.": "لا توجد قنوات مخفية. ابحث عن قناة في الأعلى لإخفائها.",
+  "Film wird vorbereitet …": "جارٍ تجهيز الفيلم …"
 };

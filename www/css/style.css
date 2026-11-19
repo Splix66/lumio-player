@@ -4246,3 +4246,16 @@ body.kbd .player .osd.pa .p-center .cbtn.f:focus { background: rgba(255, 255, 25
 .btn.fav-heart .i { width: 1.35rem; height: 1.35rem; }
 .btn.fav-heart.is-fav .i, .btn.fav-heart.is-fav.f:focus .i, .btn.fav-heart.is-fav:hover .i { color: #ff3b30; }
 span.fav { color: #ff3b30; }
+
+/* Einstellungen → Ausgeblendete Sender: Suchfeld zum Ausblenden (Erays Wunsch 18.11.2026 – Ausblenden nur noch hier) */
+.cp-search { display: block; width: 100%; margin: 0 0 .7rem; padding: .7rem 1rem; border-radius: .75rem; border: 1px solid var(--line-2); background: var(--surface); color: var(--text); font: inherit; }
+.cp-search::placeholder { color: var(--muted); }
+body.kbd .cp-search.f:focus, body.is-tv .cp-search.f:focus { outline: none; box-shadow: var(--ring); }
+.cp-found { margin-bottom: 1rem; }
+.cp-found:empty { display: none; }
+/* Startseite: nahtloser Bildwechsel oben (Erays Wunsch 19.11.2026) – neues Bild blendet über das alte, Text blendet kurz aus und ein */
+.fhero.is-home .fh-bg { transition: opacity 1.1s ease, transform 1.4s ease; }
+body.lite .fhero.is-home .fh-bg { transition: opacity .6s ease; }
+.fhero.is-home.hm-leave .fh-in { opacity: 0; transition: opacity .3s ease; }
+.fhero.is-home.hm-in .fh-in, .hm2 .fhero.is-home.hm-in .fh-in { animation: hmTextIn .55s ease both; }
+@keyframes hmTextIn { from { opacity: 0; transform: translateY(.35rem); } to { opacity: 1; transform: none; } }

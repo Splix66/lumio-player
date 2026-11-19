@@ -81,6 +81,28 @@
     } finally { D.Store.set('profiles', before); }
   });
 
+  // Erays Wunsch 18.11.2026: Ist eine Playlist da, direkt auf die Startseite – nicht auf „Welche Playlist möchtest du öffnen?“
+  t(G, 'Laufende Playlist auf der Webseite ersetzt: die neue öffnet sich direkt (keine Playlist-Auswahl)', function () {
+    var before = D.Store.get('profiles', []), act = D.Store.get('active'), keepProf = D.App.profile, keepProv = D.App.provider;
+    var keepOpen = D.Shell.open, keepExp = D.Expiry.check, opened = 0;
+    try {
+      D.Shell.open = function () { opened++; };
+      D.Expiry.check = function () {};
+      var alt = { id: 'p-alt', type: 'm3u', name: 'Alt', url: 'http://x/alt.m3u', remoteId: 'r-alt' };
+      D.Store.set('profiles', [alt]);
+      D.Store.set('active', 'p-alt');
+      D.App.profile = alt;
+      D.Cloud.apply([{ id: 'r-neu', type: 'm3u', name: 'Neu', url: 'http://x/neu.m3u' }]);
+      ok(D.App.profile && D.App.profile.name === 'Neu', 'neue Playlist ist aktiv: ' + (D.App.profile && D.App.profile.name));
+      eq(D.Store.get('active'), D.App.profile.id, 'als aktiv gemerkt');
+      eq(opened, 1, 'Startseite geöffnet (vorher: Playlist-Auswahl)');
+    } finally {
+      D.Shell.open = keepOpen; D.Expiry.check = keepExp;
+      D.Store.set('profiles', before); if (act) D.Store.set('active', act); else D.Store.del('active');
+      D.App.profile = keepProf; D.App.provider = keepProv;
+    }
+  });
+
   t(G, 'Datenschutz: Zugangsdaten werden nur mit Zustimmung („Auch auf der Webseite verwalten“) hochgeladen', function () {
     var before = D.Store.get('profiles', []), realRpc = D.Cloud.rpc, wasReg = D.Cloud.registered, sent = [];
     try {

@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Telvo Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.15.12',
+    version: '1.15.13',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     /* Bibliotheken: werden beim Bauen nach www/lib kopiert (scripts/copy-libs.js) und von dort geladen.
        Nur wenn sie fehlen, aus dem Internet – mit fester Version und Prüfsumme (SRI): eine veränderte Datei
@@ -1776,14 +1776,15 @@
       var top = Screens.top();
       var cur = App.profile && list.filter(function (p) { return p.id === App.profile.id; })[0];
       if (cur) App.profile.name = cur.name;
-      if (App.profile && removed.some(function (p) { return p.id === App.profile.id; })) { App.profile = null; showProfiles(); }
+      // Laufende Playlist auf der Webseite gelöscht: gleich die neue (bzw. die nächste) öffnen – nicht die Auswahl zeigen (Erays Wunsch 18.11.2026)
+      if (App.profile && removed.some(function (p) { return p.id === App.profile.id; })) { App.profile = null; openNextProfile(added[0]); }
       else if (App.profile && edited.some(function (p) { return p.id === App.profile.id; })) {
         // Zugangsdaten der laufenden Playlist wurden auf der Webseite geändert: neu laden (außer während der Wiedergabe)
         if (Player.el && !Player.mini) toast(T('Playlist „{0}“ wurde geändert – gilt nach dem nächsten Start.', cur.name), 5000);
         else { toast(T('Playlist „{0}“ wurde geändert.', cur.name), 2000); reloadApp(); }
       }
-      else if (top && top.name === 'profiles' && !App.profile && added.length) {
-        // Erste Playlist kommt von der Webseite, während der QR-Code angezeigt wird: direkt öffnen
+      else if (!App.profile && added.length) {
+        // Erste Playlist kommt von der Webseite (QR-Code, Willkommensseite oder Fenster „Playlist hinzufügen“): direkt öffnen
         activateProfile(added[0]);
       }
       else if (top && top.name === 'profiles') showProfiles();
@@ -3393,14 +3394,18 @@
     paintActions();
     if (item.rating || item.year) meta.appendChild(metaLine(item));
     if (item.backdrop) setBg(item.backdrop); else setBg(item.logo, true);
+    var infoDone = false;
     (isSeries ? App.provider.seriesInfo(item) : App.provider.movieInfo(item)).then(function (d) {
-      if (!d || !el.parentNode) return;
+      // Startseite: das nächste Bild wird vorbereitet, bevor es eingeblendet wird (noch nicht im Dokument) – Angaben trotzdem übernehmen
+      if (!d || (!el.parentNode && !opts.home)) return;
       paintKick(d);
       clear(meta).appendChild(metaLine(d.rating || d.year || d.genre ? d : item));
       if (d.plot) plot.textContent = d.plot;
       if (d.ext && !isSeries) item.ext = d.ext;
       if (d.backdrop) { item.backdrop = d.backdrop; setBg(d.backdrop); }
-    }).catch(function () {});
+    }).catch(function () {}).then(function () { infoDone = true; });
+    // fertig zum Einblenden: Angaben da und das gewünschte Bild geladen (für den nahtlosen Wechsel auf der Startseite)
+    el._settled = function () { return infoDone && (!wantBg || shownBg === wantBg); };
     el._refresh = paintActions;
     return el;
   }
@@ -3917,6 +3922,16 @@
       if (App.profile && App.profile.id === y.id) { delete App.profile.remoteId; App.profile.cloud = false; }
       showProfiles();
     });
+  }
+  /* Erays Wunsch 18.11.2026: Ist eine Playlist da, geht es direkt auf die Startseite. Die Auswahl „Welche Playlist
+     möchtest du öffnen?“ erscheint nur noch, wenn man sie selbst aufruft (Einstellungen → „Playlist wechseln“).
+     prefer: diese Playlist zuerst (z. B. gerade von der Webseite empfangen). Ohne Playlist: Willkommensseite. */
+  function openNextProfile(prefer) {
+    if (Player.el) Player.close();
+    var list = Profiles.list();
+    var p = (prefer && Profiles.get(prefer.id)) || Profiles.get(Store.get('active')) || list[0];
+    if (p) activateProfile(p);
+    else { App.profile = null; showProfiles(); }
   }
   function showProfiles() {
     var list = Profiles.list();
@@ -4619,15 +4634,38 @@
   /* Vorschlag oben auf der Startseite (seit 1.15.10 ohne Rahmen und ohne Pfeile: das Bild liegt oben rechts hinter allem
      und läuft nach links und unten aus). Wechselt weiter von selbst, nie während man darin steht. */
   function homeHero(items) {
-    var stage = h('div', { class: 'hm-stage' }), dots = h('div', { class: 'hm-dots', 'aria-hidden': 'true' }), idx = 0, timer = null;
+    var stage = h('div', { class: 'hm-stage' }), idx = 0, timer = null, cur = null, seq = 0;
     var box = h('div', { class: 'hm-hero' }, stage);
+    function build(i) {
+      var x = items[i], dots = h('div', { class: 'hm-dots', 'aria-hidden': 'true' });
+      items.forEach(function (y, j) { dots.appendChild(h('i', { class: j === i ? 'is-on' : '' })); });
+      return featureHero(x, { home: true, bottom: items.length > 1 ? dots : null, lead: x._t10 || '' });
+    }
+    /* Nahtloser Wechsel (Erays Wunsch 19.11.2026): Das nächste Bild wird erst geladen, dann blendet es über das alte –
+       vorher verschwand das alte sofort und es blitzte kurz leer, bis das neue da war. Der Text blendet kurz aus und neu ein. */
     function show(i) {
       idx = (i + items.length) % items.length;
-      clear(dots);
-      items.forEach(function (x, j) { dots.appendChild(h('i', { class: j === idx ? 'is-on' : '' })); });
-      var x = items[idx];
-      var fh = featureHero(x, { home: true, bottom: items.length > 1 ? dots : null, lead: x._t10 || '' });
-      clear(stage).appendChild(fh);
+      var fh = build(idx), old = cur, my = ++seq;
+      cur = fh;
+      if (!old || !old.parentNode) { clear(stage).appendChild(fh); return; }
+      var bgNew = $('.fh-bg', fh), waited = 0;
+      (function wait() {
+        if (my !== seq) return;
+        // auf Angaben und Bild warten (höchstens 2,5 s – kommt das Bild später, blendet es von selbst ein)
+        if (!(fh._settled && fh._settled()) && waited < 2500) { waited += 100; setTimeout(wait, 100); return; }
+        old.classList.add('hm-leave');
+        setTimeout(function () {
+          if (my !== seq || !old.parentNode) return;
+          var bgOld = $('.fh-bg', old), loaded = !!(bgNew && bgNew.classList.contains('is-in'));
+          if (loaded) bgNew.classList.remove('is-in');
+          // altes Bild bleibt unter dem neuen liegen, bis das neue ganz da ist
+          if (bgOld) fh.insertBefore(bgOld, fh.firstChild);
+          fh.classList.add('hm-in');
+          stage.replaceChild(fh, old);
+          if (loaded) { void bgNew.offsetWidth; bgNew.classList.add('is-in'); }
+          setTimeout(function () { if (bgOld && bgOld.parentNode) bgOld.parentNode.removeChild(bgOld); fh.classList.remove('hm-in'); }, 1300);
+        }, 300);
+      })();
     }
     show(0);
     if (items.length > 1) {
@@ -4640,7 +4678,7 @@
         show(idx + 1);
       }, HERO_EVERY);
     }
-    box._dispose = function () { clearInterval(timer); };
+    box._dispose = function () { clearInterval(timer); seq++; };   // seq: laufenden Wechsel abbrechen
     return box;
   }
 
@@ -5655,17 +5693,7 @@
         });
       };
       arch.appendChild(fb);
-      // Sender ausblenden – direkt hier, weil der TV-Player auf Android-Boxen keinen eigenen Knopf dafür hat
-      arch.appendChild(h('button', { class: 'btn f lp-hide', title: T('Sender ausblenden'), onclick: function () {
-        askHideChannel(item, function () {
-          $all('.chan[data-cid]').forEach(function (r) {
-            if (r.getAttribute('data-cid') !== String(item.id)) return;
-            var nx = r.nextElementSibling || r.previousElementSibling;
-            r.classList.add('is-hidden');
-            if (nx && nx.classList.contains('chan')) Nav.focus(nx);
-          });
-        });
-      } }, icon('eyeOff'), h('span', { text: T('Ausblenden') })));
+      // „Ausblenden“ gibt es hier nicht mehr – nur noch in den Einstellungen (Erays Wunsch 18.11.2026)
       clear(epg);
       clearTimeout(timer);
       timer = setTimeout(function () {
@@ -6479,9 +6507,9 @@
       // „Abbrechen“ ist vorgewählt – ein versehentliches OK löscht nichts
       Dialog.show(T('„{0}“ löschen?', p.name), T('Favoriten und Verlauf dieses Profils werden ebenfalls entfernt.'),
         [{ label: T('Abbrechen'), focus: true }, { label: T('Löschen'), danger: true, action: function () {
-          if (Player.el) Player.close();
           Profiles.remove(p.id);
-          showProfiles();
+          App.profile = null;
+          openNextProfile();   // gibt es noch eine Playlist: direkt auf deren Startseite, sonst Willkommensseite
         } }]);
     }
     return h('div', { class: 'pf2' },
@@ -7235,7 +7263,7 @@
   }
   function showLicenses() {
     var USE = { hls: T('Wiedergabe von HLS-Streams'), mpegts: T('Wiedergabe von MPEG-TS-Streams'), qr: T('QR-Code'), font: T('Schrift'), font2: T('Schrift'), icons: T('Symbole'),
-      cap: T('Android-App'), media3: T('TV-Player auf Android'), electron: T('Windows- und Mac-App'), blender: T('Demo-Filme') };
+      cap: T('Android-App'), media3: T('TV-Player auf Android'), electron: T('Windows- und Mac-App'), ffmpeg: T('Windows- und Mac-App'), blender: T('Demo-Filme') };
     var box = h('div', { class: 'lic-list' }, h('p', { class: 'hint', text: T('Wird geladen …') }));
     openSheet(T('Open-Source-Lizenzen'), 'info', [h('p', { class: 'hint', text: T('Telvo nutzt diese freie Software. Vielen Dank an alle, die daran mitarbeiten.') }), box], { wide: true });
     loadLicenses().then(function (L) {
@@ -7569,10 +7597,30 @@
     }
     var tHideCh = p && p.type === 'demo' ? null : tile('eyeOff', T('Ausgeblendete Sender'), function () { var n = ChanHide.count(); return n ? T('{0} ausgeblendet', n) : T('Keine'); }, function () {
       var box = h('div', { class: 'cp-list' });
+      // Sender ausblenden geht nur noch hier (Erays Wunsch 18.11.2026): oben suchen, Treffer antippen
+      var q = h('input', { class: 'f cp-search', type: 'search', placeholder: T('Sender suchen …'), autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false', 'aria-label': T('Sender suchen …') });
+      var found = h('div', { class: 'cp-list cp-found' }), qTimer = null;
+      function search() {
+        clear(found);
+        var s = q.value.trim().toLowerCase();
+        if (s.length < 2) return;
+        allItems('live').then(function (list) {
+          if (q.value.trim().toLowerCase() !== s) return;
+          var hits = list.filter(function (x) { return String(x.name || '').toLowerCase().indexOf(s) >= 0; }).slice(0, 30);
+          clear(found);
+          if (!hits.length) { found.appendChild(h('p', { class: 'hint', text: T('Kein Sender gefunden.') })); return; }
+          hits.forEach(function (it) {
+            found.appendChild(h('button', { class: 'cp-row f', onclick: function () { ChanHide.set(it, true); toast(T('„{0}“ ausgeblendet', it.name)); render(); search(); paint(); } },
+              h('span', { class: 'cp-name', text: (it.num ? it.num + ' · ' : '') + it.name }), h('span', { class: 'cp-state' }, icon('eyeOff'), h('span', { text: T('Ausblenden') }))));
+          });
+        }, function () {});
+      }
+      q.addEventListener('input', function () { clearTimeout(qTimer); qTimer = setTimeout(search, 250); });
       function render() {
         clear(box);
         var a = ChanHide.all(), ids = Object.keys(a);
-        if (!ids.length) { box.appendChild(h('p', { class: 'hint', text: T('Keine Sender ausgeblendet. Ausblenden geht bei Live TV rechts neben der Senderliste oder im Player (Auge-Symbol).') })); return; }
+        if (!ids.length) { box.appendChild(h('p', { class: 'hint', text: T('Keine Sender ausgeblendet. Suche oben einen Sender, um ihn auszublenden.') })); return; }
+        box.appendChild(h('p', { class: 'hint cp-count', text: T('{0} ausgeblendet', ids.length) }));
         box.appendChild(h('div', { class: 'row' }, sheetBtn('eye', T('Alle einblenden'), function () { ids.forEach(function (id) { ChanHide.set({ id: id }, false); }); render(); paint(); })));
         ids.forEach(function (id) {
           box.appendChild(h('button', { class: 'cp-row f is-on', onclick: function () { ChanHide.set({ id: id }, false); toast(T('„{0}“ wird wieder angezeigt.', a[id] || id)); render(); paint(); } },
@@ -7580,7 +7628,7 @@
         });
       }
       render();
-      openSheet(T('Ausgeblendete Sender'), 'eyeOff', [box], { wide: true, onClose: paintSettings });
+      openSheet(T('Ausgeblendete Sender'), 'eyeOff', [q, found, box], { wide: true, onClose: paintSettings });
     });
     var tHideL = hideTile('live', T('Live-Kategorien verwalten'));
     var tHideM = hideTile('movie', T('Film-Kategorien verwalten'));
@@ -8656,7 +8704,7 @@
       }
       barWrap.addEventListener('mousemove', function (e) {
         if (dragging || !self.canSeek()) return;
-        self.preview(frac(px(e)) * self.video.duration);
+        self.preview(frac(px(e)) * self.dur());
       });
       barWrap.addEventListener('mouseleave', function () { if (!dragging && self.scrubT == null) self.hidePreview(); });
       function down(e) {
@@ -8666,12 +8714,12 @@
         dragging = true;
         var touch = e.type === 'touchstart';
         clearTimeout(self.scrubTimer);
-        self.scrubT = frac(px(e)) * self.video.duration;
+        self.scrubT = frac(px(e)) * self.dur();
         self.preview(self.scrubT);
         self.showOsd(true);
         function move(ev) {
           ev.preventDefault();
-          self.scrubT = frac(px(ev)) * self.video.duration;
+          self.scrubT = frac(px(ev)) * self.dur();
           self.preview(self.scrubT);
         }
         function up(ev) {
@@ -8707,9 +8755,11 @@
         self.toggleOsd();
       });
       self.el.addEventListener('mousemove', function () { self.showOsd(); });
-      // Mausrad = Lautstärke (PC)
+      // Mausrad = Lautstärke (PC) – aber über einer offenen Liste (Senderliste, Zuletzt gesehen, Rad, Verpasste Sendungen)
+      // scrollt es die Liste (Erays Wunsch 18.11.2026: „Die Senderliste im Player sollte scrollbar sein“)
       self.el.addEventListener('wheel', function (e) {
         if (self.mini) return;
+        if (self.trackPanel && self.trackPanel.contains(e.target)) { clearTimeout(self.hideTimer); return; }
         e.preventDefault();
         self.setVolume(self.video.volume + (e.deltaY < 0 ? 0.05 : -0.05));
         self.showOsd();
@@ -8736,6 +8786,10 @@
     },
 
     isVod: function () { return this.item && this.item.kind !== 'live'; },
+    /* Spielzeit und Länge – beim Umpacken in der PC-App (Remux) beginnt das Video bei der gewählten Stelle wieder bei 0
+       und hat keine Länge: dann zählen Startpunkt und die von ffmpeg ermittelte Länge */
+    ct: function () { var v = this.video; return (this.remux ? this.remux.off : 0) + (v ? v.currentTime || 0 : 0); },
+    dur: function () { var v = this.video; return this.remux ? this.remux.dur || 0 : (v ? v.duration : 0); },
 
     screenOpts: function () {
       var self = this;
@@ -8918,6 +8972,9 @@
       self.triedAlt = false; self.retried = false; self.forceHlsJs = false; self.rawFail = false;
       self.netRetries = 0; self.stallRetries = 0; self.swappedCodec = false; self.mediaRecoverAt = 0; self.reconnect = false;
       self.errTrail = []; self.errInfo = '';
+      // PC-App: MKV/AVI gleich umpacken lassen; andere Filme erst, wenn der eingebaute Player sie nicht kann (onError)
+      // (vor dem ersten Abspielen sieht attach nach, ob Bild und Ton direkt gehen – sonst umpacken)
+      self.remux = null; self.remuxTx = false; self.remuxEnds = 0; self.remuxOn = false; self.remuxChecked = false;
       // vom Wächter stumm geschaltet (Ton blockiert)? Beim nächsten Sender wieder die eigene Einstellung
       self.restoreSound();
       self.closeTracks();
@@ -9047,7 +9104,7 @@
         this.errInfo = 'Stillstand (3 Versuche) rs' + v.readyState + ' Puffer ' + Math.round(ahead) + 's' + (q ? ' Bilder ' + q.totalVideoFrames : '') + (v.muted ? ' stumm' : ' mit Ton');
         this.onError(T('Der Stream hängt und lässt sich gerade nicht wiederherstellen.')); return; }
       this.stallRetries++;
-      if (this.isVod() && v.currentTime > 1) this.resumeAt = v.currentTime;
+      if (this.isVod() && this.ct() > 1) this.resumeAt = this.ct();
       this.reconnecting();
       this.attach(this.curUrl);
     },
@@ -9068,6 +9125,19 @@
       self.playedSince = 0; self.stalls = [];
       var seq = self.attachSeq = (self.attachSeq || 0) + 1;
       self.usingNative = false;
+      // PC-App: vor dem ersten Abspielen kurz Bild- und Tonformat ansehen. Der PC-Player öffnet MKV zwar selbst, lässt
+      // Dolby-Ton (AC3/EAC3/DTS) aber stumm weg – ohne Fehlermeldung (Test 18.11.2026). Dann gleich umpacken.
+      if (self.isVod() && Remux.ok() && !self.remuxOn && !self.remuxChecked && !isHlsUrl(url) && !isTsUrl(url)) {
+        self.remuxChecked = true;
+        self.loadTxt.textContent = T('Film wird vorbereitet …');
+        Remux.probe(url).then(function (info) {
+          if (self.video !== video || self.attachSeq !== seq) return;
+          if (info && !Remux.nativeOk(info)) self.remuxOn = true;
+          self.attach(url);
+        });
+        return;
+      }
+      if (self.remuxOn && self.isVod()) { self.attachRemux(url, seq); return; }
       var nativeHls = !!video.canPlayType('application/vnd.apple.mpegurl');
       // Android-App: zuerst den eingebauten Android-Player nutzen (zuverlässiger für Live-Sender),
       // nur wenn das scheitert, hls.js versuchen
@@ -9192,6 +9262,33 @@
       }
     },
 
+    /* PC-App: Film über den lokalen Umpack-Dienst (desktop/remux.js) abspielen – ab der gemerkten bzw. gewählten Stelle */
+    attachRemux: function (url, seq) {
+      var self = this, video = self.video, at = self.resumeAt || 0, first = !self.remux;
+      self.resumeAt = 0;
+      self.loadTxt.textContent = T('Film wird vorbereitet …');
+      self.spinner.style.display = '';
+      Remux.probe(url).then(function (info) {
+        if (self.video !== video || self.attachSeq !== seq) return;
+        var d = info && info.duration > 0 ? info.duration : 0, vc = info && info.video || '';
+        if (d && at >= d - 5) at = 0;
+        if (!Remux.canCopy(vc)) self.remuxTx = true;
+        self.remux = { off: at, dur: d };
+        if (first && at > 1) toast(T('Fortgesetzt bei {0}', fmtTime(at)));
+        video.src = Remux.url(url, at, self.remuxTx, vc);
+        self.playSafe();
+        self.paintProgress();
+        // Sicherheitsnetz: Ton läuft, aber kein einziges Bild (Bildformat doch nicht abspielbar) → als H.264 neu berechnen
+        if (!self.remuxTx) setTimeout(function () {
+          if (self.video !== video || self.attachSeq !== seq || self.remuxTx || video.paused) return;
+          var q = video.getVideoPlaybackQuality ? video.getVideoPlaybackQuality() : null;
+          if (video.currentTime > 3 && q && q.totalVideoFrames === 0 && !document.hidden) {
+            self.remuxTx = true; self.resumeAt = self.ct(); self.attach(self.curUrl);
+          }
+        }, 8000);
+      });
+    },
+
     playSafe: function () {
       var self = this;
       var p = self.video.play();
@@ -9206,6 +9303,12 @@
       self.errTrail = self.errTrail || [];
       self.errTrail.push((fm ? fm[1].toLowerCase() : '?') + (self.usingNative ? ' nativ' : '') + ': ' + (self.errInfo || msg));
       self.errInfo = '';
+      // PC-App: Film kann der eingebaute Player nicht (z. B. MKV mit Endung .mp4, Dolby-Ton) – umpacken lassen.
+      // Klappt auch das nicht (z. B. H.265 ohne Grafik-Unterstützung): Bild zusätzlich als H.264 neu berechnen.
+      if (self.isVod() && Remux.ok()) {
+        if (!self.remuxOn) { self.remuxOn = true; self.retried = false; self.attach(self.curUrl); return; }
+        if (self.remux && !self.remuxTx) { self.remuxTx = true; self.retried = false; self.resumeAt = self.ct(); self.attach(self.curUrl); return; }
+      }
       if (self.usingNative && Platform.android && !self.forceHlsJs) { self.forceHlsJs = true; self.retried = false; self.attach(self.curUrl); return; }
       if (self.alt && !self.triedAlt) { self.triedAlt = true; self.retried = false; self.attach(self.alt); return; }
       // gemerktes Format klappt diesmal nicht: vergessen und den normalen Weg gehen
@@ -9245,6 +9348,15 @@
 
     onEnded: function () {
       var self = this;
+      // Umgepackter Film (PC-App) endet weit vor seiner Länge: Verbindung abgebrochen bzw. der Anbieter schickte statt des
+      // Films einen kurzen Ersatz-Clip (z. B. zu viele Verbindungen). Dann NICHT als gesehen werten – an derselben Stelle neu versuchen.
+      if (self.remux && self.remux.dur && self.ct() < self.remux.dur - 60) {
+        self.remuxEnds = (self.remuxEnds || 0) + 1;
+        if (self.remuxEnds <= 3) { self.resumeAt = self.ct(); self.reconnecting(); var me = self.item; setTimeout(function () { if (self.item === me && self.video) self.attach(self.curUrl); }, 1500 * self.remuxEnds); return; }
+        self.errInfo = 'Umpacken endete bei ' + Math.round(self.ct()) + ' von ' + Math.round(self.remux.dur) + ' s';
+        self.onError(T('Das Video konnte nicht abgespielt werden (Format oder Verbindung).'));
+        return;
+      }
       Resume.set(self.item, 0, 0);
       var c = self.ctx;
       if (self.isVod()) Seen.add(self.item);
@@ -9611,11 +9723,11 @@
     },
     paintBuffer: function () {
       if (!this.isVod() || !this.video || !this.bar) return;
-      var v = this.video, d = v.duration, b = this.bar.querySelector('.buf');
+      var v = this.video, d = this.dur(), b = this.bar.querySelector('.buf'), off = this.remux ? this.remux.off : 0;
       if (!b || !d || !isFinite(d)) return;
       var end = 0, t = v.currentTime;
       try { for (var i = 0; i < v.buffered.length; i++) if (v.buffered.start(i) <= t + 1 && v.buffered.end(i) > end) end = v.buffered.end(i); } catch (e) {}
-      b.style.width = Math.min(100, end / d * 100) + '%';
+      b.style.width = Math.min(100, (off + end) / d * 100) + '%';
     },
 
     loadEpg: function () {
@@ -9670,9 +9782,9 @@
 
     paintProgress: function () {
       if (!this.isVod()) return;
-      var v = this.video, d = v.duration || 0;
+      var d = this.dur() || 0;
       if (!d || !isFinite(d)) return;
-      var cur = this.scrubT != null ? this.scrubT : v.currentTime;
+      var cur = Math.min(d, this.scrubT != null ? this.scrubT : this.ct());
       this.bar.style.display = '';
       this.bar.firstChild.style.width = (cur / d * 100) + '%';
       this.times.firstChild.textContent = fmtTime(cur);
@@ -9752,7 +9864,7 @@
       items.push(['pip', T('Bild-in-Bild'), function () { self.closeTracks(); self.toPip(); }]);
       items.push(['timer', T('Schlaf-Timer') + (Sleep.at ? ' · ' + Sleep.label() : ''), function () { self.openSleep(); }]);
       items.push([self.video.muted ? 'volOff' : 'vol', T('Ton an/aus'), function () { self.setMuted(!self.video.muted); self.closeTracks(); self.showOsd(); }]);
-      if (it && it.kind === 'live') items.push(['eyeOff', T('Sender ausblenden'), function () { self.closeTracks(); self.askHide(); }]);
+      // „Sender ausblenden“ gibt es nur noch in den Einstellungen der App, auch nicht mehr im Rad (Erays Wunsch 18.11.2026)
       self.openList('menu', 'is-menu', T('Einstellungen'), items.map(function (x) {
         return h('button', { class: 'tp-item f', onclick: x[2] }, icon(x[0]), h('span', { text: x[1] }));
       }));
@@ -9827,7 +9939,7 @@
         if (y && /^\d{4}$/.test(y)) metaRow.appendChild(h('span', { text: y }));
         if (r > 0) metaRow.appendChild(h('span', { class: 'ps-star' }, icon('starFill'), h('span', { text: String(Math.round(r * 10) / 10).replace('.', Lang.cur === 'en' ? '.' : ',') })));
         if (d.genre) metaRow.appendChild(h('span', { text: String(d.genre).split(/[,/]/).slice(0, 2).join(', ') }));
-        if (self.isVod() && v.duration && isFinite(v.duration)) metaRow.appendChild(h('span', { text: T('Noch {0}', fmtLeft(v.duration - v.currentTime)) }));
+        if (self.isVod() && self.dur() && isFinite(self.dur())) metaRow.appendChild(h('span', { text: T('Noch {0}', fmtLeft(self.dur() - self.ct())) }));
       }
       paintMeta(it);
       var box = h('div', { class: 'pause-scr' },
@@ -9891,7 +10003,7 @@
 
     togglePlay: function () { if (this.video.paused) this.playSafe(); else this.video.pause(); this.showOsd(); },
     seek: function (s) { this.scrubBy(s); },
-    canSeek: function () { var v = this.video; return !!(this.isVod() && v && v.duration && isFinite(v.duration)); },
+    canSeek: function () { var d = this.dur(); return !!(this.isVod() && this.video && d && isFinite(d)); },
 
     /* ---------- Spulen mit Vorschau (wie bei YouTube) ----------
        Pfeiltasten/Buttons verschieben erst nur die Vorschau. Nach einer kurzen
@@ -9902,8 +10014,8 @@
       var going = self.scrubT != null;
       self.scrubN = going ? (self.scrubN || 0) + 1 : 0;
       var mult = self.scrubN >= 14 ? 6 : self.scrubN >= 6 ? 3 : 1;
-      var base = going ? self.scrubT : v.currentTime;
-      self.scrubT = Math.max(0, Math.min(v.duration - 1, base + s * mult));
+      var base = going ? self.scrubT : self.ct();
+      self.scrubT = Math.max(0, Math.min(self.dur() - 1, base + s * mult));
       self.showOsd(true);
       if (focusBar && self.bar.classList.contains('f')) Nav.focus(self.bar);
       self.preview(self.scrubT);
@@ -9914,7 +10026,11 @@
       var v = this.video;
       clearTimeout(this.scrubTimer);
       this.scrubT = null; this.scrubN = 0;
-      if (v && v.duration && isFinite(v.duration)) {
+      if (this.remux) {
+        // umgepackter Film: an der gewählten Stelle neu starten (das umgepackte Video selbst lässt sich nicht spulen)
+        var d = this.dur();
+        if (d) { this.resumeAt = Math.max(0, Math.min(d - 1, t)); this.remux.off = this.resumeAt; this.attach(this.curUrl); }
+      } else if (v && v.duration && isFinite(v.duration)) {
         try { v.currentTime = Math.max(0, Math.min(v.duration - 1, t)); } catch (e) {}
       }
       this.paintProgress();
@@ -9929,7 +10045,7 @@
       this.showOsd();
     },
     preview: function (t) {
-      var self = this, d = self.video && self.video.duration;
+      var self = this, d = self.video && self.dur();
       if (!d || !isFinite(d) || !self.seekTime) return;
       self.seekTime.textContent = fmtTime(t);
       self.seekTime.classList.remove('is-hidden');
@@ -10113,7 +10229,8 @@
 
     saveResume: function () {
       var v = this.video;
-      if (this.item && this.isVod() && v && v.duration && isFinite(v.duration)) Resume.set(this.item, v.currentTime, v.duration);
+      var d = this.dur();
+      if (this.item && this.isVod() && v && d && isFinite(d)) Resume.set(this.item, this.ct(), d);
     },
     /* Lautstärke: Ton an/aus und Regler, Einstellung wird gespeichert */
     volumeUi: function () {
@@ -10233,6 +10350,45 @@
   /* ==========================================================
      Tasten der Fernbedienungen
      ========================================================== */
+  /* PC-App (Windows/Mac): Umpack-Dienst der PC-Hülle (desktop/remux.js, ffmpeg). Filme, die der eingebaute Player nicht kann
+     (MKV – auch mit Endung .mp4 –, AVI, Dolby-Ton), kommen von dort als MP4 mit AAC-Ton. Erays Auftrag 18.11.2026.
+     Nur in der PC-App vorhanden (window.telvoDesktop.remux = "http://127.0.0.1:<port>|<schlüssel>"). */
+  var Remux = {
+    cache: {},
+    conf: function () {
+      var d = window.telvoDesktop && window.telvoDesktop.remux, i = d ? d.lastIndexOf('|') : -1;
+      return i > 0 ? { base: d.slice(0, i), k: d.slice(i + 1) } : null;
+    },
+    ok: function () { return !!this.conf(); },
+    // Länge des Films (Sekunden) – einmal je Adresse
+    probe: function (src) {
+      var c = this.conf(), self = this;
+      if (!c) return Promise.resolve(null);
+      if (!self.cache[src]) {
+        self.cache[src] = fetch(c.base + '/probe?k=' + c.k + '&u=' + encodeURIComponent(src))
+          .then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+        self.cache[src].then(function (x) { if (!x || !x.duration) delete self.cache[src]; });
+      }
+      return self.cache[src];
+    },
+    /* Kann der eingebaute Player dieses Bildformat? H.265 (HEVC) kam beim Test am 18.11.2026 nur mit Ton und schwarzem Bild –
+       ohne Fehlermeldung. Darum vorher prüfen und sonst als H.264 neu berechnen lassen. */
+    canCopy: function (vc) {
+      if (!vc || /^(h264|av1|vp9|vp8)$/.test(vc)) return true;
+      if (vc === 'hevc') { try { return document.createElement('video').canPlayType('video/mp4; codecs="hvc1.1.6.L120.90"') === 'probably'; } catch (e) { return false; } }
+      return false;   // z. B. mpeg4 (DivX/Xvid), mpeg2video, vc1
+    },
+    // Kann der PC-Player diesen Film ohne Umpacken – mit Bild UND Ton? (Ton: nur AAC, MP3, Opus, Vorbis, FLAC)
+    nativeOk: function (info) {
+      if (!info) return true;
+      var v = info.video || '', a = info.audio || '';
+      return (!v || (/^(h264|av1|vp9|vp8|hevc)$/.test(v) && this.canCopy(v))) && (!a || /^(aac|mp3|opus|vorbis|flac)$/.test(a));
+    },
+    url: function (src, t, toH264, vc) {
+      var c = this.conf();
+      return c.base + '/play?k=' + c.k + '&t=' + Math.max(0, Math.floor(t || 0)) + (toH264 ? '&v=h264' : '') + (vc ? '&c=' + encodeURIComponent(vc) : '') + '&u=' + encodeURIComponent(src);
+    }
+  };
   /* Alle sichtbaren Sender, sortiert wie in der Liste (für Nummern-Eingabe und „Letzter Sender“) */
   function liveChannels() {
     return allItems('live').then(function (list) { return sortChannels(ChanHide.filter(list)); });
@@ -10499,7 +10655,8 @@
     });
 
     SubStyle.apply();
-    var active = Profiles.get(Store.get('active'));
+    // Keine gemerkte Playlist, aber eine vorhanden (z. B. die vorige gelöscht): direkt die erste öffnen statt der Auswahl (Erays Wunsch 18.11.2026)
+    var active = Profiles.get(Store.get('active')) || Profiles.list()[0];
     if (active) {
       // Neustart aus der App heraus (z. B. Sprache gewechselt)? Dann weder „App beim Start“ noch letzten Sender
       var soft = false;
@@ -10543,7 +10700,7 @@
     CatPrefs: CatPrefs, visibleCats: visibleCats, Parental: Parental, ChanHide: ChanHide, initials: initials, statusError: statusError, isVisible: isVisible,
     Backup: Backup, profileFp: profileFp, Settings: Settings, Shell: Shell, StatusLine: StatusLine, Theme: Theme, Expiry: Expiry, openProfile: openProfile, top10Rows: top10Rows, startTabNow: startTabNow, playItemNow: playItemNow, extMode: extMode, Stats: Stats, showProfiles: showProfiles, autoPreviewOk: autoPreviewOk, Platform: Platform, clockStr: clockStr, Skeleton: Skeleton, refreshInline: refreshInline,
     Seen: Seen, Resume: Resume, UpNext: UpNext, SeriesWatch: SeriesWatch, sortVod: sortVod,
-    Reminders: Reminders, NumEntry: NumEntry, Sleep: Sleep, Later: Later, Saver: Saver, trailerQuery: trailerQuery, Persons: Persons, Favs: Favs, Recent: Recent, showGuide: showGuide, Player: Player, Dialog: Dialog,
+    Reminders: Reminders, NumEntry: NumEntry, Sleep: Sleep, Later: Later, Saver: Saver, trailerQuery: trailerQuery, Persons: Persons, Favs: Favs, Recent: Recent, showGuide: showGuide, Player: Player, Remux: Remux, Dialog: Dialog,
     config: CONFIG
   };
 

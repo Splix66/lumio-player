@@ -1088,7 +1088,11 @@ window.LUMIO_I18N = {
     'Vorheriger Sender': 'Previous channel',
     'Nächster Sender': 'Next channel',
     'Ton an/aus': 'Sound on/off',
-    'Lautstärke': 'Volume'
+    'Lautstärke': 'Volume',
+    "Sender suchen …": "Search channels …",
+    "Kein Sender gefunden.": "No channel found.",
+    "Keine Sender ausgeblendet. Suche oben einen Sender, um ihn auszublenden.": "No hidden channels. Search for a channel above to hide it.",
+    "Film wird vorbereitet …": "Preparing movie …"
   },
 
   /* ---------------- Türkçe ---------------- */
@@ -2174,6 +2178,10 @@ window.LUMIO_I18N = {
     'Vorheriger Sender': 'Önceki kanal',
     'Nächster Sender': 'Sonraki kanal',
     'Ton an/aus': 'Ses açık/kapalı',
-    'Lautstärke': 'Ses düzeyi'
+    'Lautstärke': 'Ses düzeyi',
+    "Sender suchen …": "Kanal ara …",
+    "Kein Sender gefunden.": "Kanal bulunamadı.",
+    "Keine Sender ausgeblendet. Suche oben einen Sender, um ihn auszublenden.": "Gizli kanal yok. Gizlemek için yukarıda bir kanal ara.",
+    "Film wird vorbereitet …": "Film hazırlanıyor …"
   }
 };

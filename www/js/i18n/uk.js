@@ -1080,5 +1080,9 @@ window.LUMIO_I18N["uk"] = {
   "{0} Folgen": "Серій: {0}",
   "Als Nächstes": "Наступна",
   "Der Sender stockt – mehr Puffer wird genutzt.": "Канал гальмує – використовується більший буфер.",
-  "Solche Sender heißen in der Liste oft „RAW“. Sie werden unverändert durchgeleitet. Auf einer Android-TV-Box oder einem Fire TV Stick laufen sie meist – notfalls über einen externen Player wie VLC (Einstellungen → Wiedergabe).": "Такі канали у списку часто називаються «RAW». Вони передаються без змін. На приставці Android TV або Fire TV Stick вони зазвичай працюють – у крайньому разі через зовнішній програвач, наприклад VLC (Налаштування → Відтворення)."
+  "Solche Sender heißen in der Liste oft „RAW“. Sie werden unverändert durchgeleitet. Auf einer Android-TV-Box oder einem Fire TV Stick laufen sie meist – notfalls über einen externen Player wie VLC (Einstellungen → Wiedergabe).": "Такі канали у списку часто називаються «RAW». Вони передаються без змін. На приставці Android TV або Fire TV Stick вони зазвичай працюють – у крайньому разі через зовнішній програвач, наприклад VLC (Налаштування → Відтворення).",
+  "Sender suchen …": "Пошук каналу …",
+  "Kein Sender gefunden.": "Канал не знайдено.",
+  "Keine Sender ausgeblendet. Suche oben einen Sender, um ihn auszublenden.": "Прихованих каналів немає. Знайдіть канал вище, щоб приховати його.",
+  "Film wird vorbereitet …": "Фільм готується …"
 };

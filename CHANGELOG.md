@@ -1,5 +1,14 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## 1.15.13 – 2026-11-19 · Startseite, Ausblenden, Filme am PC
+
+- **Direkt auf die Startseite statt auf die Playlist-Auswahl** (Erays Wunsch 18.11.2026): Ist eine Playlist da, öffnet die App sie sofort – auch wenn man die laufende Playlist auf der Webseite durch eine neue ersetzt, beim Start keine Playlist gemerkt ist oder man in den Einstellungen „Playlist löschen“ wählt und noch eine weitere da ist. Die Seite „Welche Playlist möchtest du öffnen?“ erscheint nur noch über Einstellungen → „Playlist wechseln“. Ohne Playlist bleibt es bei der Willkommensseite.
+- **Sender ausblenden nur noch in den Einstellungen** (Erays Wunsch 18.11.2026): Der Knopf „Ausblenden“ neben der Live-Vorschau ist weg. Unter Einstellungen → „Ausgeblendete Sender“ gibt es jetzt oben ein Suchfeld: Sender suchen, antippen – ausgeblendet. Darunter wie bisher die ausgeblendeten Sender zum Wieder-Einblenden. Auch im Rad des Players gibt es „Sender ausblenden“ nicht mehr.
+- **PC-Version (Windows, Mac): Filme laufen jetzt auch als MKV, AVI oder mit Dolby-Ton** (Erays Auftrag 18.11.2026). Viele Anbieter liefern MKV-Dateien – oft sogar mit der Endung „.mp4“ –, dazu Ton in AC3/EAC3. Das kann der eingebaute Player nicht („Wiedergabe nicht möglich“). Die PC-App bringt jetzt ffmpeg mit und packt solche Filme beim Abspielen um: Bild unverändert, Ton als AAC. Bildformate, die der PC-Player nicht kann (H.265 ohne Grafik-Unterstützung, DivX/Xvid, MPEG-2, VC-1), werden vorher erkannt und als H.264 neu berechnet. Getestet am 18.11.2026 mit Filmen aus Erays Playlist: H.264 + Dolby-Ton, AV1 + Opus und H.265 + Dolby-Ton laufen (Start nach etwa 2–6 Sekunden). Spulen und „Weiterschauen“ funktionieren (der Film startet dann an der gewählten Stelle neu). Läuft nur auf dem PC selbst (lokaler Dienst mit geheimem Schlüssel); Handy, Fernseher und Webseite sind unverändert.
+- **Open-Source-Lizenzen:** FFmpeg (in der PC-App für das Umpacken) steht jetzt mit Lizenz GPL 3.0, vollständigem Lizenztext und Hinweis auf den Quellcode unter Einstellungen → Über & Updates → Open-Source-Lizenzen.
+- **Senderliste im Player lässt sich mit dem Mausrad scrollen** (Erays Wunsch 18.11.2026). Bisher stellte das Mausrad überall im Player die Lautstärke – auch über der Senderliste. Jetzt scrollt es über einer offenen Liste (Senderliste, Zuletzt gesehen, Rad, Verpasste Sendungen); sonst bleibt es die Lautstärke.
+- **Startseite: nahtloser Bildwechsel oben** (Erays Wunsch 19.11.2026). Vorher verschwand das alte Bild sofort, und es blitzte kurz leer, bis das neue geladen war. Jetzt wird das nächste Bild vorher geladen und blendet weich über das alte; der Text blendet kurz aus und neu ein.
+
 ## 1.15.12 – 2026-11-17 · Neuer Player (mit den Nachbesserungen aus 1.15.11)
 
 **Player im Stil A** (Erays Entwürfe „Player A4“ und „Stil A für alle Player“ vom 17.11.2026, abgenommen mit „alles bauen“).

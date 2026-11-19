@@ -43,11 +43,13 @@
     });
   });
 
-  t(G, 'Rad: Bild & Wiedergabe, Bild-in-Bild, Schlaf-Timer, Ton an/aus, Sender ausblenden – Favoriten sind NICHT im Rad', function () {
+  // Erays Wunsch 18.11.2026: „Sender ausblenden“ nur noch in den Einstellungen der App – nicht im Rad
+  t(G, 'Rad: Bild & Wiedergabe, Bild-in-Bild, Schlaf-Timer, Ton an/aus – kein „Sender ausblenden“, Favoriten sind NICHT im Rad', function () {
     return withPlayer('live', true, function (P) {
       P.openMenu();
       var txt = Array.prototype.map.call(P.el.querySelectorAll('.pa-list.is-menu .tp-item span'), function (s) { return s.textContent; });
-      ok(txt.indexOf('Bild & Wiedergabe') >= 0 && txt.indexOf('Bild-in-Bild') >= 0 && txt.indexOf('Ton an/aus') >= 0 && txt.indexOf('Sender ausblenden') >= 0, txt.join(', '));
+      ok(txt.indexOf('Bild & Wiedergabe') >= 0 && txt.indexOf('Bild-in-Bild') >= 0 && txt.indexOf('Ton an/aus') >= 0, txt.join(', '));
+      ok(txt.indexOf('Sender ausblenden') < 0, 'kein „Sender ausblenden“ im Rad');
       ok(txt.join(' ').indexOf('Schlaf-Timer') >= 0, 'Schlaf-Timer');
       ok(txt.indexOf('Merken') < 0 && txt.indexOf('Letzter Sender') < 0, 'kein Merken, kein Letzter Sender');
       P.openMenu();
@@ -122,5 +124,46 @@
       eq(b.textContent.trim(), '', 'kein Wort auf dem Knopf');
       ok(b.querySelector('svg'), 'Herz-Symbol');
     });
+  });
+
+  // Erays Auftrag 18.11.2026: Filme in der PC-App auch als MKV (mit Endung .mp4), AVI oder mit Dolby-Ton
+  t(G, 'PC-App: Umpack-Dienst – Adresse, Zeit ab Startpunkt, Spulen über die gemerkte Länge', function () {
+    var keep = window.telvoDesktop;
+    window.telvoDesktop = { remux: 'http://127.0.0.1:4711|geheim' };
+    function done() { if (keep === undefined) delete window.telvoDesktop; else window.telvoDesktop = keep; }
+    try {
+      ok(D.Remux.ok(), 'Dienst erkannt');
+      var u = D.Remux.url('http://srv/movie/a/b/1.mp4', 90.7, false);
+      ok(u.indexOf('http://127.0.0.1:4711/play?k=geheim&t=90&u=') === 0, u);
+      ok(u.indexOf(encodeURIComponent('http://srv/movie/a/b/1.mp4')) > 0, 'Film-Adresse verschlüsselt mitgegeben');
+      ok(D.Remux.url('http://x/1.mkv', 0, true).indexOf('&v=h264') > 0, 'H.264-Neuberechnung als Rückfall');
+      ok(D.Remux.canCopy('h264') && D.Remux.canCopy('av1'), 'H.264/AV1 unverändert');
+      ok(!D.Remux.canCopy('mpeg4') && !D.Remux.canCopy('vc1'), 'DivX/VC-1 neu berechnen');
+      ok(D.Remux.nativeOk({ video: 'h264', audio: 'aac' }), 'H.264 + AAC direkt');
+      ok(!D.Remux.nativeOk({ video: 'h264', audio: 'ac3' }), 'Dolby-Ton (AC3) umpacken – direkt bliebe es stumm');
+      ok(!D.Remux.nativeOk({ video: 'h264', audio: 'eac3' }) && !D.Remux.nativeOk({ video: 'mpeg4', audio: 'mp3' }), 'EAC3 bzw. DivX umpacken');
+      ok(D.Remux.nativeOk(null), 'ohne Angaben direkt versuchen');
+    } catch (e) { done(); throw e; }
+    return withPlayer('movie', false, function (P) {
+      P.remux = { off: 600, dur: 7200 };
+      eq(P.dur(), 7200, 'Länge aus dem Dienst');
+      ok(P.ct() >= 600, 'Zeit zählt ab dem Startpunkt: ' + P.ct());
+      ok(P.canSeek(), 'spulen möglich');
+      P.remux = null;
+    }).then(done, function (e) { done(); throw e; });
+  });
+
+  t(G, 'Open-Source-Lizenzen: FFmpeg (PC-App) steht mit GPL-3.0-Text und Quellcode-Hinweis in der Liste', function () {
+    return fetch('../www/js/licenses.js').then(function (r) { return r.text(); }).then(function (s) {
+      ok(s.indexOf('"id": "ffmpeg"') > 0, 'FFmpeg-Eintrag');
+      ok(s.indexOf('"GPL-3.0": "') > 0 && s.indexOf('GNU GENERAL PUBLIC LICENSE') > 0, 'vollständiger GPL-3.0-Text');
+      ok(s.indexOf('github.com/FFmpeg/FFmpeg') > 0, 'Quellcode-Hinweis');
+    });
+  });
+
+  t(G, 'Ohne PC-App kein Umpacken (Handy, Fernseher, Webseite bleiben wie bisher)', function () {
+    var keep = window.telvoDesktop;
+    delete window.telvoDesktop;
+    try { ok(!D.Remux.ok(), 'kein Dienst'); } finally { if (keep !== undefined) window.telvoDesktop = keep; }
   });
 })();

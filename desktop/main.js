@@ -2,6 +2,8 @@
 // Lädt dieselbe App wie auf Handy und TV aus dem Ordner "app".
 const { app, BrowserWindow, Menu, shell } = require('electron');
 const path = require('path');
+const remux = require('./remux');
+let remuxSvc = null;   // lokaler Umpack-Dienst für Filme (MKV, AVI, Dolby-Ton) – siehe remux.js
 
 // Videos über die Grafikkarte abspielen und skalieren (schärfer und flüssiger, auch auf 2K/4K-Monitoren mit 144/240 Hz).
 // Laptops mit zwei Grafikchips nutzen dafür den stärkeren.
@@ -25,7 +27,10 @@ function createWindow() {
       contextIsolation: true,
       // Sicherheit: kein Node.js in der Oberfläche, Renderer in der Sandbox
       nodeIntegration: false,
-      sandbox: true
+      sandbox: true,
+      // Gibt der Oberfläche nur die Adresse des Umpack-Dienstes (window.telvoDesktop.remux)
+      preload: path.join(__dirname, 'preload.js'),
+      additionalArguments: remuxSvc ? ['--telvo-remux=' + remuxSvc.base + '|' + remuxSvc.token] : []
     }
   });
 
@@ -65,8 +70,8 @@ function createWindow() {
   });
 }
 
-app.whenReady().then(createWindow);
-app.on('window-all-closed', () => app.quit());
+app.whenReady().then(() => remux.start(app.userAgentFallback).catch(() => null)).then((svc) => { remuxSvc = svc; createWindow(); });
+app.on('window-all-closed', () => { if (remuxSvc) remuxSvc.stop(); app.quit(); });
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) createWindow();
 });

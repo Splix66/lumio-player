@@ -1080,5 +1080,9 @@ window.LUMIO_I18N["pl"] = {
   "{0} Folgen": "{0} odcinków",
   "Als Nächstes": "Następny",
   "Der Sender stockt – mehr Puffer wird genutzt.": "Kanał się zacina – używany jest większy bufor.",
-  "Solche Sender heißen in der Liste oft „RAW“. Sie werden unverändert durchgeleitet. Auf einer Android-TV-Box oder einem Fire TV Stick laufen sie meist – notfalls über einen externen Player wie VLC (Einstellungen → Wiedergabe).": "Takie kanały mają na liście często nazwę „RAW”. Są przekazywane bez zmian. Na przystawce Android TV lub Fire TV Stick zwykle działają – w razie potrzeby przez zewnętrzny odtwarzacz, np. VLC (Ustawienia → Odtwarzanie)."
+  "Solche Sender heißen in der Liste oft „RAW“. Sie werden unverändert durchgeleitet. Auf einer Android-TV-Box oder einem Fire TV Stick laufen sie meist – notfalls über einen externen Player wie VLC (Einstellungen → Wiedergabe).": "Takie kanały mają na liście często nazwę „RAW”. Są przekazywane bez zmian. Na przystawce Android TV lub Fire TV Stick zwykle działają – w razie potrzeby przez zewnętrzny odtwarzacz, np. VLC (Ustawienia → Odtwarzanie).",
+  "Sender suchen …": "Szukaj kanału …",
+  "Kein Sender gefunden.": "Nie znaleziono kanału.",
+  "Keine Sender ausgeblendet. Suche oben einen Sender, um ihn auszublenden.": "Brak ukrytych kanałów. Wyszukaj kanał powyżej, aby go ukryć.",
+  "Film wird vorbereitet …": "Przygotowywanie filmu …"
 };

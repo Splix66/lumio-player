@@ -1080,5 +1080,9 @@ window.LUMIO_I18N["fr"] = {
   "{0} Folgen": "{0} épisodes",
   "Als Nächstes": "À suivre",
   "Der Sender stockt – mehr Puffer wird genutzt.": "La chaîne saccade – davantage de mémoire tampon est utilisée.",
-  "Solche Sender heißen in der Liste oft „RAW“. Sie werden unverändert durchgeleitet. Auf einer Android-TV-Box oder einem Fire TV Stick laufen sie meist – notfalls über einen externen Player wie VLC (Einstellungen → Wiedergabe).": "Ces chaînes s’appellent souvent « RAW » dans la liste. Elles sont transmises telles quelles. Sur un boîtier Android TV ou un Fire TV Stick, elles fonctionnent généralement – au besoin via un lecteur externe comme VLC (Réglages → Lecture)."
+  "Solche Sender heißen in der Liste oft „RAW“. Sie werden unverändert durchgeleitet. Auf einer Android-TV-Box oder einem Fire TV Stick laufen sie meist – notfalls über einen externen Player wie VLC (Einstellungen → Wiedergabe).": "Ces chaînes s’appellent souvent « RAW » dans la liste. Elles sont transmises telles quelles. Sur un boîtier Android TV ou un Fire TV Stick, elles fonctionnent généralement – au besoin via un lecteur externe comme VLC (Réglages → Lecture).",
+  "Sender suchen …": "Rechercher une chaîne …",
+  "Kein Sender gefunden.": "Aucune chaîne trouvée.",
+  "Keine Sender ausgeblendet. Suche oben einen Sender, um ihn auszublenden.": "Aucune chaîne masquée. Recherchez une chaîne ci-dessus pour la masquer.",
+  "Film wird vorbereitet …": "Préparation du film …"
 };

@@ -1080,5 +1080,9 @@ window.LUMIO_I18N["ro"] = {
   "{0} Folgen": "{0} episoade",
   "Als Nächstes": "Urmează",
   "Der Sender stockt – mehr Puffer wird genutzt.": "Canalul sacadează – se folosește un buffer mai mare.",
-  "Solche Sender heißen in der Liste oft „RAW“. Sie werden unverändert durchgeleitet. Auf einer Android-TV-Box oder einem Fire TV Stick laufen sie meist – notfalls über einen externen Player wie VLC (Einstellungen → Wiedergabe).": "Astfel de canale se numesc adesea „RAW” în listă. Sunt transmise nemodificate. Pe un box Android TV sau pe un Fire TV Stick merg de obicei – la nevoie printr-un player extern ca VLC (Setări → Redare)."
+  "Solche Sender heißen in der Liste oft „RAW“. Sie werden unverändert durchgeleitet. Auf einer Android-TV-Box oder einem Fire TV Stick laufen sie meist – notfalls über einen externen Player wie VLC (Einstellungen → Wiedergabe).": "Astfel de canale se numesc adesea „RAW” în listă. Sunt transmise nemodificate. Pe un box Android TV sau pe un Fire TV Stick merg de obicei – la nevoie printr-un player extern ca VLC (Setări → Redare).",
+  "Sender suchen …": "Caută canal …",
+  "Kein Sender gefunden.": "Niciun canal găsit.",
+  "Keine Sender ausgeblendet. Suche oben einen Sender, um ihn auszublenden.": "Niciun canal ascuns. Caută mai sus un canal pentru a-l ascunde.",
+  "Film wird vorbereitet …": "Se pregătește filmul …"
 };

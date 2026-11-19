@@ -1080,5 +1080,9 @@ window.LUMIO_I18N["ku"] = {
   "{0} Folgen": "{0} beş",
   "Als Nächstes": "Ya din",
   "Der Sender stockt – mehr Puffer wird genutzt.": "Kanal diqerise – bufferek mezintir tê bikaranîn.",
-  "Solche Sender heißen in der Liste oft „RAW“. Sie werden unverändert durchgeleitet. Auf einer Android-TV-Box oder einem Fire TV Stick laufen sie meist – notfalls über einen externen Player wie VLC (Einstellungen → Wiedergabe).": "Kanalên wiha di lîsteyê de pir caran “RAW” tên binavkirin. Ew bê guhertin tên derbaskirin. Li ser qutiyeke Android TV an Fire TV Stick bi piranî dixebitin – heke pêwîst be bi lêdanerekî derve wek VLC (Mîheng → Lêdan)."
+  "Solche Sender heißen in der Liste oft „RAW“. Sie werden unverändert durchgeleitet. Auf einer Android-TV-Box oder einem Fire TV Stick laufen sie meist – notfalls über einen externen Player wie VLC (Einstellungen → Wiedergabe).": "Kanalên wiha di lîsteyê de pir caran “RAW” tên binavkirin. Ew bê guhertin tên derbaskirin. Li ser qutiyeke Android TV an Fire TV Stick bi piranî dixebitin – heke pêwîst be bi lêdanerekî derve wek VLC (Mîheng → Lêdan).",
+  "Sender suchen …": "Kanalê bigere …",
+  "Kein Sender gefunden.": "Tu kanal nehat dîtin.",
+  "Keine Sender ausgeblendet. Suche oben einen Sender, um ihn auszublenden.": "Tu kanalên veşartî tune. Ji bo veşartinê li jor kanalek bigere.",
+  "Film wird vorbereitet …": "Fîlm tê amadekirin …"
 };

@@ -1080,5 +1080,9 @@ window.LUMIO_I18N["el"] = {
   "{0} Folgen": "{0} επεισόδια",
   "Als Nächstes": "Επόμενο",
   "Der Sender stockt – mehr Puffer wird genutzt.": "Το κανάλι κολλάει – χρησιμοποιείται περισσότερο buffer.",
-  "Solche Sender heißen in der Liste oft „RAW“. Sie werden unverändert durchgeleitet. Auf einer Android-TV-Box oder einem Fire TV Stick laufen sie meist – notfalls über einen externen Player wie VLC (Einstellungen → Wiedergabe).": "Τέτοια κανάλια λέγονται συχνά «RAW» στη λίστα. Περνούν χωρίς αλλαγές. Σε ένα Android TV box ή ένα Fire TV Stick συνήθως παίζουν – αν χρειαστεί μέσω εξωτερικού player όπως το VLC (Ρυθμίσεις → Αναπαραγωγή)."
+  "Solche Sender heißen in der Liste oft „RAW“. Sie werden unverändert durchgeleitet. Auf einer Android-TV-Box oder einem Fire TV Stick laufen sie meist – notfalls über einen externen Player wie VLC (Einstellungen → Wiedergabe).": "Τέτοια κανάλια λέγονται συχνά «RAW» στη λίστα. Περνούν χωρίς αλλαγές. Σε ένα Android TV box ή ένα Fire TV Stick συνήθως παίζουν – αν χρειαστεί μέσω εξωτερικού player όπως το VLC (Ρυθμίσεις → Αναπαραγωγή).",
+  "Sender suchen …": "Αναζήτηση καναλιού …",
+  "Kein Sender gefunden.": "Δεν βρέθηκε κανάλι.",
+  "Keine Sender ausgeblendet. Suche oben einen Sender, um ihn auszublenden.": "Δεν υπάρχουν κρυφά κανάλια. Αναζήτησε ένα κανάλι παραπάνω για να το κρύψεις.",
+  "Film wird vorbereitet …": "Η ταινία προετοιμάζεται …"
 };

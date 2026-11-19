@@ -1080,5 +1080,9 @@ window.LUMIO_I18N["hr"] = {
   "{0} Folgen": "{0} epizoda",
   "Als Nächstes": "Sljedeća",
   "Der Sender stockt – mehr Puffer wird genutzt.": "Kanal zastajkuje – koristi se veći međuspremnik.",
-  "Solche Sender heißen in der Liste oft „RAW“. Sie werden unverändert durchgeleitet. Auf einer Android-TV-Box oder einem Fire TV Stick laufen sie meist – notfalls über einen externen Player wie VLC (Einstellungen → Wiedergabe).": "Takvi kanali u popisu se često zovu „RAW“. Prosljeđuju se nepromijenjeni. Na Android TV boxu ili Fire TV Sticku uglavnom rade – po potrebi preko vanjskog playera kao što je VLC (Postavke → Reprodukcija)."
+  "Solche Sender heißen in der Liste oft „RAW“. Sie werden unverändert durchgeleitet. Auf einer Android-TV-Box oder einem Fire TV Stick laufen sie meist – notfalls über einen externen Player wie VLC (Einstellungen → Wiedergabe).": "Takvi kanali u popisu se često zovu „RAW“. Prosljeđuju se nepromijenjeni. Na Android TV boxu ili Fire TV Sticku uglavnom rade – po potrebi preko vanjskog playera kao što je VLC (Postavke → Reprodukcija).",
+  "Sender suchen …": "Traži kanal …",
+  "Kein Sender gefunden.": "Nije pronađen nijedan kanal.",
+  "Keine Sender ausgeblendet. Suche oben einen Sender, um ihn auszublenden.": "Nema skrivenih kanala. Potraži kanal gore da ga sakriješ.",
+  "Film wird vorbereitet …": "Film se priprema …"
 };

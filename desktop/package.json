@@ -9,6 +9,9 @@
     "start": "electron .",
     "bauen": "electron-builder --publish never"
   },
+  "dependencies": {
+    "ffmpeg-static": "5.2.0"
+  },
   "devDependencies": {
     "electron": "^33.0.0",
     "electron-builder": "^25.1.8"
@@ -16,7 +19,8 @@
   "build": {
     "appId": "de.lumio.player",
     "productName": "Telvo Player",
-    "files": ["main.js", "app/**/*"],
+    "files": ["main.js", "remux.js", "preload.js", "app/**/*", "node_modules/ffmpeg-static/**/*"],
+    "asarUnpack": ["node_modules/ffmpeg-static/**/*"],
     "directories": { "output": "dist" },
     "win": {
       "target": [{ "target": "nsis", "arch": ["x64"] }],
@@ -31,7 +35,8 @@
       "target": [{ "target": "dmg", "arch": ["universal"] }],
       "icon": "icon.png",
       "category": "public.app-category.entertainment",
-      "identity": null
+      "identity": null,
+      "x64ArchFiles": "**/ffmpeg-static/ffmpeg"
     },
     "dmg": {
       "artifactName": "telvo-player-mac.${ext}"
