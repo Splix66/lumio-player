@@ -11,7 +11,7 @@
   /* ---------------- Einstellungen ---------------- */
   var CONFIG = {
     appName: 'Telvo Player',          // Name der App (auch in config-Dateien ändern)
-    version: '1.15.13',
+    version: '1.15.14',
     pageSize: 60,                     // So viele Einträge werden auf einmal gezeichnet
     /* Bibliotheken: werden beim Bauen nach www/lib kopiert (scripts/copy-libs.js) und von dort geladen.
        Nur wenn sie fehlen, aus dem Internet – mit fester Version und Prüfsumme (SRI): eine veränderte Datei
@@ -1791,7 +1791,8 @@
       return { changed: true, added: added, removed: removed, edited: edited };
     },
     /* Playlists, die direkt in der App eingetragen wurden, online speichern (damit sie auf der Webseite erscheinen) –
-       nur wenn man das beim Anlegen oder in der Playlist-Übersicht ausdrücklich eingeschaltet hat. */
+       nur Playlists mit cloud: true. Seit 1.15.14 bekommt jede in der App angelegte Playlist cloud: true (der Schalter
+       „Auch auf der Webseite verwalten“ ist weg); ältere Playlists, die man damals ausgeschaltet hatte, bleiben nur auf dem Gerät. */
     upload: function () {
       var self = this;
       if (!self.registered) return;
@@ -3902,27 +3903,6 @@
     body.appendChild(h('p', { class: 'hint wl-faq-more' }, h('span', { text: T('Mehr Hilfe:') + ' ' }), portalLinkBtn()));
     openSheet(T('Hilfe'), 'help', body, { focusClose: true });
   }
-  /* „Auch auf der Webseite verwalten“: an = Playlist liegt online (von der Webseite gesendet oder freigegeben) */
-  function onWeb(p) { return !!p.remoteId || p.cloud === true; }
-  function toggleWeb(p) {
-    var list = Profiles.list(), x = list.filter(function (q) { return q.id === p.id; })[0];
-    if (!x) return;
-    if (!onWeb(x)) {
-      x.cloud = true; Profiles.save(list);
-      Cloud.upload();
-      toast(T('„{0}“ ist jetzt auf der Webseite verfügbar.', x.name), 3000);
-      showProfiles();
-      return;
-    }
-    confirmBox(T('Von der Webseite entfernen?'), T('„{0}“ bleibt auf diesem Gerät, die Online-Kopie samt Zugangsdaten wird gelöscht.', x.name), T('Entfernen'), function () {
-      var l2 = Profiles.list(), y = l2.filter(function (q) { return q.id === p.id; })[0];
-      if (!y) return;
-      if (y.remoteId) { Cloud.markDeleted(y.remoteId); Cloud.flushDeletes(); }
-      delete y.remoteId; y.cloud = false; Profiles.save(l2);
-      if (App.profile && App.profile.id === y.id) { delete App.profile.remoteId; App.profile.cloud = false; }
-      showProfiles();
-    });
-  }
   /* Erays Wunsch 18.11.2026: Ist eine Playlist da, geht es direkt auf die Startseite. Die Auswahl „Welche Playlist
      möchtest du öffnen?“ erscheint nur noch, wenn man sie selbst aufruft (Einstellungen → „Playlist wechseln“).
      prefer: diese Playlist zuerst (z. B. gerade von der Webseite empfangen). Ohne Playlist: Willkommensseite. */
@@ -4004,37 +3984,64 @@
       Screens.reset('profiles', welcome);
       return;
     }
-    var grid = h('div', { class: 'profile-grid' });
+    /* „Playlist wechseln“ im neuen Stil (Erays Entwurf A, 19.11.2026 – wie die Profilauswahl am Apple TV):
+       Kopf wie die Startseite (Zurück, Logo-Zeichen, Sprache), große Glas-Karten mit Monogramm, die aktive Playlist
+       violett mit Schild „Aktiv“, Löschen nur als kleiner Mülleimer unter der gewählten Karte (am Handy immer sichtbar),
+       unten eine ruhige Leiste zum Hinzufügen per Handy bzw. Webseite mit MAC und KEY. Bleibt wie die Willkommensseite dunkel.
+       Den Schalter „Webseite: an/aus“ gibt es nicht mehr (Erays Entscheidung 19.11.2026). */
+    var touch = !Platform.tv && !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+    var cards = h('div', { class: 'pl-cards' });
     // Vorgewählt: die aktive Playlist – gibt es keine (z. B. gerade gelöscht), die erste der Liste (sonst landete die Auswahl auf dem Sprach-Knopf)
-    var actId = Store.get('active'), focusId = list.some(function (p) { return p.id === actId; }) ? actId : list[0].id;
+    var actId = Store.get('active'), hasAct = list.some(function (p) { return p.id === actId; }), focusId = hasAct ? actId : list[0].id;
     list.forEach(function (p) {
-      var sub = p.type === 'xtream' ? T('Xtream Codes') : p.type === 'm3u' ? T('M3U-Playlist') : T('Demo');
-      grid.appendChild(h('div', { class: 'profile' },
-        h('button', { class: 'card f', onclick: function () { activateProfile(p); }, 'data-autofocus': p.id === focusId ? true : null },
-          h('span', { class: 'avatar', style: 'background:' + colorFor(p.name), text: initials(p.name) }),
-          h('span', { class: 'label', text: p.name }),
-          h('span', { class: 'sub', text: sub })),
-        p.type === 'demo' ? null : h('button', {
-          class: 'btn small ghost f web-toggle' + (onWeb(p) ? ' is-on' : ''),
-          title: T('Auch auf der Webseite verwalten'), onclick: function () { toggleWeb(p); }
-        }, icon('globe'), h('span', { text: onWeb(p) ? T('Webseite: an') : T('Webseite: aus') })),
-        h('button', {
-          class: 'btn small ghost f danger', onclick: function () {
-            confirmBox(T('„{0}“ löschen?', p.name), T('Favoriten und Verlauf dieses Profils werden ebenfalls entfernt.'), T('Löschen'), function () { Profiles.remove(p.id); showProfiles(); });
-          }
-        }, T('Löschen'))));
+      var sub = p.type === 'xtream' ? T('Xtream Codes') : p.type === 'm3u' ? T('M3U-Playlist') : T('Test-Videos');
+      var active = hasAct && p.id === actId;
+      cards.appendChild(h('div', { class: 'pl' + (active ? ' is-active' : '') },
+        h('button', { class: 'pl-card f', onclick: function () { activateProfile(p); }, 'data-autofocus': p.id === focusId ? true : null, 'aria-label': p.name + (active ? ' – ' + T('Aktiv') : '') },
+          active ? h('span', { class: 'pl-badge' }, icon('check'), h('span', { text: T('Aktiv') })) : null,
+          h('span', { class: 'pl-mono', text: initials(p.name) }),
+          h('span', { class: 'pl-name', text: p.name }),
+          h('span', { class: 'pl-sub', text: sub })),
+        h('div', { class: 'pl-tools' },
+          h('button', {
+            class: 'pl-del f', title: T('Löschen'), 'aria-label': T('„{0}“ löschen?', p.name), onclick: function () {
+              confirmBox(T('„{0}“ löschen?', p.name), T('Favoriten und Verlauf dieses Profils werden ebenfalls entfernt.'), T('Löschen'), function () {
+                Profiles.remove(p.id);
+                if (App.profile && App.profile.id === p.id) App.profile = null;
+                showProfiles();
+              });
+            }
+          }, icon('trash')))));
     });
-    grid.appendChild(h('div', { class: 'profile' },
-      h('button', { class: 'card add f', onclick: showAddProfile, 'data-autofocus': list.length ? null : true },
-        icon('plus'), h('span', { class: 'label', text: T('Playlist hinzufügen') }), h('span', { class: 'sub', text: T('Xtream oder M3U') }))));
-    var el = h('div', { class: 'profiles' }, heroArt(),
-      h('div', { class: 'profiles-top' }, h('div', { class: 'brand' }, brandMark(), wordmark()), langButton()),
-      h('div', { class: 'profiles-in' },
-        h('h2', { text: T('Welche Playlist möchtest du öffnen?') }),
-        grid,
-        remotePanel(),
-        h('div', { class: 'profiles-mac' }, macTag())));
-    Screens.reset('profiles', el);
+    if (!Profiles.full()) cards.appendChild(h('div', { class: 'pl pl-add' },
+      h('button', { class: 'pl-card f', onclick: showAddProfile },
+        h('span', { class: 'pl-mono' }, icon('plus')), h('span', { class: 'pl-name', text: T('Hinzufügen') }), h('span', { class: 'pl-sub', text: T('Xtream oder M3U') })),
+      h('div', { class: 'pl-tools' })));
+    function idTile(label, value, copyLabel) {
+      return h('div', { class: 'pl-id' }, h('small', { text: label }), h('span', { class: 'pl-id-row' }, h('b', { text: value }), copyBtn(value, copyLabel)));
+    }
+    // Unten: am Fernseher/PC per QR-Code mit dem Handy, am Handy selbst direkt über die Webseite
+    var phone = h('div', { class: 'pl-phone' },
+      touch ? null : qrBox(Device.portalLink(), 'pl-qr'),
+      h('div', { class: 'pl-phone-t' },
+        h('b', { text: touch ? T('Auf der Webseite hinzufügen') : T('Mit dem Handy hinzufügen') }),
+        h('span', { text: touch ? T('MAC und KEY sind dort schon eingetragen.') : T('QR-Code scannen – MAC und KEY sind schon eingetragen.') }),
+        touch ? h('button', { class: 'pl-web f', onclick: function () { openExternal(Device.portalLink()); } }, icon('globe'), h('span', { text: T('Webseite öffnen') })) : null),
+      h('div', { class: 'pl-ids' }, idTile('MAC', Device.mac(), 'MAC'), idTile('KEY', Device.key(), 'KEY')));
+    // Zurück: zur geöffneten Playlist (von Einstellungen → „Playlist wechseln“); ohne geöffnete Playlist gibt es keinen Zurück-Knopf
+    function back() { if (App.profile && Profiles.get(App.profile.id)) { Shell.open(); return true; } return false; }
+    var canBack = !!(App.profile && Profiles.get(App.profile.id));
+    var el = h('div', { class: 'wl pl-page' + (touch ? ' is-touch' : '') },
+      h('div', { class: 'pl-top' },
+        h('div', { class: 'pl-top-l' },
+          canBack ? h('button', { class: 'pl-round f', title: T('Zurück'), 'aria-label': T('Zurück'), onclick: back }, icon('back')) : null,
+          brandMark()),
+        langButton()),
+      h('div', { class: 'pl-main' },
+        h('div', { class: 'pl-head' }, h('h1', { text: T('Playlist wechseln') }), h('p', { text: T('Wähle, welche Playlist Telvo öffnen soll.') })),
+        cards,
+        phone));
+    Screens.reset('profiles', el, { onBack: back });
   }
 
   /* Demo-Modus: freie Test-Videos ohne eigenen Zugang – zum Ausprobieren und für die App-Store-Prüfung.
@@ -4085,11 +4092,9 @@
       err.textContent = '';
     }
     var saveBtn = h('button', { class: 'btn f primary', onclick: save }, T('Speichern & verbinden'));
-    // Voreinstellung: an – die Playlist lässt sich dann auch im Browser bearbeiten. Ausschalten = Zugangsdaten bleiben nur auf dem Gerät.
-    var toWeb = true;
-    var webRow = toggleRow(T('Auch auf der Webseite verwalten'),
-      T('Speichert die Zugangsdaten online, damit du die Playlist im Browser bearbeiten kannst. Ohne diese Option bleiben sie nur auf diesem Gerät.'),
-      function () { return toWeb; }, function (v) { toWeb = v; });
+    // Den Schalter „Auch auf der Webseite verwalten“ gibt es nicht mehr (Erays Entscheidung 19.11.2026): neue Playlists
+    // liegen immer auch (verschlüsselt) online und lassen sich auf der Webseite bearbeiten. Ein kurzer Hinweis sagt das.
+    var webRow = h('p', { class: 'hint form-web-hint' }, icon('globe'), h('span', { text: T('Die Playlist erscheint auch auf der Webseite – dort kannst du sie jederzeit bearbeiten.') }));
 
     function save() {
       err.textContent = '';
@@ -4110,7 +4115,7 @@
         else { p = { type: 'm3u', url: u }; if (eu) p.epgUrl = eu; }
       }
       p.name = name || (p.type === 'xtream' ? p.username : T('Meine Playlist'));
-      if (toWeb) p.cloud = true;
+      p.cloud = true;
       if (Profiles.full()) { err.textContent = T('Maximal {0} Playlists pro Gerät.', MAX_PLAYLISTS); return; }
       saveBtn.disabled = true; saveBtn.textContent = T('Verbinde …');
       makeProvider(p).login().then(function () {

@@ -103,7 +103,8 @@
     }
   });
 
-  t(G, 'Datenschutz: Zugangsdaten werden nur mit Zustimmung („Auch auf der Webseite verwalten“) hochgeladen', function () {
+  // Seit 1.15.14 bekommt jede in der App angelegte Playlist cloud: true (Schalter weg); ältere ohne Freigabe bleiben auf dem Gerät
+  t(G, 'Datenschutz: ältere Playlists ohne Freigabe werden nicht hochgeladen, nur die mit cloud: true', function () {
     var before = D.Store.get('profiles', []), realRpc = D.Cloud.rpc, wasReg = D.Cloud.registered, sent = [];
     try {
       D.Store.set('profiles', [

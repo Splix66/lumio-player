@@ -1084,5 +1084,14 @@ window.LUMIO_I18N["ku"] = {
   "Sender suchen …": "Kanalê bigere …",
   "Kein Sender gefunden.": "Tu kanal nehat dîtin.",
   "Keine Sender ausgeblendet. Suche oben einen Sender, um ihn auszublenden.": "Tu kanalên veşartî tune. Ji bo veşartinê li jor kanalek bigere.",
-  "Film wird vorbereitet …": "Fîlm tê amadekirin …"
+  "Film wird vorbereitet …": "Fîlm tê amadekirin …",
+  "Test-Videos": "Vîdyoyên ceribandinê",
+  "Aktiv": "Çalak",
+  "Hinzufügen": "Zêde bike",
+  "Auf der Webseite hinzufügen": "Li malperê zêde bike",
+  "Mit dem Handy hinzufügen": "Bi telefonê zêde bike",
+  "MAC und KEY sind dort schon eingetragen.": "MAC û KEY li wir jixwe hatine nivîsandin.",
+  "QR-Code scannen – MAC und KEY sind schon eingetragen.": "Koda QR bixwîne – MAC û KEY jixwe hatine nivîsandin.",
+  "Wähle, welche Playlist Telvo öffnen soll.": "Hilbijêre ka Telvo kîjan playlistê veke.",
+  "Die Playlist erscheint auch auf der Webseite – dort kannst du sie jederzeit bearbeiten.": "Playlist li malperê jî xuya dike – tu dikarî wê li wir her dem biguherînî."
 };

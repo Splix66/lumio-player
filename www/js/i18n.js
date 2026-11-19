@@ -1092,7 +1092,16 @@ window.LUMIO_I18N = {
     "Sender suchen …": "Search channels …",
     "Kein Sender gefunden.": "No channel found.",
     "Keine Sender ausgeblendet. Suche oben einen Sender, um ihn auszublenden.": "No hidden channels. Search for a channel above to hide it.",
-    "Film wird vorbereitet …": "Preparing movie …"
+    "Film wird vorbereitet …": "Preparing movie …",
+    'Test-Videos': 'Test videos',
+    'Aktiv': 'Active',
+    'Hinzufügen': 'Add',
+    'Auf der Webseite hinzufügen': 'Add on the website',
+    'Mit dem Handy hinzufügen': 'Add with your phone',
+    'MAC und KEY sind dort schon eingetragen.': 'MAC and KEY are already filled in there.',
+    'QR-Code scannen – MAC und KEY sind schon eingetragen.': 'Scan the QR code – MAC and KEY are already filled in.',
+    'Wähle, welche Playlist Telvo öffnen soll.': 'Choose which playlist Telvo should open.',
+    'Die Playlist erscheint auch auf der Webseite – dort kannst du sie jederzeit bearbeiten.': 'The playlist also appears on the website – you can edit it there at any time.'
   },
 
   /* ---------------- Türkçe ---------------- */
@@ -2182,6 +2191,15 @@ window.LUMIO_I18N = {
     "Sender suchen …": "Kanal ara …",
     "Kein Sender gefunden.": "Kanal bulunamadı.",
     "Keine Sender ausgeblendet. Suche oben einen Sender, um ihn auszublenden.": "Gizli kanal yok. Gizlemek için yukarıda bir kanal ara.",
-    "Film wird vorbereitet …": "Film hazırlanıyor …"
+    "Film wird vorbereitet …": "Film hazırlanıyor …",
+    'Test-Videos': 'Test videoları',
+    'Aktiv': 'Aktif',
+    'Hinzufügen': 'Ekle',
+    'Auf der Webseite hinzufügen': 'Web sitesinde ekle',
+    'Mit dem Handy hinzufügen': 'Telefonla ekle',
+    'MAC und KEY sind dort schon eingetragen.': 'MAC ve KEY orada zaten girili.',
+    'QR-Code scannen – MAC und KEY sind schon eingetragen.': 'QR kodu tara – MAC ve KEY zaten girili.',
+    'Wähle, welche Playlist Telvo öffnen soll.': 'Telvo’nun hangi listeyi açacağını seç.',
+    'Die Playlist erscheint auch auf der Webseite – dort kannst du sie jederzeit bearbeiten.': 'Liste web sitesinde de görünür – orada istediğin zaman düzenleyebilirsin.'
   }
 };

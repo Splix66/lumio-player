@@ -1084,5 +1084,14 @@ window.LUMIO_I18N["ar"] = {
   "Sender suchen …": "ابحث عن قناة …",
   "Kein Sender gefunden.": "لم يتم العثور على قناة.",
   "Keine Sender ausgeblendet. Suche oben einen Sender, um ihn auszublenden.": "لا توجد قنوات مخفية. ابحث عن قناة في الأعلى لإخفائها.",
-  "Film wird vorbereitet …": "جارٍ تجهيز الفيلم …"
+  "Film wird vorbereitet …": "جارٍ تجهيز الفيلم …",
+  "Test-Videos": "فيديوهات تجريبية",
+  "Aktiv": "نشطة",
+  "Hinzufügen": "إضافة",
+  "Auf der Webseite hinzufügen": "أضف عبر الموقع",
+  "Mit dem Handy hinzufügen": "أضف بهاتفك",
+  "MAC und KEY sind dort schon eingetragen.": "MAC و KEY مُدخلان هناك مسبقًا.",
+  "QR-Code scannen – MAC und KEY sind schon eingetragen.": "امسح رمز QR – MAC و KEY مُدخلان مسبقًا.",
+  "Wähle, welche Playlist Telvo öffnen soll.": "اختر قائمة التشغيل التي يفتحها Telvo.",
+  "Die Playlist erscheint auch auf der Webseite – dort kannst du sie jederzeit bearbeiten.": "تظهر قائمة التشغيل أيضًا على الموقع – يمكنك تعديلها هناك في أي وقت."
 };

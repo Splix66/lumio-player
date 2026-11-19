@@ -1084,5 +1084,14 @@ window.LUMIO_I18N["hr"] = {
   "Sender suchen …": "Traži kanal …",
   "Kein Sender gefunden.": "Nije pronađen nijedan kanal.",
   "Keine Sender ausgeblendet. Suche oben einen Sender, um ihn auszublenden.": "Nema skrivenih kanala. Potraži kanal gore da ga sakriješ.",
-  "Film wird vorbereitet …": "Film se priprema …"
+  "Film wird vorbereitet …": "Film se priprema …",
+  "Test-Videos": "Testni videozapisi",
+  "Aktiv": "Aktivna",
+  "Hinzufügen": "Dodaj",
+  "Auf der Webseite hinzufügen": "Dodaj na web-stranici",
+  "Mit dem Handy hinzufügen": "Dodaj mobitelom",
+  "MAC und KEY sind dort schon eingetragen.": "MAC i KEY su tamo već upisani.",
+  "QR-Code scannen – MAC und KEY sind schon eingetragen.": "Skeniraj QR kod – MAC i KEY su već upisani.",
+  "Wähle, welche Playlist Telvo öffnen soll.": "Odaberi koju playlistu Telvo treba otvoriti.",
+  "Die Playlist erscheint auch auf der Webseite – dort kannst du sie jederzeit bearbeiten.": "Playlista se prikazuje i na web-stranici – tamo je možeš urediti bilo kada."
 };

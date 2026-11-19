@@ -1,5 +1,11 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## 1.15.14 – noch nicht veröffentlicht
+
+- **„Playlist wechseln“ im neuen Stil** (Erays Entwurf A vom 19.11.2026, wie die Profilauswahl am Apple TV): Kopf wie die Startseite mit Zurück-Knopf, Logo-Zeichen und Sprache; große Karten mit Anfangsbuchstaben, die geöffnete Playlist violett mit dem Schild „Aktiv“; Löschen nur noch als kleiner Mülleimer unter der gewählten Karte (am Handy oben rechts auf jeder Karte); unten eine ruhige Leiste zum Hinzufügen per Handy (QR-Code) bzw. am Handy über „Webseite öffnen“, daneben MAC und KEY. Zurück führt wieder zur geöffneten Playlist.
+- **Kein Schalter „Webseite: an/aus“ mehr** (Erays Entscheidung 19.11.2026): Neue Playlists erscheinen immer auch auf der Webseite und lassen sich dort bearbeiten; das Formular „Playlist hinzufügen“ sagt das in einem kurzen Hinweis. Ältere Playlists, die man damals ausgeschaltet hatte, bleiben weiter nur auf dem Gerät.
+
+
 ## 1.15.13 – 2026-11-19 · Startseite, Ausblenden, Filme am PC
 
 - **Direkt auf die Startseite statt auf die Playlist-Auswahl** (Erays Wunsch 18.11.2026): Ist eine Playlist da, öffnet die App sie sofort – auch wenn man die laufende Playlist auf der Webseite durch eine neue ersetzt, beim Start keine Playlist gemerkt ist oder man in den Einstellungen „Playlist löschen“ wählt und noch eine weitere da ist. Die Seite „Welche Playlist möchtest du öffnen?“ erscheint nur noch über Einstellungen → „Playlist wechseln“. Ohne Playlist bleibt es bei der Willkommensseite.

@@ -1084,5 +1084,14 @@ window.LUMIO_I18N["ru"] = {
   "Sender suchen …": "Поиск канала …",
   "Kein Sender gefunden.": "Канал не найден.",
   "Keine Sender ausgeblendet. Suche oben einen Sender, um ihn auszublenden.": "Скрытых каналов нет. Найдите канал выше, чтобы скрыть его.",
-  "Film wird vorbereitet …": "Фильм готовится …"
+  "Film wird vorbereitet …": "Фильм готовится …",
+  "Test-Videos": "Тестовые видео",
+  "Aktiv": "Активен",
+  "Hinzufügen": "Добавить",
+  "Auf der Webseite hinzufügen": "Добавить на сайте",
+  "Mit dem Handy hinzufügen": "Добавить с телефона",
+  "MAC und KEY sind dort schon eingetragen.": "MAC и KEY там уже указаны.",
+  "QR-Code scannen – MAC und KEY sind schon eingetragen.": "Отсканируйте QR-код – MAC и KEY уже указаны.",
+  "Wähle, welche Playlist Telvo öffnen soll.": "Выберите, какой плейлист откроет Telvo.",
+  "Die Playlist erscheint auch auf der Webseite – dort kannst du sie jederzeit bearbeiten.": "Плейлист также появится на сайте – там вы сможете изменить его в любое время."
 };

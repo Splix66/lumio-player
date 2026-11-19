@@ -211,11 +211,30 @@
       P.save([{ id: 'tst-a', type: 'demo', name: 'Erste' }, { id: 'tst-b', type: 'demo', name: 'Zweite' }]);
       D.Store.del('active');   // so steht es nach dem Löschen der aktiven Playlist da
       D.showProfiles();
-      var cards = document.querySelectorAll('.profile-grid .card:not(.add)');
+      var cards = document.querySelectorAll('.pl-cards .pl:not(.pl-add) .pl-card');
       eq(cards.length, 2);
       ok(cards[0].hasAttribute('data-autofocus'), 'erste Playlist ist vorgewählt');
       ok(!cards[1].hasAttribute('data-autofocus'), 'nur eine vorgewählt');
     } finally { P.save(keepList); if (keepActive) D.Store.set('active', keepActive); D.Screens.reset('leer', document.createElement('div'), {}); }
+  });
+
+  // Erays Entwurf A (19.11.2026): „Playlist wechseln“ im neuen Stil; den Schalter „Webseite an/aus“ gibt es nicht mehr
+  t(G, 'Playlist wechseln: Karten im neuen Stil, aktive Playlist markiert, kein Schalter „Webseite an/aus“', function () {
+    var P = D.Profiles, keepList = P.list(), keepActive = D.Store.get('active', null);
+    try {
+      P.save([{ id: 'tst-a', type: 'm3u', name: 'Wohnzimmer', url: 'http://x/a.m3u' }, { id: 'tst-b', type: 'demo', name: 'Demo' }]);
+      D.Store.set('active', 'tst-a');
+      D.showProfiles();
+      var page = document.querySelector('.pl-page');
+      ok(page, 'neue Seite ist da');
+      ok(page.querySelector('.pl-head h1').textContent.length > 0, 'Überschrift');
+      eq(page.querySelectorAll('.pl:not(.pl-add)').length, 2, 'zwei Playlists');
+      ok(page.querySelector('.pl.is-active .pl-badge'), 'aktive Playlist hat das Schild');
+      ok(page.querySelector('.pl-add .pl-card'), 'Karte „Hinzufügen“');
+      eq(page.querySelectorAll('.pl-del').length, 2, 'je ein Mülleimer');
+      ok(!page.querySelector('.web-toggle'), 'kein Schalter „Webseite an/aus“ mehr');
+      ok(page.querySelector('.pl-ids'), 'MAC und KEY unten');
+    } finally { P.save(keepList); if (keepActive) D.Store.set('active', keepActive); else D.Store.del('active'); D.Screens.reset('leer', document.createElement('div'), {}); }
   });
 
   t(G, 'Profil: QR-Code zum Scannen mit dem Handy steht wieder bei „Dieses Gerät“', function () {

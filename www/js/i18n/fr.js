@@ -1084,5 +1084,14 @@ window.LUMIO_I18N["fr"] = {
   "Sender suchen …": "Rechercher une chaîne …",
   "Kein Sender gefunden.": "Aucune chaîne trouvée.",
   "Keine Sender ausgeblendet. Suche oben einen Sender, um ihn auszublenden.": "Aucune chaîne masquée. Recherchez une chaîne ci-dessus pour la masquer.",
-  "Film wird vorbereitet …": "Préparation du film …"
+  "Film wird vorbereitet …": "Préparation du film …",
+  "Test-Videos": "Vidéos de test",
+  "Aktiv": "Active",
+  "Hinzufügen": "Ajouter",
+  "Auf der Webseite hinzufügen": "Ajouter sur le site",
+  "Mit dem Handy hinzufügen": "Ajouter avec votre téléphone",
+  "MAC und KEY sind dort schon eingetragen.": "La MAC et la KEY y sont déjà renseignées.",
+  "QR-Code scannen – MAC und KEY sind schon eingetragen.": "Scannez le code QR – la MAC et la KEY sont déjà renseignées.",
+  "Wähle, welche Playlist Telvo öffnen soll.": "Choisissez la playlist que Telvo doit ouvrir.",
+  "Die Playlist erscheint auch auf der Webseite – dort kannst du sie jederzeit bearbeiten.": "La playlist apparaît aussi sur le site – vous pouvez la modifier à tout moment."
 };

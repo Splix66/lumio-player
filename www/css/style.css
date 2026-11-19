@@ -1764,9 +1764,6 @@ body.kbd .tr-close.f:focus, body.is-tv .tr-close.f:focus { background: #fff; col
   html:not(.tv) .mv2 .mv-head.no-sort { display: flex; }
 }
 
-/* Playlist-Übersicht: „Webseite: an/aus“ (Zugangsdaten nur mit Zustimmung online) */
-.web-toggle .i { color: var(--muted); }
-.web-toggle.is-on .i { color: var(--ok); }
 
 
 /* ==========================================================
@@ -4259,3 +4256,99 @@ body.lite .fhero.is-home .fh-bg { transition: opacity .6s ease; }
 .fhero.is-home.hm-leave .fh-in { opacity: 0; transition: opacity .3s ease; }
 .fhero.is-home.hm-in .fh-in, .hm2 .fhero.is-home.hm-in .fh-in { animation: hmTextIn .55s ease both; }
 @keyframes hmTextIn { from { opacity: 0; transform: translateY(.35rem); } to { opacity: 1; transform: none; } }
+
+/* ---------- „Playlist wechseln“ im neuen Stil (1.15.14, Erays Entwurf A vom 19.11.2026) ----------
+   Wie die Profilauswahl am Apple TV: große Glas-Karten mit Monogramm, aktive Playlist violett mit Schild „Aktiv“,
+   Löschen nur als kleiner Mülleimer unter der gewählten Karte, unten eine Leiste zum Hinzufügen per Handy/Webseite.
+   Nutzt die Farben der Willkommensseite (.wl) und bleibt wie sie dunkel. */
+.pl-page { display: flex; flex-direction: column; }
+.pl-top { width: 100%; max-width: 80rem; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: calc(1.3rem + env(safe-area-inset-top)) var(--pad) 0; }
+.pl-top-l { display: flex; align-items: center; gap: 1rem; }
+.pl-page .brand-mark { width: 2.3rem; height: 2.3rem; color: var(--wl-text); }
+.pl-round { width: 3rem; height: 3rem; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .05); color: var(--wl-text); box-shadow: inset 0 0 0 1px var(--wl-line-2); }
+.pl-round .i { width: 1.2rem; height: 1.2rem; }
+.pl-round:hover { background: rgba(255, 255, 255, .09); }
+.pl-main { flex: 1; width: 100%; max-width: 80rem; margin: 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.4rem var(--pad) 2rem; }
+.pl-head { text-align: center; margin-bottom: 2.4rem; }
+.pl-head h1 { font-size: 2.6rem; font-weight: 800; letter-spacing: -.035em; line-height: 1.1; color: var(--wl-text); }
+.pl-head p { margin-top: .55rem; font-size: 1.05rem; color: var(--wl-muted); }
+.pl-cards { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.6rem; max-width: 64rem; }
+.pl { width: 13.2rem; display: flex; flex-direction: column; align-items: center; }
+.pl-card { position: relative; width: 100%; height: 14.2rem; border-radius: 1.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1rem;
+  background: rgba(255, 255, 255, .055); color: var(--wl-text); box-shadow: inset 0 0 0 1px var(--wl-line); transition: transform .2s ease, background .2s ease, box-shadow .2s ease; }
+.pl-card:hover { background: rgba(255, 255, 255, .08); }
+body.kbd .pl-card.f:focus, body.is-tv .pl-card.f:focus { outline: none; transform: scale(1.06); background: rgba(255, 255, 255, .09);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, .85), 0 1.6rem 3rem -1.4rem rgba(0, 0, 0, .8); }
+.pl-mono { width: 5.6rem; height: 5.6rem; border-radius: 1.35rem; display: grid; place-items: center; font-size: 2rem; font-weight: 700; letter-spacing: -.02em; color: #fff;
+  background: linear-gradient(160deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, .04)); box-shadow: inset 0 0 0 1px var(--wl-line-2); }
+.pl.is-active .pl-mono { background: linear-gradient(160deg, #8b5cf6, #5b21b6); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .25), 0 .8rem 1.8rem -.9rem rgba(124, 58, 237, .9); }
+.pl-name { margin-top: 1.05rem; max-width: 100%; font-size: 1.2rem; font-weight: 700; letter-spacing: -.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pl-sub { margin-top: .3rem; font-size: .8rem; letter-spacing: .04em; text-transform: uppercase; color: var(--wl-muted); }
+.pl-badge { position: absolute; top: .85rem; right: .85rem; display: flex; align-items: center; gap: .3rem; padding: .28rem .6rem .28rem .45rem; border-radius: 99px;
+  background: rgba(52, 211, 153, .14); color: #34d399; font-size: .74rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.pl-badge .i { width: .85rem; height: .85rem; }
+.pl-add .pl-card { background: transparent; box-shadow: none; outline: 1.5px dashed rgba(255, 255, 255, .18); outline-offset: -1.5px; color: var(--wl-muted); }
+body.kbd .pl-add .pl-card.f:focus, body.is-tv .pl-add .pl-card.f:focus { outline: none; }
+.pl-add .pl-mono { background: none; box-shadow: none; color: var(--wl-muted); }
+.pl-add .pl-mono .i { width: 2.2rem; height: 2.2rem; }
+.pl-tools { height: 3.6rem; display: flex; align-items: flex-end; justify-content: center; }
+/* Mülleimer nur unter der gewählten Karte (Fernbedienung: einmal nach unten) bzw. beim Darüberfahren mit der Maus */
+.pl-del { width: 2.7rem; height: 2.7rem; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .05); color: #ff6b6b; box-shadow: inset 0 0 0 1px var(--wl-line-2);
+  opacity: 0; transition: opacity .15s ease; }
+.pl-del .i { width: 1.1rem; height: 1.1rem; }
+.pl:focus-within .pl-del, .pl:hover .pl-del, .pl-del:focus { opacity: 1; }
+body.kbd .pl-del.f:focus, body.is-tv .pl-del.f:focus { outline: none; box-shadow: 0 0 0 2px rgba(255, 255, 255, .85); }
+.pl-page.is-touch .pl-del { opacity: 1; }
+/* Leiste unten */
+.pl-phone { position: relative; margin-top: 1.8rem; display: flex; align-items: center; gap: 1.4rem; padding: .9rem 1.2rem .9rem .9rem; border-radius: 1.3rem;
+  background: rgba(255, 255, 255, .05); box-shadow: inset 0 0 0 1px var(--wl-line); }
+.pl-phone::before { content: ""; position: absolute; left: 12%; right: 12%; top: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(179, 160, 227, .55), transparent); }
+.pl-phone .qr.pl-qr { width: 4.8rem; height: 4.8rem; padding: .3rem; border-radius: .75rem; background: #fff; flex: none; }
+.pl-phone .qr.pl-qr img { width: 100%; height: 100%; display: block; }
+.pl-phone-t { display: flex; flex-direction: column; min-width: 0; }
+.pl-phone-t b { font-size: 1rem; font-weight: 700; color: var(--wl-text); }
+.pl-phone-t span { margin-top: .25rem; font-size: .86rem; color: var(--wl-muted); }
+.pl-web { margin-top: .75rem; align-self: flex-start; display: flex; align-items: center; gap: .5rem; height: 2.6rem; padding: 0 1.1rem; border-radius: 99px; background: rgba(255, 255, 255, .08); color: var(--wl-text); box-shadow: inset 0 0 0 1px var(--wl-line-2); font-weight: 600; font-size: .9rem; }
+.pl-web .i { width: 1.1rem; height: 1.1rem; }
+.pl-web span { margin: 0; color: inherit; font-size: inherit; }
+.pl-ids { display: flex; gap: .6rem; margin-left: .6rem; }
+.pl-id { padding: .5rem .5rem .5rem .85rem; border-radius: .8rem; background: rgba(0, 0, 0, .25); box-shadow: inset 0 0 0 1px var(--wl-line); }
+.pl-id small { display: block; font-size: .64rem; font-weight: 700; letter-spacing: .14em; color: var(--wl-dim); }
+.pl-id-row { display: flex; align-items: center; gap: .3rem; }
+.pl-id-row b { font: 600 .95rem/1.3 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .04em; color: var(--wl-text); }
+/* Formular „Playlist hinzufügen“: Hinweis statt Schalter „Auch auf der Webseite verwalten“ */
+.form-web-hint { display: flex; align-items: flex-start; gap: .5rem; }
+.form-web-hint .i { width: 1rem; height: 1rem; flex: none; margin-top: .15rem; }
+/* Handy hochkant: zwei Spalten, Titel links, Leiste über die ganze Breite */
+@media (max-width: 700px) {
+  html:not(.tv) .pl-top { padding-top: calc(1rem + env(safe-area-inset-top)); }
+  html:not(.tv) .pl-round { width: 2.6rem; height: 2.6rem; }
+  html:not(.tv) .pl-main { align-items: stretch; justify-content: flex-start; padding-top: 1.2rem; }
+  html:not(.tv) .pl-head { text-align: left; margin-bottom: 1.3rem; }
+  html:not(.tv) .pl-head h1 { font-size: 2rem; }
+  html:not(.tv) .pl-head p { font-size: .95rem; }
+  html:not(.tv) .pl-cards { justify-content: flex-start; gap: .9rem; }
+  html:not(.tv) .pl { width: calc(50% - .45rem); position: relative; }
+  html:not(.tv) .pl-card { height: 10.6rem; border-radius: 1.2rem; padding-top: 1.7rem; }
+  html:not(.tv) .pl-mono { width: 4rem; height: 4rem; font-size: 1.45rem; border-radius: 1rem; }
+  html:not(.tv) .pl-name { font-size: 1rem; margin-top: .75rem; }
+  html:not(.tv) .pl-sub { font-size: .72rem; }
+  html:not(.tv) .pl-badge { top: .6rem; left: .6rem; right: auto; }
+  html:not(.tv) .pl-tools { position: absolute; top: .45rem; right: .45rem; height: auto; }
+  html:not(.tv) .pl-del { width: 2.1rem; height: 2.1rem; opacity: 1; }
+  html:not(.tv) .pl-del .i { width: .95rem; height: .95rem; }
+  html:not(.tv) .pl-phone { flex-wrap: wrap; gap: .9rem; }
+  html:not(.tv) .pl-ids { margin-left: 0; width: 100%; flex-direction: column; }
+  html:not(.tv) .pl-id { flex: 1; min-width: 0; }
+}
+/* Handy quer / niedrige Bildschirme: alles etwas kleiner, damit es ohne Scrollen passt */
+@media (max-height: 540px) and (min-width: 600px) {
+  html:not(.tv) .pl-head { margin-bottom: 1.2rem; }
+  html:not(.tv) .pl-head h1 { font-size: 1.8rem; }
+  html:not(.tv) .pl { width: 10.5rem; }
+  html:not(.tv) .pl-card { height: 10rem; padding-top: 2.3rem; }
+  html:not(.tv) .pl-badge { top: .5rem; right: .5rem; font-size: .66rem; }
+  html:not(.tv) .pl-mono { width: 3.6rem; height: 3.6rem; font-size: 1.3rem; border-radius: .9rem; }
+  html:not(.tv) .pl-tools { height: 2.9rem; }
+  html:not(.tv) .pl-phone { margin-top: .8rem; }
+}

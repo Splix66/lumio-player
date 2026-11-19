@@ -1084,5 +1084,14 @@ window.LUMIO_I18N["el"] = {
   "Sender suchen …": "Αναζήτηση καναλιού …",
   "Kein Sender gefunden.": "Δεν βρέθηκε κανάλι.",
   "Keine Sender ausgeblendet. Suche oben einen Sender, um ihn auszublenden.": "Δεν υπάρχουν κρυφά κανάλια. Αναζήτησε ένα κανάλι παραπάνω για να το κρύψεις.",
-  "Film wird vorbereitet …": "Η ταινία προετοιμάζεται …"
+  "Film wird vorbereitet …": "Η ταινία προετοιμάζεται …",
+  "Test-Videos": "Δοκιμαστικά βίντεο",
+  "Aktiv": "Ενεργή",
+  "Hinzufügen": "Προσθήκη",
+  "Auf der Webseite hinzufügen": "Προσθήκη στον ιστότοπο",
+  "Mit dem Handy hinzufügen": "Προσθήκη με το κινητό",
+  "MAC und KEY sind dort schon eingetragen.": "Τα MAC και KEY είναι ήδη συμπληρωμένα εκεί.",
+  "QR-Code scannen – MAC und KEY sind schon eingetragen.": "Σάρωσε τον κωδικό QR – τα MAC και KEY είναι ήδη συμπληρωμένα.",
+  "Wähle, welche Playlist Telvo öffnen soll.": "Διάλεξε ποια playlist θα ανοίξει το Telvo.",
+  "Die Playlist erscheint auch auf der Webseite – dort kannst du sie jederzeit bearbeiten.": "Η playlist εμφανίζεται και στον ιστότοπο – εκεί μπορείς να την επεξεργαστείς οποιαδήποτε στιγμή."
 };

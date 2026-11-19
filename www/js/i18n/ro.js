@@ -1084,5 +1084,14 @@ window.LUMIO_I18N["ro"] = {
   "Sender suchen …": "Caută canal …",
   "Kein Sender gefunden.": "Niciun canal găsit.",
   "Keine Sender ausgeblendet. Suche oben einen Sender, um ihn auszublenden.": "Niciun canal ascuns. Caută mai sus un canal pentru a-l ascunde.",
-  "Film wird vorbereitet …": "Se pregătește filmul …"
+  "Film wird vorbereitet …": "Se pregătește filmul …",
+  "Test-Videos": "Videoclipuri de test",
+  "Aktiv": "Activă",
+  "Hinzufügen": "Adaugă",
+  "Auf der Webseite hinzufügen": "Adaugă pe site",
+  "Mit dem Handy hinzufügen": "Adaugă cu telefonul",
+  "MAC und KEY sind dort schon eingetragen.": "MAC și KEY sunt deja completate acolo.",
+  "QR-Code scannen – MAC und KEY sind schon eingetragen.": "Scanează codul QR – MAC și KEY sunt deja completate.",
+  "Wähle, welche Playlist Telvo öffnen soll.": "Alege ce listă să deschidă Telvo.",
+  "Die Playlist erscheint auch auf der Webseite – dort kannst du sie jederzeit bearbeiten.": "Lista apare și pe site – acolo o poți modifica oricând."
 };
