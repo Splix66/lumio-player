@@ -1,5 +1,10 @@
 # Änderungsprotokoll – Telvo Player (früher Lumio Player)
 
+## 1.15.14 – noch nicht veröffentlicht
+
+- **Webseite mit dem Logo-Zeichen der App** (Erays Wunsch 19.11.2026): Oben links auf allen Seiten (Start, Download-Seite für den Fernseher, Verwaltung, Impressum, Datenschutz, Nutzungsbedingungen) steht jetzt dasselbe weiße T mit Play-Zeichen und Stern wie in der App, statt des lila Quadrats. Das Symbol im Browser-Tab und auf dem Gerät bleibt die lila Kachel.
+
+
 ## 1.15.13 – 2026-11-19 · Startseite, Ausblenden, Filme am PC
 
 - **Direkt auf die Startseite statt auf die Playlist-Auswahl** (Erays Wunsch 18.11.2026): Ist eine Playlist da, öffnet die App sie sofort – auch wenn man die laufende Playlist auf der Webseite durch eine neue ersetzt, beim Start keine Playlist gemerkt ist oder man in den Einstellungen „Playlist löschen“ wählt und noch eine weitere da ist. Die Seite „Welche Playlist möchtest du öffnen?“ erscheint nur noch über Einstellungen → „Playlist wechseln“. Ohne Playlist bleibt es bei der Willkommensseite.

@@ -29,9 +29,9 @@
     .brand { display: flex; align-items: center; gap: .6rem; font-weight: 800; font-size: 1.6rem; letter-spacing: -.035em; margin: 0; }
     .brand span:last-child { font-weight: 400; color: var(--muted); }
 /* Logo „Verlauf“ (seit 1.15.10): lila Kachel, Zeichen weiß */
-    .mark { width: 2.4rem; height: 2.4rem; display: grid; place-items: center; border-radius: 28%; background: linear-gradient(145deg, #a78bfa, #6d3df0); color: #fff; }
-    .mark svg { width: 76%; height: 76%; overflow: visible; }
-    .mark .play { fill: #fff; }
+    .mark { width: 2.6rem; height: 2.6rem; display: grid; place-items: center; color: #fff; }   /* weißes Logo-Zeichen wie in der App (19.11.2026) */
+    .mark svg { width: 100%; height: 100%; overflow: visible; }
+    .mark .play, .mark .star { fill: #fff; }
     .mark .dot { fill: var(--gold); }
     .status { display: flex; align-items: center; gap: .7rem; font-size: 1rem; color: var(--muted); margin: 0; }
     .spin { width: 1.4rem; height: 1.4rem; border-radius: 50%; border: .2rem solid var(--line); border-top-color: var(--accent-2); animation: spin .8s linear infinite; flex: none; }
@@ -61,7 +61,7 @@
 <body>
   <main>
     <h1 class="brand">
-      <span class="mark"><svg viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="lumioPlay" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b06cff"/><stop offset="1" stop-color="#7c3aed"/></linearGradient></defs><path d="M17 25H70a12 12 0 0 1 12 12M42 25v50" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/><path class="play" transform="translate(16.5 11.5) scale(.78)" d="M50 38.5c0-3.3 3.6-5.3 6.4-3.6l25.4 15.6c2.7 1.7 2.7 5.6 0 7.2L56.4 73.4C53.6 75.1 50 73.1 50 69.8z"/></svg></span>
+      <span class="mark"><svg viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="lumioPlay" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b06cff"/><stop offset="1" stop-color="#7c3aed"/></linearGradient></defs><path d="M17 25H70a12 12 0 0 1 12 12M42 25v50" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/><path class="play" transform="translate(16.5 11.5) scale(.78)" d="M50 38.5c0-3.3 3.6-5.3 6.4-3.6l25.4 15.6c2.7 1.7 2.7 5.6 0 7.2L56.4 73.4C53.6 75.1 50 73.1 50 69.8z"/><path class="star" d="M92 0L94 7L101 9L94 11L92 18L90 11L83 9L90 7Z"/></svg></span>
       <span>Telvo</span><span>Player</span>
     </h1>
     <p class="status"><span class="spin" aria-hidden="true"></span><span data-t>Der Download startet gleich von selbst …</span></p>
